@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>写真・ファイル｜河口電機</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#fff; --line:#e3e6ea; --ink:#1f2733; --sub:#6b7280;
+    --accent:#b4791a; --accent-d:#8a5c11;
+    --radius:12px; --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:24px;}
+  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
+  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .hd-row h1{font-size:17px;margin:0;font-weight:700;}
+  .back{color:#fef3c7;text-decoration:none;font-size:13px;}
+  .sync{font-size:12px;display:flex;align-items:center;gap:5px;color:#fef3c7;}
+  .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;}
+  .dot.ok{background:#4ade80;} .dot.busy{background:#fde047;} .dot.off{background:#f87171;}
+  .wrap{padding:12px;}
+  .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:600;}
+  select.f{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:15px;font-family:inherit;}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-top:12px;}
+  .pname{font-weight:700;font-size:16px;}
+  .pid{font-size:12px;color:var(--sub);}
+  .btnrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .btn{flex:1;min-width:130px;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
+  .btn.primary{background:var(--accent);color:#fff;} .btn.open{background:#eef1f5;color:var(--ink);}
+  .hint{font-size:12.5px;color:var(--sub);margin-top:10px;}
+  .prog{font-size:13px;color:var(--accent-d);margin-top:10px;font-weight:600;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:12px;}
+  .ph{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f1f2f4;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;text-decoration:none;}
+  .ph img{width:100%;height:100%;object-fit:cover;display:block;}
+  .ph .fallback{font-size:26px;color:#9aa1ab;}
+  .ph .cap{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .empty{text-align:center;color:var(--sub);padding:30px 10px;font-size:14px;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:60;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .sec{font-size:13px;font-weight:700;color:var(--accent-d);margin-top:16px;}
+  input[type=file]{display:none;}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd-row">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
+    <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
+  </div>
+  <div class="hd-row" style="margin-top:6px;"><h1>写真・ファイル</h1></div>
+</header>
+
+<div class="wrap">
+  <div class="fld"><label>現場 ／ 案件を選ぶ</label>
+    <select class="f" id="projSel" onchange="onSelect()"><option value="">― 選択 ―</option></select></div>
+
+  <div class="panel" id="panel" style="display:none;">
+    <div class="pname" id="pName"></div>
+    <div class="pid" id="pId"></div>
+
+    <div class="btnrow">
+      <button class="btn primary" id="addBtn" onclick="pickFiles()">＋ 写真を追加</button>
+      <a class="btn open" id="openBtn" target="_blank">📁 ドライブフォルダを開く</a>
+    </div>
+    <input type="file" id="file" accept="image/*" multiple>
+    <div class="hint" id="hint">選んだ写真は、この現場の「写真」フォルダ(Googleドライブ)に保存されます。</div>
+    <div class="prog" id="prog" style="display:none;"></div>
+
+    <div class="sec">写真一覧 <span id="phCount" style="color:var(--sub);font-weight:400;"></span></div>
+    <div id="photos"><div class="empty">読込中…</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var SECRET  = 'kawaguchi-genba-2026';
+var MAXPX = 1600, QUALITY = 0.72;
+
+var projects=[], curId='', folderReady=false;
+var CACHE='genba_projects_cache_files';
+
+function callGAS(params){
+  return new Promise(function(resolve,reject){
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+    var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},30000);
+    function cleanup(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    window[cb]=function(res){cleanup();resolve(res);};
+    var q=Object.assign({secret:SECRET,callback:cb},params);
+    s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+    s.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(s);
+  });
+}
+function postNoCors(obj){ obj.secret=SECRET; return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)}); }
+function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
+
+function loadProjects(){
+  setSync('busy','同期中…');
+  callGAS({action:'list'}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'エラー');
+    projects=res.projects||[]; try{localStorage.setItem(CACHE,JSON.stringify(projects));}catch(e){}
+    buildSel(); setSync('ok','同期済み');
+  }).catch(function(err){
+    try{projects=JSON.parse(localStorage.getItem(CACHE)||'[]');}catch(e){projects=[];}
+    buildSel(); setSync('off','オフライン'); toast('読込失敗：'+err.message);
+  });
+}
+function buildSel(){ var s=document.getElementById('projSel'),cur=s.value; s.innerHTML='<option value="">― 選択 ―</option>';
+  projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);}); s.value=cur; }
+
+function onSelect(){
+  curId=document.getElementById('projSel').value;
+  var panel=document.getElementById('panel');
+  if(!curId){panel.style.display='none';return;}
+  var p=projects.filter(function(x){return x['案件ID']===curId;})[0]||{};
+  document.getElementById('pName').textContent=p['案件名']||'';
+  document.getElementById('pId').textContent=curId;
+  panel.style.display='block';
+  document.getElementById('photos').innerHTML='<div class="empty">フォルダを準備中…</div>';
+  folderReady=false;
+  // フォルダを用意（無ければ作成）してから一覧
+  callGAS({action:'ensureFolder',id:curId}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'フォルダ準備失敗');
+    document.getElementById('openBtn').href=res.url; folderReady=true; loadPhotos();
+  }).catch(function(err){ document.getElementById('photos').innerHTML='<div class="empty">フォルダ準備に失敗しました。<br>↻でやり直すか、少し待って再選択してください。</div>'; toast(err.message); });
+}
+
+function loadPhotos(){
+  if(!curId)return;
+  callGAS({action:'listPhotos',id:curId}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'一覧取得失敗');
+    renderPhotos(res.photos||[]);
+  }).catch(function(err){toast('一覧：'+err.message);});
+}
+function renderPhotos(arr){
+  document.getElementById('phCount').textContent=arr.length?('（'+arr.length+'枚）'):'';
+  var el=document.getElementById('photos');
+  if(!arr.length){el.innerHTML='<div class="empty">まだ写真がありません。<br>「＋写真を追加」から登録できます。</div>';return;}
+  el.innerHTML='';
+  arr.forEach(function(f){
+    var a=document.createElement('a');a.className='ph';a.href=f.url;a.target='_blank';
+    var img=document.createElement('img');img.loading='lazy';
+    img.src='https://drive.google.com/thumbnail?id='+f.id+'&sz=w300';
+    img.onerror=function(){a.innerHTML='<span class="fallback">🖼</span><span class="cap">'+esc(f.name)+'</span>';};
+    a.appendChild(img);
+    var cap=document.createElement('span');cap.className='cap';cap.textContent=f.name;a.appendChild(cap);
+    el.appendChild(a);
+  });
+}
+
+function pickFiles(){ if(!folderReady){toast('フォルダ準備中です。少し待ってください');return;} document.getElementById('file').click(); }
+document.getElementById('file').addEventListener('change',function(e){ var fs=e.target.files; if(fs&&fs.length)uploadAll(fs); this.value=''; });
+
+function uploadAll(files){
+  var arr=Array.prototype.slice.call(files),done=0,fail=0,i=0;
+  var prog=document.getElementById('prog');prog.style.display='block';
+  function next(){
+    if(i>=arr.length){
+      prog.textContent='アップロード完了（'+done+'枚'+(fail?'／失敗'+fail:'')+'）。一覧を更新します…';
+      setTimeout(function(){loadPhotos();prog.style.display='none';toast(done+'枚を保存しました');},1800);
+      return;
+    }
+    var file=arr[i++];
+    prog.textContent='送信中… '+i+'/'+arr.length;
+    resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
+      var b64=dataUrl.split(',')[1];
+      var name=(file.name||('photo_'+Date.now())).replace(/\.[^.]+$/,'')+'.jpg';
+      return postNoCors({action:'uploadPhoto',id:curId,name:name,mime:'image/jpeg',data:b64});
+    }).then(function(){done++;next();}).catch(function(){fail++;next();});
+  }
+  next();
+}
+function resizeImage(file,max,q){
+  return new Promise(function(res,rej){
+    var img=new Image(),url=URL.createObjectURL(file);
+    img.onload=function(){ var w=img.width,h=img.height,s=Math.min(1,max/Math.max(w,h));
+      var cw=Math.max(1,Math.round(w*s)),ch=Math.max(1,Math.round(h*s));
+      var c=document.createElement('canvas');c.width=cw;c.height=ch;c.getContext('2d').drawImage(img,0,0,cw,ch);
+      URL.revokeObjectURL(url); try{res(c.toDataURL('image/jpeg',q));}catch(e){rej(e);} };
+    img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('画像読込失敗'));}; img.src=url;
+  });
+}
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
+
+try{projects=JSON.parse(localStorage.getItem(CACHE)||'[]');buildSel();}catch(e){}
+loadProjects();
+</script>
+</body>
+</html>
