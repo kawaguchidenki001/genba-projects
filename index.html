@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>案件管理｜河口電機</title>
+<style>
+  :root{
+    --bg:#f4f5f7; --card:#ffffff; --line:#e3e6ea; --ink:#1f2733; --sub:#6b7280;
+    --accent:#0f5fb5; --accent-d:#0b4a8f;
+    --s-見積中:#6b7280; --s-受注:#2563eb; --s-施工中:#ea580c;
+    --s-完了:#16a34a; --s-請求:#7c3aed; --s-入金:#0d9488;
+    --radius:12px; --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;
+    font-size:15px;line-height:1.5;padding-bottom:80px;}
+  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;
+    padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
+  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .hd-row h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.02em;}
+  .back{color:#dbeafe;text-decoration:none;font-size:13px;}
+  .sync{font-size:12px;display:flex;align-items:center;gap:5px;color:#dbeafe;}
+  .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;}
+  .dot.ok{background:#4ade80;} .dot.busy{background:#fde047;} .dot.off{background:#f87171;}
+  .toolbar{padding:10px 12px;display:flex;flex-direction:column;gap:8px;
+    position:sticky;top:54px;background:var(--bg);z-index:10;}
+  .search{display:flex;gap:8px;}
+  .search input{flex:1;padding:10px 12px;border:1px solid var(--line);border-radius:10px;
+    font-size:15px;background:#fff;}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;}
+  .chip{flex:0 0 auto;padding:6px 12px;border:1px solid var(--line);border-radius:999px;
+    background:#fff;color:var(--sub);font-size:13px;cursor:pointer;white-space:nowrap;}
+  .chip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
+  .row2{display:flex;gap:8px;align-items:center;}
+  select.sort{flex:1;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:14px;}
+  .ghost{padding:9px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;
+    color:var(--ink);font-size:14px;cursor:pointer;}
+  main{padding:4px 12px 12px;}
+  .count{font-size:12px;color:var(--sub);margin:2px 2px 8px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px;cursor:pointer;
+    display:flex;flex-direction:column;gap:6px;border-left:5px solid var(--line);}
+  .card .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;}
+  .card .name{font-weight:700;font-size:15.5px;}
+  .card .id{font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums;}
+  .badge{font-size:11px;font-weight:700;color:#fff;padding:3px 9px;border-radius:999px;white-space:nowrap;}
+  .meta{font-size:13px;color:var(--sub);display:flex;flex-wrap:wrap;gap:4px 12px;}
+  .meta b{color:var(--ink);font-weight:600;}
+  .yen{font-variant-numeric:tabular-nums;}
+  .flag{font-size:11px;color:#b45309;font-weight:700;}
+  .empty{text-align:center;color:var(--sub);padding:40px 10px;font-size:14px;}
+  .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;
+    background:var(--accent);color:#fff;border:none;border-radius:999px;
+    padding:14px 20px;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(15,95,181,.4);cursor:pointer;}
+  /* modal */
+  .ov{position:fixed;inset:0;background:rgba(15,23,40,.45);z-index:40;display:none;
+    align-items:flex-end;justify-content:center;}
+  .ov.show{display:flex;}
+  .sheet{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;
+    border-radius:16px 16px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);}
+  .sheet h2{font-size:16px;margin:2px 0 12px;}
+  .fld{margin-bottom:11px;}
+  .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:600;}
+  .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid var(--line);
+    border-radius:10px;font-size:15px;background:#fff;font-family:inherit;}
+  .fld textarea{resize:vertical;min-height:54px;}
+  .two{display:flex;gap:8px;} .two>.fld{flex:1;}
+  .ytip{display:flex;gap:6px;align-items:flex-end;}
+  .ytip .mini{flex:0 0 auto;padding:10px 10px;border:1px solid var(--line);border-radius:10px;
+    background:#f8fafc;font-size:12px;cursor:pointer;color:var(--accent);}
+  .acts{display:flex;gap:8px;margin-top:6px;}
+  .btn{flex:1;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn.primary{background:var(--accent);color:#fff;} .btn.primary:active{background:var(--accent-d);}
+  .btn.sub{background:#eef1f5;color:var(--ink);}
+  .btn.danger{background:#fff;color:#dc2626;border:1px solid #fecaca;}
+  .row-del{text-align:center;margin-top:10px;}
+  .row-del a{color:#dc2626;font-size:13px;text-decoration:none;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;z-index:60;
+    background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;
+    opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd-row">
+    <a class="back" href="https://kawaguchidenki001.github.io/checklist/">← メニュー</a>
+    <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
+  </div>
+  <div class="hd-row" style="margin-top:6px;"><h1>案件管理</h1>
+    <button class="ghost" style="padding:6px 10px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;" onclick="reload()">↻ 更新</button>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="search"><input id="q" type="search" placeholder="案件名・顧客・場所で検索" oninput="render()"></div>
+  <div class="chips" id="chips"></div>
+  <div class="row2">
+    <select class="sort" id="sort" onchange="render()">
+      <option value="updated">更新が新しい順</option>
+      <option value="deadline">工期が近い順</option>
+      <option value="id">案件ID順</option>
+      <option value="amount">受注金額が高い順</option>
+    </select>
+    <button class="ghost" onclick="openCustomer()">＋顧客</button>
+  </div>
+</div>
+
+<main>
+  <div class="count" id="count"></div>
+  <div id="list"></div>
+</main>
+
+<button class="fab" onclick="openProject()">＋ 新規案件</button>
+
+<!-- 案件モーダル -->
+<div class="ov" id="ov">
+  <div class="sheet">
+    <h2 id="mTitle">新規案件</h2>
+    <input type="hidden" id="f_id">
+    <div class="fld"><label>案件名 ／ 現場名 *</label><input id="f_name" placeholder="例）競輪場サイクルプラザ照明改修"></div>
+    <div class="two">
+      <div class="fld"><label>顧客 ／ 取引先</label><input id="f_cust" list="custList" placeholder="例）岐阜市"><datalist id="custList"></datalist></div>
+      <div class="fld"><label>場所</label><input id="f_place" placeholder="例）岐阜市"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>種別</label><select id="f_type">
+        <option>官公庁</option><option>民間</option><option>住宅</option><option>その他</option></select></div>
+      <div class="fld"><label>ステータス</label><select id="f_status">
+        <option>見積中</option><option>受注</option><option>施工中</option><option>完了</option><option>請求</option><option>入金</option></select></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>工期開始</label><input id="f_start" type="date"></div>
+      <div class="fld"><label>工期完了</label><input id="f_end" type="date"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>受注金額（税抜）</label>
+        <div class="ytip"><input id="f_net" type="number" inputmode="numeric" placeholder="円">
+          <span class="mini" onclick="calcTax()">×1.1</span></div></div>
+      <div class="fld"><label>受注金額（税込）</label><input id="f_gross" type="number" inputmode="numeric" placeholder="円"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>実行予算</label><input id="f_budget" type="number" inputmode="numeric" placeholder="円"></div>
+      <div class="fld"><label>担当</label><input id="f_owner" placeholder="担当者名"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>段取り</label><select id="f_setup"><option>—</option><option>未</option><option>済</option></select></div>
+      <div class="fld"><label>Driveフォルダ（任意）</label><input id="f_drive" placeholder="URL"></div>
+    </div>
+    <div class="fld"><label>備考</label><textarea id="f_note" placeholder="メモ"></textarea></div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeOv()">キャンセル</button>
+      <button class="btn primary" id="saveBtn" onclick="saveProject()">保存</button>
+    </div>
+    <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="delProject(event)">この案件を削除</a></div>
+  </div>
+</div>
+
+<!-- 顧客モーダル -->
+<div class="ov" id="ovc">
+  <div class="sheet">
+    <h2>顧客の追加</h2>
+    <div class="fld"><label>顧客名 *</label><input id="c_name" placeholder="例）岐阜市 / ○○建設"></div>
+    <div class="two">
+      <div class="fld"><label>担当者</label><input id="c_person"></div>
+      <div class="fld"><label>電話</label><input id="c_tel" inputmode="tel"></div>
+    </div>
+    <div class="fld"><label>住所</label><input id="c_addr"></div>
+    <div class="fld"><label>備考</label><textarea id="c_note"></textarea></div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeC()">キャンセル</button>
+      <button class="btn primary" id="cSaveBtn" onclick="saveCustomer()">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 設定（★ここを埋める）===== */
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var SECRET  = 'kawaguchi-genba-2026';   // ← Code.gs の SECRET と同じ文字列
+
+var STATUSES = ['見積中','受注','施工中','完了','請求','入金'];
+var projects = [], customers = [], filterStatus = 'すべて';
+var CACHE_P = 'genba_projects', CACHE_C = 'genba_customers';
+
+/* ===== JSONP 通信 ===== */
+function callGAS(params){
+  return new Promise(function(resolve,reject){
+    if(!GAS_URL){ reject(new Error('GAS_URL が未設定です')); return; }
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6);
+    var s=document.createElement('script');
+    var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
+    function cleanup(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    window[cb]=function(res){cleanup();resolve(res);};
+    var q=Object.assign({secret:SECRET,callback:cb},params);
+    if(q.data && typeof q.data!=='string') q.data=JSON.stringify(q.data);
+    var url=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+    s.src=url; s.onerror=function(){cleanup();reject(new Error('通信エラー'));};
+    document.head.appendChild(s);
+  });
+}
+
+/* ===== 同期表示 ===== */
+function setSync(state,txt){
+  var d=document.getElementById('dot');
+  d.className='dot'+(state?' '+state:'');
+  document.getElementById('syncTxt').textContent=txt;
+}
+
+/* ===== 読込 ===== */
+function loadCache(){
+  try{projects=JSON.parse(localStorage.getItem(CACHE_P)||'[]');}catch(e){projects=[];}
+  try{customers=JSON.parse(localStorage.getItem(CACHE_C)||'[]');}catch(e){customers=[];}
+}
+function saveCache(){
+  try{localStorage.setItem(CACHE_P,JSON.stringify(projects));
+      localStorage.setItem(CACHE_C,JSON.stringify(customers));}catch(e){}
+}
+function reload(){
+  setSync('busy','同期中…');
+  callGAS({action:'all'}).then(function(res){
+    if(!res.ok){throw new Error(res.error||'エラー');}
+    projects=res.projects||[]; customers=res.customers||[];
+    saveCache(); buildChips(); buildCustList(); render();
+    setSync('ok','同期済み');
+  }).catch(function(err){
+    setSync('off','オフライン'); render();
+    toast('読込失敗：'+err.message);
+  });
+}
+
+/* ===== UI構築 ===== */
+function buildChips(){
+  var counts={}; STATUSES.forEach(function(s){counts[s]=0;});
+  projects.forEach(function(p){if(counts[p['ステータス']]!=null)counts[p['ステータス']]++;});
+  var wrap=document.getElementById('chips'); wrap.innerHTML='';
+  var all=['すべて'].concat(STATUSES);
+  all.forEach(function(s){
+    var c=document.createElement('div');
+    c.className='chip'+(filterStatus===s?' on':'');
+    c.textContent= s==='すべて'?('すべて '+projects.length):(s+' '+(counts[s]||0));
+    c.onclick=function(){filterStatus=s;buildChips();render();};
+    wrap.appendChild(c);
+  });
+}
+function buildCustList(){
+  var dl=document.getElementById('custList'); dl.innerHTML='';
+  customers.forEach(function(c){var o=document.createElement('option');o.value=c['顧客名'];dl.appendChild(o);});
+}
+
+function render(){
+  var q=(document.getElementById('q').value||'').trim();
+  var sort=document.getElementById('sort').value;
+  var list=projects.slice();
+  if(filterStatus!=='すべて') list=list.filter(function(p){return p['ステータス']===filterStatus;});
+  if(q){var lq=q.toLowerCase();
+    list=list.filter(function(p){
+      return [p['案件名'],p['顧客'],p['場所'],p['案件ID'],p['担当']]
+        .some(function(v){return String(v||'').toLowerCase().indexOf(lq)>=0;});});}
+  list.sort(function(a,b){
+    if(sort==='deadline')return (a['工期完了']||'9999').localeCompare(b['工期完了']||'9999');
+    if(sort==='id')return String(b['案件ID']||'').localeCompare(String(a['案件ID']||''));
+    if(sort==='amount')return (num(b['受注金額税込'])||num(b['受注金額税抜']))-(num(a['受注金額税込'])||num(a['受注金額税抜']));
+    return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));
+  });
+  document.getElementById('count').textContent= list.length+' 件';
+  var el=document.getElementById('list');
+  if(!list.length){el.innerHTML='<div class="empty">該当する案件がありません。<br>右下の「＋新規案件」から登録できます。</div>';return;}
+  el.innerHTML='';
+  list.forEach(function(p){
+    var col=statusColor(p['ステータス']);
+    var amt= p['受注金額税込']||p['受注金額税抜'];
+    var div=document.createElement('div');
+    div.className='card'; div.style.borderLeftColor=col;
+    div.onclick=function(){openProject(p);};
+    var period= (p['工期開始']||'')+(p['工期完了']?(' 〜 '+p['工期完了']):'');
+    div.innerHTML=
+      '<div class="top"><div><div class="name">'+esc(p['案件名']||'(無題)')+'</div>'+
+        '<div class="id">'+esc(p['案件ID']||'')+(p['顧客']?(' ・ '+esc(p['顧客'])):'')+'</div></div>'+
+        '<span class="badge" style="background:'+col+'">'+esc(p['ステータス']||'')+'</span></div>'+
+      '<div class="meta">'+
+        (p['場所']?'<span>📍 '+esc(p['場所'])+'</span>':'')+
+        (period.trim()?'<span>🗓 '+esc(period)+'</span>':'')+
+        (amt?'<span class="yen">💰 '+yen(amt)+'</span>':'')+
+        (p['担当']?'<span>👤 '+esc(p['担当'])+'</span>':'')+
+      '</div>'+
+      (p['段取り']==='未' && (p['ステータス']==='受注')?'<div class="flag">⚠ 段取り未</div>':'');
+    el.appendChild(div);
+  });
+}
+
+/* ===== 案件モーダル ===== */
+function openProject(p){
+  document.getElementById('mTitle').textContent= p?'案件の編集':'新規案件';
+  document.getElementById('delRow').style.display= p?'block':'none';
+  var g=function(id){return document.getElementById(id);};
+  g('f_id').value   = p?(p['案件ID']||''):'';
+  g('f_name').value = p?(p['案件名']||''):'';
+  g('f_cust').value = p?(p['顧客']||''):'';
+  g('f_place').value= p?(p['場所']||''):'';
+  g('f_type').value = p?(p['種別']||'官公庁'):'官公庁';
+  g('f_status').value=p?(p['ステータス']||'見積中'):'見積中';
+  g('f_start').value= p?(dateOnly(p['工期開始'])):'';
+  g('f_end').value  = p?(dateOnly(p['工期完了'])):'';
+  g('f_net').value  = p?(num(p['受注金額税抜'])||''):'';
+  g('f_gross').value= p?(num(p['受注金額税込'])||''):'';
+  g('f_budget').value=p?(num(p['実行予算'])||''):'';
+  g('f_owner').value= p?(p['担当']||''):'';
+  g('f_setup').value= p?(p['段取り']||'—'):'—';
+  g('f_drive').value= p?(p['Driveフォルダ']||''):'';
+  g('f_note').value = p?(p['備考']||''):'';
+  document.getElementById('ov').classList.add('show');
+}
+function closeOv(){document.getElementById('ov').classList.remove('show');}
+function calcTax(){
+  var n=num(document.getElementById('f_net').value);
+  if(n) document.getElementById('f_gross').value=Math.round(n*1.1);
+}
+function gatherProject(){
+  var g=function(id){return document.getElementById(id).value;};
+  return {
+    '案件ID':g('f_id'),'案件名':g('f_name').trim(),'顧客':g('f_cust').trim(),
+    '場所':g('f_place').trim(),'種別':g('f_type'),'ステータス':g('f_status'),
+    '工期開始':g('f_start'),'工期完了':g('f_end'),
+    '受注金額税抜':g('f_net'),'受注金額税込':g('f_gross'),'実行予算':g('f_budget'),
+    '担当':g('f_owner').trim(),'段取り':g('f_setup'),'Driveフォルダ':g('f_drive').trim(),
+    '備考':g('f_note').trim()
+  };
+}
+function saveProject(){
+  var d=gatherProject();
+  if(!d['案件名']){toast('案件名を入力してください');return;}
+  var id=d['案件ID']; var isNew=!id;
+  var btn=document.getElementById('saveBtn'); btn.disabled=true; btn.textContent='保存中…';
+  var action= isNew?'addProject':'updateProject';
+  var params= isNew?{action:action,data:d}:{action:action,id:id,data:d};
+  callGAS(params).then(function(res){
+    if(!res.ok)throw new Error(res.error||'保存失敗');
+    var rec=res.project;
+    if(isNew){projects.push(rec);}
+    else{for(var i=0;i<projects.length;i++){if(projects[i]['案件ID']===id){projects[i]=rec;break;}}}
+    saveCache(); buildChips(); render(); closeOv(); toast(isNew?'登録しました':'更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);})
+    .then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+function delProject(ev){
+  ev.preventDefault();
+  var id=document.getElementById('f_id').value;
+  if(!id)return;
+  if(!confirm('この案件を削除します。よろしいですか？'))return;
+  callGAS({action:'deleteProject',id:id}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'削除失敗');
+    projects=projects.filter(function(p){return p['案件ID']!==id;});
+    saveCache(); buildChips(); render(); closeOv(); toast('削除しました');
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+
+/* ===== 顧客モーダル ===== */
+function openCustomer(){['c_name','c_person','c_tel','c_addr','c_note'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('ovc').classList.add('show');}
+function closeC(){document.getElementById('ovc').classList.remove('show');}
+function saveCustomer(){
+  var g=function(id){return document.getElementById(id).value;};
+  var name=g('c_name').trim();
+  if(!name){toast('顧客名を入力してください');return;}
+  var d={'顧客名':name,'担当者':g('c_person').trim(),'電話':g('c_tel').trim(),'住所':g('c_addr').trim(),'備考':g('c_note').trim()};
+  var btn=document.getElementById('cSaveBtn'); btn.disabled=true; btn.textContent='保存中…';
+  callGAS({action:'addCustomer',data:d}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'保存失敗');
+    customers.push(res.customer); saveCache(); buildCustList(); closeC(); toast('顧客を追加しました');
+  }).catch(function(err){toast('失敗：'+err.message);})
+    .then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+
+/* ===== ヘルパー ===== */
+function statusColor(s){var m={'見積中':'var(--s-見積中)','受注':'var(--s-受注)','施工中':'var(--s-施工中)','完了':'var(--s-完了)','請求':'var(--s-請求)','入金':'var(--s-入金)'};return m[s]||'var(--sub)';}
+function num(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN(n)?0:n;}
+function yen(v){var n=num(v);return n?('¥'+n.toLocaleString('ja-JP')):'';}
+function dateOnly(v){return v?String(v).slice(0,10):'';}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastT;
+function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
+
+/* 背景タップで閉じる */
+['ov','ovc'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
+/* タブ復帰で自動更新 */
+document.addEventListener('visibilitychange',function(){if(!document.hidden && GAS_URL)reload();});
+
+/* 起動 */
+loadCache(); buildChips(); buildCustList(); render();
+if(GAS_URL){reload();}else{setSync('off','GAS_URL未設定');}
+</script>
+</body>
+</html>
