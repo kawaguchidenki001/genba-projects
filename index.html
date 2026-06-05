@@ -68,10 +68,30 @@
 
   .foot{text-align:center;color:rgba(255,255,255,.78);font-size:12px;margin-top:24px;}
   .foot a{color:#fff;text-decoration:underline;}
+  #login{position:fixed;inset:0;z-index:100;background:linear-gradient(150deg,#1f5f8b 0%,#2a7d9e 38%,#27a4a0 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
+  #login .box{width:100%;max-width:340px;text-align:center;color:#fff;}
+  #login .lg-t{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.22em;font-size:11px;opacity:.8;text-transform:uppercase;}
+  #login h2{font-size:24px;margin:8px 0 2px;font-weight:700;}
+  #login p{font-size:13px;color:rgba(255,255,255,.82);margin:0 0 22px;}
+  #login input{width:100%;padding:14px;border:1px solid rgba(255,255,255,.3);border-radius:12px;font-size:16px;margin-bottom:10px;background:rgba(255,255,255,.95);color:#15233a;}
+  #login button{width:100%;padding:14px;border:none;border-radius:12px;background:#fff;color:#1f5f8b;font-size:16px;font-weight:800;cursor:pointer;}
+  #login .err{color:#ffdede;font-size:13px;min-height:18px;margin-top:10px;}
 </style>
 </head>
 <body>
-<div class="wrap">
+<div id="login">
+  <div class="box">
+    <div class="lg-t">Genba Management</div>
+    <h2>現場管理</h2>
+    <p>IDとパスワードを入力してください</p>
+    <input id="lgid" autocapitalize="off" autocomplete="username" placeholder="ID" onkeydown="if(event.key==='Enter')doLogin()">
+    <input id="lgpw" type="password" autocomplete="current-password" placeholder="パスワード" onkeydown="if(event.key==='Enter')doLogin()">
+    <button id="lgbtn" onclick="doLogin()">ログイン</button>
+    <div class="err" id="lgerr"></div>
+  </div>
+</div>
+
+<div class="wrap" style="display:none;">
   <div class="head">
     <div class="kicker">Genba Management</div>
     <h1>現場管理</h1>
@@ -95,7 +115,29 @@
   <div class="lbl">今後追加予定</div>
   <div class="soons"><span class="soon">📊 工事台帳・原価</span><span class="soon">👷 出面管理</span></div>
 
-  <div class="foot">金額は管理者のみ表示 ・ <a href="https://kawaguchidenki001.github.io/checklist/">お仕事メニューへ</a></div>
+  <div class="foot"><span id="meName"></span> ・ <a href="#" onclick="logout();return false;">ログアウト</a><br>金額は管理者のみ表示 ・ <a href="https://kawaguchidenki001.github.io/checklist/">お仕事メニューへ</a></div>
 </div>
+<script>
+var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var T_GENERAL='kawaguchi-genba-2026';
+function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
+function setErr(m){document.getElementById('lgerr').textContent=m||'';}
+function showMenu(u){document.getElementById('login').style.display='none';document.querySelector('.wrap').style.display='block';
+  document.getElementById('meName').textContent=u&&u['氏名']?u['氏名']+' さん':'';}
+function doLogin(){
+  var id=document.getElementById('lgid').value.trim(),pw=document.getElementById('lgpw').value;
+  if(!id){setErr('IDを入力してください');return;}
+  setErr('');var btn=document.getElementById('lgbtn');btn.disabled=true;btn.textContent='確認中…';
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6);
+  window[cb]=function(res){btn.disabled=false;btn.textContent='ログイン';try{delete window[cb];}catch(e){}
+    if(res&&res.ok&&res.worker){localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);}
+    else setErr((res&&res.error)||'ログインできませんでした');};
+  var s=document.createElement('script');
+  s.src=GAS_URL+'?action=login&secret='+encodeURIComponent(T_GENERAL)+'&id='+encodeURIComponent(id)+'&pw='+encodeURIComponent(pw)+'&callback='+cb;
+  s.onerror=function(){btn.disabled=false;btn.textContent='ログイン';setErr('通信エラー');};document.head.appendChild(s);
+}
+function logout(){localStorage.removeItem('genba_user');location.reload();}
+(function(){var u=gUser();if(u&&u['作業員ID'])showMenu(u);})();
+</script>
 </body>
 </html>
