@@ -154,9 +154,9 @@ function callGAS(params){return new Promise(function(res,rej){
   var q=Object.assign({secret:tok(),callback:cb},params);if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
   s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
   s.onerror=function(){cl();rej(new Error('通信エラー'));};document.head.appendChild(s);});}
-var loadCnt=0;
-function showLoad(){loadCnt++;document.getElementById('loading').classList.add('show');}
-function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0)document.getElementById('loading').classList.remove('show');}
+var loadCnt=0,loadShownAt=0;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
 
 function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function hm(d){return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
@@ -178,31 +178,45 @@ function brkKey(){return 'genba_brk_'+(me?me['作業員ID']:'')+'_'+ymd(new Date
 function loadBrk(){try{var b=JSON.parse(localStorage.getItem(brkKey())||'null');if(b){brk=b;}else{brk={am:30,noon:60,pm:30};}}catch(e){brk={am:30,noon:60,pm:30};}}
 function brkTot(){return brk.am+brk.noon+brk.pm;}
 function showBrk(){document.getElementById('bAm').textContent=brk.am+'分';document.getElementById('bNoon').textContent=brk.noon+'分';document.getElementById('bPm').textContent=brk.pm+'分';document.getElementById('bTot').textContent=brkTot();}
-function stB(k,d){brk[k]=Math.max(0,Math.min(180,brk[k]+d));try{localStorage.setItem(brkKey(),JSON.stringify(brk));}catch(e){}showBrk();
-  var rec=myRec();if(rec){ // 既に出勤済みなら休憩を保存
-    showLoad();callGAS({action:'updateKintai',id:rec['勤怠ID'],data:{'休憩分':brkTot()}}).then(function(res){if(res.ok){upTodayK(res.kintai);renderHome();}}).catch(function(){}).then(hideLoad);
-  }}
+function stB(k,d){brk[k]=Math.max(0,Math.min(180,brk[k]+d));try{localStorage.setItem(brkKey(),JSON.stringify(brk));}catch(e){}showBrk();}
 
 function reload(){ if(!me)return; showLoad();
   callGAS({action:'punchData',date:ymd(new Date())}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
     workers=res.workers||[];todayK=res.kintai||[];renderHome();if(tab==='all')renderAll();
   }).catch(function(err){toast('読込失敗：'+err.message);}).then(hideLoad); }
 
-function myRec(){ if(!me)return null; return todayK.filter(function(k){return String(k['作業員ID'])===String(me['作業員ID']);})[0]||null; }
+function mySessions(){ if(!me)return []; var wid=String(me['作業員ID']);
+  return todayK.filter(function(k){return String(k['作業員ID'])===wid;})
+    .sort(function(a,b){return (String(a['日付'])+(a['出勤']||'')).localeCompare(String(b['日付'])+(b['出勤']||''));}); }
+function myOpen(){ var s=mySessions().filter(function(k){return k['出勤']&&!k['退勤'];}); return s.length?s[s.length-1]:null; }
+function myTodaySessions(){ var t=ymd(new Date()); return mySessions().filter(function(k){return String(k['日付']).slice(0,10)===t;}); }
+function toMinC(t){var m=String(t||'').match(/(\d{1,2}):(\d{2})/);return m?(+m[1]*60+ +m[2]):null;}
 function upTodayK(rec){var f=false;for(var i=0;i<todayK.length;i++){if(todayK[i]['勤怠ID']===rec['勤怠ID']){todayK[i]=rec;f=true;break;}}if(!f)todayK.push(rec);}
 
 function renderHome(){
-  var rec=myRec();
-  document.getElementById('sIn').textContent=rec&&rec['出勤']?rec['出勤']:'―';
-  document.getElementById('sOut').textContent=rec&&rec['退勤']?rec['退勤']:'―';
-  document.getElementById('sWork').textContent=(rec&&rec['実働時間']!==''&&rec['実働時間']!=null)?rec['実働時間']+'h':'―';
-  var hasIn=rec&&rec['出勤'],hasOut=rec&&rec['退勤'];
-  document.getElementById('btnIn').disabled=!!hasIn;document.getElementById('btnOut').disabled=!hasIn||!!hasOut;
+  var open=myOpen(), today=myTodaySessions();
+  var firstIn = today.length ? (today[0]['出勤']||'') : (open?open['出勤']:'');
+  var done = today.filter(function(k){return k['退勤'];});
+  var lastOut=''; done.forEach(function(k){lastOut=k['退勤'];});
+  var totalH = done.reduce(function(s,k){var v=parseFloat(k['実働時間']);return s+(isNaN(v)?0:v);},0);
+  document.getElementById('sIn').textContent = firstIn||'―';
+  document.getElementById('sOut').textContent = open ? '勤務中' : (lastOut||'―');
+  document.getElementById('sWork').textContent = done.length ? (Math.round(totalH*100)/100)+'h' : '―';
+  document.getElementById('btnIn').disabled = !!open;   // 出勤中は出勤不可
+  document.getElementById('btnOut').disabled = !open;   // 出勤中のみ退勤可
   showBrk();
+  var t=ymd(new Date());
+  var rows = mySessions().filter(function(k){ var d=String(k['日付']).slice(0,10); return d===t || (k['出勤']&&!k['退勤']); });
   var log=document.getElementById('log');
-  if(!rec||(!rec['出勤']&&!rec['退勤'])){log.innerHTML='<div class="lrow"><span class="dt">まだ打刻がありません</span></div>';}
-  else{var h='';if(rec['出勤'])h+='<div class="lrow"><span class="dt">'+esc(rec['出勤'])+'</span><span class="badge g">出勤</span><span class="pin">'+(rec['出勤位置']?'📍':'')+'</span></div>';
-    if(rec['退勤'])h+='<div class="lrow"><span class="dt">'+esc(rec['退勤'])+'</span><span class="badge o">退勤</span><span class="pin">'+(rec['退勤位置']?'📍':'')+'</span></div>';log.innerHTML=h;}
+  if(!rows.length){ log.innerHTML='<div class="lrow"><span class="dt">まだ打刻がありません</span></div>'; return; }
+  var h='';
+  rows.forEach(function(k){
+    var inT=k['出勤']||'', outT=k['退勤']||'';
+    var nd=(inT&&outT&&toMinC(outT)<toMinC(inT))?'翌':'';
+    var right = outT ? ((k['実働時間']!==''&&k['実働時間']!=null)?('実働 '+k['実働時間']+'h'):'') : '勤務中';
+    h+='<div class="lrow"><span class="dt">'+esc(inT||'—')+' → '+(outT?nd+esc(outT):'—')+'</span><span class="pin" style="margin-left:auto;font-size:12px;'+(outT?'color:var(--sub);':'color:var(--green);font-weight:700;')+'">'+esc(right)+'</span></div>';
+  });
+  log.innerHTML=h;
 }
 
 function getPos(){return new Promise(function(res){ if(!navigator.geolocation){res('');return;}
@@ -221,10 +235,16 @@ function renderAll(){
   var el=document.getElementById('pAll');
   if(!workers.length){el.innerHTML='<div class="needlogin">作業員が未登録です（管理画面で登録）。</div>';return;}
   el.innerHTML='';
+  var t=ymd(new Date());
   workers.forEach(function(w){
-    var rec=todayK.filter(function(k){return String(k['作業員ID'])===String(w['作業員ID']);})[0];
-    var st,cl;if(rec&&rec['出勤']&&!rec['退勤']){st='出勤中 '+rec['出勤'];cl='b1';}
-      else if(rec&&rec['退勤']){st='退勤 '+rec['退勤']+'（実働'+(rec['実働時間']||0)+'h）';cl='b2';}else{st='未打刻';cl='b3';}
+    var wid=String(w['作業員ID']);
+    var sess=todayK.filter(function(k){return String(k['作業員ID'])===wid;});
+    var open=sess.filter(function(k){return k['出勤']&&!k['退勤'];});
+    var todayS=sess.filter(function(k){return String(k['日付']).slice(0,10)===t;});
+    var st,cl;
+    if(open.length){ st='勤務中 '+open[open.length-1]['出勤']; cl='b1'; }
+    else if(todayS.length){ var tot=todayS.reduce(function(s,k){var v=parseFloat(k['実働時間']);return s+(isNaN(v)?0:v);},0); st='退勤（実働'+(Math.round(tot*100)/100)+'h）'; cl='b2'; }
+    else { st='未打刻'; cl='b3'; }
     var r=document.createElement('div');r.className='row';r.innerHTML='<span class="nm">'+esc(w['氏名'])+'</span><span class="bdg '+cl+'">'+esc(st)+'</span>';el.appendChild(r);
   });
 }
@@ -241,14 +261,33 @@ function loadMonth(){ if(!me)return;
 function renderMonth(){
   var el=document.getElementById('mTable');
   if(!monthK.length){el.innerHTML='<div class="needlogin">この月の打刻はありません。</div>';return;}
+  var byDate={}; monthK.forEach(function(k){var d=String(k['日付']).slice(0,10);(byDate[d]=byDate[d]||[]).push(k);});
+  var dates=Object.keys(byDate).sort();
   var h='<table><tr><th>日付</th><th>出勤</th><th>退勤</th><th>休憩</th><th>実働</th></tr>';
-  monthK.forEach(function(k){h+='<tr><td>'+esc(String(k['日付']).slice(5))+'</td><td>'+esc(k['出勤']||'')+'</td><td>'+esc(k['退勤']||'')+'</td><td>'+esc((k['休憩分']||0)+'分')+'</td><td>'+esc((k['実働時間']!==''&&k['実働時間']!=null?k['実働時間']+'h':''))+'</td></tr>';});
+  var monthTot=0;
+  dates.forEach(function(d){
+    var list=byDate[d].sort(function(a,b){return String(a['出勤']||'').localeCompare(String(b['出勤']||''));});
+    var dayTot=0;
+    list.forEach(function(k,idx){
+      var v=parseFloat(k['実働時間']); if(!isNaN(v))dayTot+=v;
+      var nd=(k['出勤']&&k['退勤']&&toMinC(k['退勤'])<toMinC(k['出勤']))?'翌':'';
+      h+='<tr><td>'+(idx===0?esc(d.slice(5)):'')+'</td><td>'+esc(k['出勤']||'')+'</td><td>'+(k['退勤']?nd+esc(k['退勤']):'')+'</td><td>'+esc((k['休憩分']||0)+'分')+'</td><td>'+esc(k['実働時間']!==''&&k['実働時間']!=null?k['実働時間']+'h':'')+'</td></tr>';
+    });
+    if(list.length>1){ h+='<tr style="background:#f7fbfa;"><td style="font-weight:700;">'+esc(d.slice(5))+' 計</td><td></td><td></td><td></td><td style="font-weight:700;">'+(Math.round(dayTot*100)/100)+'h</td></tr>'; }
+    monthTot+=dayTot;
+  });
+  h+='<tr style="background:#eef5f3;font-weight:800;"><td colspan="4">月合計</td><td>'+(Math.round(monthTot*100)/100)+'h</td></tr>';
   h+='</table>';el.innerHTML=h;
 }
 function downloadCSV(){
   if(!monthK.length){toast('データがありません');return;}
   var rows=[['日付','氏名','出勤','退勤','休憩分','実働時間']];
-  monthK.forEach(function(k){rows.push([k['日付'],k['氏名']||'',k['出勤']||'',k['退勤']||'',k['休憩分']||'',k['実働時間']||'']);});
+  var byDate={}; monthK.forEach(function(k){var d=String(k['日付']).slice(0,10);(byDate[d]=byDate[d]||[]).push(k);});
+  Object.keys(byDate).sort().forEach(function(d){
+    byDate[d].sort(function(a,b){return String(a['出勤']||'').localeCompare(String(b['出勤']||''));}).forEach(function(k){
+      rows.push([k['日付'],k['氏名']||'',k['出勤']||'',k['退勤']||'',k['休憩分']||'',k['実働時間']||'']);
+    });
+  });
   var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   var blob=new Blob(['\uFEFF'+csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='勤怠_'+(me?me['氏名']:'')+'_'+mCur.getFullYear()+('0'+(mCur.getMonth()+1)).slice(-2)+'.csv';a.click();URL.revokeObjectURL(url);
