@@ -5,122 +5,146 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>タイムカード｜河口電機</title>
 <style>
-  :root{ --bg:#f4f5f7;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#0e7490;--accent-d:#0b596f;
-    --in:#16a34a;--out:#dc2626;--radius:12px;--shadow:0 1px 3px rgba(20,30,50,.08);}
+  :root{ --bg:#f3f4f6;--card:#fff;--line:#e6e8ec;--ink:#2b323c;--sub:#9aa0a8;
+    --green:#52b86a;--greenbg:#eef9f1;--orange:#eea53a;--orangebg:#fdf4e6;--blue:#5b9bd5;--bluebg:#eaf2fb;--red:#e2574c;
+    --teal1:#43cea2;--teal2:#2bb6a0;}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
-  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:30px;}
-  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
-  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .hd-row h1{font-size:17px;margin:0;font-weight:700;}
-  .back{color:#cfeef4;text-decoration:none;font-size:13px;}
-  .sync{font-size:12px;display:flex;align-items:center;gap:5px;color:#cfeef4;}
-  .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;}
-  .dot.ok{background:#4ade80;}.dot.busy{background:#fde047;}.dot.off{background:#f87171;}
-  .ghost{padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.15);color:#fff;font-size:13px;cursor:pointer;}
-  .tabs{display:flex;background:var(--bg);position:sticky;top:54px;z-index:10;padding:10px 12px 0;gap:6px;}
-  .tabs button{flex:1;padding:10px;border:1px solid var(--line);border-bottom:none;background:#fff;border-radius:10px 10px 0 0;font-size:14px;cursor:pointer;color:var(--sub);font-weight:700;}
-  .tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
-  main{padding:12px;}
-  .pick{margin-bottom:12px;}
-  .pick label{font-size:12.5px;color:var(--sub);font-weight:600;display:block;margin-bottom:4px;}
-  select.f{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:16px;font-family:inherit;}
-  .clock{text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px 16px;margin-bottom:14px;}
-  .who{font-size:18px;font-weight:700;}
-  .now{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;margin:4px 0;}
-  .nowd{font-size:13px;color:var(--sub);}
-  .status{display:flex;justify-content:center;gap:18px;margin-top:12px;font-size:14px;}
-  .status .v{font-weight:800;font-variant-numeric:tabular-nums;font-size:18px;}
-  .status .lab{font-size:11px;color:var(--sub);}
-  .btns{display:flex;gap:12px;margin-bottom:14px;}
-  .pbtn{flex:1;padding:22px 0;border:none;border-radius:16px;color:#fff;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(20,30,50,.15);}
-  .pbtn.in{background:var(--in);} .pbtn.out{background:var(--out);} .pbtn:disabled{opacity:.4;}
-  .brk{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
-  .brk label{font-size:13px;color:var(--sub);font-weight:600;}
-  .brk select{flex:1;padding:9px;border:1px solid var(--line);border-radius:9px;font-size:15px;}
-  .note{font-size:12px;color:var(--sub);margin-top:10px;text-align:center;}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:66px;}
+  .head{background:linear-gradient(135deg,var(--teal1),var(--teal2));color:#fff;text-align:center;padding:calc(env(safe-area-inset-top) + 14px) 16px 18px;position:relative;}
+  .head .bar{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:14px;right:14px;display:flex;justify-content:space-between;}
+  .head .bar a,.head .bar button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:5px 9px;font-size:13px;cursor:pointer;text-decoration:none;}
+  .head .me{font-size:14px;opacity:.95;margin-bottom:4px;font-weight:700;}
+  .head .d{font-size:14px;opacity:.92;}
+  .head .t{font-size:44px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:.03em;line-height:1.15;}
+  main{max-width:540px;margin:0 auto;padding:14px;}
+  .pane{display:none;} .pane.on{display:block;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+  .pbtn{padding:26px 0;border-radius:14px;font-size:24px;font-weight:700;border:1.5px solid transparent;cursor:pointer;}
+  .b-in{background:var(--greenbg);color:var(--green);border-color:#cdeed6;}
+  .b-out{background:var(--orangebg);color:var(--orange);border-color:#f6e2c0;}
+  .pbtn:disabled{opacity:.4;}
+  .stat{display:flex;gap:10px;margin-bottom:14px;}
+  .stat .c{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;text-align:center;padding:11px 4px;}
+  .stat .v{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;}
+  .stat .lab{font-size:11px;color:var(--sub);}
+  .brkcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px;}
+  .brkcard h3{font-size:14px;margin:0 0 10px;color:var(--teal2);display:flex;justify-content:space-between;}
+  .brkcard h3 .tot{color:var(--ink);font-variant-numeric:tabular-nums;}
+  .brow{display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line);}
+  .brow:first-of-type{border-top:none;}
+  .brow .l{flex:1;font-size:15px;}
+  .stp{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .stp button{width:42px;height:42px;border:none;background:#eef5f3;font-size:20px;cursor:pointer;color:var(--teal2);font-weight:700;}
+  .stp .val{width:62px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;}
+  .logttl{font-size:13px;color:var(--sub);font-weight:700;margin:0 2px 8px;}
+  .log{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .lrow{display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--line);font-size:14px;}
+  .lrow:first-child{border-top:none;}
+  .lrow .dt{color:var(--sub);font-variant-numeric:tabular-nums;}
+  .badge{font-size:12px;font-weight:700;padding:3px 12px;border-radius:6px;}
+  .g{background:var(--greenbg);color:var(--green);} .o{background:var(--orangebg);color:var(--orange);}
+  .pin{margin-left:auto;color:var(--teal2);font-size:15px;}
   table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:10px;overflow:hidden;}
   th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:center;}
-  th{background:#eef1f5;font-size:11.5px;color:var(--sub);}
-  td.nm{text-align:left;}
+  th{background:#eef5f3;font-size:11.5px;color:var(--sub);}
   .row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:8px;}
   .row .nm{font-weight:700;flex:1;}
-  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
-  .b-in{background:#dcfce7;color:#166534;} .b-out{background:#e5e7eb;color:#4b5563;} .b-none{background:#fef3c7;color:#92400e;}
+  .bdg{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
+  .b1{background:#dcfce7;color:#166534;}.b2{background:#e5e7eb;color:#4b5563;}.b3{background:#fef3c7;color:#92400e;}
   .mnav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:12px;}
   .mnav button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;cursor:pointer;}
   .mnav .ym{font-weight:700;min-width:120px;text-align:center;}
-  .csv{width:100%;padding:12px;border:1px solid var(--accent);color:var(--accent);background:#fff;border-radius:11px;font-weight:700;cursor:pointer;margin-top:10px;}
-  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:60;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .csv{width:100%;padding:12px;border:1px solid var(--teal2);color:var(--teal2);background:#fff;border-radius:11px;font-weight:700;cursor:pointer;margin-top:10px;}
+  .setbox{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;}
+  .setbox .lo{display:block;width:100%;margin-top:14px;padding:12px;border:1px solid var(--red);color:var(--red);background:#fff;border-radius:11px;font-weight:700;cursor:pointer;}
+  .tabbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 0 calc(env(safe-area-inset-bottom) + 6px);}
+  .tabbar button{flex:1;text-align:center;border:none;background:none;color:var(--sub);font-size:11px;cursor:pointer;}
+  .tabbar button .i{display:block;font-size:20px;margin-bottom:1px;}
+  .tabbar button.on{color:var(--teal2);}
+  .loading{position:fixed;inset:0;z-index:100;background:rgba(240,242,245,.72);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
+  .loading.show{display:flex;}
+  .lbox{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(20,30,50,.18);padding:24px 32px;text-align:center;}
+  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--teal2);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .lbox .txt{font-size:14px;font-weight:700;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:80px;z-index:120;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
   .toast.show{opacity:1;}
-  .empty{text-align:center;color:var(--sub);padding:24px;font-size:14px;}
+  .needlogin{max-width:340px;margin:70px auto;text-align:center;color:var(--sub);padding:0 20px;}
+  .needlogin a{display:inline-block;margin-top:14px;background:var(--teal2);color:#fff;text-decoration:none;padding:12px 20px;border-radius:11px;font-weight:700;}
 </style>
 </head>
 <body>
-<header>
-  <div class="hd-row">
-    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
-    <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
-  </div>
-  <div class="hd-row" style="margin-top:6px;"><h1>タイムカード</h1>
-    <button class="ghost" onclick="reload()">↻</button>
-  </div>
-</header>
-
-<div class="tabs">
-  <button id="tPunch" class="on" onclick="setTab('punch')">打刻</button>
-  <button id="tAll" onclick="setTab('all')">全員（今日）</button>
-  <button id="tMonth" onclick="setTab('month')">月</button>
+<div class="head">
+  <div class="bar"><a href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a><button onclick="reload()">↻</button></div>
+  <div class="me" id="meName">―</div>
+  <div class="d" id="hd">―</div>
+  <div class="t" id="ht">--:--:--</div>
 </div>
 
 <main>
-  <!-- 打刻 -->
-  <div id="pPunch">
-    <div class="pick" id="pickWrap">
-      <label>名前を選んでください</label>
-      <select class="f" id="who" onchange="onWho()"></select>
-    </div>
-    <div class="clock">
-      <div class="who" id="whoName">―</div>
-      <div class="now" id="nowT">--:--</div>
-      <div class="nowd" id="nowD"></div>
-      <div class="status">
-        <div><div class="v" id="sIn">―</div><div class="lab">出勤</div></div>
-        <div><div class="v" id="sOut">―</div><div class="lab">退勤</div></div>
-        <div><div class="v" id="sWork">―</div><div class="lab">実働</div></div>
+  <!-- ホーム（打刻） -->
+  <div class="pane on" id="pHome">
+    <div id="needLogin" class="needlogin" style="display:none;">ログインしていません。<br>メニューからログインしてください。<br><a href="https://kawaguchidenki001.github.io/genba-projects/">ログイン画面へ</a></div>
+    <div id="homeBody">
+      <div class="grid2">
+        <button class="pbtn b-in" id="btnIn" onclick="punch('出勤')">出勤</button>
+        <button class="pbtn b-out" id="btnOut" onclick="punch('退勤')">退勤</button>
       </div>
+      <div class="stat">
+        <div class="c"><div class="v" id="sIn">―</div><div class="lab">出勤</div></div>
+        <div class="c"><div class="v" id="sOut">―</div><div class="lab">退勤</div></div>
+        <div class="c"><div class="v" id="sWork">―</div><div class="lab">実働</div></div>
+      </div>
+      <div class="brkcard">
+        <h3><span>休憩</span><span class="tot">合計 <b id="bTot">120</b> 分</span></h3>
+        <div class="brow"><span class="l">午前</span><div class="stp"><button onclick="stB('am',-5)">−</button><span class="val" id="bAm">30分</span><button onclick="stB('am',5)">＋</button></div></div>
+        <div class="brow"><span class="l">昼</span><div class="stp"><button onclick="stB('noon',-5)">−</button><span class="val" id="bNoon">60分</span><button onclick="stB('noon',5)">＋</button></div></div>
+        <div class="brow"><span class="l">午後</span><div class="stp"><button onclick="stB('pm',-5)">−</button><span class="val" id="bPm">30分</span><button onclick="stB('pm',5)">＋</button></div></div>
+      </div>
+      <div class="logttl">今日の打刻</div>
+      <div class="log" id="log"></div>
     </div>
-    <div class="btns">
-      <button class="pbtn in" id="btnIn" onclick="punch('出勤')">出勤</button>
-      <button class="pbtn out" id="btnOut" onclick="punch('退勤')">退勤</button>
-    </div>
-    <div class="brk">
-      <label>休憩</label>
-      <select id="brk" onchange="changeBreak()"></select>
-    </div>
-    <div class="note" id="gpsNote">打刻時に位置情報を記録します（許可しない場合は位置なしで記録）。</div>
   </div>
 
-  <!-- 全員 -->
-  <div id="pAll" style="display:none;"></div>
-
-  <!-- 月 -->
-  <div id="pMonth" style="display:none;">
+  <!-- 勤怠表（自分の月） -->
+  <div class="pane" id="pMonth">
     <div class="mnav"><button onclick="moveM(-1)">‹</button><span class="ym" id="mym"></span><button onclick="moveM(1)">›</button></div>
     <div id="mTable"></div>
     <button class="csv" onclick="downloadCSV()">この月をCSVで保存</button>
   </div>
+
+  <!-- 全員（今日） -->
+  <div class="pane" id="pAll"></div>
+
+  <!-- 設定 -->
+  <div class="pane" id="pSet">
+    <div class="setbox">
+      <div style="font-size:13px;color:var(--sub);">ログイン中</div>
+      <div style="font-size:18px;font-weight:800;margin-top:2px;" id="setName">―</div>
+      <button class="lo" onclick="logout()">ログアウト</button>
+      <div style="font-size:12px;color:var(--sub);margin-top:12px;">ログアウトすると次回はメニューでID・パスワードの入力が必要です。</div>
+    </div>
+  </div>
 </main>
 
+<div class="tabbar">
+  <button id="tabHome" class="on" onclick="setTab('home')"><span class="i">🏠</span>ホーム</button>
+  <button id="tabMonth" onclick="setTab('month')"><span class="i">📋</span>勤怠表</button>
+  <button id="tabAll" onclick="setTab('all')"><span class="i">👥</span>全員</button>
+  <button id="tabSet" onclick="setTab('set')"><span class="i">⚙️</span>設定</button>
+</div>
+
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var T_GENERAL='kawaguchi-genba-2026';
-var workers=[],todayK=[],monthK=[],curW=null,mCur=new Date(),tab='punch';
+var me=null,workers=[],todayK=[],monthK=[],mCur=new Date(),tab='home',brk={am:30,noon:60,pm:30};
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||T_GENERAL;}
-function qParam(n){var m=location.search.match(new RegExp('[?&]'+n+'=([^&]*)'));return m?decodeURIComponent(m[1].replace(/\+/g,' ')):'';}
+function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
 
 function callGAS(params){return new Promise(function(res,rej){
   var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
@@ -130,120 +154,121 @@ function callGAS(params){return new Promise(function(res,rej){
   var q=Object.assign({secret:tok(),callback:cb},params);if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
   s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
   s.onerror=function(){cl();rej(new Error('通信エラー'));};document.head.appendChild(s);});}
-function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
+var loadCnt=0;
+function showLoad(){loadCnt++;document.getElementById('loading').classList.add('show');}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0)document.getElementById('loading').classList.remove('show');}
 
 function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function hm(d){return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+function tickClock(){var n=new Date();
+  document.getElementById('hd').textContent=n.getFullYear()+'/'+(n.getMonth()+1)+'/'+n.getDate()+'('+'日月火水木金土'[n.getDay()]+')';
+  document.getElementById('ht').textContent=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2)+':'+('0'+n.getSeconds()).slice(-2);}
 
 function setTab(t){tab=t;
-  document.getElementById('tPunch').className=t==='punch'?'on':'';document.getElementById('tAll').className=t==='all'?'on':'';document.getElementById('tMonth').className=t==='month'?'on':'';
-  document.getElementById('pPunch').style.display=t==='punch'?'block':'none';
-  document.getElementById('pAll').style.display=t==='all'?'block':'none';
-  document.getElementById('pMonth').style.display=t==='month'?'block':'none';
-  if(t==='all')renderAll(); if(t==='month')loadMonth();}
-
-function reload(){ setSync('busy','同期中…');
-  callGAS({action:'punchData',date:ymd(new Date())}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
-    workers=res.workers||[];todayK=res.kintai||[];
-    buildWho();renderClock();if(tab==='all')renderAll();setSync('ok','同期済み');
-  }).catch(function(err){setSync('off','オフライン');toast('読込失敗：'+err.message);}); }
-
-function buildWho(){
-  var sel=document.getElementById('who');sel.innerHTML='<option value="">― 選択 ―</option>';
-  workers.forEach(function(w){var o=document.createElement('option');o.value=w['作業員ID'];o.textContent=w['氏名'];sel.appendChild(o);});
-  var u=qParam('u');
-  if(u){ var w=workers.filter(function(x){return x['氏名']===u;})[0]; if(w){curW=w;sel.value=w['作業員ID'];document.getElementById('pickWrap').style.display='none';} }
-  else if(curW){ sel.value=curW['作業員ID']; }
-  renderClock();
+  ['Home','Month','All','Set'].forEach(function(x){document.getElementById('tab'+x).className=('tab'+x==='tab'+cap(t))?'on':'';});
+  document.getElementById('pHome').className='pane'+(t==='home'?' on':'');
+  document.getElementById('pMonth').className='pane'+(t==='month'?' on':'');
+  document.getElementById('pAll').className='pane'+(t==='all'?' on':'');
+  document.getElementById('pSet').className='pane'+(t==='set'?' on':'');
+  if(t==='month')loadMonth(); if(t==='all')renderAll();
 }
-function onWho(){var id=document.getElementById('who').value;curW=workers.filter(function(x){return x['作業員ID']===id;})[0]||null;renderClock();}
-function myToday(){ if(!curW)return null; return todayK.filter(function(k){return String(k['作業員ID'])===String(curW['作業員ID']);})[0]||null; }
+function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 
-function renderClock(){
-  var now=new Date();document.getElementById('nowT').textContent=hm(now);
-  document.getElementById('nowD').textContent=now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日（'+'日月火水木金土'[now.getDay()]+'）';
-  document.getElementById('whoName').textContent=curW?curW['氏名']:'名前を選んでください';
-  var rec=myToday();
+function brkKey(){return 'genba_brk_'+(me?me['作業員ID']:'')+'_'+ymd(new Date());}
+function loadBrk(){try{var b=JSON.parse(localStorage.getItem(brkKey())||'null');if(b){brk=b;}else{brk={am:30,noon:60,pm:30};}}catch(e){brk={am:30,noon:60,pm:30};}}
+function brkTot(){return brk.am+brk.noon+brk.pm;}
+function showBrk(){document.getElementById('bAm').textContent=brk.am+'分';document.getElementById('bNoon').textContent=brk.noon+'分';document.getElementById('bPm').textContent=brk.pm+'分';document.getElementById('bTot').textContent=brkTot();}
+function stB(k,d){brk[k]=Math.max(0,Math.min(180,brk[k]+d));try{localStorage.setItem(brkKey(),JSON.stringify(brk));}catch(e){}showBrk();
+  var rec=myRec();if(rec){ // 既に出勤済みなら休憩を保存
+    showLoad();callGAS({action:'updateKintai',id:rec['勤怠ID'],data:{'休憩分':brkTot()}}).then(function(res){if(res.ok){upTodayK(res.kintai);renderHome();}}).catch(function(){}).then(hideLoad);
+  }}
+
+function reload(){ if(!me)return; showLoad();
+  callGAS({action:'punchData',date:ymd(new Date())}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
+    workers=res.workers||[];todayK=res.kintai||[];renderHome();if(tab==='all')renderAll();
+  }).catch(function(err){toast('読込失敗：'+err.message);}).then(hideLoad); }
+
+function myRec(){ if(!me)return null; return todayK.filter(function(k){return String(k['作業員ID'])===String(me['作業員ID']);})[0]||null; }
+function upTodayK(rec){var f=false;for(var i=0;i<todayK.length;i++){if(todayK[i]['勤怠ID']===rec['勤怠ID']){todayK[i]=rec;f=true;break;}}if(!f)todayK.push(rec);}
+
+function renderHome(){
+  var rec=myRec();
   document.getElementById('sIn').textContent=rec&&rec['出勤']?rec['出勤']:'―';
   document.getElementById('sOut').textContent=rec&&rec['退勤']?rec['退勤']:'―';
-  document.getElementById('sWork').textContent=rec&&rec['実働時間']!==''&&rec['実働時間']!=null?rec['実働時間']+'h':'―';
-  var brk=document.getElementById('brk');if(!brk.options.length){for(var m=0;m<=120;m+=5){var o=document.createElement('option');o.value=m;o.textContent=m+'分';brk.appendChild(o);}}
-  brk.value=rec&&rec['休憩分']?String(rec['休憩分']):'0';
+  document.getElementById('sWork').textContent=(rec&&rec['実働時間']!==''&&rec['実働時間']!=null)?rec['実働時間']+'h':'―';
   var hasIn=rec&&rec['出勤'],hasOut=rec&&rec['退勤'];
-  document.getElementById('btnIn').disabled=!curW||hasIn;
-  document.getElementById('btnOut').disabled=!curW||!hasIn||hasOut;
+  document.getElementById('btnIn').disabled=!!hasIn;document.getElementById('btnOut').disabled=!hasIn||!!hasOut;
+  showBrk();
+  var log=document.getElementById('log');
+  if(!rec||(!rec['出勤']&&!rec['退勤'])){log.innerHTML='<div class="lrow"><span class="dt">まだ打刻がありません</span></div>';}
+  else{var h='';if(rec['出勤'])h+='<div class="lrow"><span class="dt">'+esc(rec['出勤'])+'</span><span class="badge g">出勤</span><span class="pin">'+(rec['出勤位置']?'📍':'')+'</span></div>';
+    if(rec['退勤'])h+='<div class="lrow"><span class="dt">'+esc(rec['退勤'])+'</span><span class="badge o">退勤</span><span class="pin">'+(rec['退勤位置']?'📍':'')+'</span></div>';log.innerHTML=h;}
 }
 
 function getPos(){return new Promise(function(res){ if(!navigator.geolocation){res('');return;}
-  navigator.geolocation.getCurrentPosition(function(p){res(p.coords.latitude.toFixed(5)+','+p.coords.longitude.toFixed(5));},
-    function(){res('');},{enableHighAccuracy:true,timeout:8000,maximumAge:60000}); }); }
+  navigator.geolocation.getCurrentPosition(function(p){res(p.coords.latitude.toFixed(5)+','+p.coords.longitude.toFixed(5));},function(){res('');},{enableHighAccuracy:true,timeout:8000,maximumAge:60000}); }); }
 
 function punch(type){
-  if(!curW){toast('名前を選んでください');return;}
-  var btnI=document.getElementById('btnIn'),btnO=document.getElementById('btnOut');btnI.disabled=true;btnO.disabled=true;
-  setSync('busy','記録中…');
-  getPos().then(function(pos){
-    var now=new Date();
-    return callGAS({action:'punch',data:{'作業員ID':curW['作業員ID'],'氏名':curW['氏名'],'種別':type,'時刻':hm(now),'日付':ymd(now),'位置':pos}});
-  }).then(function(res){ if(!res.ok)throw new Error(res.error||'記録失敗');
-    var rec=res.kintai,found=false;
-    for(var i=0;i<todayK.length;i++){if(todayK[i]['勤怠ID']===rec['勤怠ID']){todayK[i]=rec;found=true;break;}}
-    if(!found)todayK.push(rec);
-    renderClock();setSync('ok','同期済み');toast(type+'を記録しました');
-  }).catch(function(err){setSync('off','失敗');toast('失敗：'+err.message);renderClock();}); }
-
-function changeBreak(){
-  var rec=myToday();if(!rec){toast('先に出勤を打刻してください');renderClock();return;}
-  var v=document.getElementById('brk').value;
-  callGAS({action:'updateKintai',id:rec['勤怠ID'],data:{'休憩分':v}}).then(function(res){if(!res.ok)throw new Error(res.error||'失敗');
-    for(var i=0;i<todayK.length;i++){if(todayK[i]['勤怠ID']===res.kintai['勤怠ID']){todayK[i]=res.kintai;break;}}
-    renderClock();toast('休憩を更新しました');
-  }).catch(function(err){toast('失敗：'+err.message);}); }
+  if(!me){toast('ログインしてください');return;}
+  document.getElementById('btnIn').disabled=true;document.getElementById('btnOut').disabled=true;showLoad();
+  getPos().then(function(pos){var n=new Date();
+    return callGAS({action:'punch',data:{'作業員ID':me['作業員ID'],'氏名':me['氏名'],'種別':type,'時刻':hm(n),'日付':ymd(n),'位置':pos,'休憩分':brkTot()}});
+  }).then(function(res){if(!res.ok)throw new Error(res.error||'記録失敗');upTodayK(res.kintai);renderHome();toast(type+'を記録しました');})
+  .catch(function(err){toast('失敗：'+err.message);renderHome();}).then(hideLoad);
+}
 
 function renderAll(){
   var el=document.getElementById('pAll');
-  if(!workers.length){el.innerHTML='<div class="empty">作業員が未登録です（管理画面で登録）。</div>';return;}
+  if(!workers.length){el.innerHTML='<div class="needlogin">作業員が未登録です（管理画面で登録）。</div>';return;}
   el.innerHTML='';
   workers.forEach(function(w){
     var rec=todayK.filter(function(k){return String(k['作業員ID'])===String(w['作業員ID']);})[0];
-    var st,cl; if(rec&&rec['出勤']&&!rec['退勤']){st='出勤中 '+rec['出勤'];cl='b-in';}
-      else if(rec&&rec['退勤']){st='退勤 '+rec['退勤']+'（実働'+(rec['実働時間']||0)+'h）';cl='b-out';}
-      else{st='未打刻';cl='b-none';}
-    var r=document.createElement('div');r.className='row';
-    r.innerHTML='<span class="nm">'+esc(w['氏名'])+'</span><span class="badge '+cl+'">'+esc(st)+'</span>';
-    el.appendChild(r);
+    var st,cl;if(rec&&rec['出勤']&&!rec['退勤']){st='出勤中 '+rec['出勤'];cl='b1';}
+      else if(rec&&rec['退勤']){st='退勤 '+rec['退勤']+'（実働'+(rec['実働時間']||0)+'h）';cl='b2';}else{st='未打刻';cl='b3';}
+    var r=document.createElement('div');r.className='row';r.innerHTML='<span class="nm">'+esc(w['氏名'])+'</span><span class="bdg '+cl+'">'+esc(st)+'</span>';el.appendChild(r);
   });
 }
 
 function moveM(n){mCur=new Date(mCur.getFullYear(),mCur.getMonth()+n,1);loadMonth();}
-function loadMonth(){
+function loadMonth(){ if(!me)return;
   var ym=mCur.getFullYear()+'-'+('0'+(mCur.getMonth()+1)).slice(-2);
   document.getElementById('mym').textContent=mCur.getFullYear()+'年'+(mCur.getMonth()+1)+'月';
-  document.getElementById('mTable').innerHTML='<div class="empty">読込中…</div>';
-  callGAS({action:'kintaiMonth',ym:ym}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');monthK=res.kintai||[];renderMonth();})
-  .catch(function(err){document.getElementById('mTable').innerHTML='<div class="empty">読込失敗：'+esc(err.message)+'</div>';});
+  document.getElementById('mTable').innerHTML='<div class="needlogin">読み込み中…</div>';showLoad();
+  callGAS({action:'kintaiMonth',ym:ym}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
+    monthK=(res.kintai||[]).filter(function(k){return String(k['作業員ID'])===String(me['作業員ID']);});renderMonth();
+  }).catch(function(err){document.getElementById('mTable').innerHTML='<div class="needlogin">読込失敗：'+esc(err.message)+'</div>';}).then(hideLoad);
 }
 function renderMonth(){
   var el=document.getElementById('mTable');
-  if(!monthK.length){el.innerHTML='<div class="empty">この月の打刻はありません。</div>';return;}
-  var h='<table><tr><th>日付</th><th>氏名</th><th>出勤</th><th>退勤</th><th>休憩</th><th>実働</th></tr>';
-  monthK.forEach(function(k){h+='<tr><td>'+esc(String(k['日付']).slice(5))+'</td><td class="nm">'+esc(k['氏名']||'')+'</td><td>'+esc(k['出勤']||'')+'</td><td>'+esc(k['退勤']||'')+'</td><td>'+esc((k['休憩分']||0)+'分')+'</td><td>'+esc((k['実働時間']!==''&&k['実働時間']!=null?k['実働時間']+'h':''))+'</td></tr>';});
+  if(!monthK.length){el.innerHTML='<div class="needlogin">この月の打刻はありません。</div>';return;}
+  var h='<table><tr><th>日付</th><th>出勤</th><th>退勤</th><th>休憩</th><th>実働</th></tr>';
+  monthK.forEach(function(k){h+='<tr><td>'+esc(String(k['日付']).slice(5))+'</td><td>'+esc(k['出勤']||'')+'</td><td>'+esc(k['退勤']||'')+'</td><td>'+esc((k['休憩分']||0)+'分')+'</td><td>'+esc((k['実働時間']!==''&&k['実働時間']!=null?k['実働時間']+'h':''))+'</td></tr>';});
   h+='</table>';el.innerHTML=h;
 }
 function downloadCSV(){
   if(!monthK.length){toast('データがありません');return;}
-  var rows=[['日付','氏名','出勤','退勤','休憩分','実働時間','現場']];
-  monthK.forEach(function(k){rows.push([k['日付'],k['氏名']||'',k['出勤']||'',k['退勤']||'',k['休憩分']||'',k['実働時間']||'',k['現場名']||'']);});
+  var rows=[['日付','氏名','出勤','退勤','休憩分','実働時間']];
+  monthK.forEach(function(k){rows.push([k['日付'],k['氏名']||'',k['出勤']||'',k['退勤']||'',k['休憩分']||'',k['実働時間']||'']);});
   var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
-  var bom='\uFEFF',blob=new Blob([bom+csv],{type:'text/csv'}),url=URL.createObjectURL(blob);
-  var a=document.createElement('a');a.href=url;a.download='勤怠_'+mCur.getFullYear()+('0'+(mCur.getMonth()+1)).slice(-2)+'.csv';a.click();URL.revokeObjectURL(url);
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='勤怠_'+(me?me['氏名']:'')+'_'+mCur.getFullYear()+('0'+(mCur.getMonth()+1)).slice(-2)+'.csv';a.click();URL.revokeObjectURL(url);
 }
+
+function logout(){localStorage.removeItem('genba_user');location.href='https://kawaguchidenki001.github.io/genba-projects/';}
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
-setInterval(function(){if(tab==='punch')renderClock();},20000);
-document.addEventListener('visibilitychange',function(){if(!document.hidden)reload();});
-reload();
+
+tickClock();setInterval(tickClock,1000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&me)reload();});
+(function init(){
+  me=gUser();
+  if(!me||!me['作業員ID']){ document.getElementById('needLogin').style.display='block';document.getElementById('homeBody').style.display='none';
+    document.getElementById('meName').textContent='未ログイン';return; }
+  document.getElementById('meName').textContent=me['氏名']+' さん';
+  document.getElementById('setName').textContent=me['氏名'];
+  loadBrk();showBrk();reload();
+})();
 </script>
 </body>
 </html>
