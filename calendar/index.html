@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>スケジュール｜河口電機</title>
+<style>
+  :root{ --bg:#f4f5f7;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#6a4fb3;--accent-d:#543d92;
+    --k工事:#2563eb;--k打合せ:#16a34a;--k検査:#7c3aed;--k納品:#ea8a0b;--k搬入:#0d8a86;--kその他:#6b7280;
+    --radius:12px;--shadow:0 1px 3px rgba(20,30,50,.08);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:30px;}
+  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
+  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .hd-row h1{font-size:17px;margin:0;font-weight:700;}
+  .back{color:#e4dcf6;text-decoration:none;font-size:13px;}
+  .sync{font-size:12px;display:flex;align-items:center;gap:5px;color:#e4dcf6;}
+  .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;}
+  .dot.ok{background:#4ade80;}.dot.busy{background:#fde047;}.dot.off{background:#f87171;}
+  .ghost{padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.15);color:#fff;font-size:13px;cursor:pointer;}
+  .navbar{display:flex;align-items:center;justify-content:center;gap:16px;padding:12px;background:var(--bg);position:sticky;top:54px;z-index:10;}
+  .navbar button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-size:16px;cursor:pointer;color:var(--ink);}
+  .navbar .ym{font-size:17px;font-weight:700;min-width:130px;text-align:center;}
+  .navbar .today{font-size:13px;padding:7px 12px;}
+  .cal{padding:0 8px;}
+  .wk{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}
+  .wk div{text-align:center;font-size:11px;color:var(--sub);font-weight:700;padding:2px 0;}
+  .wk .sun{color:#dc2626;} .wk .sat{color:#2563eb;}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+  .cell{background:#fff;border:1px solid var(--line);border-radius:8px;min-height:74px;padding:4px;display:flex;flex-direction:column;gap:2px;cursor:pointer;overflow:hidden;}
+  .cell.dim{background:#f7f8f9;color:#b9bec6;}
+  .cell.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
+  .dnum{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .cell.sun .dnum{color:#dc2626;} .cell.sat .dnum{color:#2563eb;} .cell.dim .dnum{color:#c2c7ce;}
+  .ev{font-size:10px;color:#fff;border-radius:4px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;}
+  .more{font-size:9.5px;color:var(--sub);padding-left:2px;}
+  /* bottom sheets */
+  .ov{position:fixed;inset:0;background:rgba(15,23,40,.45);z-index:40;display:none;align-items:flex-end;justify-content:center;}
+  .ov.show{display:flex;}
+  .sheet{background:#fff;width:100%;max-width:560px;max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);}
+  .sheet h2{font-size:16px;margin:2px 0 12px;display:flex;justify-content:space-between;align-items:center;}
+  .addmini{font-size:13px;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:7px 12px;cursor:pointer;font-weight:700;}
+  .evrow{display:flex;gap:10px;align-items:flex-start;padding:11px 6px;border-top:1px solid var(--line);cursor:pointer;}
+  .evrow:first-of-type{border-top:none;}
+  .cdot{width:10px;height:10px;border-radius:3px;margin-top:5px;flex:0 0 auto;}
+  .evttl{font-weight:700;font-size:15px;}
+  .evmeta{font-size:12.5px;color:var(--sub);}
+  .empty{text-align:center;color:var(--sub);padding:24px 10px;font-size:14px;}
+  .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:600;}
+  .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;font-family:inherit;}
+  .fld textarea{resize:vertical;min-height:48px;}
+  .two{display:flex;gap:8px;}.two>.fld{flex:1;}
+  .acts{display:flex;gap:8px;margin-top:6px;}.btn{flex:1;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn.primary{background:var(--accent);color:#fff;}.btn.sub{background:#eef1f5;color:var(--ink);}
+  .row-del{text-align:center;margin-top:10px;}.row-del a{color:#dc2626;font-size:13px;text-decoration:none;}
+  .ro{color:var(--sub);font-size:13px;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:60;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd-row">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
+    <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
+  </div>
+  <div class="hd-row" style="margin-top:6px;"><h1>スケジュール</h1>
+    <div style="display:flex;gap:6px;"><button class="ghost" id="admBtn" onclick="toggleAdmin()">🔑</button><button class="ghost" onclick="reload()">↻</button></div>
+  </div>
+</header>
+
+<div class="navbar">
+  <button onclick="move(-1)">‹</button>
+  <span class="ym" id="ym"></span>
+  <button onclick="move(1)">›</button>
+  <button class="today" onclick="goToday()">今日</button>
+</div>
+
+<div class="cal">
+  <div class="wk"><div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div></div>
+  <div class="grid" id="grid"></div>
+</div>
+
+<!-- 日別シート -->
+<div class="ov" id="ovDay">
+  <div class="sheet">
+    <h2><span id="dayTitle"></span><button class="addmini" id="dayAdd" style="display:none;" onclick="openEvent(null,window._selDate)">＋ 予定</button></h2>
+    <div id="dayList"></div>
+  </div>
+</div>
+
+<!-- 予定モーダル -->
+<div class="ov" id="ovEv">
+  <div class="sheet">
+    <h2 id="evTitle">予定の追加</h2>
+    <div id="evView" style="display:none;"></div>
+    <div id="evForm">
+      <input type="hidden" id="f_id">
+      <div class="two">
+        <div class="fld"><label>日付 *</label><input id="f_date" type="date"></div>
+        <div class="fld"><label>終了日（任意・連日のとき）</label><input id="f_end" type="date"></div>
+      </div>
+      <div class="fld"><label>予定内容 *</label><input id="f_ttl" placeholder="例）配線工事 / 現場打合せ"></div>
+      <div class="two">
+        <div class="fld"><label>区分</label><select id="f_kind">
+          <option>工事</option><option>打合せ</option><option>検査</option><option>納品</option><option>搬入</option><option>その他</option></select></div>
+        <div class="fld"><label>現場 ／ 案件</label><select id="f_proj"><option value="">（現場なし）</option></select></div>
+      </div>
+      <div class="two">
+        <div class="fld"><label>開始（任意）</label><input id="f_start" type="time"></div>
+        <div class="fld"><label>終了（任意）</label><input id="f_etime" type="time"></div>
+      </div>
+      <div class="fld"><label>担当</label><input id="f_owner" placeholder="担当者名"></div>
+      <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
+      <div class="acts"><button class="btn sub" onclick="closeEv()">キャンセル</button><button class="btn primary" id="saveBtn" onclick="saveEvent()">保存</button></div>
+      <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="delEvent(event)">この予定を削除</a></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var T_GENERAL='kawaguchi-genba-2026';
+var ROLE='general';
+var projects=[],schedules=[],cur=new Date();
+var KINDS=['工事','打合せ','検査','納品','搬入','その他'];
+
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+function tok(){return admTok()||T_GENERAL;}
+function isAdmin(){return ROLE==='admin';}
+
+function callGAS(params,sec){return new Promise(function(res,rej){
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+  var t=setTimeout(function(){cl();rej(new Error('タイムアウト'));},20000);
+  function cl(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(t);}
+  window[cb]=function(r){cl();res(r);};
+  var q=Object.assign({secret:sec||tok(),callback:cb},params);if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
+  s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+  s.onerror=function(){cl();rej(new Error('通信エラー'));};document.head.appendChild(s);});}
+function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
+
+function toggleAdmin(){ if(admTok()){ if(confirm('管理者ログアウトしますか？')){localStorage.removeItem('genba_admin');location.reload();} return; }
+  var pin=prompt('管理者PINを入力してください');if(!pin)return;
+  callGAS({action:'checkRole'},pin).then(function(r){ if(r&&r.ok&&r.role==='admin'){localStorage.setItem('genba_admin',pin);location.reload();} else toast('管理者PINが違います'); })
+  .catch(function(e){toast('通信エラー：'+e.message);}); }
+function updateAdmBtn(){document.getElementById('admBtn').textContent=isAdmin()?'管理者':'🔑';}
+
+function reload(){ setSync('busy','同期中…');
+  callGAS({action:'checkRole'}).then(function(r){ROLE=(r&&r.ok)?r.role:'general';if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin');updateAdmBtn();})
+  .then(function(){return callGAS({action:'calendarData'});})
+  .then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); projects=res.projects||[];schedules=res.schedules||[];
+    try{localStorage.setItem('genba_cal',JSON.stringify({projects:projects,schedules:schedules}));}catch(e){}
+    render();setSync('ok','同期済み'); })
+  .catch(function(err){ try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];}catch(e){} render();setSync('off','オフライン');toast('読込失敗：'+err.message); }); }
+
+function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function kindColor(k){return getComputedStyle(document.documentElement).getPropertyValue('--k'+k).trim()||'#6b7280';}
+function eventsOn(dateStr){ return schedules.filter(function(s){var a=String(s['日付']||'').slice(0,10);if(!a)return false;var b=String(s['終了日']||'').slice(0,10)||a;return dateStr>=a&&dateStr<=b;})
+  .sort(function(x,y){return String(x['開始']||'').localeCompare(String(y['開始']||''));}); }
+
+function move(n){cur=new Date(cur.getFullYear(),cur.getMonth()+n,1);render();}
+function goToday(){cur=new Date();render();}
+
+function render(){
+  document.getElementById('ym').textContent=cur.getFullYear()+'年 '+(cur.getMonth()+1)+'月';
+  var first=new Date(cur.getFullYear(),cur.getMonth(),1),start=new Date(first);start.setDate(1-first.getDay());
+  var today=ymd(new Date()),g=document.getElementById('grid');g.innerHTML='';
+  for(var i=0;i<42;i++){
+    var d=new Date(start);d.setDate(start.getDate()+i);var ds=ymd(d),inM=d.getMonth()===cur.getMonth(),dow=d.getDay();
+    var cell=document.createElement('div');cell.className='cell'+(inM?'':' dim')+(ds===today?' today':'')+(dow===0?' sun':'')+(dow===6?' sat':'');
+    cell.onclick=(function(x){return function(){openDay(x);};})(ds);
+    var html='<div class="dnum">'+d.getDate()+'</div>';
+    var evs=eventsOn(ds);
+    for(var j=0;j<evs.length && j<3;j++){ var e=evs[j];html+='<div class="ev" style="background:'+kindColor(e['区分']||'その他')+'">'+esc(e['予定内容']||'(予定)')+'</div>'; }
+    if(evs.length>3)html+='<div class="more">+'+(evs.length-3)+'件</div>';
+    cell.innerHTML=html;g.appendChild(cell);
+  }
+  if(i===42){} 
+}
+
+/* 日別 */
+function openDay(ds){ window._selDate=ds;
+  var d=new Date(ds);document.getElementById('dayTitle').textContent=(d.getMonth()+1)+'月'+d.getDate()+'日（'+'日月火水木金土'[d.getDay()]+'）';
+  document.getElementById('dayAdd').style.display=isAdmin()?'inline-block':'none';
+  var evs=eventsOn(ds),el=document.getElementById('dayList');
+  if(!evs.length){el.innerHTML='<div class="empty">予定はありません。'+(isAdmin()?'<br>右上の「＋予定」から追加できます。':'')+'</div>';}
+  else{ el.innerHTML=''; evs.forEach(function(e){ var r=document.createElement('div');r.className='evrow';r.onclick=function(){openEvent(e);};
+    var tm=(e['開始']?e['開始']+(e['終了']?'〜'+e['終了']:''):'終日');
+    r.innerHTML='<span class="cdot" style="background:'+kindColor(e['区分']||'その他')+'"></span>'+
+      '<div><div class="evttl">'+esc(e['予定内容']||'')+' <span style="font-size:11px;color:var(--sub);">'+esc(e['区分']||'')+'</span></div>'+
+      '<div class="evmeta">'+esc(tm)+(e['案件名']?' ・ '+esc(e['案件名']):'')+(e['担当']?' ・ '+esc(e['担当']):'')+'</div>'+
+      (e['備考']?'<div class="evmeta">'+esc(e['備考'])+'</div>':'')+'</div>';
+    el.appendChild(r); }); }
+  document.getElementById('ovDay').classList.add('show');
+}
+function closeDay(){document.getElementById('ovDay').classList.remove('show');}
+
+/* 予定 追加/編集/閲覧 */
+function openEvent(e,presetDate){
+  closeDay();
+  var admin=isAdmin();
+  document.getElementById('evForm').style.display=admin?'block':'none';
+  document.getElementById('evView').style.display=admin?'none':'block';
+  document.getElementById('evTitle').textContent=admin?(e?'予定の編集':'予定の追加'):'予定';
+  buildProj();
+  if(!admin){ // 閲覧のみ
+    var tm=(e['開始']?e['開始']+(e['終了']?'〜'+e['終了']:''):'終日');
+    document.getElementById('evView').innerHTML='<div class="fld"><label>予定</label><div>'+esc(e['予定内容']||'')+'（'+esc(e['区分']||'')+'）</div></div>'+
+      '<div class="fld"><label>日時</label><div class="ro">'+esc(String(e['日付']||'').slice(0,10))+(e['終了日']?' 〜 '+esc(String(e['終了日']).slice(0,10)):'')+' '+esc(tm)+'</div></div>'+
+      (e['案件名']?'<div class="fld"><label>現場</label><div class="ro">'+esc(e['案件名'])+'</div></div>':'')+
+      (e['担当']?'<div class="fld"><label>担当</label><div class="ro">'+esc(e['担当'])+'</div></div>':'')+
+      (e['備考']?'<div class="fld"><label>備考</label><div class="ro">'+esc(e['備考'])+'</div></div>':'')+
+      '<div class="acts"><button class="btn sub" onclick="closeEv()">閉じる</button></div>';
+    document.getElementById('ovEv').classList.add('show');return;
+  }
+  document.getElementById('delRow').style.display=e?'block':'none';
+  var g=function(id){return document.getElementById(id);};
+  g('f_id').value=e?(e['予定ID']||''):'';
+  g('f_date').value=e?String(e['日付']||'').slice(0,10):(presetDate||ymd(new Date()));
+  g('f_end').value=e?String(e['終了日']||'').slice(0,10):'';
+  g('f_ttl').value=e?(e['予定内容']||''):'';
+  g('f_kind').value=e?(e['区分']||'工事'):'工事';
+  g('f_proj').value=e?(e['案件ID']||''):'';
+  g('f_start').value=e?(e['開始']||''):'';g('f_etime').value=e?(e['終了']||''):'';
+  g('f_owner').value=e?(e['担当']||''):'';g('f_note').value=e?(e['備考']||''):'';
+  document.getElementById('ovEv').classList.add('show');
+}
+function buildProj(){var s=document.getElementById('f_proj');s.innerHTML='<option value="">（現場なし）</option>';projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);});}
+function closeEv(){document.getElementById('ovEv').classList.remove('show');}
+function gather(){var g=function(id){return document.getElementById(id).value;};var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
+  return {'予定ID':g('f_id'),'日付':g('f_date'),'終了日':g('f_end'),'案件ID':pid,'案件名':p['案件名']||'','予定内容':g('f_ttl').trim(),'区分':g('f_kind'),'担当':g('f_owner').trim(),'開始':g('f_start'),'終了':g('f_etime'),'備考':g('f_note').trim()};}
+function saveEvent(){var d=gather();if(!d['日付']){toast('日付を入れてください');return;}if(!d['予定内容']){toast('予定内容を入れてください');return;}
+  var id=d['予定ID'],isNew=!id,btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
+  var params=isNew?{action:'addSchedule',data:d}:{action:'updateSchedule',id:id,data:d};
+  callGAS(params).then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
+    if(isNew)schedules.push(res.schedule);else for(var i=0;i<schedules.length;i++){if(schedules[i]['予定ID']===id){schedules[i]=res.schedule;break;}}
+    render();closeEv();toast(isNew?'追加しました':'更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});}
+function delEvent(ev){ev.preventDefault();var id=document.getElementById('f_id').value;if(!id)return;if(!confirm('この予定を削除します。よろしいですか？'))return;
+  callGAS({action:'deleteSchedule',id:id}).then(function(res){if(!res.ok)throw new Error(res.error||'削除失敗');
+    schedules=schedules.filter(function(s){return s['予定ID']!==id;});render();closeEv();toast('削除しました');
+  }).catch(function(err){toast('失敗：'+err.message);});}
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
+['ovDay','ovEv'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)reload();});
+updateAdmBtn();render();reload();
+</script>
+</body>
+</html>
