@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>タイムカード｜河口電機</title>
+<style>
+  :root{ --bg:#f4f5f7;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#0e7490;--accent-d:#0b596f;
+    --in:#16a34a;--out:#dc2626;--radius:12px;--shadow:0 1px 3px rgba(20,30,50,.08);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:30px;}
+  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
+  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .hd-row h1{font-size:17px;margin:0;font-weight:700;}
+  .back{color:#cfeef4;text-decoration:none;font-size:13px;}
+  .sync{font-size:12px;display:flex;align-items:center;gap:5px;color:#cfeef4;}
+  .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;}
+  .dot.ok{background:#4ade80;}.dot.busy{background:#fde047;}.dot.off{background:#f87171;}
+  .ghost{padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.15);color:#fff;font-size:13px;cursor:pointer;}
+  .tabs{display:flex;background:var(--bg);position:sticky;top:54px;z-index:10;padding:10px 12px 0;gap:6px;}
+  .tabs button{flex:1;padding:10px;border:1px solid var(--line);border-bottom:none;background:#fff;border-radius:10px 10px 0 0;font-size:14px;cursor:pointer;color:var(--sub);font-weight:700;}
+  .tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  main{padding:12px;}
+  .pick{margin-bottom:12px;}
+  .pick label{font-size:12.5px;color:var(--sub);font-weight:600;display:block;margin-bottom:4px;}
+  select.f{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:16px;font-family:inherit;}
+  .clock{text-align:center;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:18px 16px;margin-bottom:14px;}
+  .who{font-size:18px;font-weight:700;}
+  .now{font-size:34px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:.02em;margin:4px 0;}
+  .nowd{font-size:13px;color:var(--sub);}
+  .status{display:flex;justify-content:center;gap:18px;margin-top:12px;font-size:14px;}
+  .status .v{font-weight:800;font-variant-numeric:tabular-nums;font-size:18px;}
+  .status .lab{font-size:11px;color:var(--sub);}
+  .btns{display:flex;gap:12px;margin-bottom:14px;}
+  .pbtn{flex:1;padding:22px 0;border:none;border-radius:16px;color:#fff;font-size:20px;font-weight:800;cursor:pointer;box-shadow:0 6px 16px rgba(20,30,50,.15);}
+  .pbtn.in{background:var(--in);} .pbtn.out{background:var(--out);} .pbtn:disabled{opacity:.4;}
+  .brk{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;}
+  .brk label{font-size:13px;color:var(--sub);font-weight:600;}
+  .brk select{flex:1;padding:9px;border:1px solid var(--line);border-radius:9px;font-size:15px;}
+  .note{font-size:12px;color:var(--sub);margin-top:10px;text-align:center;}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:10px;overflow:hidden;}
+  th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:center;}
+  th{background:#eef1f5;font-size:11.5px;color:var(--sub);}
+  td.nm{text-align:left;}
+  .row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:8px;}
+  .row .nm{font-weight:700;flex:1;}
+  .badge{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
+  .b-in{background:#dcfce7;color:#166534;} .b-out{background:#e5e7eb;color:#4b5563;} .b-none{background:#fef3c7;color:#92400e;}
+  .mnav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:12px;}
+  .mnav button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;cursor:pointer;}
+  .mnav .ym{font-weight:700;min-width:120px;text-align:center;}
+  .csv{width:100%;padding:12px;border:1px solid var(--accent);color:var(--accent);background:#fff;border-radius:11px;font-weight:700;cursor:pointer;margin-top:10px;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:60;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .empty{text-align:center;color:var(--sub);padding:24px;font-size:14px;}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd-row">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
+    <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
+  </div>
+  <div class="hd-row" style="margin-top:6px;"><h1>タイムカード</h1>
+    <button class="ghost" onclick="reload()">↻</button>
+  </div>
+</header>
+
+<div class="tabs">
+  <button id="tPunch" class="on" onclick="setTab('punch')">打刻</button>
+  <button id="tAll" onclick="setTab('all')">全員（今日）</button>
+  <button id="tMonth" onclick="setTab('month')">月</button>
+</div>
+
+<main>
+  <!-- 打刻 -->
+  <div id="pPunch">
+    <div class="pick" id="pickWrap">
+      <label>名前を選んでください</label>
+      <select class="f" id="who" onchange="onWho()"></select>
+    </div>
+    <div class="clock">
+      <div class="who" id="whoName">―</div>
+      <div class="now" id="nowT">--:--</div>
+      <div class="nowd" id="nowD"></div>
+      <div class="status">
+        <div><div class="v" id="sIn">―</div><div class="lab">出勤</div></div>
+        <div><div class="v" id="sOut">―</div><div class="lab">退勤</div></div>
+        <div><div class="v" id="sWork">―</div><div class="lab">実働</div></div>
+      </div>
+    </div>
+    <div class="btns">
+      <button class="pbtn in" id="btnIn" onclick="punch('出勤')">出勤</button>
+      <button class="pbtn out" id="btnOut" onclick="punch('退勤')">退勤</button>
+    </div>
+    <div class="brk">
+      <label>休憩</label>
+      <select id="brk" onchange="changeBreak()"></select>
+    </div>
+    <div class="note" id="gpsNote">打刻時に位置情報を記録します（許可しない場合は位置なしで記録）。</div>
+  </div>
+
+  <!-- 全員 -->
+  <div id="pAll" style="display:none;"></div>
+
+  <!-- 月 -->
+  <div id="pMonth" style="display:none;">
+    <div class="mnav"><button onclick="moveM(-1)">‹</button><span class="ym" id="mym"></span><button onclick="moveM(1)">›</button></div>
+    <div id="mTable"></div>
+    <button class="csv" onclick="downloadCSV()">この月をCSVで保存</button>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var T_GENERAL='kawaguchi-genba-2026';
+var workers=[],todayK=[],monthK=[],curW=null,mCur=new Date(),tab='punch';
+
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+function tok(){return admTok()||T_GENERAL;}
+function qParam(n){var m=location.search.match(new RegExp('[?&]'+n+'=([^&]*)'));return m?decodeURIComponent(m[1].replace(/\+/g,' ')):'';}
+
+function callGAS(params){return new Promise(function(res,rej){
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+  var t=setTimeout(function(){cl();rej(new Error('タイムアウト'));},20000);
+  function cl(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(t);}
+  window[cb]=function(r){cl();res(r);};
+  var q=Object.assign({secret:tok(),callback:cb},params);if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
+  s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+  s.onerror=function(){cl();rej(new Error('通信エラー'));};document.head.appendChild(s);});}
+function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
+
+function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function hm(d){return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+
+function setTab(t){tab=t;
+  document.getElementById('tPunch').className=t==='punch'?'on':'';document.getElementById('tAll').className=t==='all'?'on':'';document.getElementById('tMonth').className=t==='month'?'on':'';
+  document.getElementById('pPunch').style.display=t==='punch'?'block':'none';
+  document.getElementById('pAll').style.display=t==='all'?'block':'none';
+  document.getElementById('pMonth').style.display=t==='month'?'block':'none';
+  if(t==='all')renderAll(); if(t==='month')loadMonth();}
+
+function reload(){ setSync('busy','同期中…');
+  callGAS({action:'punchData',date:ymd(new Date())}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
+    workers=res.workers||[];todayK=res.kintai||[];
+    buildWho();renderClock();if(tab==='all')renderAll();setSync('ok','同期済み');
+  }).catch(function(err){setSync('off','オフライン');toast('読込失敗：'+err.message);}); }
+
+function buildWho(){
+  var sel=document.getElementById('who');sel.innerHTML='<option value="">― 選択 ―</option>';
+  workers.forEach(function(w){var o=document.createElement('option');o.value=w['作業員ID'];o.textContent=w['氏名'];sel.appendChild(o);});
+  var u=qParam('u');
+  if(u){ var w=workers.filter(function(x){return x['氏名']===u;})[0]; if(w){curW=w;sel.value=w['作業員ID'];document.getElementById('pickWrap').style.display='none';} }
+  else if(curW){ sel.value=curW['作業員ID']; }
+  renderClock();
+}
+function onWho(){var id=document.getElementById('who').value;curW=workers.filter(function(x){return x['作業員ID']===id;})[0]||null;renderClock();}
+function myToday(){ if(!curW)return null; return todayK.filter(function(k){return String(k['作業員ID'])===String(curW['作業員ID']);})[0]||null; }
+
+function renderClock(){
+  var now=new Date();document.getElementById('nowT').textContent=hm(now);
+  document.getElementById('nowD').textContent=now.getFullYear()+'年'+(now.getMonth()+1)+'月'+now.getDate()+'日（'+'日月火水木金土'[now.getDay()]+'）';
+  document.getElementById('whoName').textContent=curW?curW['氏名']:'名前を選んでください';
+  var rec=myToday();
+  document.getElementById('sIn').textContent=rec&&rec['出勤']?rec['出勤']:'―';
+  document.getElementById('sOut').textContent=rec&&rec['退勤']?rec['退勤']:'―';
+  document.getElementById('sWork').textContent=rec&&rec['実働時間']!==''&&rec['実働時間']!=null?rec['実働時間']+'h':'―';
+  var brk=document.getElementById('brk');if(!brk.options.length){for(var m=0;m<=120;m+=5){var o=document.createElement('option');o.value=m;o.textContent=m+'分';brk.appendChild(o);}}
+  brk.value=rec&&rec['休憩分']?String(rec['休憩分']):'0';
+  var hasIn=rec&&rec['出勤'],hasOut=rec&&rec['退勤'];
+  document.getElementById('btnIn').disabled=!curW||hasIn;
+  document.getElementById('btnOut').disabled=!curW||!hasIn||hasOut;
+}
+
+function getPos(){return new Promise(function(res){ if(!navigator.geolocation){res('');return;}
+  navigator.geolocation.getCurrentPosition(function(p){res(p.coords.latitude.toFixed(5)+','+p.coords.longitude.toFixed(5));},
+    function(){res('');},{enableHighAccuracy:true,timeout:8000,maximumAge:60000}); }); }
+
+function punch(type){
+  if(!curW){toast('名前を選んでください');return;}
+  var btnI=document.getElementById('btnIn'),btnO=document.getElementById('btnOut');btnI.disabled=true;btnO.disabled=true;
+  setSync('busy','記録中…');
+  getPos().then(function(pos){
+    var now=new Date();
+    return callGAS({action:'punch',data:{'作業員ID':curW['作業員ID'],'氏名':curW['氏名'],'種別':type,'時刻':hm(now),'日付':ymd(now),'位置':pos}});
+  }).then(function(res){ if(!res.ok)throw new Error(res.error||'記録失敗');
+    var rec=res.kintai,found=false;
+    for(var i=0;i<todayK.length;i++){if(todayK[i]['勤怠ID']===rec['勤怠ID']){todayK[i]=rec;found=true;break;}}
+    if(!found)todayK.push(rec);
+    renderClock();setSync('ok','同期済み');toast(type+'を記録しました');
+  }).catch(function(err){setSync('off','失敗');toast('失敗：'+err.message);renderClock();}); }
+
+function changeBreak(){
+  var rec=myToday();if(!rec){toast('先に出勤を打刻してください');renderClock();return;}
+  var v=document.getElementById('brk').value;
+  callGAS({action:'updateKintai',id:rec['勤怠ID'],data:{'休憩分':v}}).then(function(res){if(!res.ok)throw new Error(res.error||'失敗');
+    for(var i=0;i<todayK.length;i++){if(todayK[i]['勤怠ID']===res.kintai['勤怠ID']){todayK[i]=res.kintai;break;}}
+    renderClock();toast('休憩を更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);}); }
+
+function renderAll(){
+  var el=document.getElementById('pAll');
+  if(!workers.length){el.innerHTML='<div class="empty">作業員が未登録です（管理画面で登録）。</div>';return;}
+  el.innerHTML='';
+  workers.forEach(function(w){
+    var rec=todayK.filter(function(k){return String(k['作業員ID'])===String(w['作業員ID']);})[0];
+    var st,cl; if(rec&&rec['出勤']&&!rec['退勤']){st='出勤中 '+rec['出勤'];cl='b-in';}
+      else if(rec&&rec['退勤']){st='退勤 '+rec['退勤']+'（実働'+(rec['実働時間']||0)+'h）';cl='b-out';}
+      else{st='未打刻';cl='b-none';}
+    var r=document.createElement('div');r.className='row';
+    r.innerHTML='<span class="nm">'+esc(w['氏名'])+'</span><span class="badge '+cl+'">'+esc(st)+'</span>';
+    el.appendChild(r);
+  });
+}
+
+function moveM(n){mCur=new Date(mCur.getFullYear(),mCur.getMonth()+n,1);loadMonth();}
+function loadMonth(){
+  var ym=mCur.getFullYear()+'-'+('0'+(mCur.getMonth()+1)).slice(-2);
+  document.getElementById('mym').textContent=mCur.getFullYear()+'年'+(mCur.getMonth()+1)+'月';
+  document.getElementById('mTable').innerHTML='<div class="empty">読込中…</div>';
+  callGAS({action:'kintaiMonth',ym:ym}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');monthK=res.kintai||[];renderMonth();})
+  .catch(function(err){document.getElementById('mTable').innerHTML='<div class="empty">読込失敗：'+esc(err.message)+'</div>';});
+}
+function renderMonth(){
+  var el=document.getElementById('mTable');
+  if(!monthK.length){el.innerHTML='<div class="empty">この月の打刻はありません。</div>';return;}
+  var h='<table><tr><th>日付</th><th>氏名</th><th>出勤</th><th>退勤</th><th>休憩</th><th>実働</th></tr>';
+  monthK.forEach(function(k){h+='<tr><td>'+esc(String(k['日付']).slice(5))+'</td><td class="nm">'+esc(k['氏名']||'')+'</td><td>'+esc(k['出勤']||'')+'</td><td>'+esc(k['退勤']||'')+'</td><td>'+esc((k['休憩分']||0)+'分')+'</td><td>'+esc((k['実働時間']!==''&&k['実働時間']!=null?k['実働時間']+'h':''))+'</td></tr>';});
+  h+='</table>';el.innerHTML=h;
+}
+function downloadCSV(){
+  if(!monthK.length){toast('データがありません');return;}
+  var rows=[['日付','氏名','出勤','退勤','休憩分','実働時間','現場']];
+  monthK.forEach(function(k){rows.push([k['日付'],k['氏名']||'',k['出勤']||'',k['退勤']||'',k['休憩分']||'',k['実働時間']||'',k['現場名']||'']);});
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
+  var bom='\uFEFF',blob=new Blob([bom+csv],{type:'text/csv'}),url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download='勤怠_'+mCur.getFullYear()+('0'+(mCur.getMonth()+1)).slice(-2)+'.csv';a.click();URL.revokeObjectURL(url);
+}
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
+setInterval(function(){if(tab==='punch')renderClock();},20000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden)reload();});
+reload();
+</script>
+</body>
+</html>
