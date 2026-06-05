@@ -5,77 +5,67 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>作業日報｜河口電機</title>
 <style>
-  :root{
-    --bg:#f4f5f7; --card:#fff; --line:#e3e6ea; --ink:#1f2733; --sub:#6b7280;
-    --accent:#0f8a5f; --accent-d:#0b6e4b;
-    --radius:12px; --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);
-  }
+  :root{ --bg:#f4f5f7;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#0f8a5f;--accent-d:#0b6e4b;
+    --radius:12px;--shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;
-    font-size:15px;line-height:1.5;padding-bottom:80px;}
-  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;
-    padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:80px;}
+  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
   .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .hd-row h1{font-size:17px;margin:0;font-weight:700;}
   .back{color:#d1fae5;text-decoration:none;font-size:13px;}
   .sync{font-size:12px;display:flex;align-items:center;gap:5px;color:#d1fae5;}
   .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;}
-  .dot.ok{background:#4ade80;} .dot.busy{background:#fde047;} .dot.off{background:#f87171;}
-  .ghost{padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:9px;
-    background:rgba(255,255,255,.15);color:#fff;font-size:13px;cursor:pointer;}
+  .dot.ok{background:#4ade80;}.dot.busy{background:#fde047;}.dot.off{background:#f87171;}
+  .ghost{padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.15);color:#fff;font-size:13px;cursor:pointer;}
   .toolbar{padding:10px 12px;display:flex;flex-direction:column;gap:8px;position:sticky;top:54px;background:var(--bg);z-index:10;}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;}
+  .seg button{flex:1;padding:9px 6px;border:none;background:#fff;font-size:13px;cursor:pointer;color:var(--sub);}
+  .seg button.on{background:var(--accent);color:#fff;}
   .chips{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
   .chip{flex:0 0 auto;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--sub);font-size:13px;cursor:pointer;white-space:nowrap;}
   .chip.on{background:var(--ink);color:#fff;border-color:var(--ink);}
-  .row2{display:flex;gap:8px;}
-  select.f,input.f{flex:1;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:14px;font-family:inherit;}
-  .seg{display:flex;gap:0;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;}
-  .seg button{flex:1;padding:9px 6px;border:none;background:#fff;font-size:13px;cursor:pointer;color:var(--sub);}
-  .seg button.on{background:var(--accent);color:#fff;}
+  select.f{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:14px;font-family:inherit;}
   main{padding:4px 12px 12px;}
   .count{font-size:12px;color:var(--sub);margin:2px 2px 8px;}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
-    padding:11px 13px;margin-bottom:9px;cursor:pointer;display:flex;flex-direction:column;gap:5px;border-left:5px solid var(--accent);}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:11px 13px;margin-bottom:9px;cursor:pointer;display:flex;flex-direction:column;gap:5px;border-left:5px solid var(--accent);}
   .card.kyo{border-left-color:#b45309;}
   .c-top{display:flex;justify-content:space-between;gap:8px;}
   .c-date{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;}
   .c-proj{font-weight:700;font-size:15px;}
   .c-meta{font-size:13px;color:var(--sub);display:flex;flex-wrap:wrap;gap:3px 12px;}
-  .c-meta b{color:var(--ink);font-weight:600;}
   .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#eef1f5;color:#374151;white-space:nowrap;}
   .pill.kyo{background:#fef3c7;color:#92400e;}
   .desc{font-size:13.5px;}
   .empty{text-align:center;color:var(--sub);padding:38px 10px;font-size:14px;}
-  /* 集計 */
   .sumcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px;}
   .sumcard h3{margin:0 0 8px;font-size:14px;color:var(--accent-d);}
   .srow{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:14px;}
   .srow:first-of-type{border-top:none;}
-  .srow .nm{flex:1;}
-  .srow .nk{color:var(--sub);font-variant-numeric:tabular-nums;}
-  .srow .ry{font-weight:700;font-variant-numeric:tabular-nums;}
+  .srow .nm{flex:1;} .srow .nk{color:var(--sub);font-variant-numeric:tabular-nums;} .srow .ry{font-weight:700;font-variant-numeric:tabular-nums;}
   .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;background:var(--accent);color:#fff;border:none;border-radius:999px;padding:14px 20px;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(15,138,95,.4);cursor:pointer;}
   .ov{position:fixed;inset:0;background:rgba(15,23,40,.45);z-index:40;display:none;align-items:flex-end;justify-content:center;}
   .ov.show{display:flex;}
   .sheet{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);}
   .sheet h2{font-size:16px;margin:2px 0 12px;}
-  .fld{margin-bottom:11px;}
-  .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:600;}
+  .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:600;}
   .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;font-family:inherit;}
   .fld textarea{resize:vertical;min-height:50px;}
   .two{display:flex;gap:8px;} .two>.fld{flex:1;}
-  .nks{display:flex;gap:6px;margin-top:6px;}
-  .nks button{flex:1;padding:8px;border:1px solid var(--line);border-radius:9px;background:#f8fafc;font-size:14px;cursor:pointer;}
+  .nks{display:flex;gap:6px;margin-top:6px;} .nks button{flex:1;padding:8px;border:1px solid var(--line);border-radius:9px;background:#f8fafc;font-size:14px;cursor:pointer;}
   .calc{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:9px 12px;font-size:14px;display:flex;justify-content:space-between;}
   .calc b{font-variant-numeric:tabular-nums;}
   .drvlink{display:inline-block;margin-top:2px;font-size:13px;color:var(--accent-d);}
-  .acts{display:flex;gap:8px;margin-top:6px;}
-  .btn{flex:1;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
+  .acts{display:flex;gap:8px;margin-top:6px;} .btn{flex:1;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
   .btn.primary{background:var(--accent);color:#fff;} .btn.sub{background:#eef1f5;color:var(--ink);}
   .row-del{text-align:center;margin-top:10px;} .row-del a{color:#dc2626;font-size:13px;text-decoration:none;}
   .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;z-index:60;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
   .toast.show{opacity:1;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(240,242,245,.72);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
+  .loading.show{display:flex;}
+  .lbox{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(20,30,50,.18);padding:24px 32px;text-align:center;}
+  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .lbox .txt{font-size:14px;font-weight:700;}
 </style>
 </head>
 <body>
@@ -86,21 +76,16 @@
   </div>
   <div class="hd-row" style="margin-top:6px;"><h1>作業日報</h1>
     <div style="display:flex;gap:6px;">
-      <button class="ghost" onclick="openWorker()">＋作業員</button>
+      <button class="ghost" id="admBtn" onclick="toggleAdmin()">🔑</button>
       <button class="ghost" onclick="reload()">↻</button>
     </div>
   </div>
 </header>
 
 <div class="toolbar">
-  <div class="seg">
-    <button id="vList" class="on" onclick="setView('list')">一覧</button>
-    <button id="vSum" onclick="setView('sum')">集計</button>
-  </div>
+  <div class="seg"><button id="vList" class="on" onclick="setView('list')">一覧</button><button id="vSum" onclick="setView('sum')">集計</button></div>
   <div class="chips" id="dateChips"></div>
-  <div class="row2">
-    <select class="f" id="projFilter" onchange="render()"><option value="">すべての現場</option></select>
-  </div>
+  <select class="f" id="projFilter" onchange="render()"><option value="">すべての現場</option></select>
 </div>
 
 <main>
@@ -111,7 +96,6 @@
 
 <button class="fab" onclick="openReport()">＋ 日報</button>
 
-<!-- 日報モーダル -->
 <div class="ov" id="ov">
   <div class="sheet">
     <h2 id="mTitle">日報の入力</h2>
@@ -123,17 +107,14 @@
     </div>
     <div class="fld"><label>現場 ／ 案件 *</label><select id="f_proj" onchange="onProj()"></select>
       <a id="f_drive" class="drvlink" target="_blank" style="display:none;">📁 この現場の写真フォルダを開く</a></div>
-    <div class="fld"><label>作業員 *</label><select id="f_worker" onchange="onWorker()"></select></div>
+    <div class="fld"><label>作業員 *</label><select id="f_worker" onchange="calc()"></select></div>
     <div class="fld"><label>作業内容</label><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea></div>
     <div class="two">
       <div class="fld"><label>開始</label><input id="f_start" type="time" oninput="calcHours()"></div>
       <div class="fld"><label>終了</label><input id="f_end" type="time" oninput="calcHours()"></div>
       <div class="fld"><label>時間(h)</label><input id="f_hours" type="number" step="0.5" inputmode="decimal" placeholder="任意"></div>
     </div>
-    <div class="two">
-      <div class="fld"><label>単価(円/人工)</label><input id="f_unit" type="number" inputmode="numeric" oninput="calc()"></div>
-      <div class="fld"><label>労務費</label><div class="calc"><span>自動</span><b id="f_labor">¥0</b></div></div>
-    </div>
+    <div class="fld" id="moneyRow" style="display:none;"><label>労務費（管理者のみ）</label><div class="calc"><span>人工 × 単価（作業員マスタ）</span><b id="f_labor">¥0</b></div></div>
     <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
     <div class="acts">
       <button class="btn sub" onclick="closeOv()">キャンセル</button>
@@ -143,40 +124,31 @@
   </div>
 </div>
 
-<!-- 作業員モーダル -->
-<div class="ov" id="ovw">
-  <div class="sheet">
-    <h2>作業員の追加</h2>
-    <div class="fld"><label>氏名 *</label><input id="w_name" placeholder="例）河口太郎 / ナンカイ"></div>
-    <div class="two">
-      <div class="fld"><label>区分</label><select id="w_kind" onchange="wKind()"><option>自社</option><option>協力会社</option></select></div>
-      <div class="fld"><label>標準単価(円/人工)</label><input id="w_unit" type="number" inputmode="numeric" placeholder="例）20000"></div>
-    </div>
-    <div class="fld" id="w_belongWrap" style="display:none;"><label>所属(協力会社名)</label><input id="w_belong" placeholder="例）ナンカイ（株）"></div>
-    <div class="acts">
-      <button class="btn sub" onclick="closeW()">キャンセル</button>
-      <button class="btn primary" id="wSaveBtn" onclick="saveWorker()">保存</button>
-    </div>
-  </div>
-</div>
-
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var SECRET  = 'kawaguchi-genba-2026';
-
-var projects=[], workers=[], reports=[], dateFilter='month', view='list';
+var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var T_GENERAL='kawaguchi-genba-2026';
+var ROLE='general';
+var projects=[],workers=[],reports=[],dateFilter='month',view='list';
 var CACHE='genba_reports_cache';
 
-function callGAS(params){
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+function tok(){return admTok()||T_GENERAL;}
+function isAdmin(){return ROLE==='admin';}
+
+var loadCnt=0,loadShownAt=0;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+function callGAS(params,secretOverride){
   return new Promise(function(resolve,reject){
-    if(!GAS_URL){reject(new Error('GAS_URL未設定'));return;}
+    showLoad();
     var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
     var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
-    function cleanup(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    function cleanup(){hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
     window[cb]=function(res){cleanup();resolve(res);};
-    var q=Object.assign({secret:SECRET,callback:cb},params);
+    var q=Object.assign({secret:secretOverride||tok(),callback:cb},params);
     if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
     s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
     s.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(s);
@@ -184,76 +156,66 @@ function callGAS(params){
 }
 function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
 
+/* 管理者ログイン（PINで金額が見える）*/
+function toggleAdmin(){ if(admTok()){ if(confirm('管理者ログアウトしますか？')){localStorage.removeItem('genba_admin');location.reload();} return; }
+  var pin=prompt('管理者PINを入力してください');if(!pin)return;
+  callGAS({action:'checkRole'},pin).then(function(res){
+    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',pin);location.reload();}
+    else toast('管理者PINが違います');
+  }).catch(function(err){toast('通信エラー：'+err.message);});
+}
+function updateAdmBtn(){document.getElementById('admBtn').textContent=isAdmin()?'管理者':'🔑';}
+
 function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];workers=c.workers||[];reports=c.reports||[];}catch(e){}}
 function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,workers:workers,reports:reports}));}catch(e){}}
 function reload(){
   setSync('busy','同期中…');
-  callGAS({action:'reportData'}).then(function(res){
-    if(!res.ok)throw new Error(res.error||'エラー');
-    projects=res.projects||[];workers=res.workers||[];reports=res.reports||[];
-    saveCache();buildProjOptions();render();setSync('ok','同期済み');
-  }).catch(function(err){setSync('off','オフライン');render();toast('読込失敗：'+err.message);});
+  callGAS({action:'checkRole'}).then(function(r){ ROLE=(r&&r.ok)?r.role:'general'; if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin'); updateAdmBtn(); })
+    .then(function(){return callGAS({action:'reportData'});})
+    .then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
+      projects=res.projects||[];workers=res.workers||[];reports=res.reports||[];saveCache();buildProjOptions();render();setSync('ok','同期済み'); })
+    .catch(function(err){setSync('off','オフライン');render();toast('読込失敗：'+err.message);});
 }
 
-function buildDateChips(){
-  var defs=[['today','今日'],['month','今月'],['all','すべて']],w=document.getElementById('dateChips');w.innerHTML='';
-  defs.forEach(function(d){var c=document.createElement('div');c.className='chip'+(dateFilter===d[0]?' on':'');c.textContent=d[1];c.onclick=function(){dateFilter=d[0];buildDateChips();render();};w.appendChild(c);});
-}
-function buildProjOptions(){
-  var sel=document.getElementById('projFilter'),cur=sel.value;
-  sel.innerHTML='<option value="">すべての現場</option>';
-  projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];sel.appendChild(o);});
-  sel.value=cur;
-}
+function buildDateChips(){var defs=[['today','今日'],['month','今月'],['all','すべて']],w=document.getElementById('dateChips');w.innerHTML='';
+  defs.forEach(function(d){var c=document.createElement('div');c.className='chip'+(dateFilter===d[0]?' on':'');c.textContent=d[1];c.onclick=function(){dateFilter=d[0];buildDateChips();render();};w.appendChild(c);});}
+function buildProjOptions(){var sel=document.getElementById('projFilter'),cur=sel.value;sel.innerHTML='<option value="">すべての現場</option>';
+  projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];sel.appendChild(o);});sel.value=cur;}
 function setView(v){view=v;document.getElementById('vList').className=v==='list'?'on':'';document.getElementById('vSum').className=v==='sum'?'on':'';
   document.getElementById('list').style.display=v==='list'?'block':'none';document.getElementById('sum').style.display=v==='sum'?'block':'none';render();}
 
-function filtered(){
-  var pf=document.getElementById('projFilter').value,now=new Date(),ym=now.toISOString().slice(0,7),today=now.toISOString().slice(0,10);
-  return reports.filter(function(r){
-    if(pf&&r['案件ID']!==pf)return false;
-    var d=String(r['日付']||'').slice(0,10);
-    if(dateFilter==='today'&&d!==today)return false;
-    if(dateFilter==='month'&&d.slice(0,7)!==ym)return false;
-    return true;
-  }).sort(function(a,b){return String(b['日付']||'').localeCompare(String(a['日付']||''));});
-}
+function filtered(){var pf=document.getElementById('projFilter').value,now=new Date(),ym=now.toISOString().slice(0,7),today=now.toISOString().slice(0,10);
+  return reports.filter(function(r){if(pf&&r['案件ID']!==pf)return false;var d=String(r['日付']||'').slice(0,10);
+    if(dateFilter==='today'&&d!==today)return false;if(dateFilter==='month'&&d.slice(0,7)!==ym)return false;return true;})
+    .sort(function(a,b){return String(b['日付']||'').localeCompare(String(a['日付']||''));});}
 
 function render(){
-  var list=filtered();
-  document.getElementById('count').textContent=list.length+' 件';
+  var list=filtered();document.getElementById('count').textContent=list.length+' 件';
   if(view==='sum'){renderSum(list);return;}
   var el=document.getElementById('list');
   if(!list.length){el.innerHTML='<div class="empty">この期間の日報はありません。<br>右下の「＋日報」から登録できます。</div>';return;}
   el.innerHTML='';
   list.forEach(function(r){
-    var kyo=r['区分']==='協力会社',div=document.createElement('div');
-    div.className='card'+(kyo?' kyo':'');div.onclick=function(){openReport(r);};
+    var kyo=r['区分']==='協力会社',div=document.createElement('div');div.className='card'+(kyo?' kyo':'');div.onclick=function(){openReport(r);};
     var who=esc(r['氏名']||'')+(r['所属']?'（'+esc(r['所属'])+'）':'');
-    div.innerHTML=
-      '<div class="c-top"><span class="c-date">'+esc(String(r['日付']||'').slice(0,10))+'</span>'+
-        '<span class="pill'+(kyo?' kyo':'')+'">人工 '+esc(r['人工']||'')+'</span></div>'+
+    var money=(isAdmin()&&numv(r['労務費']))?'<span>💰 '+yen(r['労務費'])+'</span>':'';
+    div.innerHTML='<div class="c-top"><span class="c-date">'+esc(String(r['日付']||'').slice(0,10))+'</span><span class="pill'+(kyo?' kyo':'')+'">人工 '+esc(r['人工']||'')+'</span></div>'+
       '<div class="c-proj">'+esc(r['案件名']||'(現場未設定)')+'</div>'+
-      '<div class="c-meta"><span>👷 '+who+'</span>'+
-        (r['作業時間']?'<span>⏱ '+esc(r['作業時間'])+'h</span>':'')+
-        (numv(r['労務費'])?'<span>💰 '+yen(r['労務費'])+'</span>':'')+'</div>'+
+      '<div class="c-meta"><span>👷 '+who+'</span>'+(r['作業時間']?'<span>⏱ '+esc(r['作業時間'])+'h</span>':'')+money+'</div>'+
       (r['作業内容']?'<div class="desc">'+esc(r['作業内容'])+'</div>':'');
     el.appendChild(div);
   });
 }
 function renderSum(list){
   var byProj={},byKyo={};
-  list.forEach(function(r){
-    var pid=r['案件ID']||'(未設定)',pn=r['案件名']||'(現場未設定)';
-    if(!byProj[pid])byProj[pid]={name:pn,nk:0,ry:0};
-    byProj[pid].nk+=numv(r['人工']);byProj[pid].ry+=numv(r['労務費']);
-    if(r['区分']==='協力会社'){var k=r['所属']||r['氏名']||'協力会社';if(!byKyo[k])byKyo[k]={nk:0};byKyo[k].nk+=numv(r['人工']);}
-  });
+  list.forEach(function(r){var pid=r['案件ID']||'(未設定)',pn=r['案件名']||'(現場未設定)';
+    if(!byProj[pid])byProj[pid]={name:pn,nk:0,ry:0};byProj[pid].nk+=numv(r['人工']);byProj[pid].ry+=numv(r['労務費']);
+    if(r['区分']==='協力会社'){var k=r['所属']||r['氏名']||'協力会社';if(!byKyo[k])byKyo[k]={nk:0};byKyo[k].nk+=numv(r['人工']);}});
   var el=document.getElementById('sum'),html='';
-  var ps=Object.keys(byProj).sort(function(a,b){return byProj[b].ry-byProj[a].ry;});
-  html+='<div class="sumcard"><h3>案件別 労務費（工事台帳の元）</h3>';
+  var ps=Object.keys(byProj).sort(function(a,b){return byProj[b].nk-byProj[a].nk;});
+  html+='<div class="sumcard"><h3>案件別'+(isAdmin()?' 人工・労務費':' 人工')+'</h3>';
   if(!ps.length)html+='<div class="empty" style="padding:14px;">データなし</div>';
-  ps.forEach(function(k){var o=byProj[k];html+='<div class="srow"><span class="nm">'+esc(o.name)+'</span><span class="nk">'+round2(o.nk)+'人工</span><span class="ry">'+yen(o.ry)+'</span></div>';});
+  ps.forEach(function(k){var o=byProj[k];html+='<div class="srow"><span class="nm">'+esc(o.name)+'</span><span class="nk">'+round2(o.nk)+'人工</span>'+(isAdmin()?'<span class="ry">'+yen(o.ry)+'</span>':'')+'</div>';});
   html+='</div>';
   var ks=Object.keys(byKyo).sort(function(a,b){return byKyo[b].nk-byKyo[a].nk;});
   html+='<div class="sumcard"><h3>協力会社別 出面（人工）</h3>';
@@ -263,13 +225,13 @@ function renderSum(list){
   el.innerHTML=html;
 }
 
-/* 日報モーダル */
 function openReport(r){
   if(!projects.length){toast('先に案件管理で現場を登録してください');return;}
-  if(!workers.length){toast('先に「＋作業員」で作業員を登録してください');return;}
+  if(!workers.length){toast('作業員が未登録です。管理画面で登録してください');return;}
   document.getElementById('mTitle').textContent=r?'日報の編集':'日報の入力';
   document.getElementById('delRow').style.display=r?'block':'none';
-  buildSelect('f_proj',projects,'案件ID','案件名');
+  document.getElementById('moneyRow').style.display=isAdmin()?'block':'none';
+  buildSelect('f_proj',projects,'案件ID','案件名',false);
   buildSelect('f_worker',workers,'作業員ID','氏名',true);
   var g=function(id){return document.getElementById(id);};
   g('f_id').value=r?(r['日報ID']||''):'';
@@ -278,92 +240,48 @@ function openReport(r){
   g('f_proj').value=r?(r['案件ID']||''):(projects[0]?projects[0]['案件ID']:'');
   g('f_worker').value=r?(r['作業員ID']||''):(workers[0]?workers[0]['作業員ID']:'');
   g('f_desc').value=r?(r['作業内容']||''):'';
-  g('f_start').value=r?(r['開始']||''):'';
-  g('f_end').value=r?(r['終了']||''):'';
-  g('f_hours').value=r?(r['作業時間']||''):'';
-  g('f_unit').value=r?(numv(r['単価'])||''):'';
+  g('f_start').value=r?(r['開始']||''):'';g('f_end').value=r?(r['終了']||''):'';g('f_hours').value=r?(r['作業時間']||''):'';
   g('f_note').value=r?(r['備考']||''):'';
-  if(!r)onWorker();
-  onProj();calc();
-  document.getElementById('ov').classList.add('show');
+  onProj();calc();document.getElementById('ov').classList.add('show');
 }
 function buildSelect(id,arr,vk,tk,withBelong){var s=document.getElementById(id);s.innerHTML='';arr.forEach(function(o){var op=document.createElement('option');op.value=o[vk];op.textContent=o[tk]+(withBelong&&o['所属']?'（'+o['所属']+'）':'');s.appendChild(op);});}
-function onProj(){
-  var pid=document.getElementById('f_proj').value,p=projects.filter(function(x){return x['案件ID']===pid;})[0];
-  var a=document.getElementById('f_drive');
-  if(p&&p['Driveフォルダ']){a.href=p['Driveフォルダ'];a.style.display='inline-block';}else{a.style.display='none';}
-}
-function onWorker(){
-  var wid=document.getElementById('f_worker').value,w=workers.filter(function(x){return x['作業員ID']===wid;})[0];
-  if(w&&document.getElementById('f_unit').value===''){document.getElementById('f_unit').value=numv(w['標準単価'])||'';}
-  if(w&&!document.getElementById('f_id').value){document.getElementById('f_unit').value=numv(w['標準単価'])||'';}
-  calc();
-}
+function onProj(){var pid=document.getElementById('f_proj').value,p=projects.filter(function(x){return x['案件ID']===pid;})[0],a=document.getElementById('f_drive');
+  if(p&&p['Driveフォルダ']){a.href=p['Driveフォルダ'];a.style.display='inline-block';}else{a.style.display='none';}}
 function setNk(v){document.getElementById('f_nk').value=v;calc();}
-function calcHours(){
-  var s=document.getElementById('f_start').value,e=document.getElementById('f_end').value;
-  if(s&&e){var a=s.split(':'),b=e.split(':'),h=(b[0]*60+ +b[1]-(a[0]*60+ +a[1]))/60;if(h<0)h+=24;document.getElementById('f_hours').value=Math.round(h*4)/4;}
-}
-function calc(){
-  var nk=numv(document.getElementById('f_nk').value),u=numv(document.getElementById('f_unit').value);
-  document.getElementById('f_labor').textContent=yen(nk*u)||'¥0';
-}
-function gatherReport(){
-  var g=function(id){return document.getElementById(id).value;};
+function calcHours(){var s=document.getElementById('f_start').value,e=document.getElementById('f_end').value;
+  if(s&&e){var a=s.split(':'),b=e.split(':'),h=(b[0]*60+ +b[1]-(a[0]*60+ +a[1]))/60;if(h<0)h+=24;document.getElementById('f_hours').value=Math.round(h*4)/4;}}
+function workerRate(id){var w=workers.filter(function(x){return x['作業員ID']===id;})[0];return w?numv(w['標準単価']):0;}
+function calc(){ if(!isAdmin())return; var nk=numv(document.getElementById('f_nk').value),u=workerRate(document.getElementById('f_worker').value);
+  document.getElementById('f_labor').textContent=yen(nk*u)||'¥0'; }
+function gatherReport(){var g=function(id){return document.getElementById(id).value;};
   var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
   var wid=g('f_worker'),w=workers.filter(function(x){return x['作業員ID']===wid;})[0]||{};
-  return {'日報ID':g('f_id'),'日付':g('f_date'),'案件ID':pid,'案件名':p['案件名']||'',
-    '作業員ID':wid,'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||'',
-    '作業内容':g('f_desc').trim(),'開始':g('f_start'),'終了':g('f_end'),'作業時間':g('f_hours'),
-    '人工':g('f_nk'),'単価':g('f_unit'),'備考':g('f_note').trim()};
-}
-function saveReport(){
-  var d=gatherReport();
-  if(!d['日付']){toast('日付を入れてください');return;}
-  if(!d['案件ID']){toast('現場を選んでください');return;}
+  return {'日報ID':g('f_id'),'日付':g('f_date'),'案件ID':pid,'案件名':p['案件名']||'','作業員ID':wid,'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||'',
+    '作業内容':g('f_desc').trim(),'開始':g('f_start'),'終了':g('f_end'),'作業時間':g('f_hours'),'人工':g('f_nk'),'備考':g('f_note').trim()};}
+function saveReport(){var d=gatherReport();
+  if(!d['日付']){toast('日付を入れてください');return;}if(!d['案件ID']){toast('現場を選んでください');return;}
   var id=d['日報ID'],isNew=!id,btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
   var params=isNew?{action:'addReport',data:d}:{action:'updateReport',id:id,data:d};
-  callGAS(params).then(function(res){
-    if(!res.ok)throw new Error(res.error||'保存失敗');
+  callGAS(params).then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
     if(isNew)reports.push(res.report);else for(var i=0;i<reports.length;i++){if(reports[i]['日報ID']===id){reports[i]=res.report;break;}}
     saveCache();render();closeOv();toast(isNew?'登録しました':'更新しました');
-  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
-}
-function delReport(ev){
-  ev.preventDefault();var id=document.getElementById('f_id').value;if(!id)return;
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});}
+function delReport(ev){ev.preventDefault();var id=document.getElementById('f_id').value;if(!id)return;
   if(!confirm('この日報を削除します。よろしいですか？'))return;
-  callGAS({action:'deleteReport',id:id}).then(function(res){
-    if(!res.ok)throw new Error(res.error||'削除失敗');
+  callGAS({action:'deleteReport',id:id}).then(function(res){if(!res.ok)throw new Error(res.error||'削除失敗');
     reports=reports.filter(function(r){return r['日報ID']!==id;});saveCache();render();closeOv();toast('削除しました');
-  }).catch(function(err){toast('失敗：'+err.message);});
-}
+  }).catch(function(err){toast('失敗：'+err.message);});}
 function closeOv(){document.getElementById('ov').classList.remove('show');}
 
-/* 作業員モーダル */
-function openWorker(){['w_name','w_unit','w_belong'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('w_kind').value='自社';wKind();document.getElementById('ovw').classList.add('show');}
-function wKind(){document.getElementById('w_belongWrap').style.display=document.getElementById('w_kind').value==='協力会社'?'block':'none';}
-function closeW(){document.getElementById('ovw').classList.remove('show');}
-function saveWorker(){
-  var g=function(id){return document.getElementById(id).value;},name=g('w_name').trim();
-  if(!name){toast('氏名を入れてください');return;}
-  var kind=g('w_kind'),d={'氏名':name,'区分':kind,'所属':kind==='協力会社'?g('w_belong').trim():'','標準単価':g('w_unit'),'表示順':workers.length+1};
-  var btn=document.getElementById('wSaveBtn');btn.disabled=true;btn.textContent='保存中…';
-  callGAS({action:'addWorker',data:d}).then(function(res){
-    if(!res.ok)throw new Error(res.error||'保存失敗');workers.push(res.worker);saveCache();closeW();toast('作業員を追加しました');
-  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
-}
-
-/* helpers */
 function numv(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN(n)?0:n;}
 function yen(v){var n=numv(v);return n?('¥'+Math.round(n).toLocaleString('ja-JP')):'';}
 function round2(n){return Math.round(n*100)/100;}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
-['ov','ovw'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
-document.addEventListener('visibilitychange',function(){if(!document.hidden&&GAS_URL)reload();});
+var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
+document.getElementById('ov').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)reload();});
 
-loadCache();buildDateChips();buildProjOptions();render();
-if(GAS_URL)reload();else setSync('off','GAS_URL未設定');
+loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();reload();
 </script>
 </body>
 </html>
