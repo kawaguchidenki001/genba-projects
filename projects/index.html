@@ -81,6 +81,12 @@
     background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;
     opacity:0;transition:opacity .25s;pointer-events:none;}
   .toast.show{opacity:1;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(240,242,245,.72);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
+  .loading.show{display:flex;}
+  .lbox{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(20,30,50,.18);padding:24px 32px;text-align:center;}
+  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .lbox .txt{font-size:14px;font-weight:700;}
 </style>
 </head>
 <body>
@@ -90,9 +96,25 @@
     <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
   </div>
   <div class="hd-row" style="margin-top:6px;"><h1>案件管理</h1>
-    <button class="ghost" style="padding:6px 10px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;" onclick="reload()">↻ 更新</button>
+    <div style="display:flex;gap:6px;">
+      <button class="ghost" style="padding:6px 10px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;" onclick="adminLogout()">ログアウト</button>
+      <button class="ghost" style="padding:6px 10px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;" onclick="reload()">↻ 更新</button>
+    </div>
   </div>
 </header>
+
+<div id="gate" style="position:fixed;inset:0;z-index:100;background:#fff;display:flex;align-items:center;justify-content:center;">
+  <div style="max-width:360px;text-align:center;padding:0 18px;">
+    <div style="font-size:46px;">🔒</div>
+    <h2 style="font-size:18px;margin:10px 0 6px;">案件管理（管理者専用）</h2>
+    <p id="gateMsg" style="color:#6b7280;font-size:14px;margin:0 0 16px;">確認中…</p>
+    <div id="gateForm" style="display:none;">
+      <input id="pin" type="password" inputmode="numeric" placeholder="管理者PIN" style="width:100%;padding:12px;border:1px solid #e3e6ea;border-radius:10px;font-size:16px;text-align:center;margin-bottom:10px;" onkeydown="if(event.key==='Enter')doLogin()">
+      <button onclick="doLogin()" style="width:100%;padding:13px;border:none;border-radius:11px;background:#0f5fb5;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">ログイン</button>
+      <p style="margin-top:14px;"><a href="https://kawaguchidenki001.github.io/genba-projects/" style="color:#6b7280;font-size:13px;">← 現場管理メニューへ戻る</a></p>
+    </div>
+  </div>
+</div>
 
 <div class="toolbar">
   <div class="search"><input id="q" type="search" placeholder="案件名・顧客・場所で検索" oninput="render()"></div>
@@ -176,27 +198,35 @@
   </div>
 </div>
 
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
 /* ===== 設定（★ここを埋める）===== */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var SECRET  = 'kawaguchi-genba-2026';   // ← Code.gs の SECRET と同じ文字列
+var T_GENERAL = 'kawaguchi-genba-2026';
+var ROLE = '';
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+function tok(){return admTok()||T_GENERAL;}
 
 var STATUSES = ['見積中','受注','施工中','完了','請求','入金'];
 var projects = [], customers = [], filterStatus = 'すべて';
 var CACHE_P = 'genba_projects', CACHE_C = 'genba_customers';
 
 /* ===== JSONP 通信 ===== */
-function callGAS(params){
+var loadCnt=0,loadShownAt=0;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+function callGAS(params,secretOverride){
   return new Promise(function(resolve,reject){
     if(!GAS_URL){ reject(new Error('GAS_URL が未設定です')); return; }
+    showLoad();
     var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6);
     var s=document.createElement('script');
     var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
-    function cleanup(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    function cleanup(){hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
     window[cb]=function(res){cleanup();resolve(res);};
-    var q=Object.assign({secret:SECRET,callback:cb},params);
+    var q=Object.assign({secret:secretOverride||tok(),callback:cb},params);
     if(q.data && typeof q.data!=='string') q.data=JSON.stringify(q.data);
     var url=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
     s.src=url; s.onerror=function(){cleanup();reject(new Error('通信エラー'));};
@@ -390,9 +420,23 @@ function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.c
 /* タブ復帰で自動更新 */
 document.addEventListener('visibilitychange',function(){if(!document.hidden && GAS_URL)reload();});
 
-/* 起動 */
-loadCache(); buildChips(); buildCustList(); render();
-if(GAS_URL){reload();}else{setSync('off','GAS_URL未設定');}
+/* ===== 管理者ゲート ===== */
+function showGate(msg,showForm){document.getElementById('gate').style.display='flex';document.getElementById('gateMsg').textContent=msg||'';document.getElementById('gateForm').style.display=showForm?'block':'none';}
+function hideGate(){document.getElementById('gate').style.display='none';}
+function doLogin(){var pin=document.getElementById('pin').value;if(!pin){return;}
+  callGAS({action:'checkRole'},pin).then(function(res){
+    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',pin);location.reload();}
+    else{document.getElementById('gateMsg').textContent='管理者PINが違います。もう一度入力してください。';}
+  }).catch(function(err){document.getElementById('gateMsg').textContent='通信エラー：'+err.message;});}
+function adminLogout(){localStorage.removeItem('genba_admin');location.reload();}
+
+/* 起動：管理者のみ案件管理を開ける */
+loadCache();
+callGAS({action:'checkRole'}).then(function(res){
+  ROLE=(res&&res.ok)?res.role:'';
+  if(ROLE==='admin'){hideGate();buildChips();buildCustList();render();reload();}
+  else{ if(admTok())localStorage.removeItem('genba_admin'); showGate('この画面は管理者のみ利用できます。管理者PINを入力してください。',true); }
+}).catch(function(){ showGate('通信できませんでした。電波を確認して再読み込みしてください。',true); });
 </script>
 </body>
 </html>
