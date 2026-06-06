@@ -103,7 +103,11 @@
   <div class="sheet">
     <h2 id="mTitle">作業員の追加</h2>
     <input type="hidden" id="w_id">
-    <div class="fld"><label>氏名 *</label><input id="w_name" placeholder="例）河口太郎 / ナンカイ作業班"></div>
+    <div class="two">
+      <div class="fld"><label>氏（姓） *</label><input id="w_sei" placeholder="例）河口"></div>
+      <div class="fld"><label>名</label><input id="w_mei" placeholder="例）太郎"></div>
+    </div>
+    <div class="fld"><label>略称（日報・予定表に表示）</label><input id="w_short" placeholder="例）河口 / ナンカイ"></div>
     <div class="two">
       <div class="fld"><label>区分</label><select id="w_kind" onchange="wKind()"><option>自社</option><option>協力会社</option></select></div>
       <div class="fld"><label>標準単価（円/人工）</label><input id="w_unit" type="number" inputmode="numeric" placeholder="例）20000"></div>
@@ -231,7 +235,11 @@ function openWorker(w){
   document.getElementById('mTitle').textContent=w?'作業員の編集':'作業員の追加';
   document.getElementById('delRow').style.display=w?'block':'none';
   var g=function(id){return document.getElementById(id);};
-  g('w_id').value=w?(w['作業員ID']||''):'';g('w_name').value=w?(w['氏名']||''):'';
+  var nm=w?(w['氏名']||''):'',sp=nm.split(/[\s　]+/);
+  g('w_id').value=w?(w['作業員ID']||''):'';
+  g('w_sei').value=w?(w['氏']||sp[0]||''):'';
+  g('w_mei').value=w?(w['名']||sp.slice(1).join(' ')||''):'';
+  g('w_short').value=w?(w['略称']||''):'';
   g('w_kind').value=w?(w['区分']||'自社'):'自社';g('w_unit').value=w?(numv(w['標準単価'])||''):'';g('w_belong').value=w?(w['所属']||''):'';
   g('w_loginid').value=w?(w['ログインID']||''):'';g('w_pw').value=w?(w['パスワード']||''):'';
   wKind();document.getElementById('ov').classList.add('show');
@@ -239,10 +247,11 @@ function openWorker(w){
 function wKind(){document.getElementById('belongWrap').style.display=document.getElementById('w_kind').value==='協力会社'?'block':'none';}
 function closeOv(){document.getElementById('ov').classList.remove('show');}
 function saveWorker(){
-  var g=function(id){return document.getElementById(id).value;},name=g('w_name').trim();
-  if(!name){toast('氏名を入れてください');return;}
+  var g=function(id){return document.getElementById(id).value;},sei=g('w_sei').trim(),mei=g('w_mei').trim();
+  if(!sei&&!mei){toast('氏（姓）を入れてください');return;}
+  var name=[sei,mei].filter(Boolean).join('　');
   var kind=g('w_kind'),id=g('w_id'),isNew=!id;
-  var d={'氏名':name,'区分':kind,'所属':kind==='協力会社'?g('w_belong').trim():'','標準単価':g('w_unit'),'ログインID':g('w_loginid').trim(),'パスワード':g('w_pw')};
+  var d={'氏名':name,'氏':sei,'名':mei,'略称':g('w_short').trim(),'区分':kind,'所属':kind==='協力会社'?g('w_belong').trim():'','標準単価':g('w_unit'),'ログインID':g('w_loginid').trim(),'パスワード':g('w_pw')};
   var btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
   var params=isNew?{action:'addWorker',data:d}:{action:'updateWorker',id:id,data:d};
   callGAS(params).then(function(res){
