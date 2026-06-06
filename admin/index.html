@@ -29,6 +29,11 @@
   .yen{font-weight:700;font-variant-numeric:tabular-nums;}
   .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#eef1f5;color:#374151;}
   .tag.kyo{background:#fef3c7;color:#92400e;}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;}
+  .tab{flex:1;padding:9px 6px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--sub);font-size:13.5px;font-weight:700;cursor:pointer;text-align:center;}
+  .tab.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .card.kg{border-left-color:#2563eb;} .card.kk{border-left-color:#7c3aed;} .card.kx{border-left-color:#b45309;}
+  .tag.kg{background:#dbeafe;color:#1e40af;} .tag.kk{background:#ede9fe;color:#6d28d9;} .tag.kx{background:#fef3c7;color:#92400e;}
   .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14px;}
   .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;background:var(--accent);color:#fff;border:none;border-radius:999px;padding:14px 20px;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(31,41,55,.4);cursor:pointer;}
   .ov{position:fixed;inset:0;background:rgba(15,23,40,.45);z-index:40;display:none;align-items:flex-end;justify-content:center;}
@@ -73,11 +78,26 @@
 
 <!-- 管理コンテンツ -->
 <main id="content" style="display:none;">
-  <div class="sec">作業員マスタ（単価はここで設定）</div>
-  <div id="list"><div class="empty">読込中…</div></div>
+  <div class="tabs">
+    <button class="tab on" id="tab-worker" onclick="switchTab('worker')">作業員</button>
+    <button class="tab" id="tab-partner" onclick="switchTab('partner')">取引先</button>
+    <button class="tab" id="tab-contact" onclick="switchTab('contact')">先方担当者</button>
+  </div>
+  <div id="sec-worker">
+    <div class="sec">作業員マスタ（単価はここで設定）</div>
+    <div id="list"><div class="empty">読込中…</div></div>
+  </div>
+  <div id="sec-partner" style="display:none;">
+    <div class="sec">取引先マスタ（企業／官公庁／協力業者）</div>
+    <div id="listP"><div class="empty">読込中…</div></div>
+  </div>
+  <div id="sec-contact" style="display:none;">
+    <div class="sec">先方担当者マスタ（取引先ごとの担当者）</div>
+    <div id="listK"><div class="empty">読込中…</div></div>
+  </div>
 </main>
 
-<button class="fab" id="fab" style="display:none;" onclick="openWorker()">＋ 作業員</button>
+<button class="fab" id="fab" style="display:none;" onclick="fabAdd()">＋ 作業員</button>
 
 <div class="ov" id="ov">
   <div class="sheet">
@@ -102,12 +122,55 @@
   </div>
 </div>
 
+<!-- 取引先モーダル -->
+<div class="ov" id="ovp">
+  <div class="sheet">
+    <h2 id="pTitle">取引先の追加</h2>
+    <input type="hidden" id="p_id">
+    <div class="fld"><label>区分 *</label><select id="p_kind"><option>企業</option><option>官公庁</option><option>協力業者</option></select></div>
+    <div class="fld"><label>取引先名 *</label><input id="p_name" placeholder="例）㈱井上デンキ工事 / 岐阜市"></div>
+    <div class="two">
+      <div class="fld"><label>電話</label><input id="p_tel" inputmode="tel"></div>
+      <div class="fld"><label>住所</label><input id="p_addr"></div>
+    </div>
+    <div class="fld"><label>備考</label><input id="p_note"></div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeP()">キャンセル</button>
+      <button class="btn primary" id="pSaveBtn" onclick="savePartner()">保存</button>
+    </div>
+    <div class="row-del" id="pDelRow" style="display:none;"><a href="#" onclick="delPartner(event)">この取引先を削除</a></div>
+  </div>
+</div>
+
+<!-- 先方担当者モーダル -->
+<div class="ov" id="ovk">
+  <div class="sheet">
+    <h2 id="kTitle">先方担当者の追加</h2>
+    <input type="hidden" id="k_id">
+    <div class="fld"><label>取引先 *</label><select id="k_partner"></select></div>
+    <div class="two">
+      <div class="fld"><label>担当者名 *</label><input id="k_name" placeholder="例）山田 太郎"></div>
+      <div class="fld"><label>役職</label><input id="k_role" placeholder="例）工事課長"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>電話</label><input id="k_tel" inputmode="tel"></div>
+      <div class="fld"><label>メール</label><input id="k_mail" inputmode="email"></div>
+    </div>
+    <div class="fld"><label>備考</label><input id="k_note"></div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeK()">キャンセル</button>
+      <button class="btn primary" id="kSaveBtn" onclick="saveContact()">保存</button>
+    </div>
+    <div class="row-del" id="kDelRow" style="display:none;"><a href="#" onclick="delContact(event)">この担当者を削除</a></div>
+  </div>
+</div>
+
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var workers=[];
+var workers=[],customers=[],contacts=[],curTab='worker';
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 
 var loadCnt=0,loadShownAt=0;
@@ -133,14 +196,14 @@ function showContent(){document.getElementById('gate').style.display='none';docu
 function init(){
   if(!admTok()){showGate();return;}
   callGAS({action:'checkRole'}).then(function(res){
-    if(res&&res.ok&&res.role==='admin'){showContent();loadWorkers();}
+    if(res&&res.ok&&res.role==='admin'){showContent();loadAll();}
     else{localStorage.removeItem('genba_admin');showGate();}
   }).catch(function(){showGate();});
 }
 function doLogin(){
   var pin=document.getElementById('pin').value;if(!pin){toast('PINを入力してください');return;}
   callGAS({action:'checkRole'},pin).then(function(res){
-    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',pin);document.getElementById('pin').value='';showContent();loadWorkers();}
+    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',pin);document.getElementById('pin').value='';showContent();loadAll();}
     else toast('管理者PINが違います');
   }).catch(function(err){toast('通信エラー：'+err.message);});
 }
@@ -196,11 +259,131 @@ function delWorker(ev){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 
+function loadAll(){ loadWorkers(); loadCustomers(); loadContacts(); }
+function switchTab(t){ curTab=t;
+  ['worker','partner','contact'].forEach(function(x){
+    document.getElementById('sec-'+x).style.display=(x===t)?'block':'none';
+    document.getElementById('tab-'+x).className='tab'+(x===t?' on':'');
+  });
+  document.getElementById('fab').textContent= t==='worker'?'＋ 作業員' : t==='partner'?'＋ 取引先' : '＋ 担当者';
+}
+function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner')openPartner(); else openContact(); }
+
+/* ===== 取引先（区分つき）===== */
+function custKind(c){ return String(c['区分']||'').trim()||'企業'; }   // 空は企業として扱う
+function kindCls(k){ return k==='官公庁'?'kk':(k==='協力業者'?'kx':'kg'); }
+function loadCustomers(){ callGAS({action:'customers'}).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); customers=res.customers||[]; renderCustomers(); }).catch(function(err){toast('取引先の読込失敗：'+err.message);}); }
+function renderCustomers(){
+  var el=document.getElementById('listP');
+  if(!customers.length){el.innerHTML='<div class="empty">取引先がまだありません。<br>右下の「＋取引先」から登録してください。</div>';return;}
+  var order=['企業','官公庁','協力業者'],groups={};
+  customers.forEach(function(c){var k=custKind(c);(groups[k]=groups[k]||[]).push(c);});
+  Object.keys(groups).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
+  el.innerHTML='';
+  order.forEach(function(k){ var arr=groups[k]; if(!arr||!arr.length)return; var cls=kindCls(k);
+    var sec=document.createElement('div'); sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'（'+arr.length+'）</div>';
+    arr.sort(function(a,b){return String(a['顧客名']||'').localeCompare(String(b['顧客名']||''),'ja');});
+    arr.forEach(function(c){ var div=document.createElement('div');div.className='card '+cls;div.onclick=(function(x){return function(){openPartner(x);};})(c);
+      div.innerHTML='<div><div class="nm">'+esc(c['顧客名']||'')+' <span class="tag '+cls+'">'+esc(k)+'</span></div>'+
+        '<div class="meta">'+[c['電話'],c['住所']].filter(Boolean).map(esc).join(' ・ ')+'</div></div>';
+      sec.appendChild(div); });
+    el.appendChild(sec);
+  });
+}
+function openPartner(c){
+  document.getElementById('pTitle').textContent=c?'取引先の編集':'取引先の追加';
+  document.getElementById('pDelRow').style.display=c?'block':'none';
+  var g=function(id){return document.getElementById(id);};
+  g('p_id').value=c?(c['顧客ID']||''):''; g('p_kind').value=c?custKind(c):'企業';
+  g('p_name').value=c?(c['顧客名']||''):''; g('p_tel').value=c?(c['電話']||''):'';
+  g('p_addr').value=c?(c['住所']||''):''; g('p_note').value=c?(c['備考']||''):'';
+  document.getElementById('ovp').classList.add('show');
+}
+function closeP(){document.getElementById('ovp').classList.remove('show');}
+function savePartner(){
+  var g=function(id){return document.getElementById(id).value;},name=g('p_name').trim();
+  if(!name){toast('取引先名を入れてください');return;}
+  var id=g('p_id'),isNew=!id;
+  var d={'顧客名':name,'区分':g('p_kind'),'電話':g('p_tel').trim(),'住所':g('p_addr').trim(),'備考':g('p_note').trim()};
+  var btn=document.getElementById('pSaveBtn');btn.disabled=true;btn.textContent='保存中…';
+  var params=isNew?{action:'addCustomer',data:d}:{action:'updateCustomer',id:id,data:d};
+  callGAS(params).then(function(res){ if(!res.ok)throw new Error(res.error||'保存失敗');
+    if(isNew)customers.push(res.customer);else for(var i=0;i<customers.length;i++){if(customers[i]['顧客ID']===id){customers[i]=res.customer;break;}}
+    renderCustomers();closeP();toast(isNew?'登録しました':'更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+function delPartner(ev){ ev.preventDefault();var id=document.getElementById('p_id').value;if(!id)return;
+  if(!confirm('この取引先を削除します。よろしいですか？\n（ひもづく担当者は残ります）'))return;
+  callGAS({action:'deleteCustomer',id:id}).then(function(res){ if(!res.ok)throw new Error(res.error||'削除失敗');
+    customers=customers.filter(function(c){return c['顧客ID']!==id;});renderCustomers();closeP();toast('削除しました');
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+
+/* ===== 先方担当者 ===== */
+function loadContacts(){ callGAS({action:'contacts'}).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); contacts=res.contacts||[]; renderContacts(); }).catch(function(err){toast('担当者の読込失敗：'+err.message);}); }
+function renderContacts(){
+  var el=document.getElementById('listK');
+  if(!contacts.length){el.innerHTML='<div class="empty">先方担当者がまだいません。<br>右下の「＋担当者」から登録してください。</div>';return;}
+  var groups={},order=[];
+  contacts.forEach(function(c){var k=String(c['取引先']||'（取引先未設定）');if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(c);});
+  order.sort(function(a,b){return a.localeCompare(b,'ja');});
+  el.innerHTML='';
+  order.forEach(function(k){ var arr=groups[k];
+    var sec=document.createElement('div');sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'</div>';
+    arr.forEach(function(c){ var div=document.createElement('div');div.className='card';div.onclick=(function(x){return function(){openContact(x);};})(c);
+      div.innerHTML='<div><div class="nm">'+esc(c['担当者名']||'')+(c['役職']?' <span class="tag">'+esc(c['役職'])+'</span>':'')+'</div>'+
+        '<div class="meta">'+[c['電話'],c['メール']].filter(Boolean).map(esc).join(' ・ ')+'</div></div>';
+      sec.appendChild(div); });
+    el.appendChild(sec);
+  });
+}
+function buildPartnerSelect(sel,val){
+  var order=['企業','官公庁','協力業者'],byKind={};
+  customers.forEach(function(c){var k=custKind(c);(byKind[k]=byKind[k]||[]).push(c);});
+  Object.keys(byKind).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
+  sel.innerHTML='<option value="">（取引先を選択）</option>';
+  order.forEach(function(k){ var arr=byKind[k];if(!arr)return; var og=document.createElement('optgroup');og.label=k;
+    arr.sort(function(a,b){return String(a['顧客名']||'').localeCompare(String(b['顧客名']||''),'ja');});
+    arr.forEach(function(c){var o=document.createElement('option');o.value=c['顧客名'];o.textContent=c['顧客名'];og.appendChild(o);});
+    sel.appendChild(og); });
+  if(val){ sel.value=val; if(sel.value!==val){ var o=document.createElement('option');o.value=val;o.textContent=val+'（未登録）';sel.appendChild(o);sel.value=val; } }
+}
+function openContact(c){
+  document.getElementById('kTitle').textContent=c?'先方担当者の編集':'先方担当者の追加';
+  document.getElementById('kDelRow').style.display=c?'block':'none';
+  buildPartnerSelect(document.getElementById('k_partner'), c?(c['取引先']||''):'');
+  var g=function(id){return document.getElementById(id);};
+  g('k_id').value=c?(c['担当者ID']||''):''; g('k_name').value=c?(c['担当者名']||''):'';
+  g('k_role').value=c?(c['役職']||''):''; g('k_tel').value=c?(c['電話']||''):'';
+  g('k_mail').value=c?(c['メール']||''):''; g('k_note').value=c?(c['備考']||''):'';
+  document.getElementById('ovk').classList.add('show');
+}
+function closeK(){document.getElementById('ovk').classList.remove('show');}
+function saveContact(){
+  var g=function(id){return document.getElementById(id).value;},name=g('k_name').trim(),partner=g('k_partner');
+  if(!partner){toast('取引先を選んでください');return;}
+  if(!name){toast('担当者名を入れてください');return;}
+  var id=g('k_id'),isNew=!id;
+  var d={'取引先':partner,'担当者名':name,'役職':g('k_role').trim(),'電話':g('k_tel').trim(),'メール':g('k_mail').trim(),'備考':g('k_note').trim()};
+  var btn=document.getElementById('kSaveBtn');btn.disabled=true;btn.textContent='保存中…';
+  var params=isNew?{action:'addContact',data:d}:{action:'updateContact',id:id,data:d};
+  callGAS(params).then(function(res){ if(!res.ok)throw new Error(res.error||'保存失敗');
+    if(isNew)contacts.push(res.contact);else for(var i=0;i<contacts.length;i++){if(contacts[i]['担当者ID']===id){contacts[i]=res.contact;break;}}
+    renderContacts();closeK();toast(isNew?'登録しました':'更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+function delContact(ev){ ev.preventDefault();var id=document.getElementById('k_id').value;if(!id)return;
+  if(!confirm('この担当者を削除します。よろしいですか？'))return;
+  callGAS({action:'deleteContact',id:id}).then(function(res){ if(!res.ok)throw new Error(res.error||'削除失敗');
+    contacts=contacts.filter(function(c){return c['担当者ID']!==id;});renderContacts();closeK();toast('削除しました');
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+
 function numv(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN(n)?0:n;}
 function yen(v){var n=numv(v);return n?('¥'+Math.round(n).toLocaleString('ja-JP')):'';}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
-document.getElementById('ov').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+['ov','ovp','ovk'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
 init();
 </script>
 </body>
