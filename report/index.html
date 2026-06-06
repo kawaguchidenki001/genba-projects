@@ -37,6 +37,18 @@
   .pill.kyo{background:#fef3c7;color:#92400e;}
   .desc{font-size:13.5px;}
   .empty{text-align:center;color:var(--sub);padding:38px 10px;font-size:14px;}
+  .projcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;border-left:5px solid var(--accent);}
+  .pchd{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 13px;background:#f3f7f6;}
+  .pcname{font-weight:700;font-size:15px;}
+  .pcsum{font-size:13px;color:var(--accent-d);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;gap:8px;align-items:center;}
+  .pcry{color:#92400e;}
+  .rrow{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:9px 13px;border-top:1px solid var(--line);cursor:pointer;}
+  .rr-l{flex:1;min-width:0;}
+  .rr-date{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;}
+  .rr-who{font-size:14px;}
+  .rr-who.kyo{color:#b45309;}
+  .rr-desc{font-size:13px;color:var(--ink);margin-top:2px;}
+  .rr-nk{font-size:13px;font-weight:700;color:var(--sub);white-space:nowrap;font-variant-numeric:tabular-nums;}
   .sumcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px;}
   .sumcard h3{margin:0 0 8px;font-size:14px;color:var(--accent-d);}
   .srow{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:14px;}
@@ -121,11 +133,6 @@
     </div>
     <div class="fld" id="wsFld" style="display:none;"><label>作業員 *</label><select id="f_worker" onchange="calc()"></select></div>
     <div class="fld"><label>作業内容</label><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea></div>
-    <div class="two">
-      <div class="fld"><label>開始</label><input id="f_start" type="time" oninput="calcHours()"></div>
-      <div class="fld"><label>終了</label><input id="f_end" type="time" oninput="calcHours()"></div>
-      <div class="fld"><label>時間(h)</label><input id="f_hours" type="number" step="0.5" inputmode="decimal" placeholder="任意"></div>
-    </div>
     <div class="fld" id="moneyRow" style="display:none;"><label>労務費（管理者のみ）</label><div class="calc"><span id="f_laborNote">人工 × 単価（作業員マスタ）</span><b id="f_labor">¥0</b></div></div>
     <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
     <div class="acts">
@@ -206,16 +213,32 @@ function render(){
   if(view==='sum'){renderSum(list);return;}
   var el=document.getElementById('list');
   if(!list.length){el.innerHTML='<div class="empty">この期間の日報はありません。<br>右下の「＋日報」から登録できます。</div>';return;}
+  // 現場ごとにグループ化
+  var groups={},order=[];
+  list.forEach(function(r){var pid=r['案件ID']||'__none__';
+    if(!groups[pid]){groups[pid]={name:r['案件名']||'(現場未設定)',reports:[],nk:0,ry:0,latest:''};order.push(pid);}
+    var gr=groups[pid];gr.reports.push(r);gr.nk+=numv(r['人工']);gr.ry+=numv(r['労務費']);
+    var d=String(r['日付']||'').slice(0,10);if(d>gr.latest)gr.latest=d;});
+  order.sort(function(a,b){return String(groups[b].latest).localeCompare(String(groups[a].latest));});
   el.innerHTML='';
-  list.forEach(function(r){
-    var kyo=isKyo(r['区分']),div=document.createElement('div');div.className='card'+(kyo?' kyo':'');div.onclick=function(){openReport(r);};
-    var who=esc(r['氏名']||'')+(r['所属']?'（'+esc(r['所属'])+'）':'');
-    var money=(isAdmin()&&numv(r['労務費']))?'<span>💰 '+yen(r['労務費'])+'</span>':'';
-    div.innerHTML='<div class="c-top"><span class="c-date">'+esc(String(r['日付']||'').slice(0,10))+'</span><span class="pill'+(kyo?' kyo':'')+'">人工 '+esc(r['人工']||'')+'</span></div>'+
-      '<div class="c-proj">'+esc(r['案件名']||'(現場未設定)')+'</div>'+
-      '<div class="c-meta"><span>👷 '+who+'</span>'+(r['作業時間']?'<span>⏱ '+esc(r['作業時間'])+'h</span>':'')+money+'</div>'+
-      (r['作業内容']?'<div class="desc">'+esc(r['作業内容'])+'</div>':'');
-    el.appendChild(div);
+  order.forEach(function(pid){var gr=groups[pid];
+    gr.reports.sort(function(a,b){return String(b['日付']||'').localeCompare(String(a['日付']||''));});
+    var card=document.createElement('div');card.className='projcard';
+    var money=(isAdmin()&&gr.ry)?'<span class="pcry">'+yen(gr.ry)+'</span>':'';
+    var h='<div class="pchd"><span class="pcname">'+esc(gr.name)+'</span><span class="pcsum">'+round2(gr.nk)+'人工'+money+'</span></div>';
+    gr.reports.forEach(function(r){
+      var kyo=isKyo(r['区分']),who=esc(r['氏名']||'')+(r['所属']?'（'+esc(r['所属'])+'）':'');
+      h+='<div class="rrow" data-id="'+esc(r['日報ID'])+'">'+
+           '<div class="rr-l"><span class="rr-date">'+esc(String(r['日付']||'').slice(0,10))+'</span>'+
+           ' <span class="rr-who'+(kyo?' kyo':'')+'">👷 '+who+'</span>'+
+           (r['作業内容']?'<div class="rr-desc">'+esc(r['作業内容'])+'</div>':'')+'</div>'+
+           '<span class="rr-nk">'+esc(r['人工']||'')+'人工</span></div>';
+    });
+    card.innerHTML=h;
+    var rows=card.querySelectorAll('.rrow');
+    for(var i=0;i<rows.length;i++){(function(rw){rw.onclick=function(){var id=rw.getAttribute('data-id');
+      var rep=reports.filter(function(x){return String(x['日報ID'])===String(id);})[0];if(rep)openReport(rep);};})(rows[i]);}
+    el.appendChild(card);
   });
 }
 function renderSum(list){
@@ -288,11 +311,6 @@ function openReport(r){
   if(editing){buildSelect('f_worker',workers,'作業員ID','氏名',true);g('f_worker').value=r['作業員ID']||'';}
   else{buildWorkerChecks();}
   g('f_desc').value=editing?(r['作業内容']||''):'';
-  // 開始8:00／終了17:00 をデフォルト（新規時）
-  g('f_start').value=editing?(r['開始']||''):'08:00';
-  g('f_end').value=editing?(r['終了']||''):'17:00';
-  g('f_hours').value=editing?(r['作業時間']||''):'';
-  if(!editing)calcHours();
   g('f_note').value=editing?(r['備考']||''):'';
   calc();g('ov').classList.add('show');
 }
@@ -300,8 +318,6 @@ function buildSelect(id,arr,vk,tk,withBelong){var s=document.getElementById(id);
 function onProj(){var pid=document.getElementById('f_proj').value,p=projects.filter(function(x){return x['案件ID']===pid;})[0],a=document.getElementById('f_drive');
   if(p&&p['Driveフォルダ']){a.href=p['Driveフォルダ'];a.style.display='inline-block';}else{a.style.display='none';}}
 function setNk(v){document.getElementById('f_nk').value=v;calc();}
-function calcHours(){var s=document.getElementById('f_start').value,e=document.getElementById('f_end').value;
-  if(s&&e){var a=s.split(':'),b=e.split(':'),h=(b[0]*60+ +b[1]-(a[0]*60+ +a[1]))/60;if(h<0)h+=24;document.getElementById('f_hours').value=Math.round(h*4)/4;}}
 function workerRate(id){var w=workers.filter(function(x){return x['作業員ID']===id;})[0];return w?numv(w['標準単価']):0;}
 function calc(){ if(!isAdmin())return;
   var nk=numv(document.getElementById('f_nk').value);
@@ -315,8 +331,8 @@ function calc(){ if(!isAdmin())return;
 function gatherCommon(){var g=function(id){return document.getElementById(id).value;};
   var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
   return {'日付':g('f_date'),'案件ID':pid,'案件名':p['案件名']||'',
-    '作業内容':document.getElementById('f_desc').value.trim(),'開始':g('f_start'),'終了':g('f_end'),
-    '作業時間':g('f_hours'),'人工':g('f_nk'),'備考':document.getElementById('f_note').value.trim()};}
+    '作業内容':document.getElementById('f_desc').value.trim(),'人工':g('f_nk'),
+    '備考':document.getElementById('f_note').value.trim()};}
 function saveReport(){
   var c=gatherCommon();
   if(!c['日付']){toast('日付を入れてください');return;}
