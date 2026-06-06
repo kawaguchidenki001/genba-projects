@@ -156,7 +156,9 @@
       <div class="fld"><label>開始（任意）</label><input id="f_start" type="time"></div>
       <div class="fld"><label>終了（任意）</label><input id="f_etime" type="time"></div>
     </div>
-    <div class="fld"><label>担当</label><input id="f_owner" placeholder="担当者名"></div>
+    <div class="fld"><label>担当</label>
+      <select id="f_owner" onchange="onOwner()"></select>
+      <input id="f_owner_other" style="display:none;margin-top:6px;" placeholder="担当者名を直接入力"></div>
     <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
     <div class="acts"><button class="btn sub" onclick="closeEv()">キャンセル</button><button class="btn primary" id="saveBtn" onclick="saveEvent()">保存</button></div>
     <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="delEvent(event)">この予定を削除</a></div>
@@ -171,7 +173,7 @@
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var T_GENERAL='kawaguchi-genba-2026';
-var projects=[],schedules=[],cur=new Date(),viewMode='month';
+var projects=[],schedules=[],workers=[],cur=new Date(),viewMode='month';
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||T_GENERAL;}
@@ -192,13 +194,34 @@ function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st
 
 function reload(){ setSync('busy','同期中…');
   callGAS({action:'calendarData'}).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
-    projects=res.projects||[];schedules=res.schedules||[];
-    try{localStorage.setItem('genba_cal',JSON.stringify({projects:projects,schedules:schedules}));}catch(e){}
+    projects=res.projects||[];schedules=res.schedules||[];workers=res.workers||[];
+    try{localStorage.setItem('genba_cal',JSON.stringify({projects:projects,schedules:schedules,workers:workers}));}catch(e){}
     render();setSync('ok','同期済み');
-  }).catch(function(err){ try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];}catch(e){} render();setSync('off','オフライン');toast('読込失敗：'+err.message); }); }
+  }).catch(function(err){ try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];workers=c.workers||[];}catch(e){} render();setSync('off','オフライン');toast('読込失敗：'+err.message); }); }
 
 function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function kindColor(k){return getComputedStyle(document.documentElement).getPropertyValue('--k'+k).trim()||'#6b7280';}
+/* 現場ごとの色分け（案件IDから安定して決定）*/
+var PROJ_PALETTE=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0d9488','#db2777','#65a30d','#0891b2','#ea580c','#4f46e5','#9333ea','#0369a1','#be123c'];
+function hashStr(s){s=String(s||'');var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return h;}
+function projColor(pid){ if(!pid)return '#9aa1ab'; return PROJ_PALETTE[hashStr(pid)%PROJ_PALETTE.length]; }
+/* 担当（社員・協力業者から選択）*/
+function isKyoW(w){return String(w['区分']||'').indexOf('協力')>=0;}
+function buildOwnerSelect(val){
+  var sel=document.getElementById('f_owner'); if(!sel)return;
+  var emp=[],part=[]; workers.forEach(function(w){(isKyoW(w)?part:emp).push(w);});
+  sel.innerHTML='<option value="">（担当なし）</option>';
+  function addGroup(label,arr){ if(!arr.length)return; var og=document.createElement('optgroup');og.label=label;
+    arr.forEach(function(w){var o=document.createElement('option');o.value=w['氏名']||'';o.textContent=(w['氏名']||'')+(w['所属']?'（'+w['所属']+'）':'');og.appendChild(o);});
+    sel.appendChild(og); }
+  addGroup('社員',emp); addGroup('協力業者',part);
+  var ot=document.createElement('option');ot.value='__other__';ot.textContent='＋ 直接入力';sel.appendChild(ot);
+  var other=document.getElementById('f_owner_other'); other.value=''; other.style.display='none';
+  if(val){ sel.value=val;
+    if(sel.value!==val){ sel.value='__other__'; other.value=val; other.style.display='block'; } }
+}
+function onOwner(){ var sel=document.getElementById('f_owner'),other=document.getElementById('f_owner_other');
+  if(sel.value==='__other__'){ other.style.display='block'; } else { other.style.display='none'; } }
 function eventsOn(ds){ return schedules.filter(function(s){var a=String(s['日付']||'').slice(0,10);if(!a)return false;var b=String(s['終了日']||'').slice(0,10)||a;return ds>=a&&ds<=b;})
   .sort(function(x,y){return String(x['開始']||'').localeCompare(String(y['開始']||''));}); }
 
@@ -231,7 +254,7 @@ function renderMonth(){
     var cell=document.createElement('div');cell.className='cell'+(inM?'':' dim')+(ds===today?' today':'')+(dow===0?' sun':'')+(dow===6?' sat':'');
     cell.onclick=(function(x){return function(){openDay(x);};})(ds);
     var html='<div class="dnum">'+d.getDate()+'</div>',evs=eventsOn(ds);
-    for(var j=0;j<evs.length && j<3;j++){var e=evs[j];html+='<div class="ev" style="background:'+kindColor(e['区分']||'その他')+'">'+esc(evLabel(e))+'</div>';}
+    for(var j=0;j<evs.length && j<3;j++){var e=evs[j];html+='<div class="ev" style="background:'+projColor(e['案件ID'])+'">'+esc(evLabel(e))+'</div>';}
     if(evs.length>3)html+='<div class="more">+'+(evs.length-3)+'件</div>';
     cell.innerHTML=html;g.appendChild(cell);
   }
@@ -246,7 +269,7 @@ function renderAgenda(numDays){
     if(!evs.length){body='<div class="db-empty">予定なし</div>';}
     else{evs.forEach(function(e){
       var t=(e['開始']?String(e['開始']).slice(0,5)+(e['終了']?'〜'+String(e['終了']).slice(0,5):''):'終日');
-      body+='<div class="aev" data-id="'+esc(e['予定ID'])+'" style="border-left-color:'+kindColor(e['区分']||'その他')+'">'+
+      body+='<div class="aev" data-id="'+esc(e['予定ID'])+'" style="border-left-color:'+projColor(e['案件ID'])+'">'+
         '<div class="aev-h"><span class="aev-t">'+esc(t)+'</span><span class="aev-k">'+esc(e['区分']||'')+'</span></div>'+
         '<div class="aev-main">'+(e['案件名']?esc(e['案件名']):'<span style="color:#9aa1ab">（現場なし）</span>')+(e['担当']?' ・ 👤'+esc(e['担当']):'')+'</div>'+
         (e['予定内容']?'<div class="aev-desc">'+esc(e['予定内容'])+'</div>':'')+
@@ -268,7 +291,7 @@ function openDay(ds){ window._selDate=ds;
   if(!evs.length){el.innerHTML='<div class="empty">予定はありません。<br>右上の「＋予定」から追加できます。</div>';}
   else{ el.innerHTML=''; evs.forEach(function(e){ var r=document.createElement('div');r.className='evrow';r.onclick=function(){openEvent(e);};
     var tm=(e['開始']?e['開始']+(e['終了']?'〜'+e['終了']:''):'終日');
-    r.innerHTML='<span class="cdot" style="background:'+kindColor(e['区分']||'その他')+'"></span>'+
+    r.innerHTML='<span class="cdot" style="background:'+projColor(e['案件ID'])+'"></span>'+
       '<div><div class="evttl">'+esc(e['予定内容']||'')+' <span style="font-size:11px;color:var(--sub);">'+esc(e['区分']||'')+'</span></div>'+
       '<div class="evmeta">'+esc(tm)+(e['案件名']?' ・ '+esc(e['案件名']):'')+(e['担当']?' ・ '+esc(e['担当']):'')+'</div>'+
       (e['備考']?'<div class="evmeta">'+esc(e['備考'])+'</div>':'')+'</div>';
@@ -290,13 +313,14 @@ function openEvent(e,presetDate){
   g('f_kind').value=e?(e['区分']||'工事'):'工事';
   g('f_proj').value=e?(e['案件ID']||''):'';
   g('f_start').value=e?(e['開始']||''):'';g('f_etime').value=e?(e['終了']||''):'';
-  g('f_owner').value=e?(e['担当']||''):'';g('f_note').value=e?(e['備考']||''):'';
+  buildOwnerSelect(e?(e['担当']||''):'');g('f_note').value=e?(e['備考']||''):'';
   document.getElementById('ovEv').classList.add('show');
 }
 function buildProj(){var s=document.getElementById('f_proj');s.innerHTML='<option value="">（現場なし）</option>';projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);});}
 function closeEv(){document.getElementById('ovEv').classList.remove('show');}
 function gather(){var g=function(id){return document.getElementById(id).value;};var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
-  return {'予定ID':g('f_id'),'日付':g('f_date'),'終了日':g('f_end'),'案件ID':pid,'案件名':p['案件名']||'','予定内容':g('f_ttl').trim(),'区分':g('f_kind'),'担当':g('f_owner').trim(),'開始':g('f_start'),'終了':g('f_etime'),'備考':g('f_note').trim()};}
+  var ov=g('f_owner'),owner=(ov==='__other__')?g('f_owner_other').trim():ov;
+  return {'予定ID':g('f_id'),'日付':g('f_date'),'終了日':g('f_end'),'案件ID':pid,'案件名':p['案件名']||'','予定内容':g('f_ttl').trim(),'区分':g('f_kind'),'担当':owner,'開始':g('f_start'),'終了':g('f_etime'),'備考':g('f_note').trim()};}
 function saveEvent(){var d=gather();if(!d['日付']){toast('日付を入れてください');return;}if(!d['予定内容']){toast('予定内容を入れてください');return;}
   var id=d['予定ID'],isNew=!id,btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
   var params=isNew?{action:'addSchedule',data:d}:{action:'updateSchedule',id:id,data:d};
