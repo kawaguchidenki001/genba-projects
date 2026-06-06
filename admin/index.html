@@ -88,7 +88,7 @@
     <div id="list"><div class="empty">読込中…</div></div>
   </div>
   <div id="sec-partner" style="display:none;">
-    <div class="sec">取引先マスタ（企業／官公庁／協力業者）</div>
+    <div class="sec">取引先マスタ（官公庁／法人／個人）</div>
     <div id="listP"><div class="empty">読込中…</div></div>
   </div>
   <div id="sec-contact" style="display:none;">
@@ -127,7 +127,7 @@
   <div class="sheet">
     <h2 id="pTitle">取引先の追加</h2>
     <input type="hidden" id="p_id">
-    <div class="fld"><label>区分 *</label><select id="p_kind"><option>企業</option><option>官公庁</option><option>協力業者</option></select></div>
+    <div class="fld"><label>区分 *</label><select id="p_kind"><option>官公庁</option><option>法人</option><option>個人</option></select></div>
     <div class="fld"><label>取引先名 *</label><input id="p_name" placeholder="例）㈱井上デンキ工事 / 岐阜市"></div>
     <div class="two">
       <div class="fld"><label>電話</label><input id="p_tel" inputmode="tel"></div>
@@ -270,13 +270,13 @@ function switchTab(t){ curTab=t;
 function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner')openPartner(); else openContact(); }
 
 /* ===== 取引先（区分つき）===== */
-function custKind(c){ return String(c['区分']||'').trim()||'企業'; }   // 空は企業として扱う
-function kindCls(k){ return k==='官公庁'?'kk':(k==='協力業者'?'kx':'kg'); }
+function custKind(c){ return String(c['区分']||'').trim()||'法人'; }   // 空は法人として扱う
+function kindCls(k){ return k==='官公庁'?'kk':(k==='個人'?'kx':'kg'); }
 function loadCustomers(){ callGAS({action:'customers'}).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); customers=res.customers||[]; renderCustomers(); }).catch(function(err){toast('取引先の読込失敗：'+err.message);}); }
 function renderCustomers(){
   var el=document.getElementById('listP');
   if(!customers.length){el.innerHTML='<div class="empty">取引先がまだありません。<br>右下の「＋取引先」から登録してください。</div>';return;}
-  var order=['企業','官公庁','協力業者'],groups={};
+  var order=['官公庁','法人','個人'],groups={};
   customers.forEach(function(c){var k=custKind(c);(groups[k]=groups[k]||[]).push(c);});
   Object.keys(groups).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
   el.innerHTML='';
@@ -294,7 +294,7 @@ function openPartner(c){
   document.getElementById('pTitle').textContent=c?'取引先の編集':'取引先の追加';
   document.getElementById('pDelRow').style.display=c?'block':'none';
   var g=function(id){return document.getElementById(id);};
-  g('p_id').value=c?(c['顧客ID']||''):''; g('p_kind').value=c?custKind(c):'企業';
+  g('p_id').value=c?(c['顧客ID']||''):''; g('p_kind').value=c?custKind(c):'法人';
   g('p_name').value=c?(c['顧客名']||''):''; g('p_tel').value=c?(c['電話']||''):'';
   g('p_addr').value=c?(c['住所']||''):''; g('p_note').value=c?(c['備考']||''):'';
   document.getElementById('ovp').classList.add('show');
@@ -338,7 +338,7 @@ function renderContacts(){
   });
 }
 function buildPartnerSelect(sel,val){
-  var order=['企業','官公庁','協力業者'],byKind={};
+  var order=['官公庁','法人','個人'],byKind={};
   customers.forEach(function(c){var k=custKind(c);(byKind[k]=byKind[k]||[]).push(c);});
   Object.keys(byKind).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
   sel.innerHTML='<option value="">（取引先を選択）</option>';
