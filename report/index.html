@@ -49,6 +49,20 @@
   .rr-who.kyo{color:#b45309;}
   .rr-desc{font-size:13px;color:var(--ink);margin-top:2px;}
   .rr-nk{font-size:13px;font-weight:700;color:var(--sub);white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .drow{padding:9px 13px;border-top:1px solid var(--line);cursor:pointer;}
+  .dr-date{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;margin-bottom:3px;}
+  .dr-line{display:flex;align-items:baseline;gap:8px;margin:3px 0;}
+  .dr-tag{flex:0 0 auto;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;}
+  .dr-tag.emp{background:#e0e7ff;color:#3730a3;} .dr-tag.part{background:#fef3c7;color:#92400e;}
+  .dr-names{flex:1;font-size:14.5px;min-width:0;}
+  .dr-nk{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--sub);font-variant-numeric:tabular-nums;}
+  .grp-meta{color:var(--sub);font-size:13px;margin-bottom:8px;}
+  .grp-item{padding:9px 0;border-top:1px solid var(--line);cursor:pointer;}
+  .gi-top{display:flex;align-items:center;gap:8px;}
+  .gi-name{flex:1;font-size:15px;font-weight:600;} .gi-name.kyo{color:#b45309;}
+  .gi-tag{font-size:11px;color:var(--sub);}
+  .gi-nk{font-size:13px;font-weight:700;color:var(--sub);}
+  .gi-desc{font-size:13px;color:var(--ink);margin-top:3px;}
   .sumcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px;}
   .sumcard h3{margin:0 0 8px;font-size:14px;color:var(--accent-d);}
   .srow{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:14px;}
@@ -143,6 +157,16 @@
   </div>
 </div>
 
+<div class="ov" id="ovGrp">
+  <div class="sheet">
+    <h2 id="grpTitle"></h2>
+    <div class="grp-meta" id="grpMeta"></div>
+    <div id="grpList"></div>
+    <div class="acts"><button class="btn sub" onclick="closeGrp()">閉じる</button></div>
+    <div class="row-del"><a href="#" onclick="delGroup(event)">この日報（現場ごと）を削除</a></div>
+  </div>
+</div>
+
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
@@ -208,38 +232,59 @@ function filtered(){var pf=document.getElementById('projFilter').value,now=new D
     if(dateFilter==='today'&&d!==today)return false;if(dateFilter==='month'&&d.slice(0,7)!==ym)return false;return true;})
     .sort(function(a,b){return String(b['日付']||'').localeCompare(String(a['日付']||''));});}
 
+function projShort2(pid,nm){var p=projects.filter(function(x){return String(x['案件ID'])===String(pid);})[0];return (p&&p['略称'])?p['略称']:(nm||'(現場未設定)');}
+function workerShort(r){var w=workers.filter(function(x){return String(x['作業員ID'])===String(r['作業員ID']);})[0];if(w&&w['略称'])return w['略称'];return r['氏名']||(w&&w['氏名'])||'';}
 function render(){
   var list=filtered();document.getElementById('count').textContent=list.length+' 件';
   if(view==='sum'){renderSum(list);return;}
   var el=document.getElementById('list');
   if(!list.length){el.innerHTML='<div class="empty">この期間の日報はありません。<br>右下の「＋日報」から登録できます。</div>';return;}
-  // 現場ごとにグループ化
-  var groups={},order=[];
+  var pg={},porder=[];
   list.forEach(function(r){var pid=r['案件ID']||'__none__';
-    if(!groups[pid]){groups[pid]={name:r['案件名']||'(現場未設定)',reports:[],nk:0,ry:0,latest:''};order.push(pid);}
-    var gr=groups[pid];gr.reports.push(r);gr.nk+=numv(r['人工']);gr.ry+=numv(r['労務費']);
-    var d=String(r['日付']||'').slice(0,10);if(d>gr.latest)gr.latest=d;});
-  order.sort(function(a,b){return String(groups[b].latest).localeCompare(String(groups[a].latest));});
+    if(!pg[pid]){pg[pid]={pid:pid,name:projShort2(pid==='__none__'?'':pid,r['案件名']),days:{},dorder:[],nk:0,latest:''};porder.push(pid);}
+    var g=pg[pid];g.nk+=numv(r['人工']);g.ry=(g.ry||0)+numv(r['労務費']);var d=String(r['日付']||'').slice(0,10);if(d>g.latest)g.latest=d;
+    if(!g.days[d]){g.days[d]={reports:[]};g.dorder.push(d);} g.days[d].reports.push(r);});
+  porder.sort(function(a,b){return String(pg[b].latest).localeCompare(String(pg[a].latest));});
   el.innerHTML='';
-  order.forEach(function(pid){var gr=groups[pid];
-    gr.reports.sort(function(a,b){return String(b['日付']||'').localeCompare(String(a['日付']||''));});
+  porder.forEach(function(pid){var g=pg[pid];g.dorder.sort(function(a,b){return b.localeCompare(a);});
     var card=document.createElement('div');card.className='projcard';
-    var money=(isAdmin()&&gr.ry)?'<span class="pcry">'+yen(gr.ry)+'</span>':'';
-    var h='<div class="pchd"><span class="pcname">'+esc(gr.name)+'</span><span class="pcsum">'+round2(gr.nk)+'人工'+money+'</span></div>';
-    gr.reports.forEach(function(r){
-      var kyo=isKyo(r['区分']),who=esc(r['氏名']||'')+(r['所属']?'（'+esc(r['所属'])+'）':'');
-      h+='<div class="rrow" data-id="'+esc(r['日報ID'])+'">'+
-           '<div class="rr-l"><span class="rr-date">'+esc(String(r['日付']||'').slice(0,10))+'</span>'+
-           ' <span class="rr-who'+(kyo?' kyo':'')+'">👷 '+who+'</span>'+
-           (r['作業内容']?'<div class="rr-desc">'+esc(r['作業内容'])+'</div>':'')+'</div>'+
-           '<span class="rr-nk">'+esc(r['人工']||'')+'人工</span></div>';
-    });
+    var h='<div class="pchd"><span class="pcname">'+esc(g.name)+'</span><span class="pcsum">'+round2(g.nk)+'人工'+((isAdmin()&&g.ry)?'<span class="pcry"> '+yen(g.ry)+'</span>':'')+'</span></div>';
+    g.dorder.forEach(function(d){var reps=g.days[d].reports,emp=[],part=[],eNk=0,pNk=0;
+      reps.forEach(function(r){if(isKyo(r['区分'])){part.push(workerShort(r));pNk+=numv(r['人工']);}else{emp.push(workerShort(r));eNk+=numv(r['人工']);}});
+      h+='<div class="drow" data-pid="'+esc(pid)+'" data-date="'+esc(d)+'">'+
+           '<div class="dr-date">'+esc(d)+'</div>'+
+           (emp.length?'<div class="dr-line"><span class="dr-tag emp">社員</span><span class="dr-names">'+esc(emp.join('、'))+'</span><span class="dr-nk">'+round2(eNk)+'人工</span></div>':'')+
+           (part.length?'<div class="dr-line"><span class="dr-tag part">協力会社</span><span class="dr-names">'+esc(part.join('、'))+'</span><span class="dr-nk">'+round2(pNk)+'人工</span></div>':'')+
+         '</div>';});
     card.innerHTML=h;
-    var rows=card.querySelectorAll('.rrow');
-    for(var i=0;i<rows.length;i++){(function(rw){rw.onclick=function(){var id=rw.getAttribute('data-id');
-      var rep=reports.filter(function(x){return String(x['日報ID'])===String(id);})[0];if(rep)openReport(rep);};})(rows[i]);}
+    var dr=card.querySelectorAll('.drow');
+    for(var i=0;i<dr.length;i++){(function(x){x.onclick=function(){openGroup(x.getAttribute('data-pid'),x.getAttribute('data-date'));};})(dr[i]);}
     el.appendChild(card);
   });
+}
+var curGroup=[];
+function openGroup(pid,date){
+  curGroup=reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
+  if(!curGroup.length)return;
+  document.getElementById('grpTitle').textContent=projShort2(pid==='__none__'?'':pid,curGroup[0]['案件名']);
+  var tot=curGroup.reduce(function(s,r){return s+numv(r['人工']);},0);
+  document.getElementById('grpMeta').textContent=date+' ・ '+curGroup.length+'名 ・ 計'+round2(tot)+'人工';
+  var box=document.getElementById('grpList'),h='';
+  curGroup.forEach(function(r){var kyo=isKyo(r['区分']);
+    h+='<div class="grp-item" data-id="'+esc(r['日報ID'])+'">'+
+         '<div class="gi-top"><span class="gi-name'+(kyo?' kyo':'')+'">'+esc(workerShort(r))+'</span><span class="gi-tag">'+(kyo?'協力会社':'社員')+'</span><span class="gi-nk">'+esc(r['人工']||'')+'人工</span></div>'+
+         (r['作業内容']?'<div class="gi-desc">'+esc(r['作業内容'])+'</div>':'')+
+       '</div>';});
+  box.innerHTML=h;
+  var items=box.querySelectorAll('.grp-item');
+  for(var i=0;i<items.length;i++){(function(it){it.onclick=function(){var id=it.getAttribute('data-id');var rep=reports.filter(function(x){return String(x['日報ID'])===String(id);})[0];if(rep){closeGrp();openReport(rep);}};})(items[i]);}
+  document.getElementById('ovGrp').classList.add('show');
+}
+function closeGrp(){document.getElementById('ovGrp').classList.remove('show');}
+function delGroup(ev){ if(ev)ev.preventDefault(); if(!curGroup.length)return;
+  if(!confirm('この現場・この日の日報（'+curGroup.length+'名分）をまとめて削除します。よろしいですか？'))return;
+  var ids=curGroup.map(function(r){return r['日報ID'];});
+  Promise.all(ids.map(function(id){return callGAS({action:'deleteReport',id:id});})).then(function(){closeGrp();toast('削除しました');reload();}).catch(function(err){toast('削除に失敗しました：'+(err&&err.message||''));});
 }
 function renderSum(list){
   var byProj={},byKyo={};
@@ -294,7 +339,7 @@ function openReport(r){
   if(!workers.length){toast('作業員が未登録です。管理画面で登録してください');return;}
   var editing=!!r,g=function(id){return document.getElementById(id);};
   g('mTitle').textContent=editing?'日報の編集':'日報の入力（まとめて記入できます）';
-  g('delRow').style.display=editing?'block':'none';
+  g('delRow').style.display='none';
   g('moneyRow').style.display=isAdmin()?'block':'none';
   g('wmFld').style.display=editing?'none':'block';
   g('wsFld').style.display=editing?'block':'none';
@@ -372,6 +417,7 @@ function round2(n){return Math.round(n*100)/100;}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
 document.getElementById('ov').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.getElementById('ovGrp').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
 document.addEventListener('visibilitychange',function(){if(!document.hidden)reload();});
 
 loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();reload();
