@@ -67,6 +67,16 @@
   .tile .ts{font-size:10.5px;font-weight:700;color:#fff;padding:1px 7px;border-radius:999px;}
   .tile .edit{position:absolute;top:5px;right:5px;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);
     background:#fff;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--sub);}
+  /* 現場の詳細シート */
+  .d-sub{font-size:13px;color:var(--sub);margin:0 0 12px;}
+  .d-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
+  .d-row{display:flex;gap:10px;font-size:14px;}
+  .d-row .k{flex:0 0 80px;color:var(--sub);font-size:12.5px;padding-top:1px;}
+  .d-row .v{flex:1;font-weight:600;word-break:break-word;}
+  .d-map{display:block;text-align:center;padding:11px;border:1px solid var(--accent);color:var(--accent-d);border-radius:11px;text-decoration:none;font-weight:700;font-size:14px;margin-bottom:12px;}
+  .d-map:active{background:#eef4fb;}
+  .d-btns{display:flex;gap:8px;}
+  .d-btns .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;text-align:center;}
   .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;
     background:var(--accent);color:#fff;border:none;border-radius:999px;
     padding:14px 20px;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(15,95,181,.4);cursor:pointer;}
@@ -150,34 +160,20 @@
   <div class="sheet">
     <h2 id="mTitle">新規案件</h2>
     <input type="hidden" id="f_id">
-    <div class="fld"><label>案件名 ／ 現場名 *</label><input id="f_name" placeholder="例）競輪場サイクルプラザ照明改修"></div>
+    <div class="fld"><label>案件名 ／ 現場名 *</label><input id="f_name" placeholder="例）不破高等学校空調設備更新工事"></div>
     <div class="two">
-      <div class="fld"><label>顧客 ／ 取引先</label><input id="f_cust" list="custList" placeholder="例）岐阜市"><datalist id="custList"></datalist></div>
-      <div class="fld"><label>場所</label><input id="f_place" placeholder="例）岐阜市"></div>
+      <div class="fld"><label>顧客 ／ 取引先</label><input id="f_cust" list="custList" placeholder="例）㈱井上デンキ工事"><datalist id="custList"></datalist></div>
+      <div class="fld"><label>場所（住所）</label><input id="f_place" placeholder="例）愛知県一宮市〇〇1-2"></div>
     </div>
     <div class="two">
       <div class="fld"><label>種別</label><select id="f_type">
-        <option>官公庁</option><option>民間</option><option>住宅</option><option>その他</option></select></div>
+        <option>官公庁</option><option>法人</option><option>個人</option></select></div>
       <div class="fld"><label>ステータス</label><select id="f_status">
-        <option>見積中</option><option>受注</option><option>施工中</option><option>完了</option><option>請求</option><option>入金</option></select></div>
+        <option>受注</option><option>段取済</option><option>施工中</option><option>完了</option></select></div>
     </div>
     <div class="two">
       <div class="fld"><label>工期開始</label><input id="f_start" type="date"></div>
       <div class="fld"><label>工期完了</label><input id="f_end" type="date"></div>
-    </div>
-    <div class="two">
-      <div class="fld"><label>受注金額（税抜）</label>
-        <div class="ytip"><input id="f_net" type="number" inputmode="numeric" placeholder="円">
-          <span class="mini" onclick="calcTax()">×1.1</span></div></div>
-      <div class="fld"><label>受注金額（税込）</label><input id="f_gross" type="number" inputmode="numeric" placeholder="円"></div>
-    </div>
-    <div class="two">
-      <div class="fld"><label>実行予算</label><input id="f_budget" type="number" inputmode="numeric" placeholder="円"></div>
-      <div class="fld"><label>担当</label><input id="f_owner" placeholder="担当者名"></div>
-    </div>
-    <div class="two">
-      <div class="fld"><label>段取り</label><select id="f_setup"><option>—</option><option>未</option><option>済</option></select></div>
-      <div class="fld"><label>Driveフォルダ（任意）</label><input id="f_drive" placeholder="URL"></div>
     </div>
     <div class="fld"><label>備考</label><textarea id="f_note" placeholder="メモ"></textarea></div>
     <div class="acts">
@@ -206,6 +202,24 @@
   </div>
 </div>
 
+<!-- 現場の詳細（だれでも閲覧）-->
+<div class="ov" id="ovd">
+  <div class="sheet">
+    <h2 id="d_name" style="margin:2px 0 4px;">現場名</h2>
+    <div id="d_cust" class="d-sub"></div>
+    <div class="d-rows" id="d_rows"></div>
+    <a id="d_map" class="d-map" target="_blank" rel="noopener" style="display:none;">📍 地図で見る（Googleマップ）</a>
+    <div class="d-btns">
+      <a id="d_file" class="btn sub" target="_blank" rel="noopener">📄 ファイル</a>
+      <a id="d_photo" class="btn primary">📷 写真</a>
+    </div>
+    <div id="d_adminbtns" style="display:none;margin-top:10px;">
+      <button class="btn sub" style="width:100%;" onclick="editFromDetail()">✎ この現場を編集</button>
+    </div>
+    <div class="row-del"><a href="#" onclick="closeDetail(event)" style="color:var(--sub);">閉じる</a></div>
+  </div>
+</div>
+
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
@@ -217,7 +231,7 @@ var ROLE = '';
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||T_GENERAL;}
 
-var STATUSES = ['見積中','受注','施工中','完了','請求','入金'];
+var STATUSES = ['受注','段取済','施工中','完了'];
 var projects = [], customers = [], filterStatus = 'すべて';
 var CACHE_P = 'genba_projects', CACHE_C = 'genba_customers';
 
@@ -296,6 +310,33 @@ function isAdmin(){return ROLE==='admin';}
 function custKey(p){var c=String(p['顧客']||'').trim();return c||NOCUST;}
 function openPhotos(p){ if(!p||!p['案件ID']){toast('案件IDがありません');return;} location.href=BASE+'files/?case='+encodeURIComponent(p['案件ID']); }
 function editProjectById(id){var p=projects.filter(function(x){return String(x['案件ID'])===String(id);})[0];if(p)openProject(p);}
+var curDetail=null;
+function openDetail(p){
+  curDetail=p; var g=function(id){return document.getElementById(id);};
+  g('d_name').textContent=p['案件名']||'(無題)';
+  g('d_cust').textContent=(p['顧客']||'（顧客未設定）')+(p['種別']?(' ・ '+p['種別']):'');
+  var rows='';
+  function row(k,v){ if(v) rows+='<div class="d-row"><span class="k">'+k+'</span><span class="v">'+esc(v)+'</span></div>'; }
+  row('ステータス',p['ステータス']);
+  var period=(dateOnly(p['工期開始'])||'')+(dateOnly(p['工期完了'])?(' 〜 '+dateOnly(p['工期完了'])):'');
+  row('工期',period.trim());
+  row('住所',p['場所']);
+  row('備考',p['備考']);
+  g('d_rows').innerHTML=rows;
+  var mp=g('d_map');
+  if(p['場所']){ mp.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p['場所']); mp.style.display='block'; }
+  else { mp.style.display='none'; }
+  g('d_photo').href=BASE+'files/?case='+encodeURIComponent(p['案件ID']);
+  var fb=g('d_file'); fb.onclick=null; fb.removeAttribute('href'); fb.textContent='📄 ファイル（準備中…）'; fb.style.opacity='.6';
+  callGAS({action:'ensureFolder',id:p['案件ID']}).then(function(res){
+    if(res&&res.ok&&res.fileUrl){ fb.href=res.fileUrl; fb.textContent='📄 ファイル'; fb.style.opacity='1'; }
+    else { fb.textContent='📄 ファイル（再試行）'; fb.style.opacity='1'; fb.onclick=function(e){e.preventDefault();openDetail(curDetail);}; }
+  }).catch(function(){ fb.textContent='📄 ファイル（再試行）'; fb.style.opacity='1'; fb.onclick=function(e){e.preventDefault();openDetail(curDetail);}; });
+  g('d_adminbtns').style.display=isAdmin()?'block':'none';
+  document.getElementById('ovd').classList.add('show');
+}
+function editFromDetail(){ closeDetail(); if(curDetail)openProject(curDetail); }
+function closeDetail(ev){ if(ev&&ev.preventDefault)ev.preventDefault(); document.getElementById('ovd').classList.remove('show'); }
 function render(){
   var q=(document.getElementById('q').value||'').trim();
   var list=projects.slice();
@@ -323,10 +364,9 @@ function render(){
     arr.forEach(function(p){
       var col=statusColor(p['ステータス']);
       var t=document.createElement('div');t.className='tile';t.style.borderTopColor=col;
-      t.onclick=function(){openPhotos(p);};
+      t.onclick=function(){openDetail(p);};
       var h='<div class="ic">📷</div><div class="tn">'+esc(p['案件名']||'(無題)')+'</div>';
       if(p['ステータス'])h+='<div class="ts" style="background:'+col+'">'+esc(p['ステータス'])+'</div>';
-      if(isAdmin())h+='<div class="edit" title="編集" onclick="event.stopPropagation();editProjectById(\''+esc(p['案件ID'])+'\')">✎</div>';
       t.innerHTML=h;
       tiles.appendChild(t);
     });
@@ -345,15 +385,9 @@ function openProject(p){
   g('f_cust').value = p?(p['顧客']||''):'';
   g('f_place').value= p?(p['場所']||''):'';
   g('f_type').value = p?(p['種別']||'官公庁'):'官公庁';
-  g('f_status').value=p?(p['ステータス']||'見積中'):'見積中';
+  g('f_status').value=p?(p['ステータス']||'受注'):'受注';
   g('f_start').value= p?(dateOnly(p['工期開始'])):'';
   g('f_end').value  = p?(dateOnly(p['工期完了'])):'';
-  g('f_net').value  = p?(num(p['受注金額税抜'])||''):'';
-  g('f_gross').value= p?(num(p['受注金額税込'])||''):'';
-  g('f_budget').value=p?(num(p['実行予算'])||''):'';
-  g('f_owner').value= p?(p['担当']||''):'';
-  g('f_setup').value= p?(p['段取り']||'—'):'—';
-  g('f_drive').value= p?(p['Driveフォルダ']||''):'';
   g('f_note').value = p?(p['備考']||''):'';
   document.getElementById('ov').classList.add('show');
 }
@@ -368,8 +402,6 @@ function gatherProject(){
     '案件ID':g('f_id'),'案件名':g('f_name').trim(),'顧客':g('f_cust').trim(),
     '場所':g('f_place').trim(),'種別':g('f_type'),'ステータス':g('f_status'),
     '工期開始':g('f_start'),'工期完了':g('f_end'),
-    '受注金額税抜':g('f_net'),'受注金額税込':g('f_gross'),'実行予算':g('f_budget'),
-    '担当':g('f_owner').trim(),'段取り':g('f_setup'),'Driveフォルダ':g('f_drive').trim(),
     '備考':g('f_note').trim()
   };
 }
@@ -419,7 +451,7 @@ function saveCustomer(){
 }
 
 /* ===== ヘルパー ===== */
-function statusColor(s){var m={'見積中':'var(--s-見積中)','受注':'var(--s-受注)','施工中':'var(--s-施工中)','完了':'var(--s-完了)','請求':'var(--s-請求)','入金':'var(--s-入金)'};return m[s]||'var(--sub)';}
+function statusColor(s){var m={'受注':'var(--s-受注)','段取済':'#7c3aed','施工中':'var(--s-施工中)','完了':'var(--s-完了)'};return m[s]||'var(--sub)';}
 function num(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN(n)?0:n;}
 function yen(v){var n=num(v);return n?('¥'+n.toLocaleString('ja-JP')):'';}
 function dateOnly(v){return v?String(v).slice(0,10):'';}
@@ -428,7 +460,7 @@ var toastT;
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
 
 /* 背景タップで閉じる */
-['ov','ovc'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
+['ov','ovc','ovd'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
 /* タブ復帰で自動更新 */
 document.addEventListener('visibilitychange',function(){if(!document.hidden && GAS_URL)reload();});
 
