@@ -158,10 +158,9 @@
   <div class="search"><input id="q" type="search" placeholder="現場名・会社名・場所で検索" oninput="render()"></div>
   <div class="chips" id="chips"></div>
   <div class="row2" id="adminRow" style="display:none;">
-    <span style="flex:1;font-size:12px;color:var(--sub);">管理者：現場の追加・編集ができます</span>
+    <span style="flex:1;font-size:12px;color:var(--sub);">管理者：顧客マスタを追加できます</span>
     <button class="ghost" onclick="openCustomer()">＋顧客</button>
   </div>
-  <div class="adhint" id="userHint" style="display:none;">🔒 現場の登録・編集は管理者のみです。右上の 🔑 から管理者ログインすると「＋新規案件」や編集ボタンが表示されます。</div>
 </div>
 
 <main>
@@ -359,7 +358,7 @@ function openDetail(p){
     if(res&&res.ok&&res.url){ fo.href=res.url; fo.textContent='📁 フォルダを開く（Googleドライブ）'; fo.style.opacity='1'; }
     else { fo.textContent='📁 フォルダ（もう一度タップ）'; fo.style.opacity='1'; fo.onclick=function(e){e.preventDefault();openDetail(curDetail);}; }
   }).catch(function(){ fo.textContent='📁 フォルダ（もう一度タップ）'; fo.style.opacity='1'; fo.onclick=function(e){e.preventDefault();openDetail(curDetail);}; });
-  g('d_adminbtns').style.display=isAdmin()?'block':'none';
+  g('d_adminbtns').style.display='block';
   document.getElementById('ovd').classList.add('show');
 }
 function editFromDetail(){ closeDetail(); if(curDetail)openProject(curDetail); }
@@ -374,7 +373,7 @@ function render(){
         .some(function(v){return String(v||'').toLowerCase().indexOf(lq)>=0;});});}
   document.getElementById('count').textContent= list.length+' 件';
   var el=document.getElementById('list');
-  if(!list.length){el.innerHTML='<div class="empty">該当する現場がありません。'+(isAdmin()?'<br>右下の「＋新規案件」から登録できます。':'')+'</div>';return;}
+  if(!list.length){el.innerHTML='<div class="empty">該当する現場がありません。<br>右下の「＋新規案件」から登録できます。</div>';return;}
   // 会社名・自治体名ごとにグループ化
   var groups={},order=[];
   list.forEach(function(p){var k=custKey(p);if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(p);});
@@ -495,9 +494,8 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden && G
 function showGate(msg){document.getElementById('gate').style.display='flex';document.getElementById('gateMsg').textContent=msg||'';}
 function hideGate(){document.getElementById('gate').style.display='none';}
 function applyAdminUI(){
-  document.getElementById('fab').style.display=isAdmin()?'block':'none';
-  document.getElementById('adminRow').style.display=isAdmin()?'flex':'none';
-  var uh=document.getElementById('userHint'); if(uh) uh.style.display=isAdmin()?'none':'block';
+  document.getElementById('fab').style.display='block';                       // 誰でも登録できる
+  document.getElementById('adminRow').style.display=isAdmin()?'flex':'none';   // 顧客の追加は管理者
   document.getElementById('admBtn').textContent=isAdmin()?'管理者':'🔑';
 }
 function toggleAdmin(){
