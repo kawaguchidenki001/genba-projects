@@ -177,7 +177,9 @@
     <input type="hidden" id="f_id">
     <div class="fld"><label>案件名 ／ 現場名 *</label><input id="f_name" placeholder="例）不破高等学校空調設備更新工事"></div>
     <div class="two">
-      <div class="fld"><label>顧客 ／ 取引先</label><input id="f_cust" list="custList" placeholder="例）㈱井上デンキ工事"><datalist id="custList"></datalist></div>
+      <div class="fld"><label>顧客 ／ 取引先</label>
+        <select id="f_cust" onchange="onCustChange()"></select>
+        <input id="f_cust_other" style="display:none;margin-top:6px;" placeholder="一覧にない取引先を直接入力"></div>
       <div class="fld"><label>場所（住所）</label><input id="f_place" placeholder="例）愛知県一宮市〇〇1-2"></div>
     </div>
     <div class="two">
@@ -190,7 +192,9 @@
       <div class="fld"><label>工期開始</label><input id="f_start" type="date"></div>
       <div class="fld"><label>工期完了</label><input id="f_end" type="date"></div>
     </div>
-    <div class="fld"><label>先方担当者</label><input id="f_contact" placeholder="例）山田 太郎"></div>
+    <div class="fld"><label>先方担当者</label>
+      <select id="f_contact" onchange="onContactChange()"></select>
+      <input id="f_contact_other" style="display:none;margin-top:6px;" placeholder="一覧にない担当者を直接入力"></div>
     <div class="two">
       <div class="fld"><label>電話番号</label><input id="f_tel" inputmode="tel" placeholder="例）090-1234-5678"></div>
       <div class="fld"><label>メールアドレス</label><input id="f_email" inputmode="email" placeholder="例）taro@example.com"></div>
@@ -254,8 +258,8 @@ function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||T_GENERAL;}
 
 var STATUSES = ['受注','段取済','施工中','完了'];
-var projects = [], customers = [], filterStatus = 'すべて';
-var CACHE_P = 'genba_projects', CACHE_C = 'genba_customers';
+var projects = [], customers = [], contacts = [], filterStatus = 'すべて';
+var CACHE_P = 'genba_projects', CACHE_C = 'genba_customers', CACHE_K = 'genba_contacts';
 
 /* ===== JSONP 通信 ===== */
 var loadCnt=0,loadShownAt=0;
@@ -289,16 +293,18 @@ function setSync(state,txt){
 function loadCache(){
   try{projects=JSON.parse(localStorage.getItem(CACHE_P)||'[]');}catch(e){projects=[];}
   try{customers=JSON.parse(localStorage.getItem(CACHE_C)||'[]');}catch(e){customers=[];}
+  try{contacts=JSON.parse(localStorage.getItem(CACHE_K)||'[]');}catch(e){contacts=[];}
 }
 function saveCache(){
   try{localStorage.setItem(CACHE_P,JSON.stringify(projects));
-      localStorage.setItem(CACHE_C,JSON.stringify(customers));}catch(e){}
+      localStorage.setItem(CACHE_C,JSON.stringify(customers));
+      localStorage.setItem(CACHE_K,JSON.stringify(contacts));}catch(e){}
 }
 function reload(){
   setSync('busy','同期中…');
   callGAS({action:'all'}).then(function(res){
     if(!res.ok){throw new Error(res.error||'エラー');}
-    projects=res.projects||[]; customers=res.customers||[];
+    projects=res.projects||[]; customers=res.customers||[]; contacts=res.contacts||[];
     saveCache(); buildChips(); buildCustList(); render();
     setSync('ok','同期済み');
   }).catch(function(err){
@@ -321,9 +327,48 @@ function buildChips(){
     wrap.appendChild(c);
   });
 }
+function custKindOf(c){ return String(c['区分']||'').trim()||'企業'; }
 function buildCustList(){
-  var dl=document.getElementById('custList'); dl.innerHTML='';
-  customers.forEach(function(c){var o=document.createElement('option');o.value=c['顧客名'];dl.appendChild(o);});
+  var sel=document.getElementById('f_cust'); if(!sel)return;
+  var keep=sel.value;
+  var order=['企業','官公庁','協力業者'],byKind={};
+  customers.forEach(function(c){var k=custKindOf(c);(byKind[k]=byKind[k]||[]).push(c);});
+  Object.keys(byKind).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
+  sel.innerHTML='<option value="">（選択）</option>';
+  order.forEach(function(k){var arr=byKind[k];if(!arr)return;var og=document.createElement('optgroup');og.label=k;
+    arr.sort(function(a,b){return String(a['顧客名']||'').localeCompare(String(b['顧客名']||''),'ja');});
+    arr.forEach(function(c){var o=document.createElement('option');o.value=c['顧客名'];o.textContent=c['顧客名'];og.appendChild(o);});
+    sel.appendChild(og);});
+  var ot=document.createElement('option');ot.value='__other__';ot.textContent='＋ 一覧にない取引先を直接入力';sel.appendChild(ot);
+  if(keep){ sel.value=keep; }
+}
+function buildContactSelect(partner){
+  var sel=document.getElementById('f_contact'); if(!sel)return;
+  sel.innerHTML='<option value="">（選択／任意）</option>';
+  contacts.filter(function(c){return String(c['取引先']||'')===String(partner||'');})
+    .sort(function(a,b){return String(a['担当者名']||'').localeCompare(String(b['担当者名']||''),'ja');})
+    .forEach(function(c){var o=document.createElement('option');o.value=c['担当者名'];
+      o.textContent=c['担当者名']+(c['役職']?'（'+c['役職']+'）':'');
+      o.setAttribute('data-tel',c['電話']||'');o.setAttribute('data-mail',c['メール']||'');sel.appendChild(o);});
+  var ot=document.createElement('option');ot.value='__other__';ot.textContent='＋ 直接入力';sel.appendChild(ot);
+}
+function onCustChange(){
+  var sel=document.getElementById('f_cust');
+  document.getElementById('f_cust_other').style.display=(sel.value==='__other__')?'block':'none';
+  var partner=(sel.value==='__other__')?'':sel.value;
+  buildContactSelect(partner);
+  document.getElementById('f_contact').value='';
+  document.getElementById('f_contact_other').style.display='none';
+}
+function onContactChange(){
+  var sel=document.getElementById('f_contact'),other=document.getElementById('f_contact_other');
+  if(sel.value==='__other__'){ other.style.display='block'; other.value=''; return; }
+  other.style.display='none';
+  if(sel.value){ var o=sel.options[sel.selectedIndex];
+    var tel=o.getAttribute('data-tel')||'',ml=o.getAttribute('data-mail')||'';
+    if(tel)document.getElementById('f_tel').value=tel;
+    if(ml)document.getElementById('f_email').value=ml;
+  }
 }
 
 var BASE='https://kawaguchidenki001.github.io/genba-projects/';
@@ -408,13 +453,22 @@ function openProject(p){
   var g=function(id){return document.getElementById(id);};
   g('f_id').value   = p?(p['案件ID']||''):'';
   g('f_name').value = p?(p['案件名']||''):'';
-  g('f_cust').value = p?(p['顧客']||''):'';
+  buildCustList();
+  var _cust=p?(p['顧客']||''):''; var _csel=g('f_cust'); _csel.value=_cust;
+  if(_cust && _csel.value!==_cust){ _csel.value='__other__'; }
+  g('f_cust_other').value=(_csel.value==='__other__')?_cust:'';
+  g('f_cust_other').style.display=(_csel.value==='__other__')?'block':'none';
   g('f_place').value= p?(p['場所']||''):'';
   g('f_type').value = p?(p['種別']||'官公庁'):'官公庁';
   g('f_status').value=p?(p['ステータス']||'受注'):'受注';
   g('f_start').value= p?(dateOnly(p['工期開始'])):'';
   g('f_end').value  = p?(dateOnly(p['工期完了'])):'';
-  g('f_contact').value=p?(p['先方担当者']||''):'';
+  var _partner=(g('f_cust').value==='__other__')?'':g('f_cust').value;
+  buildContactSelect(_partner);
+  var _ct=p?(p['先方担当者']||''):''; var _ksel=g('f_contact'); var _kother=g('f_contact_other');
+  _kother.value=''; _kother.style.display='none';
+  if(_ct){ _ksel.value=_ct; if(_ksel.value!==_ct){ _ksel.value='__other__'; _kother.value=_ct; _kother.style.display='block'; } }
+  else { _ksel.value=''; }
   g('f_tel').value  = p?(p['電話番号']||''):'';
   g('f_email').value= p?(p['メールアドレス']||''):'';
   g('f_note').value = p?(p['備考']||''):'';
@@ -423,11 +477,13 @@ function openProject(p){
 function closeOv(){document.getElementById('ov').classList.remove('show');}
 function gatherProject(){
   var g=function(id){return document.getElementById(id).value;};
+  var cv=g('f_cust'), cust=(cv==='__other__')?g('f_cust_other').trim():cv.trim();
+  var kv=g('f_contact'), contact=(kv==='__other__')?g('f_contact_other').trim():kv.trim();
   return {
-    '案件ID':g('f_id'),'案件名':g('f_name').trim(),'顧客':g('f_cust').trim(),
+    '案件ID':g('f_id'),'案件名':g('f_name').trim(),'顧客':cust,
     '場所':g('f_place').trim(),'種別':g('f_type'),'ステータス':g('f_status'),
     '工期開始':g('f_start'),'工期完了':g('f_end'),
-    '先方担当者':g('f_contact').trim(),'電話番号':g('f_tel').trim(),'メールアドレス':g('f_email').trim(),
+    '先方担当者':contact,'電話番号':g('f_tel').trim(),'メールアドレス':g('f_email').trim(),
     '備考':g('f_note').trim()
   };
 }
