@@ -327,11 +327,11 @@ function buildChips(){
     wrap.appendChild(c);
   });
 }
-function custKindOf(c){ return String(c['区分']||'').trim()||'企業'; }
+function custKindOf(c){ return String(c['区分']||'').trim()||'法人'; }
 function buildCustList(){
   var sel=document.getElementById('f_cust'); if(!sel)return;
   var keep=sel.value;
-  var order=['企業','官公庁','協力業者'],byKind={};
+  var order=['官公庁','法人','個人'],byKind={};
   customers.forEach(function(c){var k=custKindOf(c);(byKind[k]=byKind[k]||[]).push(c);});
   Object.keys(byKind).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
   sel.innerHTML='<option value="">（選択）</option>';
