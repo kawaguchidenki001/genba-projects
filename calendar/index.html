@@ -60,6 +60,34 @@
   .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
   @keyframes sp{to{transform:rotate(360deg);}}
   .lbox .txt{font-size:14px;font-weight:700;}
+  /* 表示切替 */
+  .viewbar{padding:0 8px 8px;}
+  .vseg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff;max-width:360px;margin:0 auto;}
+  .vseg button{flex:1;padding:8px 6px;border:none;background:#fff;font-size:13px;cursor:pointer;color:var(--sub);font-weight:700;}
+  .vseg button.on{background:var(--accent);color:#fff;}
+  .cap-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:2px 6px 8px;}
+  .cap-co{font-weight:700;font-size:14px;color:var(--ink);}
+  .cap-period{font-size:13px;color:var(--sub);font-weight:700;}
+  /* 縦並び（1週/2週） */
+  #agendaView{padding:0 4px;}
+  .dayblock{background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden;}
+  .dayblock.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
+  .dbh{display:flex;align-items:center;gap:6px;padding:8px 11px;background:#faf9fd;cursor:pointer;font-weight:700;}
+  .dayblock.sun .dbh-d{color:#dc2626;} .dayblock.sat .dbh-d{color:#2563eb;}
+  .dbh-w{font-size:12px;color:var(--sub);font-weight:700;}
+  .dbh-add{margin-left:auto;color:var(--accent);font-size:18px;font-weight:700;line-height:1;}
+  .db-empty{padding:8px 11px;color:#b9bec6;font-size:13px;}
+  .aev{padding:8px 11px;border-top:1px solid var(--line);border-left:4px solid var(--accent);cursor:pointer;}
+  .aev-h{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .aev-t{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .aev-k{font-size:11px;color:var(--sub);}
+  .aev-main{font-size:14px;margin-top:2px;}
+  .aev-desc{font-size:13px;color:var(--ink);margin-top:2px;}
+  .aev-note{font-size:12px;color:var(--sub);margin-top:2px;}
+  /* 出力 */
+  .exportbar{display:flex;gap:8px;padding:12px 4px calc(env(safe-area-inset-bottom) + 16px);}
+  .exbtn{flex:1;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-size:14px;font-weight:700;cursor:pointer;}
+  .exbtn:active{background:#f1eefb;}
 </style>
 </head>
 <body>
@@ -80,9 +108,27 @@
   <button class="today" onclick="goToday()">今日</button>
 </div>
 
+<div class="viewbar">
+  <div class="vseg">
+    <button id="vm-month" class="on" onclick="setMode('month')">月</button>
+    <button id="vm-week1" onclick="setMode('week1')">1週</button>
+    <button id="vm-week2" onclick="setMode('week2')">2週</button>
+  </div>
+</div>
+
 <div class="cal">
-  <div class="wk"><div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div></div>
-  <div class="grid" id="grid"></div>
+  <div id="capture">
+    <div class="cap-head"><span class="cap-co">河口電機 スケジュール</span><span class="cap-period" id="capPeriod"></span></div>
+    <div id="monthView">
+      <div class="wk"><div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div></div>
+      <div class="grid" id="grid"></div>
+    </div>
+    <div id="agendaView" style="display:none;"></div>
+  </div>
+  <div class="exportbar">
+    <button class="exbtn" onclick="exportPdf()">📄 PDFで保存</button>
+    <button class="exbtn" onclick="exportJpeg()">🖼 JPEGで保存</button>
+  </div>
 </div>
 
 <div class="ov" id="ovDay">
@@ -119,11 +165,13 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var T_GENERAL='kawaguchi-genba-2026';
-var projects=[],schedules=[],cur=new Date();
+var projects=[],schedules=[],cur=new Date(),viewMode='month';
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||T_GENERAL;}
@@ -154,11 +202,28 @@ function kindColor(k){return getComputedStyle(document.documentElement).getPrope
 function eventsOn(ds){ return schedules.filter(function(s){var a=String(s['日付']||'').slice(0,10);if(!a)return false;var b=String(s['終了日']||'').slice(0,10)||a;return ds>=a&&ds<=b;})
   .sort(function(x,y){return String(x['開始']||'').localeCompare(String(y['開始']||''));}); }
 
-function move(n){cur=new Date(cur.getFullYear(),cur.getMonth()+n,1);render();}
+function move(n){ if(viewMode==='month'){cur=new Date(cur.getFullYear(),cur.getMonth()+n,1);}
+  else{var step=(viewMode==='week2'?14:7);cur=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()+n*step);} render(); }
 function goToday(){cur=new Date();render();}
+function weekStart(d){var s=new Date(d.getFullYear(),d.getMonth(),d.getDate());s.setDate(s.getDate()-s.getDay());return s;}
+function wd(d){return '日月火水木金土'[d.getDay()];}
+function periodLabel(){ if(viewMode==='month')return cur.getFullYear()+'年 '+(cur.getMonth()+1)+'月';
+  var s=weekStart(cur),n=(viewMode==='week2'?14:7),e=new Date(s);e.setDate(s.getDate()+n-1);
+  return (s.getMonth()+1)+'/'+s.getDate()+'（'+wd(s)+'）〜'+(e.getMonth()+1)+'/'+e.getDate()+'（'+wd(e)+'）'; }
+function setMode(m){ viewMode=m;
+  ['month','week1','week2'].forEach(function(x){document.getElementById('vm-'+x).className=(x===m)?'on':'';});
+  document.getElementById('monthView').style.display=(m==='month')?'block':'none';
+  document.getElementById('agendaView').style.display=(m==='month')?'none':'block';
+  render(); }
 
 function render(){
-  document.getElementById('ym').textContent=cur.getFullYear()+'年 '+(cur.getMonth()+1)+'月';
+  var lbl=periodLabel();
+  document.getElementById('ym').textContent=lbl;
+  document.getElementById('capPeriod').textContent=lbl;
+  if(viewMode==='month')renderMonth(); else renderAgenda(viewMode==='week2'?14:7);
+}
+function evLabel(e){ var t=e['開始']?String(e['開始']).slice(0,5):''; var name=e['案件名']||e['予定内容']||'(予定)'; var who=e['担当']?(' '+e['担当']):''; return (t?t+' ':'')+name+who; }
+function renderMonth(){
   var first=new Date(cur.getFullYear(),cur.getMonth(),1),start=new Date(first);start.setDate(1-first.getDay());
   var today=ymd(new Date()),g=document.getElementById('grid');g.innerHTML='';
   for(var i=0;i<42;i++){
@@ -166,10 +231,35 @@ function render(){
     var cell=document.createElement('div');cell.className='cell'+(inM?'':' dim')+(ds===today?' today':'')+(dow===0?' sun':'')+(dow===6?' sat':'');
     cell.onclick=(function(x){return function(){openDay(x);};})(ds);
     var html='<div class="dnum">'+d.getDate()+'</div>',evs=eventsOn(ds);
-    for(var j=0;j<evs.length && j<3;j++){var e=evs[j];html+='<div class="ev" style="background:'+kindColor(e['区分']||'その他')+'">'+esc(e['予定内容']||'(予定)')+'</div>';}
+    for(var j=0;j<evs.length && j<3;j++){var e=evs[j];html+='<div class="ev" style="background:'+kindColor(e['区分']||'その他')+'">'+esc(evLabel(e))+'</div>';}
     if(evs.length>3)html+='<div class="more">+'+(evs.length-3)+'件</div>';
     cell.innerHTML=html;g.appendChild(cell);
   }
+}
+function renderAgenda(numDays){
+  var start=weekStart(cur),today=ymd(new Date()),host=document.getElementById('agendaView');host.innerHTML='';
+  for(var i=0;i<numDays;i++){
+    var d=new Date(start);d.setDate(start.getDate()+i);var ds=ymd(d),dow=d.getDay();
+    var block=document.createElement('div');block.className='dayblock'+(ds===today?' today':'')+(dow===0?' sun':'')+(dow===6?' sat':'');
+    var head='<div class="dbh" data-ds="'+ds+'"><span class="dbh-d">'+(d.getMonth()+1)+'/'+d.getDate()+'</span><span class="dbh-w">（'+wd(d)+'）</span><span class="dbh-add">＋</span></div>';
+    var evs=eventsOn(ds),body='';
+    if(!evs.length){body='<div class="db-empty">予定なし</div>';}
+    else{evs.forEach(function(e){
+      var t=(e['開始']?String(e['開始']).slice(0,5)+(e['終了']?'〜'+String(e['終了']).slice(0,5):''):'終日');
+      body+='<div class="aev" data-id="'+esc(e['予定ID'])+'" style="border-left-color:'+kindColor(e['区分']||'その他')+'">'+
+        '<div class="aev-h"><span class="aev-t">'+esc(t)+'</span><span class="aev-k">'+esc(e['区分']||'')+'</span></div>'+
+        '<div class="aev-main">'+(e['案件名']?esc(e['案件名']):'<span style="color:#9aa1ab">（現場なし）</span>')+(e['担当']?' ・ 👤'+esc(e['担当']):'')+'</div>'+
+        (e['予定内容']?'<div class="aev-desc">'+esc(e['予定内容'])+'</div>':'')+
+        (e['備考']?'<div class="aev-note">'+esc(e['備考'])+'</div>':'')+
+      '</div>';
+    });}
+    block.innerHTML=head+'<div class="db-body">'+body+'</div>';
+    host.appendChild(block);
+  }
+  var heads=host.querySelectorAll('.dbh');
+  for(var a=0;a<heads.length;a++){(function(hd){hd.onclick=function(){openEvent(null,hd.getAttribute('data-ds'));};})(heads[a]);}
+  var aevs=host.querySelectorAll('.aev');
+  for(var b=0;b<aevs.length;b++){(function(ae){ae.onclick=function(ev){if(ev)ev.stopPropagation();var id=ae.getAttribute('data-id');var x=schedules.filter(function(s){return String(s['予定ID'])===String(id);})[0];if(x)openEvent(x);};})(aevs[b]);}
 }
 
 function openDay(ds){ window._selDate=ds;
@@ -219,6 +309,13 @@ function delEvent(ev){ev.preventDefault();var id=document.getElementById('f_id')
     schedules=schedules.filter(function(s){return s['予定ID']!==id;});render();closeEv();toast('削除しました');
   }).catch(function(err){toast('失敗：'+err.message);});}
 
+function captureCanvas(){ return html2canvas(document.getElementById('capture'),{scale:2,backgroundColor:'#ffffff',useCORS:true}); }
+function fileStamp(){ if(viewMode==='month')return cur.getFullYear()+'-'+('0'+(cur.getMonth()+1)).slice(-2); var s=weekStart(cur);return ymd(s)+(viewMode==='week2'?'_2週':'_1週'); }
+function exportJpeg(){ if(typeof html2canvas==='undefined'){toast('出力の準備中です。少し待って再度お試しください');return;}
+  toast('画像を作成中…'); captureCanvas().then(function(c){var a=document.createElement('a');a.href=c.toDataURL('image/jpeg',0.95);a.download='スケジュール_'+fileStamp()+'.jpg';document.body.appendChild(a);a.click();a.remove();toast('JPEGを保存しました');}).catch(function(){toast('画像の作成に失敗しました');}); }
+function exportPdf(){ if(typeof html2canvas==='undefined'||!(window.jspdf&&window.jspdf.jsPDF)){toast('出力の準備中です。少し待って再度お試しください');return;}
+  toast('PDFを作成中…'); captureCanvas().then(function(c){var img=c.toDataURL('image/jpeg',0.95),w=c.width,h=c.height;
+    var pdf=new window.jspdf.jsPDF({orientation:w>=h?'l':'p',unit:'pt',format:[w,h]});pdf.addImage(img,'JPEG',0,0,w,h);pdf.save('スケジュール_'+fileStamp()+'.pdf');toast('PDFを保存しました');}).catch(function(){toast('PDFの作成に失敗しました');}); }
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
 ['ovDay','ovEv'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
