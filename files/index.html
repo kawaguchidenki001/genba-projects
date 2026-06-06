@@ -89,6 +89,11 @@ var MAXPX = 1600, QUALITY = 0.72;
 
 var projects=[], curId='', folderReady=false;
 var CACHE='genba_projects_cache_files';
+// 案件管理からタップで来たとき用：?case=案件ID（id / proj でも可）
+var INIT_CASE=(function(){try{var p=new URLSearchParams(location.search);return p.get('case')||p.get('id')||p.get('proj')||'';}catch(e){return '';}})();
+var initApplied=false;
+function applyInit(){ if(initApplied||!INIT_CASE)return; var s=document.getElementById('projSel');
+  for(var i=0;i<s.options.length;i++){ if(s.options[i].value===INIT_CASE){ initApplied=true; s.value=INIT_CASE; onSelect(); return; } } }
 
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
@@ -120,7 +125,7 @@ function loadProjects(){
   });
 }
 function buildSel(){ var s=document.getElementById('projSel'),cur=s.value; s.innerHTML='<option value="">― 選択 ―</option>';
-  projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);}); s.value=cur; }
+  projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);}); s.value=cur; applyInit(); }
 
 function onSelect(){
   curId=document.getElementById('projSel').value;
