@@ -205,6 +205,8 @@ function kindColor(k){return getComputedStyle(document.documentElement).getPrope
 var PROJ_PALETTE=['#2563eb','#dc2626','#16a34a','#d97706','#7c3aed','#0d9488','#db2777','#65a30d','#0891b2','#ea580c','#4f46e5','#9333ea','#0369a1','#be123c'];
 function hashStr(s){s=String(s||'');var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return h;}
 function projColor(pid){ if(!pid)return '#9aa1ab'; return PROJ_PALETTE[hashStr(pid)%PROJ_PALETTE.length]; }
+function projShort(pid,fallbackName){ var p=projects.filter(function(x){return String(x['案件ID'])===String(pid);})[0];
+  return (p&&p['略称'])?p['略称']:((p&&p['案件名'])||fallbackName||''); }
 /* 担当（社員・協力業者から選択）*/
 function isKyoW(w){return String(w['区分']||'').indexOf('協力')>=0;}
 function buildOwnerSelect(val){
@@ -212,7 +214,7 @@ function buildOwnerSelect(val){
   var emp=[],part=[]; workers.forEach(function(w){(isKyoW(w)?part:emp).push(w);});
   sel.innerHTML='<option value="">（担当なし）</option>';
   function addGroup(label,arr){ if(!arr.length)return; var og=document.createElement('optgroup');og.label=label;
-    arr.forEach(function(w){var o=document.createElement('option');o.value=w['氏名']||'';o.textContent=(w['氏名']||'')+(w['所属']?'（'+w['所属']+'）':'');og.appendChild(o);});
+    arr.forEach(function(w){var o=document.createElement('option');o.value=w['略称']||w['氏名']||'';o.textContent=(w['氏名']||w['略称']||'')+(w['略称']?'（'+w['略称']+'）':'')+(w['所属']?'／'+w['所属']:'');og.appendChild(o);});
     sel.appendChild(og); }
   addGroup('社員',emp); addGroup('協力業者',part);
   var ot=document.createElement('option');ot.value='__other__';ot.textContent='＋ 直接入力';sel.appendChild(ot);
@@ -245,7 +247,7 @@ function render(){
   document.getElementById('capPeriod').textContent=lbl;
   if(viewMode==='month')renderMonth(); else renderAgenda(viewMode==='week2'?14:7);
 }
-function evLabel(e){ var t=e['開始']?String(e['開始']).slice(0,5):''; var name=e['案件名']||e['予定内容']||'(予定)'; var who=e['担当']?(' '+e['担当']):''; return (t?t+' ':'')+name+who; }
+function evLabel(e){ var t=e['開始']?String(e['開始']).slice(0,5):''; var name=projShort(e['案件ID'],e['案件名'])||e['予定内容']||'(予定)'; var who=e['担当']?(' '+e['担当']):''; return (t?t+' ':'')+name+who; }
 function renderMonth(){
   var first=new Date(cur.getFullYear(),cur.getMonth(),1),start=new Date(first);start.setDate(1-first.getDay());
   var today=ymd(new Date()),g=document.getElementById('grid');g.innerHTML='';
@@ -271,7 +273,7 @@ function renderAgenda(numDays){
       var t=(e['開始']?String(e['開始']).slice(0,5)+(e['終了']?'〜'+String(e['終了']).slice(0,5):''):'終日');
       body+='<div class="aev" data-id="'+esc(e['予定ID'])+'" style="border-left-color:'+projColor(e['案件ID'])+'">'+
         '<div class="aev-h"><span class="aev-t">'+esc(t)+'</span><span class="aev-k">'+esc(e['区分']||'')+'</span></div>'+
-        '<div class="aev-main">'+(e['案件名']?esc(e['案件名']):'<span style="color:#9aa1ab">（現場なし）</span>')+(e['担当']?' ・ 👤'+esc(e['担当']):'')+'</div>'+
+        '<div class="aev-main">'+(projShort(e['案件ID'],e['案件名'])?esc(projShort(e['案件ID'],e['案件名'])):'<span style="color:#9aa1ab">（現場なし）</span>')+(e['担当']?' ・ 👤'+esc(e['担当']):'')+'</div>'+
         (e['予定内容']?'<div class="aev-desc">'+esc(e['予定内容'])+'</div>':'')+
         (e['備考']?'<div class="aev-note">'+esc(e['備考'])+'</div>':'')+
       '</div>';
@@ -293,7 +295,7 @@ function openDay(ds){ window._selDate=ds;
     var tm=(e['開始']?e['開始']+(e['終了']?'〜'+e['終了']:''):'終日');
     r.innerHTML='<span class="cdot" style="background:'+projColor(e['案件ID'])+'"></span>'+
       '<div><div class="evttl">'+esc(e['予定内容']||'')+' <span style="font-size:11px;color:var(--sub);">'+esc(e['区分']||'')+'</span></div>'+
-      '<div class="evmeta">'+esc(tm)+(e['案件名']?' ・ '+esc(e['案件名']):'')+(e['担当']?' ・ '+esc(e['担当']):'')+'</div>'+
+      '<div class="evmeta">'+esc(tm)+(projShort(e['案件ID'],e['案件名'])?' ・ '+esc(projShort(e['案件ID'],e['案件名'])):'')+(e['担当']?' ・ '+esc(e['担当']):'')+'</div>'+
       (e['備考']?'<div class="evmeta">'+esc(e['備考'])+'</div>':'')+'</div>';
     el.appendChild(r); }); }
   document.getElementById('ovDay').classList.add('show');
