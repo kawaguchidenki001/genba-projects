@@ -58,8 +58,9 @@
   .wgroup{border:1px solid var(--line);border-radius:10px;overflow:hidden;}
   .wghd{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:#f3f7f6;font-size:12.5px;font-weight:700;color:var(--accent-d);}
   .wghd a{font-size:12px;color:var(--accent-d);text-decoration:none;cursor:pointer;}
-  .wchk{display:flex;align-items:center;gap:9px;padding:9px 11px;border-top:1px solid var(--line);font-size:14.5px;cursor:pointer;}
-  .wchk input{width:19px;height:19px;flex:0 0 auto;accent-color:var(--accent);}
+  .wlist{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;}
+  .wchk{display:flex;align-items:center;gap:6px;padding:7px 9px;border:1px solid var(--line);border-radius:9px;font-size:13px;cursor:pointer;flex:1 1 30%;min-width:calc(33% - 6px);background:#fbfdfc;}
+  .wchk input{width:17px;height:17px;flex:0 0 auto;accent-color:var(--accent);}
   .wgroup .wempty{padding:9px 11px;border-top:1px solid var(--line);color:var(--sub);font-size:13px;}
   .acts{display:flex;gap:8px;margin-top:6px;} .btn{flex:1;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
   .btn.primary{background:var(--accent);color:#fff;} .btn.sub{background:#eef1f5;color:var(--ink);}
@@ -113,7 +114,7 @@
     </div>
     <div class="fld"><label>会社名・自治体名 *</label><select id="f_customer" onchange="onCustomer()"></select></div>
     <div class="fld"><label>現場名 *</label><select id="f_proj" onchange="onProj()"></select>
-      <a id="f_drive" class="drvlink" target="_blank" style="display:none;">📁 この現場の写真フォルダを開く</a></div>
+      <a id="f_drive" class="drvlink" target="_blank" style="display:none;">📁 この現場のフォルダを開く</a></div>
     <div class="fld" id="wmFld"><label>作業員（複数選択できます）*</label>
       <div id="wmEmp" class="wgroup"></div>
       <div id="wmPart" class="wgroup" style="margin-top:8px;"></div>
@@ -255,8 +256,10 @@ function buildWorkerChecks(){var emp=[],part=[];
 function renderWGroup(boxId,title,arr){var box=document.getElementById(boxId);
   var h='<div class="wghd"><span>'+title+'（'+arr.length+'）</span>'+(arr.length?'<span><a onclick="toggleGroup(\''+boxId+'\',true)">全員</a> ／ <a onclick="toggleGroup(\''+boxId+'\',false)">解除</a></span>':'')+'</div>';
   if(!arr.length){h+='<div class="wempty">登録なし</div>';box.innerHTML=h;return;}
+  h+='<div class="wlist">';
   arr.forEach(function(w){var nm=esc(w['氏名']||'')+(w['所属']?'（'+esc(w['所属'])+'）':'');
     h+='<label class="wchk"><input type="checkbox" class="wcb" value="'+esc(w['作業員ID'])+'" onchange="calc()"> '+nm+'</label>';});
+  h+='</div>';
   box.innerHTML=h;}
 function toggleGroup(boxId,on){var cbs=document.querySelectorAll('#'+boxId+' .wcb');for(var i=0;i<cbs.length;i++)cbs[i].checked=on;calc();}
 function checkedWorkers(){var cbs=document.querySelectorAll('#wmFld .wcb:checked'),out=[];
