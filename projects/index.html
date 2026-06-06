@@ -51,6 +51,22 @@
   .yen{font-variant-numeric:tabular-nums;}
   .flag{font-size:11px;color:#b45309;font-weight:700;}
   .empty{text-align:center;color:var(--sub);padding:40px 10px;font-size:14px;}
+  /* 会社ごとのグループ＋現場タイル */
+  .group{margin-bottom:18px;}
+  .ghd{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--ink);margin:2px 2px 9px;padding-bottom:6px;border-bottom:2px solid var(--line);}
+  .ghd .gc{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--accent);}
+  .ghd .gn{flex:1;}
+  .ghd .gcount{font-size:12px;color:var(--sub);font-weight:600;}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:9px;}
+  .tile{position:relative;background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);
+    padding:13px 10px 11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;
+    border-top:4px solid var(--line);min-height:104px;justify-content:center;}
+  .tile:active{transform:scale(.97);}
+  .tile .ic{font-size:26px;line-height:1;}
+  .tile .tn{font-size:13px;font-weight:700;line-height:1.25;word-break:break-word;}
+  .tile .ts{font-size:10.5px;font-weight:700;color:#fff;padding:1px 7px;border-radius:999px;}
+  .tile .edit{position:absolute;top:5px;right:5px;width:26px;height:26px;border-radius:8px;border:1px solid var(--line);
+    background:#fff;font-size:13px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--sub);}
   .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;
     background:var(--accent);color:#fff;border:none;border-radius:999px;
     padding:14px 20px;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(15,95,181,.4);cursor:pointer;}
@@ -97,35 +113,27 @@
   </div>
   <div class="hd-row" style="margin-top:6px;"><h1>案件管理</h1>
     <div style="display:flex;gap:6px;">
-      <button class="ghost" style="padding:6px 10px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;" onclick="adminLogout()">ログアウト</button>
+      <button class="ghost" id="admBtn" style="padding:6px 10px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;" onclick="toggleAdmin()">🔑</button>
       <button class="ghost" style="padding:6px 10px;background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.3);color:#fff;" onclick="reload()">↻ 更新</button>
     </div>
   </div>
 </header>
 
-<div id="gate" style="position:fixed;inset:0;z-index:100;background:#fff;display:flex;align-items:center;justify-content:center;">
+<div id="gate" style="position:fixed;inset:0;z-index:100;background:#fff;display:none;align-items:center;justify-content:center;">
   <div style="max-width:360px;text-align:center;padding:0 18px;">
-    <div style="font-size:46px;">🔒</div>
-    <h2 style="font-size:18px;margin:10px 0 6px;">案件管理（管理者専用）</h2>
+    <div style="font-size:46px;">📡</div>
+    <h2 style="font-size:18px;margin:10px 0 6px;">案件管理</h2>
     <p id="gateMsg" style="color:#6b7280;font-size:14px;margin:0 0 16px;">確認中…</p>
-    <div id="gateForm" style="display:none;">
-      <input id="pin" type="password" inputmode="numeric" placeholder="管理者PIN" style="width:100%;padding:12px;border:1px solid #e3e6ea;border-radius:10px;font-size:16px;text-align:center;margin-bottom:10px;" onkeydown="if(event.key==='Enter')doLogin()">
-      <button onclick="doLogin()" style="width:100%;padding:13px;border:none;border-radius:11px;background:#0f5fb5;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">ログイン</button>
-      <p style="margin-top:14px;"><a href="https://kawaguchidenki001.github.io/genba-projects/" style="color:#6b7280;font-size:13px;">← 現場管理メニューへ戻る</a></p>
-    </div>
+    <button onclick="location.reload()" style="width:100%;padding:13px;border:none;border-radius:11px;background:#0f5fb5;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">再読み込み</button>
+    <p style="margin-top:14px;"><a href="https://kawaguchidenki001.github.io/genba-projects/" style="color:#6b7280;font-size:13px;">← 現場管理メニューへ戻る</a></p>
   </div>
 </div>
 
 <div class="toolbar">
-  <div class="search"><input id="q" type="search" placeholder="案件名・顧客・場所で検索" oninput="render()"></div>
+  <div class="search"><input id="q" type="search" placeholder="現場名・会社名・場所で検索" oninput="render()"></div>
   <div class="chips" id="chips"></div>
-  <div class="row2">
-    <select class="sort" id="sort" onchange="render()">
-      <option value="updated">更新が新しい順</option>
-      <option value="deadline">工期が近い順</option>
-      <option value="id">案件ID順</option>
-      <option value="amount">受注金額が高い順</option>
-    </select>
+  <div class="row2" id="adminRow" style="display:none;">
+    <span style="flex:1;font-size:12px;color:var(--sub);">管理者：現場の追加・編集ができます</span>
     <button class="ghost" onclick="openCustomer()">＋顧客</button>
   </div>
 </div>
@@ -135,7 +143,7 @@
   <div id="list"></div>
 </main>
 
-<button class="fab" onclick="openProject()">＋ 新規案件</button>
+<button class="fab" id="fab" onclick="openProject()" style="display:none;">＋ 新規案件</button>
 
 <!-- 案件モーダル -->
 <div class="ov" id="ov">
@@ -282,44 +290,48 @@ function buildCustList(){
   customers.forEach(function(c){var o=document.createElement('option');o.value=c['顧客名'];dl.appendChild(o);});
 }
 
+var BASE='https://kawaguchidenki001.github.io/genba-projects/';
+var NOCUST='（未分類）';
+function isAdmin(){return ROLE==='admin';}
+function custKey(p){var c=String(p['顧客']||'').trim();return c||NOCUST;}
+function openPhotos(p){ if(!p||!p['案件ID']){toast('案件IDがありません');return;} location.href=BASE+'files/?case='+encodeURIComponent(p['案件ID']); }
+function editProjectById(id){var p=projects.filter(function(x){return String(x['案件ID'])===String(id);})[0];if(p)openProject(p);}
 function render(){
   var q=(document.getElementById('q').value||'').trim();
-  var sort=document.getElementById('sort').value;
   var list=projects.slice();
   if(filterStatus!=='すべて') list=list.filter(function(p){return p['ステータス']===filterStatus;});
   if(q){var lq=q.toLowerCase();
     list=list.filter(function(p){
       return [p['案件名'],p['顧客'],p['場所'],p['案件ID'],p['担当']]
         .some(function(v){return String(v||'').toLowerCase().indexOf(lq)>=0;});});}
-  list.sort(function(a,b){
-    if(sort==='deadline')return (a['工期完了']||'9999').localeCompare(b['工期完了']||'9999');
-    if(sort==='id')return String(b['案件ID']||'').localeCompare(String(a['案件ID']||''));
-    if(sort==='amount')return (num(b['受注金額税込'])||num(b['受注金額税抜']))-(num(a['受注金額税込'])||num(a['受注金額税抜']));
-    return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));
-  });
   document.getElementById('count').textContent= list.length+' 件';
   var el=document.getElementById('list');
-  if(!list.length){el.innerHTML='<div class="empty">該当する案件がありません。<br>右下の「＋新規案件」から登録できます。</div>';return;}
+  if(!list.length){el.innerHTML='<div class="empty">該当する現場がありません。'+(isAdmin()?'<br>右下の「＋新規案件」から登録できます。':'')+'</div>';return;}
+  // 会社名・自治体名ごとにグループ化
+  var groups={},order=[];
+  list.forEach(function(p){var k=custKey(p);if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(p);});
+  order.sort(function(a,b){ if(a===NOCUST)return 1; if(b===NOCUST)return -1; return a.localeCompare(b,'ja'); });
   el.innerHTML='';
-  list.forEach(function(p){
-    var col=statusColor(p['ステータス']);
-    var amt= p['受注金額税込']||p['受注金額税抜'];
-    var div=document.createElement('div');
-    div.className='card'; div.style.borderLeftColor=col;
-    div.onclick=function(){openProject(p);};
-    var period= (p['工期開始']||'')+(p['工期完了']?(' 〜 '+p['工期完了']):'');
-    div.innerHTML=
-      '<div class="top"><div><div class="name">'+esc(p['案件名']||'(無題)')+'</div>'+
-        '<div class="id">'+esc(p['案件ID']||'')+(p['顧客']?(' ・ '+esc(p['顧客'])):'')+'</div></div>'+
-        '<span class="badge" style="background:'+col+'">'+esc(p['ステータス']||'')+'</span></div>'+
-      '<div class="meta">'+
-        (p['場所']?'<span>📍 '+esc(p['場所'])+'</span>':'')+
-        (period.trim()?'<span>🗓 '+esc(period)+'</span>':'')+
-        (amt?'<span class="yen">💰 '+yen(amt)+'</span>':'')+
-        (p['担当']?'<span>👤 '+esc(p['担当'])+'</span>':'')+
-      '</div>'+
-      (p['段取り']==='未' && (p['ステータス']==='受注')?'<div class="flag">⚠ 段取り未</div>':'');
-    el.appendChild(div);
+  order.forEach(function(k){
+    var arr=groups[k];
+    arr.sort(function(a,b){return String(a['案件名']||'').localeCompare(String(b['案件名']||''),'ja');});
+    var g=document.createElement('div');g.className='group';
+    var hd=document.createElement('div');hd.className='ghd';
+    hd.innerHTML='<span class="gc"></span><span class="gn">'+esc(k)+'</span><span class="gcount">'+arr.length+'件</span>';
+    g.appendChild(hd);
+    var tiles=document.createElement('div');tiles.className='tiles';
+    arr.forEach(function(p){
+      var col=statusColor(p['ステータス']);
+      var t=document.createElement('div');t.className='tile';t.style.borderTopColor=col;
+      t.onclick=function(){openPhotos(p);};
+      var h='<div class="ic">📷</div><div class="tn">'+esc(p['案件名']||'(無題)')+'</div>';
+      if(p['ステータス'])h+='<div class="ts" style="background:'+col+'">'+esc(p['ステータス'])+'</div>';
+      if(isAdmin())h+='<div class="edit" title="編集" onclick="event.stopPropagation();editProjectById(\''+esc(p['案件ID'])+'\')">✎</div>';
+      t.innerHTML=h;
+      tiles.appendChild(t);
+    });
+    g.appendChild(tiles);
+    el.appendChild(g);
   });
 }
 
@@ -420,23 +432,32 @@ function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.c
 /* タブ復帰で自動更新 */
 document.addEventListener('visibilitychange',function(){if(!document.hidden && GAS_URL)reload();});
 
-/* ===== 管理者ゲート ===== */
-function showGate(msg,showForm){document.getElementById('gate').style.display='flex';document.getElementById('gateMsg').textContent=msg||'';document.getElementById('gateForm').style.display=showForm?'block':'none';}
+/* ===== 管理者ログイン ===== */
+function showGate(msg){document.getElementById('gate').style.display='flex';document.getElementById('gateMsg').textContent=msg||'';}
 function hideGate(){document.getElementById('gate').style.display='none';}
-function doLogin(){var pin=document.getElementById('pin').value;if(!pin){return;}
+function applyAdminUI(){
+  document.getElementById('fab').style.display=isAdmin()?'block':'none';
+  document.getElementById('adminRow').style.display=isAdmin()?'flex':'none';
+  document.getElementById('admBtn').textContent=isAdmin()?'管理者':'🔑';
+}
+function toggleAdmin(){
+  if(admTok()){ if(confirm('管理者ログアウトしますか？')){localStorage.removeItem('genba_admin');location.reload();} return; }
+  var pin=prompt('管理者PINを入力してください');if(!pin)return;
   callGAS({action:'checkRole'},pin).then(function(res){
     if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',pin);location.reload();}
-    else{document.getElementById('gateMsg').textContent='管理者PINが違います。もう一度入力してください。';}
-  }).catch(function(err){document.getElementById('gateMsg').textContent='通信エラー：'+err.message;});}
-function adminLogout(){localStorage.removeItem('genba_admin');location.reload();}
+    else toast('管理者PINが違います');
+  }).catch(function(err){toast('通信エラー：'+err.message);});
+}
 
-/* 起動：管理者のみ案件管理を開ける */
+/* 起動：全員が閲覧可。管理者のみ追加・編集ができる */
 loadCache();
+buildChips(); render(); applyAdminUI();
 callGAS({action:'checkRole'}).then(function(res){
   ROLE=(res&&res.ok)?res.role:'';
-  if(ROLE==='admin'){hideGate();buildChips();buildCustList();render();reload();}
-  else{ if(admTok())localStorage.removeItem('genba_admin'); showGate('この画面は管理者のみ利用できます。管理者PINを入力してください。',true); }
-}).catch(function(){ showGate('通信できませんでした。電波を確認して再読み込みしてください。',true); });
+  if(!ROLE){ if(admTok())localStorage.removeItem('genba_admin'); showGate('認証できませんでした。共通リンクから開き直してください。'); return; }
+  if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin');
+  hideGate(); applyAdminUI(); buildChips(); buildCustList(); render(); reload();
+}).catch(function(){ setSync('off','オフライン'); });
 </script>
 </body>
 </html>
