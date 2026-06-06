@@ -55,6 +55,12 @@
   .calc{background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:9px 12px;font-size:14px;display:flex;justify-content:space-between;}
   .calc b{font-variant-numeric:tabular-nums;}
   .drvlink{display:inline-block;margin-top:2px;font-size:13px;color:var(--accent-d);}
+  .wgroup{border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .wghd{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:#f3f7f6;font-size:12.5px;font-weight:700;color:var(--accent-d);}
+  .wghd a{font-size:12px;color:var(--accent-d);text-decoration:none;cursor:pointer;}
+  .wchk{display:flex;align-items:center;gap:9px;padding:9px 11px;border-top:1px solid var(--line);font-size:14.5px;cursor:pointer;}
+  .wchk input{width:19px;height:19px;flex:0 0 auto;accent-color:var(--accent);}
+  .wgroup .wempty{padding:9px 11px;border-top:1px solid var(--line);color:var(--sub);font-size:13px;}
   .acts{display:flex;gap:8px;margin-top:6px;} .btn{flex:1;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
   .btn.primary{background:var(--accent);color:#fff;} .btn.sub{background:#eef1f5;color:var(--ink);}
   .row-del{text-align:center;margin-top:10px;} .row-del a{color:#dc2626;font-size:13px;text-decoration:none;}
@@ -105,16 +111,21 @@
       <div class="fld"><label>人工 *</label><input id="f_nk" type="number" step="0.25" inputmode="decimal" value="1" oninput="calc()">
         <div class="nks"><button type="button" onclick="setNk(0.5)">0.5</button><button type="button" onclick="setNk(1)">1.0</button><button type="button" onclick="setNk(1.5)">1.5</button></div></div>
     </div>
-    <div class="fld"><label>現場 ／ 案件 *</label><select id="f_proj" onchange="onProj()"></select>
+    <div class="fld"><label>会社名・自治体名 *</label><select id="f_customer" onchange="onCustomer()"></select></div>
+    <div class="fld"><label>現場名 *</label><select id="f_proj" onchange="onProj()"></select>
       <a id="f_drive" class="drvlink" target="_blank" style="display:none;">📁 この現場の写真フォルダを開く</a></div>
-    <div class="fld"><label>作業員 *</label><select id="f_worker" onchange="calc()"></select></div>
+    <div class="fld" id="wmFld"><label>作業員（複数選択できます）*</label>
+      <div id="wmEmp" class="wgroup"></div>
+      <div id="wmPart" class="wgroup" style="margin-top:8px;"></div>
+    </div>
+    <div class="fld" id="wsFld" style="display:none;"><label>作業員 *</label><select id="f_worker" onchange="calc()"></select></div>
     <div class="fld"><label>作業内容</label><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea></div>
     <div class="two">
       <div class="fld"><label>開始</label><input id="f_start" type="time" oninput="calcHours()"></div>
       <div class="fld"><label>終了</label><input id="f_end" type="time" oninput="calcHours()"></div>
       <div class="fld"><label>時間(h)</label><input id="f_hours" type="number" step="0.5" inputmode="decimal" placeholder="任意"></div>
     </div>
-    <div class="fld" id="moneyRow" style="display:none;"><label>労務費（管理者のみ）</label><div class="calc"><span>人工 × 単価（作業員マスタ）</span><b id="f_labor">¥0</b></div></div>
+    <div class="fld" id="moneyRow" style="display:none;"><label>労務費（管理者のみ）</label><div class="calc"><span id="f_laborNote">人工 × 単価（作業員マスタ）</span><b id="f_labor">¥0</b></div></div>
     <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
     <div class="acts">
       <button class="btn sub" onclick="closeOv()">キャンセル</button>
@@ -196,7 +207,7 @@ function render(){
   if(!list.length){el.innerHTML='<div class="empty">この期間の日報はありません。<br>右下の「＋日報」から登録できます。</div>';return;}
   el.innerHTML='';
   list.forEach(function(r){
-    var kyo=r['区分']==='協力会社',div=document.createElement('div');div.className='card'+(kyo?' kyo':'');div.onclick=function(){openReport(r);};
+    var kyo=isKyo(r['区分']),div=document.createElement('div');div.className='card'+(kyo?' kyo':'');div.onclick=function(){openReport(r);};
     var who=esc(r['氏名']||'')+(r['所属']?'（'+esc(r['所属'])+'）':'');
     var money=(isAdmin()&&numv(r['労務費']))?'<span>💰 '+yen(r['労務費'])+'</span>':'';
     div.innerHTML='<div class="c-top"><span class="c-date">'+esc(String(r['日付']||'').slice(0,10))+'</span><span class="pill'+(kyo?' kyo':'')+'">人工 '+esc(r['人工']||'')+'</span></div>'+
@@ -210,7 +221,7 @@ function renderSum(list){
   var byProj={},byKyo={};
   list.forEach(function(r){var pid=r['案件ID']||'(未設定)',pn=r['案件名']||'(現場未設定)';
     if(!byProj[pid])byProj[pid]={name:pn,nk:0,ry:0};byProj[pid].nk+=numv(r['人工']);byProj[pid].ry+=numv(r['労務費']);
-    if(r['区分']==='協力会社'){var k=r['所属']||r['氏名']||'協力会社';if(!byKyo[k])byKyo[k]={nk:0};byKyo[k].nk+=numv(r['人工']);}});
+    if(isKyo(r['区分'])){var k=r['所属']||r['氏名']||'協力業者';if(!byKyo[k])byKyo[k]={nk:0};byKyo[k].nk+=numv(r['人工']);}});
   var el=document.getElementById('sum'),html='';
   var ps=Object.keys(byProj).sort(function(a,b){return byProj[b].nk-byProj[a].nk;});
   html+='<div class="sumcard"><h3>案件別'+(isAdmin()?' 人工・労務費':' 人工')+'</h3>';
@@ -225,24 +236,62 @@ function renderSum(list){
   el.innerHTML=html;
 }
 
+var NOCUST='（未分類）';
+function isKyo(k){return String(k||'').indexOf('協力')>=0;}
+function custKey(p){var c=String(p['顧客']||'').trim();return c||NOCUST;}
+function customerOfProj(pid){var p=projects.filter(function(x){return x['案件ID']===pid;})[0];return p?custKey(p):'';}
+function buildCustomerOptions(){var sel=document.getElementById('f_customer'),seen={},list=[];
+  projects.forEach(function(p){var c=custKey(p);if(!seen[c]){seen[c]=1;list.push(c);}});
+  var cur=sel.value;sel.innerHTML='';
+  list.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+  if(cur&&seen[cur])sel.value=cur;}
+function projsForCustomer(c){return projects.filter(function(p){return custKey(p)===c;});}
+function onCustomer(){var c=document.getElementById('f_customer').value;
+  buildSelect('f_proj',projsForCustomer(c),'案件ID','案件名',false);onProj();}
+
+function buildWorkerChecks(){var emp=[],part=[];
+  workers.forEach(function(w){(isKyo(w['区分'])?part:emp).push(w);});
+  renderWGroup('wmEmp','社員',emp);renderWGroup('wmPart','協力業者',part);}
+function renderWGroup(boxId,title,arr){var box=document.getElementById(boxId);
+  var h='<div class="wghd"><span>'+title+'（'+arr.length+'）</span>'+(arr.length?'<span><a onclick="toggleGroup(\''+boxId+'\',true)">全員</a> ／ <a onclick="toggleGroup(\''+boxId+'\',false)">解除</a></span>':'')+'</div>';
+  if(!arr.length){h+='<div class="wempty">登録なし</div>';box.innerHTML=h;return;}
+  arr.forEach(function(w){var nm=esc(w['氏名']||'')+(w['所属']?'（'+esc(w['所属'])+'）':'');
+    h+='<label class="wchk"><input type="checkbox" class="wcb" value="'+esc(w['作業員ID'])+'" onchange="calc()"> '+nm+'</label>';});
+  box.innerHTML=h;}
+function toggleGroup(boxId,on){var cbs=document.querySelectorAll('#'+boxId+' .wcb');for(var i=0;i<cbs.length;i++)cbs[i].checked=on;calc();}
+function checkedWorkers(){var cbs=document.querySelectorAll('#wmFld .wcb:checked'),out=[];
+  for(var i=0;i<cbs.length;i++){var id=cbs[i].value,w=workers.filter(function(x){return String(x['作業員ID'])===String(id);})[0];if(w)out.push(w);}
+  return out;}
+
 function openReport(r){
   if(!projects.length){toast('先に案件管理で現場を登録してください');return;}
   if(!workers.length){toast('作業員が未登録です。管理画面で登録してください');return;}
-  document.getElementById('mTitle').textContent=r?'日報の編集':'日報の入力';
-  document.getElementById('delRow').style.display=r?'block':'none';
-  document.getElementById('moneyRow').style.display=isAdmin()?'block':'none';
-  buildSelect('f_proj',projects,'案件ID','案件名',false);
-  buildSelect('f_worker',workers,'作業員ID','氏名',true);
-  var g=function(id){return document.getElementById(id);};
-  g('f_id').value=r?(r['日報ID']||''):'';
-  g('f_date').value=r?String(r['日付']||'').slice(0,10):new Date().toISOString().slice(0,10);
-  g('f_nk').value=r?(r['人工']||'1'):'1';
-  g('f_proj').value=r?(r['案件ID']||''):(projects[0]?projects[0]['案件ID']:'');
-  g('f_worker').value=r?(r['作業員ID']||''):(workers[0]?workers[0]['作業員ID']:'');
-  g('f_desc').value=r?(r['作業内容']||''):'';
-  g('f_start').value=r?(r['開始']||''):'';g('f_end').value=r?(r['終了']||''):'';g('f_hours').value=r?(r['作業時間']||''):'';
-  g('f_note').value=r?(r['備考']||''):'';
-  onProj();calc();document.getElementById('ov').classList.add('show');
+  var editing=!!r,g=function(id){return document.getElementById(id);};
+  g('mTitle').textContent=editing?'日報の編集':'日報の入力（まとめて記入できます）';
+  g('delRow').style.display=editing?'block':'none';
+  g('moneyRow').style.display=isAdmin()?'block':'none';
+  g('wmFld').style.display=editing?'none':'block';
+  g('wsFld').style.display=editing?'block':'none';
+  g('f_id').value=editing?(r['日報ID']||''):'';
+  g('f_date').value=editing?String(r['日付']||'').slice(0,10):new Date().toISOString().slice(0,10);
+  g('f_nk').value=editing?(r['人工']||'1'):'1';
+  // 会社名・自治体名 → 現場名
+  buildCustomerOptions();
+  g('f_customer').value=editing?customerOfProj(r['案件ID']):g('f_customer').value;
+  onCustomer();
+  if(editing)g('f_proj').value=r['案件ID']||'';
+  onProj();
+  // 作業員（新規=複数チェック、編集=1人セレクト）
+  if(editing){buildSelect('f_worker',workers,'作業員ID','氏名',true);g('f_worker').value=r['作業員ID']||'';}
+  else{buildWorkerChecks();}
+  g('f_desc').value=editing?(r['作業内容']||''):'';
+  // 開始8:00／終了17:00 をデフォルト（新規時）
+  g('f_start').value=editing?(r['開始']||''):'08:00';
+  g('f_end').value=editing?(r['終了']||''):'17:00';
+  g('f_hours').value=editing?(r['作業時間']||''):'';
+  if(!editing)calcHours();
+  g('f_note').value=editing?(r['備考']||''):'';
+  calc();g('ov').classList.add('show');
 }
 function buildSelect(id,arr,vk,tk,withBelong){var s=document.getElementById(id);s.innerHTML='';arr.forEach(function(o){var op=document.createElement('option');op.value=o[vk];op.textContent=o[tk]+(withBelong&&o['所属']?'（'+o['所属']+'）':'');s.appendChild(op);});}
 function onProj(){var pid=document.getElementById('f_proj').value,p=projects.filter(function(x){return x['案件ID']===pid;})[0],a=document.getElementById('f_drive');
@@ -251,21 +300,46 @@ function setNk(v){document.getElementById('f_nk').value=v;calc();}
 function calcHours(){var s=document.getElementById('f_start').value,e=document.getElementById('f_end').value;
   if(s&&e){var a=s.split(':'),b=e.split(':'),h=(b[0]*60+ +b[1]-(a[0]*60+ +a[1]))/60;if(h<0)h+=24;document.getElementById('f_hours').value=Math.round(h*4)/4;}}
 function workerRate(id){var w=workers.filter(function(x){return x['作業員ID']===id;})[0];return w?numv(w['標準単価']):0;}
-function calc(){ if(!isAdmin())return; var nk=numv(document.getElementById('f_nk').value),u=workerRate(document.getElementById('f_worker').value);
-  document.getElementById('f_labor').textContent=yen(nk*u)||'¥0'; }
-function gatherReport(){var g=function(id){return document.getElementById(id).value;};
+function calc(){ if(!isAdmin())return;
+  var nk=numv(document.getElementById('f_nk').value);
+  var multi=document.getElementById('wmFld').style.display!=='none';
+  if(multi){var ws=checkedWorkers(),total=0;ws.forEach(function(w){total+=nk*numv(w['標準単価']);});
+    document.getElementById('f_labor').textContent=yen(total)||'¥0';
+    document.getElementById('f_laborNote').textContent=ws.length?('選択 '+ws.length+'名分の合計'):'（作業員を選択してください）';
+  }else{var u=workerRate(document.getElementById('f_worker').value);
+    document.getElementById('f_labor').textContent=yen(nk*u)||'¥0';
+    document.getElementById('f_laborNote').textContent='人工 × 単価（作業員マスタ）';}}
+function gatherCommon(){var g=function(id){return document.getElementById(id).value;};
   var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
-  var wid=g('f_worker'),w=workers.filter(function(x){return x['作業員ID']===wid;})[0]||{};
-  return {'日報ID':g('f_id'),'日付':g('f_date'),'案件ID':pid,'案件名':p['案件名']||'','作業員ID':wid,'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||'',
-    '作業内容':g('f_desc').trim(),'開始':g('f_start'),'終了':g('f_end'),'作業時間':g('f_hours'),'人工':g('f_nk'),'備考':g('f_note').trim()};}
-function saveReport(){var d=gatherReport();
-  if(!d['日付']){toast('日付を入れてください');return;}if(!d['案件ID']){toast('現場を選んでください');return;}
-  var id=d['日報ID'],isNew=!id,btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
-  var params=isNew?{action:'addReport',data:d}:{action:'updateReport',id:id,data:d};
-  callGAS(params).then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
-    if(isNew)reports.push(res.report);else for(var i=0;i<reports.length;i++){if(reports[i]['日報ID']===id){reports[i]=res.report;break;}}
-    saveCache();render();closeOv();toast(isNew?'登録しました':'更新しました');
-  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});}
+  return {'日付':g('f_date'),'案件ID':pid,'案件名':p['案件名']||'',
+    '作業内容':document.getElementById('f_desc').value.trim(),'開始':g('f_start'),'終了':g('f_end'),
+    '作業時間':g('f_hours'),'人工':g('f_nk'),'備考':document.getElementById('f_note').value.trim()};}
+function saveReport(){
+  var c=gatherCommon();
+  if(!c['日付']){toast('日付を入れてください');return;}
+  if(!c['案件ID']){toast('現場名を選んでください');return;}
+  var editing=!!document.getElementById('f_id').value,btn=document.getElementById('saveBtn');
+  if(editing){
+    var id=document.getElementById('f_id').value;
+    var wid=document.getElementById('f_worker').value,w=workers.filter(function(x){return x['作業員ID']===wid;})[0]||{};
+    if(!wid){toast('作業員を選んでください');return;}
+    var d={};for(var k in c)d[k]=c[k];d['日報ID']=id;d['作業員ID']=wid;d['氏名']=w['氏名']||'';d['区分']=w['区分']||'';d['所属']=w['所属']||'';
+    btn.disabled=true;btn.textContent='保存中…';
+    callGAS({action:'updateReport',id:id,data:d}).then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
+      for(var i=0;i<reports.length;i++){if(reports[i]['日報ID']===id){reports[i]=res.report;break;}}
+      saveCache();render();closeOv();toast('更新しました');
+    }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
+  }else{
+    var ws=checkedWorkers();
+    if(!ws.length){toast('作業員を選んでください（複数可）');return;}
+    var data={};for(var k2 in c)data[k2]=c[k2];
+    data['_workers']=ws.map(function(w){return {'作業員ID':w['作業員ID'],'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||''};});
+    btn.disabled=true;btn.textContent='保存中…';
+    callGAS({action:'addReportMulti',data:data}).then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
+      (res.reports||[]).forEach(function(rp){reports.push(rp);});
+      saveCache();render();closeOv();toast(ws.length+'名分を登録しました');
+    }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
+  }}
 function delReport(ev){ev.preventDefault();var id=document.getElementById('f_id').value;if(!id)return;
   if(!confirm('この日報を削除します。よろしいですか？'))return;
   callGAS({action:'deleteReport',id:id}).then(function(res){if(!res.ok)throw new Error(res.error||'削除失敗');
