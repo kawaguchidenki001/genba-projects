@@ -116,6 +116,28 @@
   <!-- 全員（今日） -->
   <div class="pane" id="pAll"></div>
 
+  <!-- 手修正（打刻忘れ・修正） -->
+  <div class="pane" id="pManual">
+    <div class="setbox" style="margin-bottom:12px;">
+      <div style="font-size:13px;color:var(--sub);margin-bottom:8px;">打刻を忘れたとき・直したいときに、日付を選んで手入力できます。</div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="date" id="mDate" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px;">
+        <button onclick="manualLoad()" style="padding:10px 14px;border:1px solid var(--teal2);color:var(--teal2);background:#fff;border-radius:10px;font-weight:700;cursor:pointer;">表示</button>
+      </div>
+    </div>
+    <div id="manualList"></div>
+    <div class="brkcard">
+      <h3><span>この日に勤務を追加</span></h3>
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+        <label style="font-size:12px;color:var(--sub);">出勤<input type="time" id="mIn" style="display:block;margin-top:3px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:15px;"></label>
+        <label style="font-size:12px;color:var(--sub);">退勤<input type="time" id="mOut" style="display:block;margin-top:3px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:15px;"></label>
+        <label style="font-size:12px;color:var(--sub);">休憩(分)<input type="number" id="mBrk" value="60" min="0" step="5" style="display:block;margin-top:3px;width:84px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:15px;"></label>
+        <button onclick="manualAdd()" style="margin-left:auto;padding:11px 18px;border:none;background:var(--teal2);color:#fff;border-radius:10px;font-weight:700;cursor:pointer;">追加</button>
+      </div>
+      <div style="font-size:11px;color:var(--sub);margin-top:8px;">※夜勤などで日付をまたぐ場合は、出勤した日を選び、退勤に翌朝の時刻（例 06:00）を入れてください。</div>
+    </div>
+  </div>
+
   <!-- 設定 -->
   <div class="pane" id="pSet">
     <div class="setbox">
@@ -130,6 +152,7 @@
 <div class="tabbar">
   <button id="tabHome" class="on" onclick="setTab('home')"><span class="i">🏠</span>ホーム</button>
   <button id="tabMonth" onclick="setTab('month')"><span class="i">📋</span>勤怠表</button>
+  <button id="tabManual" onclick="setTab('manual')"><span class="i">✏️</span>手修正</button>
   <button id="tabAll" onclick="setTab('all')"><span class="i">👥</span>全員</button>
   <button id="tabSet" onclick="setTab('set')"><span class="i">⚙️</span>設定</button>
 </div>
@@ -140,7 +163,7 @@
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var T_GENERAL='kawaguchi-genba-2026';
-var me=null,workers=[],todayK=[],monthK=[],mCur=new Date(),tab='home',brk={am:30,noon:60,pm:30};
+var me=null,workers=[],todayK=[],monthK=[],mCur=new Date(),tab='home',brk={am:30,noon:60,pm:30},manualRows=[];
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||T_GENERAL;}
@@ -165,12 +188,14 @@ function tickClock(){var n=new Date();
   document.getElementById('ht').textContent=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2)+':'+('0'+n.getSeconds()).slice(-2);}
 
 function setTab(t){tab=t;
-  ['Home','Month','All','Set'].forEach(function(x){document.getElementById('tab'+x).className=('tab'+x==='tab'+cap(t))?'on':'';});
+  ['Home','Month','Manual','All','Set'].forEach(function(x){document.getElementById('tab'+x).className=('tab'+x==='tab'+cap(t))?'on':'';});
   document.getElementById('pHome').className='pane'+(t==='home'?' on':'');
   document.getElementById('pMonth').className='pane'+(t==='month'?' on':'');
+  document.getElementById('pManual').className='pane'+(t==='manual'?' on':'');
   document.getElementById('pAll').className='pane'+(t==='all'?' on':'');
   document.getElementById('pSet').className='pane'+(t==='set'?' on':'');
   if(t==='month')loadMonth(); if(t==='all')renderAll();
+  if(t==='manual'){ var di=document.getElementById('mDate'); if(di&&!di.value)di.value=ymd(new Date()); manualLoad(); }
 }
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 
@@ -292,6 +317,45 @@ function downloadCSV(){
   var blob=new Blob(['\uFEFF'+csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='勤怠_'+(me?me['氏名']:'')+'_'+mCur.getFullYear()+('0'+(mCur.getMonth()+1)).slice(-2)+'.csv';a.click();URL.revokeObjectURL(url);
 }
+
+function manualLoad(){ if(!me)return; var d=document.getElementById('mDate').value; if(!d){toast('日付を選んでください');return;}
+  showLoad(); callGAS({action:'kintaiByDate',date:d}).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
+    manualRows=(res.kintai||[]).filter(function(k){return String(k['作業員ID'])===String(me['作業員ID']);})
+      .sort(function(a,b){return String(a['出勤']||'').localeCompare(String(b['出勤']||''));});
+    renderManual();
+  }).catch(function(e){toast('読込失敗：'+e.message);}).then(hideLoad); }
+function renderManual(){
+  var el=document.getElementById('manualList');
+  if(!manualRows.length){ el.innerHTML='<div class="needlogin" style="margin:6px auto 14px;">この日の記録はありません。下の「追加」で入力できます。</div>'; return; }
+  var h='';
+  manualRows.forEach(function(k){ var id=esc(k['勤怠ID']);
+    h+='<div class="brkcard" style="padding:12px 14px;margin-bottom:10px;"><div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">'
+      +'<label style="font-size:12px;color:var(--sub);">出勤<input type="time" id="mi_'+id+'" value="'+esc(k['出勤']||'')+'" style="display:block;margin-top:3px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:15px;"></label>'
+      +'<label style="font-size:12px;color:var(--sub);">退勤<input type="time" id="mo_'+id+'" value="'+esc(k['退勤']||'')+'" style="display:block;margin-top:3px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:15px;"></label>'
+      +'<label style="font-size:12px;color:var(--sub);">休憩(分)<input type="number" id="mb_'+id+'" value="'+esc(k['休憩分']||0)+'" min="0" step="5" style="display:block;margin-top:3px;width:84px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:15px;"></label>'
+      +'<button onclick="manualSave(\''+id+'\')" style="padding:10px 14px;border:1px solid var(--teal2);color:var(--teal2);background:#fff;border-radius:8px;font-weight:700;cursor:pointer;">保存</button>'
+      +'<button onclick="manualDelete(\''+id+'\')" style="padding:10px 14px;border:1px solid var(--red);color:var(--red);background:#fff;border-radius:8px;font-weight:700;cursor:pointer;">削除</button>'
+      +'</div><div style="font-size:11px;color:var(--sub);margin-top:6px;">実働 '+esc((k['実働時間']!==''&&k['実働時間']!=null)?k['実働時間']+'h':'—')+'</div></div>';
+  });
+  el.innerHTML=h;
+}
+function manualAdd(){ if(!me)return; var d=document.getElementById('mDate').value; if(!d){toast('日付を選んでください');return;}
+  var i=document.getElementById('mIn').value, o=document.getElementById('mOut').value, b=document.getElementById('mBrk').value||0;
+  if(!i&&!o){toast('出勤か退勤を入力してください');return;}
+  showLoad();
+  callGAS({action:'kintaiAdd',data:{'作業員ID':me['作業員ID'],'氏名':me['氏名'],'日付':d,'出勤':i,'退勤':o,'休憩分':Number(b)}})
+   .then(function(res){if(!res.ok)throw new Error(res.error||'追加失敗');toast('追加しました');document.getElementById('mIn').value='';document.getElementById('mOut').value='';manualLoad();reload();})
+   .catch(function(e){toast('失敗：'+e.message);}).then(hideLoad); }
+function manualSave(id){ var i=document.getElementById('mi_'+id).value, o=document.getElementById('mo_'+id).value, b=document.getElementById('mb_'+id).value||0;
+  showLoad();
+  callGAS({action:'updateKintai',id:id,data:{'出勤':i,'退勤':o,'休憩分':Number(b)}})
+   .then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');toast('保存しました');manualLoad();reload();})
+   .catch(function(e){toast('失敗：'+e.message);}).then(hideLoad); }
+function manualDelete(id){ if(!confirm('この記録を削除しますか？'))return;
+  showLoad();
+  callGAS({action:'kintaiDeleteOwn',id:id,wid:me['作業員ID']})
+   .then(function(res){if(!res.ok)throw new Error(res.error||'削除失敗');toast('削除しました');manualLoad();reload();})
+   .catch(function(e){toast('失敗：'+e.message);}).then(hideLoad); }
 
 function logout(){localStorage.removeItem('genba_user');location.href='https://kawaguchidenki001.github.io/genba-projects/';}
 
