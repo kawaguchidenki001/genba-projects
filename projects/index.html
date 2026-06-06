@@ -176,6 +176,7 @@
     <h2 id="mTitle">新規案件</h2>
     <input type="hidden" id="f_id">
     <div class="fld"><label>案件名 ／ 現場名 *</label><input id="f_name" placeholder="例）不破高等学校空調設備更新工事"></div>
+    <div class="fld"><label>略称（日報・予定表に表示）</label><input id="f_short" placeholder="例）不破高 空調"></div>
     <div class="two">
       <div class="fld"><label>顧客 ／ 取引先</label>
         <select id="f_cust" onchange="onCustChange()"></select>
@@ -453,6 +454,7 @@ function openProject(p){
   var g=function(id){return document.getElementById(id);};
   g('f_id').value   = p?(p['案件ID']||''):'';
   g('f_name').value = p?(p['案件名']||''):'';
+  g('f_short').value = p?(p['略称']||''):'';
   buildCustList();
   var _cust=p?(p['顧客']||''):''; var _csel=g('f_cust'); _csel.value=_cust;
   if(_cust && _csel.value!==_cust){ _csel.value='__other__'; }
@@ -480,7 +482,7 @@ function gatherProject(){
   var cv=g('f_cust'), cust=(cv==='__other__')?g('f_cust_other').trim():cv.trim();
   var kv=g('f_contact'), contact=(kv==='__other__')?g('f_contact_other').trim():kv.trim();
   return {
-    '案件ID':g('f_id'),'案件名':g('f_name').trim(),'顧客':cust,
+    '案件ID':g('f_id'),'案件名':g('f_name').trim(),'略称':g('f_short').trim(),'顧客':cust,
     '場所':g('f_place').trim(),'種別':g('f_type'),'ステータス':g('f_status'),
     '工期開始':g('f_start'),'工期完了':g('f_end'),
     '先方担当者':contact,'電話番号':g('f_tel').trim(),'メールアドレス':g('f_email').trim(),
