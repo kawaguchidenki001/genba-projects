@@ -299,7 +299,7 @@ function renderMonth(){
     }
     cell.innerHTML=html;g.appendChild(cell);
     var pills=cell.querySelectorAll('.ev2');
-    for(var k=0;k<pills.length;k++){(function(el){el.onclick=function(je){je.stopPropagation();openDay(ds);};})(pills[k]);}
+    for(var k=0;k<pills.length;k++){(function(el,dsv){el.onclick=function(je){je.stopPropagation();openDay(dsv);};})(pills[k],ds);}
   }
 }
 function renderAgenda(numDays){
