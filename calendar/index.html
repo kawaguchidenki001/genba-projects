@@ -115,44 +115,44 @@
   .exbtn:active{background:#f1eefb;}
   /* ===== PC（768px以上）のみ：文字を大きく。スマホ（767px以下）はそのまま ===== */
   @media (min-width:768px){
-    body{font-size:17px;}
-    .hd-row h1{font-size:21px;}
-    .back{font-size:15px;} .sync{font-size:14px;}
-    .ghost{font-size:15px;padding:8px 13px;}
-    .navbar{gap:20px;}
-    .navbar .ym{font-size:23px;min-width:210px;}
-    .navbar button{font-size:19px;padding:9px 16px;}
-    .navbar .today{font-size:15px;padding:9px 16px;}
-    .viewbar .vseg{max-width:480px;}
-    .vseg button{font-size:16px;padding:11px 8px;}
+    body{font-size:16px;}
+    .hd-row h1{font-size:19px;}
+    .back{font-size:14px;} .sync{font-size:13px;}
+    .ghost{font-size:14px;padding:7px 12px;}
+    .navbar{gap:18px;}
+    .navbar .ym{font-size:20px;min-width:170px;}
+    .navbar button{font-size:17.5px;padding:8px 14px;}
+    .navbar .today{font-size:14px;padding:8px 14px;}
+    .viewbar .vseg{max-width:420px;}
+    .vseg button{font-size:14.5px;padding:10px 7px;}
     /* 月グリッド */
-    .wk div{font-size:14px;padding:4px 0;}
-    .cell{min-height:108px;padding:5px 7px;border-radius:8px;}
-    .dnum{font-size:16px;}
-    .ev2{margin-top:3px;line-height:1.25;}
-    .ev-proj{font-size:14px;padding:1px 6px;border-radius:4px;}
-    .ev-sub{font-size:13px;}
+    .wk div{font-size:12px;padding:3px 0;}
+    .cell{min-height:84px;padding:4px 5px;border-radius:7px;}
+    .dnum{font-size:13.5px;}
+    .ev2{margin-top:2px;line-height:1.2;}
+    .ev-proj{font-size:12px;padding:1px 4px;border-radius:4px;}
+    .ev-sub{font-size:11px;}
     /* 週アジェンダ */
-    .adate{flex:0 0 66px;padding:9px 4px;}
-    .adate-d{font-size:18px;} .adate-w{font-size:13px;}
-    .aevs{padding:6px 10px;}
-    .aev{gap:8px;padding:5px 0;}
-    .aev-proj{font-size:15px;padding:1px 7px;}
-    .aev-time{font-size:14px;} .aev-who{font-size:15px;} .aev-none{font-size:14px;}
+    .adate{flex:0 0 53px;padding:8px 3px;}
+    .adate-d{font-size:15.5px;} .adate-w{font-size:11.5px;}
+    .aevs{padding:5px 8px;}
+    .aev{gap:6px;padding:4px 0;}
+    .aev-proj{font-size:13px;padding:1px 6px;}
+    .aev-time{font-size:12.5px;} .aev-who{font-size:13px;} .aev-none{font-size:12.5px;}
     /* シート・詳細・フォーム */
-    .sheet{max-width:680px;padding:22px 22px calc(env(safe-area-inset-bottom) + 22px);}
-    .sheet h2{font-size:20px;}
-    .addmini{font-size:15px;padding:9px 15px;}
-    .evrow{padding:13px 6px;} .evttl{font-size:17px;} .evmeta{font-size:14px;}
-    .empty{font-size:16px;}
-    .det-time{font-size:16px;} .det-row{font-size:17px;} .det-lbl{font-size:13px;}
-    .daycard{padding:14px 2px;} .dc-title{font-size:17px;}
-    .evd-side{flex:0 0 120px;} .evd-side .btn{font-size:14px;padding:13px 6px;}
-    .fld label{font-size:14px;}
-    .fld input,.fld select,.fld textarea{font-size:16px;padding:11px 13px;}
-    .acts .btn{font-size:16px;padding:14px;}
-    .wghd{font-size:14px;} .wghd a{font-size:13px;} .wchk{font-size:15px;}
-    .exbtn{font-size:16px;padding:13px;}
+    .sheet{max-width:620px;padding:19px 19px calc(env(safe-area-inset-bottom) + 19px);}
+    .sheet h2{font-size:18px;}
+    .addmini{font-size:14px;padding:8px 14px;}
+    .evrow{padding:12px 6px;} .evttl{font-size:16px;} .evmeta{font-size:13px;}
+    .empty{font-size:15px;}
+    .det-time{font-size:15px;} .det-row{font-size:16px;} .det-lbl{font-size:12.5px;}
+    .daycard{padding:13px 2px;} .dc-title{font-size:16px;}
+    .evd-side{flex:0 0 108px;} .evd-side .btn{font-size:13.5px;padding:12px 6px;}
+    .fld label{font-size:13px;}
+    .fld input,.fld select,.fld textarea{font-size:15.5px;padding:11px 13px;}
+    .acts .btn{font-size:15.5px;padding:13px;}
+    .wghd{font-size:13px;} .wghd a{font-size:12.5px;} .wchk{font-size:14px;}
+    .exbtn{font-size:15px;padding:13px;}
   }
 </style>
 </head>
@@ -461,7 +461,23 @@ function buildProj(){var s=document.getElementById('f_proj');s.innerHTML='<optio
 function closeEv(){document.getElementById('ovEv').classList.remove('show');}
 function gather(){var g=function(id){return document.getElementById(id).value;};var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
   return {'予定ID':g('f_id'),'日付':g('f_date'),'終了日':g('f_end'),'案件ID':pid,'案件名':p['案件名']||'','予定内容':g('f_ttl').trim(),'区分':g('f_kind'),'担当':checkedOwnerStr(),'開始':g('f_start'),'終了':g('f_etime'),'備考':g('f_note').trim()};}
+/* 同じ担当者が同じ時間帯に予定を持っていないかチェック（2重登録防止）*/
+function _toMin(t){ var m=String(t||'').match(/^(\d{1,2}):(\d{2})/); return m?(parseInt(m[1],10)*60+parseInt(m[2],10)):null; }
+function _timeRange(e){ var s=_toMin(e['開始']),en=_toMin(e['終了']);
+  if(s==null&&en==null)return [0,1440]; if(s!=null&&en==null)return [s,1440]; if(s==null&&en!=null)return [0,en]; return [s,en]; }
+function _dateRange(e){ var s=String(e['日付']||'').slice(0,10),en=String(e['終了日']||'').slice(0,10)||s; if(en<s)en=s; return [s,en]; }
+function _nameSet(ownerStr){ var o={}; String(ownerStr||'').split(/[・、,，\/\s　]+/).forEach(function(x){var n=normName(x);if(n)o[n]=1;}); return o; }
+function findOwnerTimeConflict(d){
+  var mine=_nameSet(d['担当']); if(!Object.keys(mine).length)return null;
+  var md=_dateRange(d),mt=_timeRange(d),mid=String(d['予定ID']||'');
+  for(var i=0;i<schedules.length;i++){ var e=schedules[i];
+    if(String(e['予定ID']||'')===mid)continue;
+    var ed=_dateRange(e); if(!(md[0]<=ed[1]&&ed[0]<=md[1]))continue;
+    var et=_timeRange(e); if(!(mt[0]<et[1]&&et[0]<mt[1]))continue;
+    var es=_nameSet(e['担当']); for(var nm in mine){ if(es[nm])return {ev:e,name:nm}; } }
+  return null; }
 function saveEvent(){var d=gather();if(!d['日付']){toast('日付を入れてください');return;}if(!d['案件ID']){toast('現場を選んでください');return;}
+  var cf=findOwnerTimeConflict(d); if(cf){var ce=cf.ev,pn=projShort(ce['案件ID'],ce['案件名'])||ce['予定内容']||'予定'; toast(cf.name+' さんは同じ時間帯に予定があります：'+pn+'（'+timeLabel(ce)+'）'); return;}
   var id=d['予定ID'],isNew=!id,btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
   var params=isNew?{action:'addSchedule',data:d}:{action:'updateSchedule',id:id,data:d};
   callGAS(params).then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
