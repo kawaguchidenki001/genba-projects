@@ -34,7 +34,7 @@
   .cell.sun .dnum{color:#dc2626;} .cell.sat .dnum{color:#2563eb;} .cell.dim .dnum{color:#c2c7ce;}
   .ev2{margin-top:2px;line-height:1.15;}
   .ev-proj{display:block;background:#eef0f2;color:var(--ink);border-radius:3px;padding:0 3px;font-weight:700;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .ev-sub{font-size:9.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ev-sub{font-size:9.5px;color:var(--ink);line-height:1.3;white-space:normal;word-break:break-word;}
   .ev-tm{color:var(--sub);}
   /* スマホの「月」表示：セル内の時間は非表示（PCでは表示）／担当名は省略せず折り返して全員表示 */
   @media (max-width:767px){
@@ -113,6 +113,47 @@
   .exportbar{display:flex;gap:8px;padding:12px 4px calc(env(safe-area-inset-bottom) + 16px);}
   .exbtn{flex:1;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-size:14px;font-weight:700;cursor:pointer;}
   .exbtn:active{background:#f1eefb;}
+  /* ===== PC（768px以上）のみ：文字を大きく。スマホ（767px以下）はそのまま ===== */
+  @media (min-width:768px){
+    body{font-size:17px;}
+    .hd-row h1{font-size:21px;}
+    .back{font-size:15px;} .sync{font-size:14px;}
+    .ghost{font-size:15px;padding:8px 13px;}
+    .navbar{gap:20px;}
+    .navbar .ym{font-size:23px;min-width:210px;}
+    .navbar button{font-size:19px;padding:9px 16px;}
+    .navbar .today{font-size:15px;padding:9px 16px;}
+    .viewbar .vseg{max-width:480px;}
+    .vseg button{font-size:16px;padding:11px 8px;}
+    /* 月グリッド */
+    .wk div{font-size:14px;padding:4px 0;}
+    .cell{min-height:108px;padding:5px 7px;border-radius:8px;}
+    .dnum{font-size:16px;}
+    .ev2{margin-top:3px;line-height:1.25;}
+    .ev-proj{font-size:14px;padding:1px 6px;border-radius:4px;}
+    .ev-sub{font-size:13px;}
+    /* 週アジェンダ */
+    .adate{flex:0 0 66px;padding:9px 4px;}
+    .adate-d{font-size:18px;} .adate-w{font-size:13px;}
+    .aevs{padding:6px 10px;}
+    .aev{gap:8px;padding:5px 0;}
+    .aev-proj{font-size:15px;padding:1px 7px;}
+    .aev-time{font-size:14px;} .aev-who{font-size:15px;} .aev-none{font-size:14px;}
+    /* シート・詳細・フォーム */
+    .sheet{max-width:680px;padding:22px 22px calc(env(safe-area-inset-bottom) + 22px);}
+    .sheet h2{font-size:20px;}
+    .addmini{font-size:15px;padding:9px 15px;}
+    .evrow{padding:13px 6px;} .evttl{font-size:17px;} .evmeta{font-size:14px;}
+    .empty{font-size:16px;}
+    .det-time{font-size:16px;} .det-row{font-size:17px;} .det-lbl{font-size:13px;}
+    .daycard{padding:14px 2px;} .dc-title{font-size:17px;}
+    .evd-side{flex:0 0 120px;} .evd-side .btn{font-size:14px;padding:13px 6px;}
+    .fld label{font-size:14px;}
+    .fld input,.fld select,.fld textarea{font-size:16px;padding:11px 13px;}
+    .acts .btn{font-size:16px;padding:14px;}
+    .wghd{font-size:14px;} .wghd a{font-size:13px;} .wchk{font-size:15px;}
+    .exbtn{font-size:16px;padding:13px;}
+  }
 </style>
 </head>
 <body>
@@ -181,24 +222,30 @@
   <div class="sheet">
     <h2 id="evTitle">予定の追加</h2>
     <input type="hidden" id="f_id">
+    <!-- 1. 日付 -->
     <div class="two">
       <div class="fld"><label>日付 *</label><input id="f_date" type="date"></div>
       <div class="fld"><label>終了日（任意・連日のとき）</label><input id="f_end" type="date"></div>
     </div>
-    <div class="fld"><label>予定内容 *</label><input id="f_ttl" placeholder="例）配線工事 / 現場打合せ"></div>
-    <div class="two">
-      <div class="fld"><label>区分</label><select id="f_kind">
-        <option>工事</option><option>現場調査</option><option>打ち合わせ</option><option>その他</option></select></div>
-      <div class="fld"><label>現場 ／ 案件</label><select id="f_proj"><option value="">（現場なし）</option></select></div>
-    </div>
+    <!-- 2. 時間 -->
     <div class="two">
       <div class="fld"><label>開始（任意）</label><input id="f_start" type="time"></div>
       <div class="fld"><label>終了（任意）</label><input id="f_etime" type="time"></div>
     </div>
+    <!-- 3. 現場 ／ 4. 区分 -->
+    <div class="two">
+      <div class="fld"><label>現場 ／ 案件 *</label><select id="f_proj"><option value="">（現場を選択）</option></select></div>
+      <div class="fld"><label>区分</label><select id="f_kind">
+        <option>工事</option><option>現場調査</option><option>打ち合わせ</option><option>その他</option></select></div>
+    </div>
+    <!-- 5. 予定内容 -->
+    <div class="fld"><label>予定内容</label><input id="f_ttl" placeholder="例）配線工事 / 現場打合せ"></div>
+    <!-- 6. 担当 -->
     <div class="fld" id="wmFld"><label>担当（複数選択できます）</label>
       <div id="wmEmp" class="wgroup"></div>
       <div id="wmPart" class="wgroup" style="margin-top:8px;"></div>
     </div>
+    <!-- 7. 備考 -->
     <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
     <div class="acts"><button class="btn sub" onclick="closeEv()">キャンセル</button><button class="btn primary" id="saveBtn" onclick="saveEvent()">保存</button></div>
     <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="delEvent(event)">この予定を削除</a></div>
@@ -410,11 +457,11 @@ function openEvent(e,presetDate){
   setOwnerChecks(e?(e['担当']||''):'');g('f_note').value=e?(e['備考']||''):'';
   document.getElementById('ovEv').classList.add('show');
 }
-function buildProj(){var s=document.getElementById('f_proj');s.innerHTML='<option value="">（現場なし）</option>';projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);});}
+function buildProj(){var s=document.getElementById('f_proj');s.innerHTML='<option value="">（現場を選択）</option>';projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);});}
 function closeEv(){document.getElementById('ovEv').classList.remove('show');}
 function gather(){var g=function(id){return document.getElementById(id).value;};var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
   return {'予定ID':g('f_id'),'日付':g('f_date'),'終了日':g('f_end'),'案件ID':pid,'案件名':p['案件名']||'','予定内容':g('f_ttl').trim(),'区分':g('f_kind'),'担当':checkedOwnerStr(),'開始':g('f_start'),'終了':g('f_etime'),'備考':g('f_note').trim()};}
-function saveEvent(){var d=gather();if(!d['日付']){toast('日付を入れてください');return;}if(!d['予定内容']){toast('予定内容を入れてください');return;}
+function saveEvent(){var d=gather();if(!d['日付']){toast('日付を入れてください');return;}if(!d['案件ID']){toast('現場を選んでください');return;}
   var id=d['予定ID'],isNew=!id,btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
   var params=isNew?{action:'addSchedule',data:d}:{action:'updateSchedule',id:id,data:d};
   callGAS(params).then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
