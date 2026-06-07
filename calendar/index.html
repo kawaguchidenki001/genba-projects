@@ -23,22 +23,18 @@
   .navbar .ym{font-size:17px;font-weight:700;min-width:130px;text-align:center;}
   .navbar .today{font-size:13px;padding:7px 12px;}
   .cal{padding:0 8px;}
-  .wk{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}
-  .wk div{text-align:center;font-size:11px;color:var(--sub);font-weight:700;padding:2px 0;}
+  .wk{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:3px;}
+  .wk div{text-align:center;font-size:10px;color:var(--sub);font-weight:700;padding:2px 0;}
   .wk .sun{color:#dc2626;} .wk .sat{color:#2563eb;}
-  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
-  .cell{background:#fff;border:1px solid var(--line);border-radius:8px;min-height:74px;padding:4px;display:flex;flex-direction:column;gap:2px;cursor:pointer;}
+  .grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+  .cell{background:#fff;border:1px solid var(--line);border-radius:6px;min-height:60px;padding:2px 3px;display:flex;flex-direction:column;gap:1px;cursor:pointer;}
   .cell.dim{background:#f7f8f9;color:#b9bec6;}
   .cell.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
-  .dnum{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .dnum{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1;}
   .cell.sun .dnum{color:#dc2626;} .cell.sat .dnum{color:#2563eb;} .cell.dim .dnum{color:#c2c7ce;}
-  .ev{font-size:10px;color:#fff;border-radius:4px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.4;}
-  .more{font-size:9.5px;color:var(--sub);padding-left:2px;}
-  .ev2{margin-top:4px;}
-  .ev-l1{font-size:10px;line-height:1.35;display:flex;align-items:baseline;gap:4px;flex-wrap:wrap;}
-  .ev-proj{background:#eef0f2;color:var(--ink);border-radius:4px;padding:1px 5px;font-weight:700;}
-  .ev-time{color:var(--sub);font-variant-numeric:tabular-nums;}
-  .ev-who{font-size:10px;color:var(--sub);line-height:1.3;margin-left:2px;}
+  .ev2{margin-top:2px;line-height:1.15;}
+  .ev-proj{display:block;background:#eef0f2;color:var(--ink);border-radius:3px;padding:0 3px;font-weight:700;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ev-sub{font-size:9px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .ov{position:fixed;inset:0;background:rgba(15,23,40,.45);z-index:40;display:none;align-items:flex-end;justify-content:center;}
   .ov.show{display:flex;}
   .sheet{background:#fff;width:100%;max-width:560px;max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);}
@@ -50,6 +46,11 @@
   .evttl{font-weight:700;font-size:15px;}
   .evmeta{font-size:12.5px;color:var(--sub);}
   .empty{text-align:center;color:var(--sub);padding:24px 10px;font-size:14px;}
+  .det-time{font-size:14px;color:var(--ink);font-weight:700;margin:-4px 0 10px;}
+  .det-row{margin:9px 0;font-size:15px;}
+  .det-lbl{display:block;font-size:12px;color:var(--sub);font-weight:600;margin-bottom:1px;}
+  .row-link{margin-top:8px;}
+  .row-link .btn{width:100%;background:#eef1f5;color:var(--ink);}
   .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:600;}
   .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;font-family:inherit;}
   .fld textarea{resize:vertical;min-height:48px;}
@@ -73,22 +74,22 @@
   .cap-head{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:2px 6px 8px;}
   .cap-co{font-weight:700;font-size:14px;color:var(--ink);}
   .cap-period{font-size:13px;color:var(--sub);font-weight:700;}
-  /* 縦並び（1週/2週） */
-  #agendaView{padding:0 4px;}
-  .dayblock{background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:8px;overflow:hidden;}
-  .dayblock.today{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);}
-  .dbh{display:flex;align-items:center;gap:6px;padding:8px 11px;background:#faf9fd;cursor:pointer;font-weight:700;}
-  .dayblock.sun .dbh-d{color:#dc2626;} .dayblock.sat .dbh-d{color:#2563eb;}
-  .dbh-w{font-size:12px;color:var(--sub);font-weight:700;}
-  .dbh-add{margin-left:auto;color:var(--accent);font-size:18px;font-weight:700;line-height:1;}
-  .db-empty{padding:8px 11px;color:#b9bec6;font-size:13px;}
-  .aev{padding:8px 11px;border-top:1px solid var(--line);border-left:4px solid var(--accent);cursor:pointer;}
-  .aev-h{display:flex;justify-content:space-between;align-items:center;gap:8px;}
-  .aev-t{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;}
-  .aev-k{font-size:11px;color:var(--sub);}
-  .aev-main{font-size:14px;margin-top:2px;}
-  .aev-desc{font-size:13px;color:var(--ink);margin-top:2px;}
-  .aev-note{font-size:12px;color:var(--sub);margin-top:2px;}
+  /* 縦並び（1週/2週）：日付を左、間は線のみ */
+  #agendaView{padding:0 4px;border-top:1px solid var(--line);}
+  .arow{display:flex;border-bottom:1px solid var(--line);}
+  .arow.today{background:#f5f3fd;}
+  .adate{flex:0 0 44px;padding:5px 2px 6px;text-align:center;border-right:1px solid var(--line);}
+  .adate-d{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.05;}
+  .arow.sun .adate-d{color:#dc2626;} .arow.sat .adate-d{color:#2563eb;}
+  .adate-w{font-size:10px;color:var(--sub);}
+  .adate-add{display:inline-block;margin-top:3px;color:var(--accent);font-size:15px;font-weight:700;line-height:1;cursor:pointer;padding:0 6px;}
+  .aevs{flex:1;min-width:0;padding:2px 7px;}
+  .aev{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;padding:3px 0;cursor:pointer;}
+  .aev+.aev{border-top:1px dashed #eceef1;}
+  .aev-proj{background:#eef0f2;color:var(--ink);border-radius:4px;padding:0 5px;font-weight:700;font-size:11.5px;}
+  .aev-time{font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums;}
+  .aev-who{font-size:11px;color:var(--ink);}
+  .aev-none{font-size:11px;color:#c2c7ce;padding:4px 0;}
   /* 出力 */
   .exportbar{display:flex;gap:8px;padding:12px 4px calc(env(safe-area-inset-bottom) + 16px);}
   .exbtn{flex:1;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-size:14px;font-weight:700;cursor:pointer;}
@@ -140,6 +141,15 @@
   <div class="sheet">
     <h2><span id="dayTitle"></span><button class="addmini" onclick="openEvent(null,window._selDate)">＋ 予定</button></h2>
     <div id="dayList"></div>
+  </div>
+</div>
+
+<div class="ov" id="ovEvD">
+  <div class="sheet">
+    <h2 id="evdTitle"></h2>
+    <div id="evdBody"></div>
+    <div class="acts"><button class="btn sub" onclick="closeEvD()">閉じる</button><button class="btn primary" onclick="evdEdit()">編集</button></div>
+    <div class="row-link" id="evdLinkRow"><button class="btn" onclick="evdOpenProject()">📁 この案件の情報を開く</button></div>
   </div>
 </div>
 
@@ -272,53 +282,74 @@ function renderMonth(){
     for(var j=0;j<evs.length;j++){var e=evs[j];
       var pn=projShort(e['案件ID'],e['案件名'])||e['予定内容']||'(予定)';
       var who=ownerShort(e['担当']);
-      html+='<div class="ev2">'+
-            '<div class="ev-l1"><span class="ev-proj" style="background:'+projColor(e['案件ID'])+'">'+esc(pn)+'</span><span class="ev-time">'+esc(timeLabel(e))+'</span></div>'+
-            (who?'<div class="ev-who">'+esc(who)+'</div>':'')+'</div>';
+      var sub=timeLabel(e)+(who?' '+who:'');
+      html+='<div class="ev2"><div class="ev-proj" style="background:'+projColor(e['案件ID'])+'">'+esc(pn)+'</div><div class="ev-sub">'+esc(sub)+'</div></div>';
     }
     cell.innerHTML=html;g.appendChild(cell);
+    var pills=cell.querySelectorAll('.ev2');
+    for(var k=0;k<pills.length;k++){(function(el,ev){el.onclick=function(je){je.stopPropagation();openEventDetail(ev);};})(pills[k],evs[k]);}
   }
 }
 function renderAgenda(numDays){
   var start=weekStart(cur),today=ymd(new Date()),host=document.getElementById('agendaView');host.innerHTML='';
   for(var i=0;i<numDays;i++){
     var d=new Date(start);d.setDate(start.getDate()+i);var ds=ymd(d),dow=d.getDay();
-    var block=document.createElement('div');block.className='dayblock'+(ds===today?' today':'')+(dow===0?' sun':'')+(dow===6?' sat':'');
-    var head='<div class="dbh" data-ds="'+ds+'"><span class="dbh-d">'+(d.getMonth()+1)+'/'+d.getDate()+'</span><span class="dbh-w">（'+wd(d)+'）</span><span class="dbh-add">＋</span></div>';
+    var row=document.createElement('div');row.className='arow'+(ds===today?' today':'')+(dow===0?' sun':'')+(dow===6?' sat':'');
     var evs=eventsOn(ds),body='';
-    if(!evs.length){body='<div class="db-empty">予定なし</div>';}
+    if(!evs.length){body='<div class="aev-none">—</div>';}
     else{evs.forEach(function(e){
-      var t=timeLabel(e);
-      body+='<div class="aev" data-id="'+esc(e['予定ID'])+'" style="border-left-color:'+projAccent(e['案件ID'])+'">'+
-        '<div class="aev-h"><span class="aev-t">'+esc(t)+'</span><span class="aev-k">'+esc(e['区分']||'')+'</span></div>'+
-        '<div class="aev-main">'+(projShort(e['案件ID'],e['案件名'])?esc(projShort(e['案件ID'],e['案件名'])):'<span style="color:#9aa1ab">（現場なし）</span>')+(ownerShort(e['担当'])?' ・ 👤'+esc(ownerShort(e['担当'])):'')+'</div>'+
-        (e['予定内容']?'<div class="aev-desc">'+esc(e['予定内容'])+'</div>':'')+
-        (e['備考']?'<div class="aev-note">'+esc(e['備考'])+'</div>':'')+
+      var pn=projShort(e['案件ID'],e['案件名'])||e['予定内容']||'(予定)';
+      var who=ownerShort(e['担当']);
+      body+='<div class="aev" data-id="'+esc(e['予定ID'])+'">'+
+        '<span class="aev-proj" style="background:'+projColor(e['案件ID'])+'">'+esc(pn)+'</span>'+
+        '<span class="aev-time">'+esc(timeLabel(e))+'</span>'+
+        (who?'<span class="aev-who">'+esc(who)+'</span>':'')+
       '</div>';
     });}
-    block.innerHTML=head+'<div class="db-body">'+body+'</div>';
-    host.appendChild(block);
+    row.innerHTML='<div class="adate"><div class="adate-d">'+(d.getMonth()+1)+'/'+d.getDate()+'</div><div class="adate-w">'+wd(d)+'</div><div class="adate-add" data-ds="'+ds+'">＋</div></div>'+
+                  '<div class="aevs">'+body+'</div>';
+    host.appendChild(row);
   }
-  var heads=host.querySelectorAll('.dbh');
-  for(var a=0;a<heads.length;a++){(function(hd){hd.onclick=function(){openEvent(null,hd.getAttribute('data-ds'));};})(heads[a]);}
+  var adds=host.querySelectorAll('.adate-add');
+  for(var a=0;a<adds.length;a++){(function(b){b.onclick=function(ev){if(ev)ev.stopPropagation();openEvent(null,b.getAttribute('data-ds'));};})(adds[a]);}
   var aevs=host.querySelectorAll('.aev');
-  for(var b=0;b<aevs.length;b++){(function(ae){ae.onclick=function(ev){if(ev)ev.stopPropagation();var id=ae.getAttribute('data-id');var x=schedules.filter(function(s){return String(s['予定ID'])===String(id);})[0];if(x)openEvent(x);};})(aevs[b]);}
+  for(var c=0;c<aevs.length;c++){(function(ae){ae.onclick=function(){var id=ae.getAttribute('data-id');var x=schedules.filter(function(s){return String(s['予定ID'])===String(id);})[0];if(x)openEventDetail(x);};})(aevs[c]);}
 }
 
 function openDay(ds){ window._selDate=ds;
   var d=new Date(ds);document.getElementById('dayTitle').textContent=(d.getMonth()+1)+'月'+d.getDate()+'日（'+'日月火水木金土'[d.getDay()]+'）';
   var evs=eventsOn(ds),el=document.getElementById('dayList');
   if(!evs.length){el.innerHTML='<div class="empty">予定はありません。<br>右上の「＋予定」から追加できます。</div>';}
-  else{ el.innerHTML=''; evs.forEach(function(e){ var r=document.createElement('div');r.className='evrow';r.onclick=function(){openEvent(e);};
-    var tm=timeLabel(e);
+  else{ el.innerHTML=''; evs.forEach(function(e){ var r=document.createElement('div');r.className='evrow';r.onclick=function(){openEventDetail(e);};
+    var pn=projShort(e['案件ID'],e['案件名'])||e['予定内容']||'(予定)';
+    var who=ownerShort(e['担当']);
     r.innerHTML='<span class="cdot" style="background:'+projAccent(e['案件ID'])+'"></span>'+
-      '<div><div class="evttl">'+esc(e['予定内容']||'')+' <span style="font-size:11px;color:var(--sub);">'+esc(e['区分']||'')+'</span></div>'+
-      '<div class="evmeta">'+esc(tm)+(projShort(e['案件ID'],e['案件名'])?' ・ '+esc(projShort(e['案件ID'],e['案件名'])):'')+(ownerShort(e['担当'])?' ・ '+esc(ownerShort(e['担当'])):'')+'</div>'+
-      (e['備考']?'<div class="evmeta">'+esc(e['備考'])+'</div>':'')+'</div>';
+      '<div style="flex:1;min-width:0;">'+
+        '<div class="evttl">'+esc(pn)+' <span style="font-size:12px;color:var(--sub);font-weight:400;">'+esc(timeLabel(e))+(e['区分']?' ・ '+esc(e['区分']):'')+'</span></div>'+
+        (e['予定内容']?'<div class="evmeta">作業内容：'+esc(e['予定内容'])+'</div>':'')+
+        (who?'<div class="evmeta">作業員：'+esc(who)+'</div>':'')+
+      '</div>';
     el.appendChild(r); }); }
   document.getElementById('ovDay').classList.add('show');
 }
 function closeDay(){document.getElementById('ovDay').classList.remove('show');}
+var evdCur=null;
+function fmtDate(e){ var s=String(e['日付']||'').slice(0,10); if(!s)return ''; var d=new Date(s); var t=(d.getMonth()+1)+'月'+d.getDate()+'日（'+'日月火水木金土'[d.getDay()]+'）'; var en=String(e['終了日']||'').slice(0,10); if(en&&en!==s){var d2=new Date(en);t+=' 〜 '+(d2.getMonth()+1)+'月'+d2.getDate()+'日';} return t; }
+function openEventDetail(e){ evdCur=e;
+  document.getElementById('evdTitle').textContent=projShort(e['案件ID'],e['案件名'])||e['予定内容']||'(予定)';
+  var h='<div class="det-time">'+esc(timeLabel(e))+(e['区分']?' ・ '+esc(e['区分']):'')+'</div>';
+  h+='<div class="det-row"><span class="det-lbl">日付</span>'+esc(fmtDate(e))+'</div>';
+  if(e['予定内容'])h+='<div class="det-row"><span class="det-lbl">作業内容</span>'+esc(e['予定内容'])+'</div>';
+  var who=ownerShort(e['担当']);if(who)h+='<div class="det-row"><span class="det-lbl">作業員</span>'+esc(who)+'</div>';
+  if(e['備考'])h+='<div class="det-row"><span class="det-lbl">備考</span>'+esc(e['備考'])+'</div>';
+  document.getElementById('evdBody').innerHTML=h;
+  document.getElementById('evdLinkRow').style.display=e['案件ID']?'block':'none';
+  document.getElementById('ovDay').classList.remove('show');
+  document.getElementById('ovEvD').classList.add('show');
+}
+function closeEvD(){document.getElementById('ovEvD').classList.remove('show');}
+function evdEdit(){ var e=evdCur; closeEvD(); if(e)openEvent(e); }
+function evdOpenProject(ev){ if(ev)ev.preventDefault(); var e=evdCur; if(e&&e['案件ID'])location.href='../projects/?case='+encodeURIComponent(e['案件ID']); }
 
 function openEvent(e,presetDate){
   closeDay();
@@ -362,7 +393,7 @@ function exportPdf(){ if(typeof html2canvas==='undefined'||!(window.jspdf&&windo
     var pdf=new window.jspdf.jsPDF({orientation:w>=h?'l':'p',unit:'pt',format:[w,h]});pdf.addImage(img,'JPEG',0,0,w,h);pdf.save('スケジュール_'+fileStamp()+'.pdf');toast('PDFを保存しました');}).catch(function(){toast('PDFの作成に失敗しました');}); }
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
-['ovDay','ovEv'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
+['ovDay','ovEv','ovEvD'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
 document.addEventListener('visibilitychange',function(){if(!document.hidden)reload();});
 render();reload();
 </script>
