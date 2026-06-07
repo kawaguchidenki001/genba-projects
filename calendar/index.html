@@ -229,25 +229,30 @@
       <div class="fld"><label>日付 *</label><input id="f_date" type="date"></div>
       <div class="fld"><label>終了日（任意・連日のとき）</label><input id="f_end" type="date"></div>
     </div>
-    <!-- 2. 時間 -->
+    <!-- 2. 時間（10分単位）-->
     <div class="two">
-      <div class="fld"><label>開始（任意）</label><input id="f_start" type="time"></div>
-      <div class="fld"><label>終了（任意）</label><input id="f_etime" type="time"></div>
+      <div class="fld"><label>開始</label><input id="f_start" type="time" step="600"></div>
+      <div class="fld"><label>終了</label><input id="f_etime" type="time" step="600"></div>
     </div>
-    <!-- 3. 現場 ／ 4. 区分 -->
+    <!-- 3. 種別 ／ 候補（取引先）-->
     <div class="two">
-      <div class="fld"><label>現場 ／ 案件 *</label><select id="f_proj"><option value="">（現場を選択）</option></select></div>
-      <div class="fld"><label>区分</label><select id="f_kind">
-        <option>工事</option><option>現場調査</option><option>打ち合わせ</option><option>その他</option></select></div>
+      <div class="fld"><label>種別</label><select id="f_ctype" onchange="onCType()">
+        <option value="">（すべて）</option><option>官公庁</option><option>法人</option><option>個人</option></select></div>
+      <div class="fld"><label>候補（取引先）</label><select id="f_cand" onchange="onCand()"><option value="">（取引先を選択）</option></select></div>
     </div>
-    <!-- 5. 予定内容 -->
+    <!-- 4. 現場名（1行）-->
+    <div class="fld"><label>現場名 *</label><select id="f_proj"><option value="">（現場を選択）</option></select></div>
+    <!-- 5. 区分 -->
+    <div class="fld"><label>区分</label><select id="f_kind">
+      <option>工事</option><option>現場調査</option><option>打ち合わせ</option><option>その他</option></select></div>
+    <!-- 6. 予定内容 -->
     <div class="fld"><label>予定内容</label><input id="f_ttl" placeholder="例）配線工事 / 現場打合せ"></div>
-    <!-- 6. 担当 -->
-    <div class="fld" id="wmFld"><label>担当（複数選択できます）</label>
+    <!-- 7. 担当（必須・1人以上）-->
+    <div class="fld" id="wmFld"><label>担当 *（1人以上を選択）</label>
       <div id="wmEmp" class="wgroup"></div>
       <div id="wmPart" class="wgroup" style="margin-top:8px;"></div>
     </div>
-    <!-- 7. 備考 -->
+    <!-- 8. 備考 -->
     <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
     <div class="acts"><button class="btn sub" onclick="closeEv()">キャンセル</button><button class="btn primary" id="saveBtn" onclick="saveEvent()">保存</button></div>
   </div>
@@ -261,7 +266,7 @@
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var T_GENERAL='kawaguchi-genba-2026';
-var projects=[],schedules=[],workers=[],cur=new Date(),viewMode='month';
+var projects=[],schedules=[],workers=[],customers=[],cur=new Date(),viewMode='month';
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||T_GENERAL;}
@@ -282,10 +287,10 @@ function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st
 
 function reload(){ setSync('busy','同期中…');
   callGAS({action:'calendarData'}).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
-    projects=res.projects||[];schedules=res.schedules||[];workers=res.workers||[];
-    try{localStorage.setItem('genba_cal',JSON.stringify({projects:projects,schedules:schedules,workers:workers}));}catch(e){}
+    projects=res.projects||[];schedules=res.schedules||[];workers=res.workers||[];customers=res.customers||[];
+    try{localStorage.setItem('genba_cal',JSON.stringify({projects:projects,schedules:schedules,workers:workers,customers:customers}));}catch(e){}
     render();setSync('ok','同期済み');
-  }).catch(function(err){ try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];workers=c.workers||[];}catch(e){} render();setSync('off','オフライン');toast('読込失敗：'+err.message); }); }
+  }).catch(function(err){ try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];workers=c.workers||[];customers=c.customers||[];}catch(e){} render();setSync('off','オフライン');toast('読込失敗：'+err.message); }); }
 
 function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function kindColor(k){return getComputedStyle(document.documentElement).getPropertyValue('--k'+k).trim()||'#6b7280';}
@@ -447,19 +452,35 @@ function evdOpenProject(ev){ if(ev)ev.preventDefault(); var e=evdCur; if(e&&e['�
 function openEvent(e,presetDate){
   closeDay();
   document.getElementById('evTitle').textContent=e?'予定の編集':'予定の追加';
-  buildProj();
   var g=function(id){return document.getElementById(id);};
   g('f_id').value=e?(e['予定ID']||''):'';
   g('f_date').value=e?String(e['日付']||'').slice(0,10):(presetDate||ymd(new Date()));
   g('f_end').value=e?String(e['終了日']||'').slice(0,10):'';
   g('f_ttl').value=e?(e['予定内容']||''):'';
   g('f_kind').value=e?(e['区分']||'工事'):'工事';
-  g('f_proj').value=e?(e['案件ID']||''):'';
-  g('f_start').value=e?(e['開始']||''):'';g('f_etime').value=e?(e['終了']||''):'';
+  setProjCascade(e?(e['案件ID']||''):'');
+  g('f_start').value=e?(e['開始']||''):'08:00';g('f_etime').value=e?(e['終了']||''):'12:00';
   setOwnerChecks(e?(e['担当']||''):'');g('f_note').value=e?(e['備考']||''):'';
   document.getElementById('ovEv').classList.add('show');
 }
-function buildProj(){var s=document.getElementById('f_proj');s.innerHTML='<option value="">（現場を選択）</option>';projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);});}
+/* 種別 → 候補（取引先）→ 現場名 のカスケード */
+function buildCand(){ var t=document.getElementById('f_ctype').value,s=document.getElementById('f_cand');
+  var list=customers.filter(function(c){return !t||String(c['区分']||'')===t;});
+  s.innerHTML='<option value="">（取引先を選択）</option>';
+  list.forEach(function(c){var nm=String(c['顧客名']||'');if(!nm)return;var o=document.createElement('option');o.value=nm;o.textContent=nm;s.appendChild(o);}); }
+function buildProjByCust(){ var cust=document.getElementById('f_cand').value,s=document.getElementById('f_proj');
+  var list=projects.filter(function(p){return !cust||String(p['顧客']||'')===cust;});
+  s.innerHTML='<option value="">（現場を選択）</option>';
+  list.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);}); }
+function onCType(){ buildCand(); buildProjByCust(); }
+function onCand(){ buildProjByCust(); }
+function setProjCascade(caseId){ caseId=String(caseId||'');
+  var p=projects.filter(function(x){return String(x['案件ID'])===caseId;})[0];
+  var cust=p?String(p['顧客']||''):'';
+  var c=customers.filter(function(x){return String(x['顧客名']||'')===cust;})[0];
+  document.getElementById('f_ctype').value=c?String(c['区分']||''):'';
+  buildCand(); document.getElementById('f_cand').value=cust;
+  buildProjByCust(); document.getElementById('f_proj').value=caseId; }
 function closeEv(){document.getElementById('ovEv').classList.remove('show');}
 function gather(){var g=function(id){return document.getElementById(id).value;};var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
   return {'予定ID':g('f_id'),'日付':g('f_date'),'終了日':g('f_end'),'案件ID':pid,'案件名':p['案件名']||'','予定内容':g('f_ttl').trim(),'区分':g('f_kind'),'担当':checkedOwnerStr(),'開始':g('f_start'),'終了':g('f_etime'),'備考':g('f_note').trim()};}
@@ -478,7 +499,7 @@ function findOwnerTimeConflict(d){
     var et=_timeRange(e); if(!(mt[0]<et[1]&&et[0]<mt[1]))continue;
     var es=_nameSet(e['担当']); for(var nm in mine){ if(es[nm])return {ev:e,name:nm}; } }
   return null; }
-function saveEvent(){var d=gather();if(!d['日付']){toast('日付を入れてください');return;}if(!d['案件ID']){toast('現場を選んでください');return;}
+function saveEvent(){var d=gather();if(!d['日付']){toast('日付を入れてください');return;}if(!d['案件ID']){toast('現場を選んでください');return;}if(!d['担当']){toast('担当を選んでください（1人以上）');return;}
   var cf=findOwnerTimeConflict(d); if(cf){var ce=cf.ev,pn=projShort(ce['案件ID'],ce['案件名'])||ce['予定内容']||'予定'; toast(cf.name+' さんは同じ時間帯に予定があります：'+pn+'（'+timeLabel(ce)+'）'); return;}
   var id=d['予定ID'],isNew=!id,btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
   var params=isNew?{action:'addSchedule',data:d}:{action:'updateSchedule',id:id,data:d};
