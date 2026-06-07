@@ -54,6 +54,13 @@
   .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
   @keyframes sp{to{transform:rotate(360deg);}}
   .lbox .txt{font-size:14px;font-weight:700;}
+  /* 危険な操作（全データ削除）*/
+  #sec-danger{margin-top:30px;border-top:1px solid var(--line);padding-top:16px;}
+  .danger-ttl{color:#b91c1c;}
+  .danger-box{border:1px solid #f3c0bd;background:#fff5f4;border-radius:12px;padding:14px;}
+  .danger-txt{font-size:13px;color:#7f1d1d;margin:0 0 12px;line-height:1.6;}
+  .btn-danger{width:100%;padding:13px;border:none;border-radius:11px;background:#dc2626;color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn-danger:active{background:#b91c1c;}
 </style>
 </head>
 <body>
@@ -94,6 +101,15 @@
   <div id="sec-contact" style="display:none;">
     <div class="sec">先方担当者マスタ（取引先ごとの担当者）</div>
     <div id="listK"><div class="empty">読込中…</div></div>
+  </div>
+
+  <!-- 危険な操作（全データ削除）-->
+  <div id="sec-danger">
+    <div class="sec danger-ttl">危険な操作</div>
+    <div class="danger-box">
+      <p class="danger-txt">全データ（案件・取引先・先方担当者・作業員・作業日報・スケジュール・勤怠）を完全に削除して、まっさらな状態に戻します。<b>元に戻せません。</b><br>※ 写真・ファイル（Google Drive内）は削除されません。</p>
+      <button class="btn-danger" onclick="clearAllData()">🗑 データをオールクリア</button>
+    </div>
   </div>
 </main>
 
@@ -269,6 +285,17 @@ function delWorker(ev){
 }
 
 function loadAll(){ loadWorkers(); loadCustomers(); loadContacts(); }
+function clearAllData(){
+  if(!confirm('全データ（案件・取引先・先方担当者・作業員・作業日報・スケジュール・勤怠）を完全に削除します。\nこの操作は元に戻せません。本当によろしいですか？'))return;
+  var t=prompt('確認のため「削除」と入力してください。');
+  if(t===null)return;
+  if(String(t).trim()!=='削除'){toast('「削除」と入力されなかったため中止しました');return;}
+  callGAS({action:'clearAll'}).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'削除に失敗しました');
+    toast('全データを削除しました');
+    loadAll();
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
 function switchTab(t){ curTab=t;
   ['worker','partner','contact'].forEach(function(x){
     document.getElementById('sec-'+x).style.display=(x===t)?'block':'none';
