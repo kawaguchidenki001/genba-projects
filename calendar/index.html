@@ -54,6 +54,10 @@
   #evdBody{flex:1;min-width:0;}
   .evd-side{display:flex;flex-direction:column;gap:8px;flex:0 0 96px;}
   .evd-side .btn{flex:none;width:100%;padding:11px 6px;font-size:13px;border-radius:10px;}
+  .daycard{display:flex;gap:12px;align-items:flex-start;padding:12px 2px;border-top:1px solid var(--line);}
+  .daycard:first-child{border-top:none;padding-top:2px;}
+  .dc-info{flex:1;min-width:0;}
+  .dc-title{font-weight:700;font-size:15.5px;margin-bottom:3px;display:flex;align-items:center;gap:7px;}
   .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:600;}
   .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;font-family:inherit;}
   .fld textarea{resize:vertical;min-height:48px;}
@@ -295,7 +299,7 @@ function renderMonth(){
     }
     cell.innerHTML=html;g.appendChild(cell);
     var pills=cell.querySelectorAll('.ev2');
-    for(var k=0;k<pills.length;k++){(function(el,ev){el.onclick=function(je){je.stopPropagation();openEventDetail(ev);};})(pills[k],evs[k]);}
+    for(var k=0;k<pills.length;k++){(function(el){el.onclick=function(je){je.stopPropagation();openDay(ds);};})(pills[k]);}
   }
 }
 function renderAgenda(numDays){
@@ -322,23 +326,32 @@ function renderAgenda(numDays){
   var adds=host.querySelectorAll('.aadd');
   for(var a=0;a<adds.length;a++){(function(b){b.onclick=function(ev){if(ev)ev.stopPropagation();openEvent(null,b.getAttribute('data-ds'));};})(adds[a]);}
   var aevs=host.querySelectorAll('.aev');
-  for(var c=0;c<aevs.length;c++){(function(ae){ae.onclick=function(){var id=ae.getAttribute('data-id');var x=schedules.filter(function(s){return String(s['予定ID'])===String(id);})[0];if(x)openEventDetail(x);};})(aevs[c]);}
+  for(var c=0;c<aevs.length;c++){(function(ae){ae.onclick=function(){var id=ae.getAttribute('data-id');var x=schedules.filter(function(s){return String(s['予定ID'])===String(id);})[0];if(x)openDay(String(x['日付']||'').slice(0,10));};})(aevs[c]);}
 }
 
 function openDay(ds){ window._selDate=ds;
   var d=new Date(ds);document.getElementById('dayTitle').textContent=(d.getMonth()+1)+'月'+d.getDate()+'日（'+'日月火水木金土'[d.getDay()]+'）';
   var evs=eventsOn(ds),el=document.getElementById('dayList');
-  if(!evs.length){el.innerHTML='<div class="empty">予定はありません。<br>右上の「＋予定」から追加できます。</div>';}
-  else{ el.innerHTML=''; evs.forEach(function(e){ var r=document.createElement('div');r.className='evrow';r.onclick=function(){openEventDetail(e);};
-    var pn=projShort(e['案件ID'],e['案件名'])||e['予定内容']||'(予定)';
+  if(!evs.length){el.innerHTML='<div class="empty">予定はありません。<br>右上の「＋予定」から追加できます。</div>';document.getElementById('ovDay').classList.add('show');return;}
+  el.innerHTML='';
+  evs.forEach(function(e){
+    var p=projects.filter(function(x){return String(x['案件ID'])===String(e['案件ID']);})[0]||{};
     var who=ownerShort(e['担当']);
-    r.innerHTML='<span class="cdot" style="background:'+projAccent(e['案件ID'])+'"></span>'+
-      '<div style="flex:1;min-width:0;">'+
-        '<div class="evttl">'+esc(pn)+' <span style="font-size:12px;color:var(--sub);font-weight:400;">'+esc(timeLabel(e))+(e['区分']?' ・ '+esc(e['区分']):'')+'</span></div>'+
-        (e['予定内容']?'<div class="evmeta">作業内容：'+esc(e['予定内容'])+'</div>':'')+
-        (who?'<div class="evmeta">作業員：'+esc(who)+'</div>':'')+
-      '</div>';
-    el.appendChild(r); }); }
+    var info='<div class="dc-title"><span class="cdot" style="background:'+projAccent(e['案件ID'])+'"></span>'+esc(e['案件名']||projShort(e['案件ID'],e['案件名'])||'(予定)')+'</div>'+
+      '<div class="det-time">'+esc(timeLabel(e))+(e['区分']?' ・ '+esc(e['区分']):'')+'</div>'+
+      (p['顧客']?'<div class="det-row"><span class="det-lbl">取引先</span>'+esc(p['顧客'])+'</div>':'')+
+      (p['場所']?'<div class="det-row"><span class="det-lbl">場所</span>'+esc(p['場所'])+'</div>':'')+
+      (e['予定内容']?'<div class="det-row"><span class="det-lbl">作業内容</span>'+esc(e['予定内容'])+'</div>':'')+
+      (who?'<div class="det-row"><span class="det-lbl">作業員</span>'+esc(who)+'</div>':'')+
+      (e['備考']?'<div class="det-row"><span class="det-lbl">備考</span>'+esc(e['備考'])+'</div>':'');
+    var card=document.createElement('div');card.className='daycard';
+    card.innerHTML='<div class="dc-info">'+info+'</div>'+
+      '<div class="evd-side"><button class="btn primary dc-edit">編集</button>'+
+      (e['案件ID']?'<button class="btn sub dc-link">📁 案件情報</button>':'')+'</div>';
+    card.querySelector('.dc-edit').onclick=(function(ev){return function(){closeDay();openEvent(ev);};})(e);
+    var lk=card.querySelector('.dc-link');if(lk)lk.onclick=(function(ev){return function(){location.href='../projects/?case='+encodeURIComponent(ev['案件ID']);};})(e);
+    el.appendChild(card);
+  });
   document.getElementById('ovDay').classList.add('show');
 }
 function closeDay(){document.getElementById('ovDay').classList.remove('show');}
