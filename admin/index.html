@@ -264,7 +264,7 @@ function delWorker(ev){
   ev.preventDefault();var id=document.getElementById('w_id').value;if(!id)return;
   if(!confirm('この作業員を削除します。よろしいですか？'))return;
   callGAS({action:'deleteWorker',id:id}).then(function(res){
-    if(!res.ok)throw new Error(res.error||'削除失敗');workers=workers.filter(function(w){return w['作業員ID']!==id;});render();closeOv();toast('削除しました');
+    if(!res.ok)throw new Error(res.error||'削除失敗');closeOv();toast('削除しました');loadWorkers();
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 
@@ -324,7 +324,7 @@ function savePartner(){
 function delPartner(ev){ ev.preventDefault();var id=document.getElementById('p_id').value;if(!id)return;
   if(!confirm('この取引先を削除します。よろしいですか？\n（ひもづく担当者は残ります）'))return;
   callGAS({action:'deleteCustomer',id:id}).then(function(res){ if(!res.ok)throw new Error(res.error||'削除失敗');
-    customers=customers.filter(function(c){return c['顧客ID']!==id;});renderCustomers();closeP();toast('削除しました');
+    closeP();toast('削除しました');loadCustomers();
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 
@@ -384,7 +384,7 @@ function saveContact(){
 function delContact(ev){ ev.preventDefault();var id=document.getElementById('k_id').value;if(!id)return;
   if(!confirm('この担当者を削除します。よろしいですか？'))return;
   callGAS({action:'deleteContact',id:id}).then(function(res){ if(!res.ok)throw new Error(res.error||'削除失敗');
-    contacts=contacts.filter(function(c){return c['担当者ID']!==id;});renderContacts();closeK();toast('削除しました');
+    closeK();toast('削除しました');loadContacts();
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 
