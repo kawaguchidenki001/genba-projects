@@ -45,7 +45,7 @@
   .ov.show{display:flex;}
   .sheet{background:#fff;width:100%;max-width:560px;max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);}
   .sheet h2{font-size:16px;margin:2px 0 12px;display:flex;justify-content:space-between;align-items:center;}
-  .addmini{font-size:13px;background:var(--accent);color:#fff;border:none;border-radius:9px;padding:7px 12px;cursor:pointer;font-weight:700;}
+  .addmini{font-size:14px;background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 14px;cursor:pointer;font-weight:700;}
   .evrow{display:flex;gap:10px;align-items:flex-start;padding:11px 6px;border-top:1px solid var(--line);cursor:pointer;}
   .evrow:first-of-type{border-top:none;}
   .cdot{width:10px;height:10px;border-radius:3px;margin-top:5px;flex:0 0 auto;}
@@ -58,7 +58,9 @@
   .evd-wrap{display:flex;gap:12px;align-items:flex-start;}
   #evdBody{flex:1;min-width:0;}
   .evd-side{display:flex;flex-direction:column;gap:8px;flex:0 0 96px;}
-  .evd-side .btn{flex:none;width:100%;padding:11px 6px;font-size:13px;border-radius:10px;}
+  .evd-side .btn{flex:none;width:100%;padding:9px 6px;font-size:12px;border-radius:10px;}
+  .dc-edit{background:#0d9488;color:#fff;}
+  .dc-del{background:#dc2626;color:#fff;}
   .daycard{display:flex;gap:12px;align-items:flex-start;padding:12px 2px;border-top:1px solid var(--line);}
   .daycard:first-child{border-top:none;padding-top:2px;}
   .dc-info{flex:1;min-width:0;}
@@ -142,12 +144,12 @@
     /* シート・詳細・フォーム */
     .sheet{max-width:620px;padding:19px 19px calc(env(safe-area-inset-bottom) + 19px);}
     .sheet h2{font-size:18px;}
-    .addmini{font-size:14px;padding:8px 14px;}
+    .addmini{font-size:15px;padding:10px 16px;}
     .evrow{padding:12px 6px;} .evttl{font-size:16px;} .evmeta{font-size:13px;}
     .empty{font-size:15px;}
     .det-time{font-size:15px;} .det-row{font-size:16px;} .det-lbl{font-size:12.5px;}
     .daycard{padding:13px 2px;} .dc-title{font-size:16px;}
-    .evd-side{flex:0 0 108px;} .evd-side .btn{font-size:13.5px;padding:12px 6px;}
+    .evd-side{flex:0 0 108px;} .evd-side .btn{font-size:12.5px;padding:10px 6px;}
     .fld label{font-size:13px;}
     .fld input,.fld select,.fld textarea{font-size:15.5px;padding:11px 13px;}
     .acts .btn{font-size:15.5px;padding:13px;}
@@ -248,7 +250,6 @@
     <!-- 7. 備考 -->
     <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
     <div class="acts"><button class="btn sub" onclick="closeEv()">キャンセル</button><button class="btn primary" id="saveBtn" onclick="saveEvent()">保存</button></div>
-    <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="delEvent(event)">この予定を削除</a></div>
   </div>
 </div>
 
@@ -411,10 +412,12 @@ function openDay(ds){ window._selDate=ds;
       (e['備考']?'<div class="det-row"><span class="det-lbl">備考</span>'+esc(e['備考'])+'</div>':'');
     var card=document.createElement('div');card.className='daycard';
     card.innerHTML='<div class="dc-info">'+info+'</div>'+
-      '<div class="evd-side"><button class="btn primary dc-edit">編集</button>'+
-      (e['案件ID']?'<button class="btn sub dc-link">📁 案件情報</button>':'')+'</div>';
+      '<div class="evd-side"><button class="btn dc-edit">編集</button>'+
+      (e['案件ID']?'<button class="btn sub dc-link">📁 案件情報</button>':'')+
+      '<button class="btn dc-del">予定削除</button></div>';
     card.querySelector('.dc-edit').onclick=(function(ev){return function(){closeDay();openEvent(ev);};})(e);
     var lk=card.querySelector('.dc-link');if(lk)lk.onclick=(function(ev){return function(){location.href='../projects/?case='+encodeURIComponent(ev['案件ID']);};})(e);
+    card.querySelector('.dc-del').onclick=(function(ev){return function(){delSchedule(ev['予定ID']);};})(e);
     el.appendChild(card);
   });
   document.getElementById('ovDay').classList.add('show');
@@ -444,7 +447,6 @@ function evdOpenProject(ev){ if(ev)ev.preventDefault(); var e=evdCur; if(e&&e['�
 function openEvent(e,presetDate){
   closeDay();
   document.getElementById('evTitle').textContent=e?'予定の編集':'予定の追加';
-  document.getElementById('delRow').style.display=e?'block':'none';
   buildProj();
   var g=function(id){return document.getElementById(id);};
   g('f_id').value=e?(e['予定ID']||''):'';
@@ -484,9 +486,10 @@ function saveEvent(){var d=gather();if(!d['日付']){toast('日付を入れて�
     if(isNew)schedules.push(res.schedule);else for(var i=0;i<schedules.length;i++){if(schedules[i]['予定ID']===id){schedules[i]=res.schedule;break;}}
     render();closeEv();toast(isNew?'追加しました':'更新しました');
   }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});}
-function delEvent(ev){ev.preventDefault();var id=document.getElementById('f_id').value;if(!id)return;if(!confirm('この予定を削除します。よろしいですか？'))return;
+function delSchedule(id){ id=String(id||''); if(!id)return; if(!confirm('この予定を削除します。よろしいですか？'))return;
   callGAS({action:'deleteSchedule',id:id}).then(function(res){if(!res.ok)throw new Error(res.error||'削除失敗');
-    schedules=schedules.filter(function(s){return s['予定ID']!==id;});render();closeEv();toast('削除しました');
+    schedules=schedules.filter(function(s){return String(s['予定ID'])!==id;});render();toast('削除しました');
+    if(document.getElementById('ovDay').classList.contains('show')&&window._selDate)openDay(window._selDate);
   }).catch(function(err){toast('失敗：'+err.message);});}
 
 function captureCanvas(){ var cap=document.querySelector('.cap-head'); if(cap)cap.classList.add('show');
