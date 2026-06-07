@@ -380,7 +380,7 @@ function openPhotos(p){ if(!p||!p['案件ID']){toast('案件IDがありません
 function editProjectById(id){var p=projects.filter(function(x){return String(x['案件ID'])===String(id);})[0];if(p)openProject(p);}
 function openCaseFromUrl(){ try{ var m=location.search.match(/[?&]case=([^&]+)/); if(!m)return; var id=decodeURIComponent(m[1]);
   var p=projects.filter(function(x){return String(x['案件ID'])===String(id);})[0];
-  if(p){ openProject(p); if(history&&history.replaceState)history.replaceState(null,'',location.pathname); } }catch(e){} }
+  if(p){ openDetail(p); if(history&&history.replaceState)history.replaceState(null,'',location.pathname); } }catch(e){} }
 var curDetail=null;
 function openDetail(p){
   curDetail=p; var g=function(id){return document.getElementById(id);};
