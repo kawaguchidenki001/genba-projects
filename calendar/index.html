@@ -84,19 +84,18 @@
   .cap-period{font-size:13px;color:var(--sub);font-weight:700;}
   /* 縦並び（1週/2週）：日付を左、＋は右、間は線のみ */
   #agendaView{padding:0 4px;border-top:1px solid #b9bec6;}
-  .arow{display:flex;border-bottom:1px solid #b3b9c0;}
+  .arow{display:flex;border-bottom:1px solid #b3b9c0;cursor:pointer;}
   .arow.today{background:#f5f3fd;}
   .adate{flex:0 0 40px;padding:6px 2px;text-align:center;border-right:1px solid #c2c7ce;}
   .adate-d{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.05;}
   .arow.sun .adate-d{color:#dc2626;} .arow.sat .adate-d{color:#2563eb;}
   .adate-w{font-size:10px;color:var(--sub);}
-  .aevs{flex:0 1 auto;min-width:0;padding:3px 6px;}
-  .aev{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;padding:3px 0;cursor:pointer;}
+  .aevs{flex:1 1 auto;min-width:0;padding:3px 6px;}
+  .aev{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;padding:3px 0;}
   .aev-proj{background:#eef0f2;color:var(--ink);border-radius:4px;padding:0 5px;font-weight:700;font-size:11.5px;}
   .aev-time{font-size:11px;color:#5b6470;font-variant-numeric:tabular-nums;}
   .aev-who{font-size:11.5px;color:var(--ink);font-weight:500;}
   .aev-none{font-size:11px;color:#b9bec6;padding:4px 0;}
-  .aadd{align-self:center;display:flex;align-items:center;justify-content:center;color:var(--accent);font-size:18px;font-weight:700;cursor:pointer;padding:4px 10px;}
   /* 出力 */
   .exportbar{display:flex;gap:8px;padding:12px 4px calc(env(safe-area-inset-bottom) + 16px);}
   .exbtn{flex:1;padding:12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-size:14px;font-weight:700;cursor:pointer;}
@@ -307,26 +306,24 @@ function renderAgenda(numDays){
   for(var i=0;i<numDays;i++){
     var d=new Date(start);d.setDate(start.getDate()+i);var ds=ymd(d),dow=d.getDay();
     var row=document.createElement('div');row.className='arow'+(ds===today?' today':'')+(dow===0?' sun':'')+(dow===6?' sat':'');
+    row.setAttribute('data-ds',ds);
     var evs=eventsOn(ds),body='';
     if(!evs.length){body='<div class="aev-none">—</div>';}
     else{evs.forEach(function(e){
       var pn=projShort(e['案件ID'],e['案件名'])||e['予定内容']||'(予定)';
       var who=ownerShort(e['担当']);
-      body+='<div class="aev" data-id="'+esc(e['予定ID'])+'">'+
+      body+='<div class="aev">'+
         '<span class="aev-proj" style="background:'+projColor(e['案件ID'])+'">'+esc(pn)+'</span>'+
         '<span class="aev-time">'+esc(timeLabel(e))+'</span>'+
         (who?'<span class="aev-who">'+esc(who)+'</span>':'')+
       '</div>';
     });}
     row.innerHTML='<div class="adate"><div class="adate-d">'+(d.getMonth()+1)+'/'+d.getDate()+'</div><div class="adate-w">'+wd(d)+'</div></div>'+
-                  '<div class="aevs">'+body+'</div>'+
-                  '<div class="aadd" data-ds="'+ds+'">＋</div>';
+                  '<div class="aevs">'+body+'</div>';
     host.appendChild(row);
   }
-  var adds=host.querySelectorAll('.aadd');
-  for(var a=0;a<adds.length;a++){(function(b){b.onclick=function(ev){if(ev)ev.stopPropagation();openEvent(null,b.getAttribute('data-ds'));};})(adds[a]);}
-  var aevs=host.querySelectorAll('.aev');
-  for(var c=0;c<aevs.length;c++){(function(ae){ae.onclick=function(){var id=ae.getAttribute('data-id');var x=schedules.filter(function(s){return String(s['予定ID'])===String(id);})[0];if(x)openDay(String(x['日付']||'').slice(0,10));};})(aevs[c]);}
+  var rows=host.querySelectorAll('.arow');
+  for(var c=0;c<rows.length;c++){(function(r){r.onclick=function(){openDay(r.getAttribute('data-ds'));};})(rows[c]);}
 }
 
 function openDay(ds){ window._selDate=ds;
