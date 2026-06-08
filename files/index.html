@@ -229,7 +229,7 @@ function makeLedger(){
 function buildLedger(photos){
  var pj=(projects.filter(function(x){return x['案件ID']===curId;})[0]||{}),nm=pj['案件名']||'';
  var doc=new window.jspdf.jsPDF({orientation:'p',unit:'mm',format:'a4'});
- var pw=210,ph2=297,m=12,gap=8,cols=2,rows=2,per=4,cw=(pw-m*2-gap)/cols,chh=(ph2-m*2-gap)/rows,fail=0;
+ var pw=210,ph2=297,m=12,gap=8,cols=1,rows=3,per=3,cw=(pw-m*2-gap*(cols-1))/cols,chh=(ph2-m*2-gap*(rows-1))/rows,fail=0;
  doc.addImage(ledgerCover(nm),'JPEG',0,0,pw,ph2);
  var prog=document.getElementById('prog');if(prog)prog.style.display='block';
  function step(i){
