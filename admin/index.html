@@ -61,6 +61,10 @@
   .danger-txt{font-size:13px;color:#7f1d1d;margin:0 0 12px;line-height:1.6;}
   .btn-danger{width:100%;padding:13px;border:none;border-radius:11px;background:#dc2626;color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
   .btn-danger:active{background:#b91c1c;}
+  /* グリッドレイアウト */
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  @media(max-width:600px){.grid-3{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:400px){.grid-3{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
@@ -103,12 +107,12 @@
     <div id="listK"><div class="empty">読込中…</div></div>
   </div>
 
-  <!-- 危険な操作（全データ削除）-->
+  <!-- 全データ削除 -->
   <div id="sec-danger">
-    <div class="sec danger-ttl">危険な操作</div>
+    <div class="sec danger-ttl">全データを削除します</div>
     <div class="danger-box">
-      <p class="danger-txt">全データ（案件・取引先・先方担当者・作業員・作業日報・スケジュール・勤怠）を完全に削除して、まっさらな状態に戻します。<b>元に戻せません。</b><br>※ 写真・ファイル（Google Drive内）は削除されません。</p>
-      <button class="btn-danger" onclick="clearAllData()">🗑 データをオールクリア</button>
+      <p class="danger-txt">案件・取引先・先方担当者・作業員・作業日報・スケジュール・勤怠を完全に削除します。<b>元に戻せません。</b><br>※ 写真・ファイル（Google Drive内）は削除されません。</p>
+      <div style="text-align:center;"><button class="btn-danger" onclick="clearAllData()" style="width:auto;padding:13px 32px;">🗑 データを削除</button></div>
     </div>
   </div>
 </main>
@@ -153,6 +157,7 @@
       <div class="fld"><label>電話</label><input id="p_tel" inputmode="tel"></div>
       <div class="fld"><label>住所</label><input id="p_addr"></div>
     </div>
+    <div class="fld"><label>ホームページ</label><input id="p_url" type="url" placeholder="https://example.com"></div>
     <div class="fld"><label>備考</label><input id="p_note"></div>
     <div class="acts">
       <button class="btn sub" onclick="closeP()">キャンセル</button>
@@ -238,12 +243,21 @@ function render(){
   var el=document.getElementById('list');
   if(!workers.length){el.innerHTML='<div class="empty">作業員がまだいません。<br>右下の「＋作業員」から登録してください。</div>';return;}
   el.innerHTML='';
-  workers.forEach(function(w){
-    var kyo=w['区分']==='協力会社',div=document.createElement('div');div.className='card'+(kyo?' kyo':'');div.onclick=function(){openWorker(w);};
-    div.innerHTML='<div><div class="nm">'+esc(w['氏名']||'')+' <span class="tag'+(kyo?' kyo':'')+'">'+esc(w['区分']||'')+'</span></div>'+
-      '<div class="meta">'+(w['所属']?esc(w['所属'])+' ・ ':'')+(w['ログインID']?'🔑 '+esc(w['ログインID']):'<span style="color:#bbb;">ログイン未設定</span>')+'</div></div>'+
-      '<div class="yen">'+(numv(w['標準単価'])?yen(w['標準単価'])+'/人工':'<span style="color:#9aa1ab;font-weight:400;">単価未設定</span>')+'</div>';
-    el.appendChild(div);
+  var groups={};
+  workers.forEach(function(w){var k=w['区分']||'自社';(groups[k]=groups[k]||[]).push(w);});
+  ['自社','協力会社'].forEach(function(k){
+    if(!groups[k]||!groups[k].length)return;
+    var arr=groups[k],sec=document.createElement('div');
+    sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'（'+arr.length+'）</div>';
+    var grid=document.createElement('div');grid.className='grid-3';
+    arr.forEach(function(w){
+      var div=document.createElement('div');div.className='card'+(w['区分']==='協力会社'?' kyo':'');div.onclick=function(){openWorker(w);};
+      div.innerHTML='<div><div class="nm">'+esc(w['氏名']||'')+' <span class="tag'+(w['区分']==='協力会社'?' kyo':'')+'">'+esc(w['区分']||'')+'</span></div>'+
+        '<div class="meta">'+(w['所属']?esc(w['所属'])+' ・ ':'')+(w['ログインID']?'🔑 '+esc(w['ログインID']):'<span style="color:#bbb;">ログイン未設定</span>')+'</div></div>'+
+        '<div class="yen">'+(numv(w['標準単価'])?yen(w['標準単価'])+'/人工':'<span style="color:#9aa1ab;font-weight:400;">単価未設定</span>')+'</div>';
+      grid.appendChild(div);
+    });
+    sec.appendChild(grid);el.appendChild(sec);
   });
 }
 
@@ -319,11 +333,12 @@ function renderCustomers(){
   order.forEach(function(k){ var arr=groups[k]; if(!arr||!arr.length)return; var cls=kindCls(k);
     var sec=document.createElement('div'); sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'（'+arr.length+'）</div>';
     arr.sort(function(a,b){return String(a['顧客名']||'').localeCompare(String(b['顧客名']||''),'ja');});
+    var grid=document.createElement('div');grid.className='grid-3';
     arr.forEach(function(c){ var div=document.createElement('div');div.className='card '+cls;div.onclick=(function(x){return function(){openPartner(x);};})(c);
       div.innerHTML='<div><div class="nm">'+esc(c['顧客名']||'')+' <span class="tag '+cls+'">'+esc(k)+'</span></div>'+
         '<div class="meta">'+[c['電話'],c['住所']].filter(Boolean).map(esc).join(' ・ ')+'</div></div>';
-      sec.appendChild(div); });
-    el.appendChild(sec);
+      grid.appendChild(div); });
+    sec.appendChild(grid);el.appendChild(sec);
   });
 }
 function openPartner(c){
@@ -332,7 +347,7 @@ function openPartner(c){
   var g=function(id){return document.getElementById(id);};
   g('p_id').value=c?(c['顧客ID']||''):''; g('p_kind').value=c?custKind(c):'法人';
   g('p_name').value=c?(c['顧客名']||''):''; g('p_tel').value=c?(c['電話']||''):'';
-  g('p_addr').value=c?(c['住所']||''):''; g('p_note').value=c?(c['備考']||''):'';
+  g('p_addr').value=c?(c['住所']||''):''; g('p_url').value=c?(c['ホームページ']||''):''; g('p_note').value=c?(c['備考']||''):'';
   document.getElementById('ovp').classList.add('show');
 }
 function closeP(){document.getElementById('ovp').classList.remove('show');}
@@ -340,7 +355,7 @@ function savePartner(){
   var g=function(id){return document.getElementById(id).value;},name=g('p_name').trim();
   if(!name){toast('取引先名を入れてください');return;}
   var id=g('p_id'),isNew=!id;
-  var d={'顧客名':name,'区分':g('p_kind'),'電話':g('p_tel').trim(),'住所':g('p_addr').trim(),'備考':g('p_note').trim()};
+  var d={'顧客名':name,'区分':g('p_kind'),'電話':g('p_tel').trim(),'住所':g('p_addr').trim(),'ホームページ':g('p_url').trim(),'備考':g('p_note').trim()};
   var btn=document.getElementById('pSaveBtn');btn.disabled=true;btn.textContent='保存中…';
   var params=isNew?{action:'addCustomer',data:d}:{action:'updateCustomer',id:id,data:d};
   callGAS(params).then(function(res){ if(!res.ok)throw new Error(res.error||'保存失敗');
@@ -365,12 +380,13 @@ function renderContacts(){
   order.sort(function(a,b){return a.localeCompare(b,'ja');});
   el.innerHTML='';
   order.forEach(function(k){ var arr=groups[k];
-    var sec=document.createElement('div');sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'</div>';
+    var sec=document.createElement('div');sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'（'+arr.length+'）</div>';
+    var grid=document.createElement('div');grid.className='grid-3';
     arr.forEach(function(c){ var div=document.createElement('div');div.className='card';div.onclick=(function(x){return function(){openContact(x);};})(c);
       div.innerHTML='<div><div class="nm">'+esc(c['担当者名']||'')+(c['役職']?' <span class="tag">'+esc(c['役職'])+'</span>':'')+'</div>'+
         '<div class="meta">'+[c['電話'],c['メール']].filter(Boolean).map(esc).join(' ・ ')+'</div></div>';
-      sec.appendChild(div); });
-    el.appendChild(sec);
+      grid.appendChild(div); });
+    sec.appendChild(grid);el.appendChild(sec);
   });
 }
 function buildPartnerSelect(sel,val){
