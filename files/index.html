@@ -98,7 +98,7 @@
     <div class="sec">写真一覧 <span id="phCount" style="color:var(--sub);font-weight:400;"></span></div>
     <div id="selBar"><span id="selCount"></span><button onclick="delSelected()" style="color:#c0392b;border-color:#e3b7b0;">削除</button><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div>
     <div id="photos"><div class="empty">読込中…</div></div>
-    <div id="outBar" style="display:none;margin-top:12px;"><button class="btn primary" onclick="makeLedger()">📄 PDFで出力</button></div>
+    <div id="outBar" style="display:none;margin-top:12px;"><button class="btn primary" onclick="buildLedgerFiles()">🧾 工事写真台帳を作成（Excel・PDF）</button><div id="ledgerResult" style="display:none;margin-top:10px;font-size:14px;line-height:1.7;"></div></div>
     </div>
   </div>
 </div>
@@ -122,11 +122,11 @@ function applyInit(){ if(initApplied||!INIT_CASE)return; var s=document.getEleme
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
 function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
-function callGAS(params){
+function callGAS(params,timeoutMs){
   return new Promise(function(resolve,reject){
     showLoad();
     var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
-    var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},30000);
+    var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},timeoutMs||30000);
     function cleanup(){hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
     window[cb]=function(res){cleanup();resolve(res);};
     var q=Object.assign({secret:SECRET,callback:cb},params);
@@ -177,6 +177,20 @@ function onSelect(){
   }).catch(function(err){ document.getElementById('photos').innerHTML='<div class="empty">フォルダ準備に失敗しました。<br>↻でやり直すか、少し待って再選択してください。</div>'; toast(err.message); });
 }
 
+function buildLedgerFiles(){
+  if(!curId){toast('案件を選んでください');return;}
+  var ids=[];document.querySelectorAll('#photos .ph.selected').forEach(function(el){ids.push(el.dataset.id);});
+  if(!ids.length){toast('写真を選択してください');return;}
+  var nm=(document.getElementById('pName')||{}).textContent||'';
+  var box=document.getElementById('ledgerResult'); if(box){box.style.display='none';box.innerHTML='';}
+  toast('台帳を作成中です。少し時間がかかります…'); showLoad();
+  callGAS({action:'makeLedgerFiles',id:curId,ids:ids.join(','),name:nm},180000).then(function(res){
+    hideLoad();
+    if(!res||!res.ok){toast('作成に失敗：'+((res&&res.error)||'不明なエラー'));return;}
+    if(box){box.innerHTML='台帳ができました（'+res.n+'枚）<br><a href="'+res.pdfUrl+'" target="_blank">📄 PDFを開く</a>　/　<a href="'+res.xlsxUrl+'" target="_blank">📊 Excelを開く</a><br><span style="color:var(--sub);font-size:12px;">ドライブの「台帳」フォルダにも保存されています。</span>';box.style.display='block';}
+    toast('台帳を作成しました');
+  }).catch(function(err){hideLoad();toast('作成に失敗：'+err.message);});
+}
 function showPhotos(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;} document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='none'; loadPhotos(); }
 function showLedger(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;} document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='block'; loadPhotos(); }
 function loadPhotos(){
