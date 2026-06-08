@@ -201,7 +201,7 @@ function showLedger(){ if(!curId){toast('案件を選んでください');return
     var fr=document.getElementById('folderRow'), fs=document.getElementById('folderSel');
     var folders=(res&&res.folders)||[], rootId=res&&res.rootId;
     fs.innerHTML='';
-    var o0=document.createElement('option'); o0.value=rootId||''; o0.textContent='写真フォルダ（直下）'; fs.appendChild(o0);
+    var o0=document.createElement('option'); o0.value=rootId||''; o0.textContent='写真フォルダ全体'; fs.appendChild(o0);
     folders.forEach(function(x){var o=document.createElement('option');o.value=x.id;o.textContent=x.name;fs.appendChild(o);});
     fr.style.display=folders.length?'block':'none';
     loadCurFolderPhotos();
