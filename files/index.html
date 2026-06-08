@@ -86,19 +86,20 @@
       <datalist id="kindList"><option value="電気配線工事"></option><option value="盤・分電盤設置"></option><option value="照明器具取付"></option><option value="コンセント・スイッチ"></option><option value="配管・配線工事"></option><option value="接地工事"></option><option value="受変電設備"></option><option value="撤去・改修"></option></datalist>
     </div>
     <div class="btnrow">
-      <a class="btn primary" id="openBtn" target="_blank">① 写真・ファイルの追加</a>
-      <button class="btn open" id="viewBtn" onclick="showPhotos()">② 写真・ファイルの閲覧</button>
+      <button class="btn primary" id="addBtn" onclick="pickFiles()">① 写真・ファイルの追加</button>
+      <a class="btn open" id="openBtn" target="_blank">② 写真・ファイルの閲覧</a>
       <button class="btn open" id="ledgerBtn" onclick="showLedger()">③ 工事写真台帳作成</button>
     </div>
-    <input type="file" id="file" accept="image/*" multiple>
-    <div class="hint" id="hint">「写真を追加」を押すと、この現場の写真フォルダ(Googleドライブ)が開きます。そこに写真を入れてください。</div>
+    <input type="file" id="file" multiple>
+    <div class="hint" id="hint">「① 写真・ファイルの追加」で、スマホやPCの写真・ファイルをこの現場のドライブに保存できます（写真は写真フォルダ、その他はファイルフォルダ）。</div>
     <div class="prog" id="prog" style="display:none;"></div>
 
     <div id="gridArea" style="display:none;">
+    <div id="folderRow" style="display:none;margin-bottom:8px;"><label style="font-size:13px;color:var(--sub);margin-right:6px;">フォルダ</label><select class="f" id="folderSel" onchange="loadCurFolderPhotos()" style="display:inline-block;width:auto;min-width:60%;"></select></div>
     <div class="sec">写真一覧 <span id="phCount" style="color:var(--sub);font-weight:400;"></span></div>
     <div id="selBar"><span id="selCount"></span><button onclick="delSelected()" style="color:#c0392b;border-color:#e3b7b0;">削除</button><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div>
     <div id="photos"><div class="empty">読込中…</div></div>
-    <div id="outBar" style="display:none;margin-top:12px;"><button class="btn primary" onclick="buildLedgerFiles()">🧾 工事写真台帳を作成（Excel・PDF）</button><div id="ledgerResult" style="display:none;margin-top:10px;font-size:14px;line-height:1.7;"></div></div>
+    <div id="outBar" style="display:none;margin-top:12px;"><button class="btn primary" onclick="buildLedgerFiles('pdf')">📄 PDFで作成</button> <button class="btn open" onclick="buildLedgerFiles('xlsx')">📊 エクセルで作成</button><div id="ledgerResult" style="display:none;margin-top:10px;font-size:14px;line-height:1.7;"></div></div>
     </div>
   </div>
 </div>
@@ -177,22 +178,41 @@ function onSelect(){
   }).catch(function(err){ document.getElementById('photos').innerHTML='<div class="empty">フォルダ準備に失敗しました。<br>↻でやり直すか、少し待って再選択してください。</div>'; toast(err.message); });
 }
 
-function buildLedgerFiles(){
+function buildLedgerFiles(fmt){
   if(!curId){toast('案件を選んでください');return;}
   var ids=[];document.querySelectorAll('#photos .ph.selected').forEach(function(el){ids.push(el.dataset.id);});
   if(!ids.length){toast('写真を選択してください');return;}
   var nm=(document.getElementById('pName')||{}).textContent||'';
   var box=document.getElementById('ledgerResult'); if(box){box.style.display='none';box.innerHTML='';}
-  toast('台帳を作成中です。少し時間がかかります…'); showLoad();
-  callGAS({action:'makeLedgerFiles',id:curId,ids:ids.join(','),name:nm},180000).then(function(res){
+  toast((fmt==='xlsx'?'エクセル':'PDF')+'を作成中です。少し時間がかかります…'); showLoad();
+  callGAS({action:'makeLedgerFiles',id:curId,ids:ids.join(','),name:nm,fmt:fmt},180000).then(function(res){
     hideLoad();
     if(!res||!res.ok){toast('作成に失敗：'+((res&&res.error)||'不明なエラー'));return;}
-    if(box){box.innerHTML='台帳ができました（'+res.n+'枚）<br><a href="'+res.pdfUrl+'" target="_blank">📄 PDFを開く</a>　/　<a href="'+res.xlsxUrl+'" target="_blank">📊 Excelを開く</a><br><span style="color:var(--sub);font-size:12px;">ドライブの「台帳」フォルダにも保存されています。</span>';box.style.display='block';}
+    var url=(fmt==='xlsx')?res.xlsxUrl:res.pdfUrl, lbl=(fmt==='xlsx')?'📊 Excelを開く':'📄 PDFを開く';
+    if(box&&url){box.innerHTML='台帳ができました（'+res.n+'枚）<br><a href="'+url+'" target="_blank">'+lbl+'</a><br><span style="color:var(--sub);font-size:12px;">ドライブの「台帳」フォルダにも保存されています。</span>';box.style.display='block';}
     toast('台帳を作成しました');
   }).catch(function(err){hideLoad();toast('作成に失敗：'+err.message);});
 }
 function showPhotos(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;} document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='none'; loadPhotos(); }
-function showLedger(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;} document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='block'; loadPhotos(); }
+function showLedger(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;}
+  document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='block';
+  document.getElementById('photos').innerHTML='<div class="empty">読込中…</div>';
+  callGAS({action:'photoFolders',id:curId}).then(function(res){
+    var fr=document.getElementById('folderRow'), fs=document.getElementById('folderSel');
+    var folders=(res&&res.folders)||[], rootId=res&&res.rootId;
+    fs.innerHTML='';
+    var o0=document.createElement('option'); o0.value=rootId||''; o0.textContent='写真フォルダ（直下）'; fs.appendChild(o0);
+    folders.forEach(function(x){var o=document.createElement('option');o.value=x.id;o.textContent=x.name;fs.appendChild(o);});
+    fr.style.display=folders.length?'block':'none';
+    loadCurFolderPhotos();
+  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">フォルダの取得に失敗しました</div>';toast(err.message);});
+}
+function loadCurFolderPhotos(){
+  var fs=document.getElementById('folderSel'), fid=fs&&fs.value;
+  if(!fid){toast('フォルダがありません');return;}
+  document.getElementById('photos').innerHTML='<div class="empty">読込中…</div>';
+  callGAS({action:'photosByFolder',fid:fid}).then(function(res){ renderPhotos((res&&res.photos)||[]); }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">写真の取得に失敗しました</div>';toast(err.message);});
+}
 function loadPhotos(){
   if(!curId)return;
   callGAS({action:'listPhotos',id:curId}).then(function(res){
@@ -318,20 +338,26 @@ function uploadAll(files){
   var prog=document.getElementById('prog');prog.style.display='block';
   function next(){
     if(i>=arr.length){
-      prog.textContent='アップロード完了（'+done+'枚'+(fail?'／失敗'+fail:'')+'）。一覧を更新します…';
-      var _t=[1200,3000,5500,8500];_t.forEach(function(d,k){setTimeout(function(){loadPhotos();if(k===_t.length-1)prog.style.display='none';},d);});toast(done+'枚を保存しました');
+      prog.textContent='アップロード完了（'+done+'件'+(fail?'／失敗'+fail:'')+'）';
+      setTimeout(function(){prog.style.display='none';},4000);
+      toast('ドライブに保存しました（'+done+'件）');
       return;
     }
     var file=arr[i++];
     prog.textContent='送信中… '+i+'/'+arr.length;
-    resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
-      var b64=dataUrl.split(',')[1];
-      var name=bdFileName(file);
-      return postNoCors({action:'uploadPhoto',id:curId,name:name,mime:'image/jpeg',data:b64});
-    }).then(function(){done++;next();}).catch(function(){fail++;next();});
+    if((file.type||'').indexOf('image')===0){
+      resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
+        return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',name:file.name,mime:'image/jpeg',data:dataUrl.split(',')[1]});
+      }).then(function(){done++;next();}).catch(function(){fail++;next();});
+    }else{
+      readB64(file).then(function(b64){
+        return postNoCors({action:'uploadPhoto',id:curId,dest:'file',name:file.name,mime:file.type||'application/octet-stream',data:b64});
+      }).then(function(){done++;next();}).catch(function(){fail++;next();});
+    }
   }
   next();
 }
+function readB64(file){ return new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){ res(String(r.result).split(',')[1]); }; r.onerror=function(){rej(new Error('読込失敗'));}; r.readAsDataURL(file); }); }
 function resizeImage(file,max,q){
   return new Promise(function(res,rej){
     var img=new Image(),url=URL.createObjectURL(file);
