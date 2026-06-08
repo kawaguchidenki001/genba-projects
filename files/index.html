@@ -192,6 +192,7 @@ function buildLedgerFiles(fmt){
     var url=(fmt==='xlsx')?res.xlsxUrl:res.pdfUrl, lbl=(fmt==='xlsx')?'📊 スプレッドシートを開く':'📄 PDFを開く';
     var note=(fmt==='xlsx')?'開いたら〔ファイル〕→〔ダウンロード〕→〔Microsoft Excel(.xlsx)〕でExcelとして保存できます。ドライブの「台帳」フォルダにも残っています。':'ドライブの「台帳」フォルダにも保存されています。';
     if(box&&url){box.innerHTML='台帳ができました（'+res.n+'枚）<br><a href="'+url+'" target="_blank">'+lbl+'</a><br><span style="color:var(--sub);font-size:12px;">'+note+'</span>';box.style.display='block';}
+    if(box&&res.test){box.innerHTML+='<br><span style="font-size:11px;color:var(--sub);word-break:break-all;">診断 結果欄=「'+esc(res.test.v||'(空＝画像OK)')+'」<br>'+esc(res.test.f)+'</span>';box.style.display='block';}
     toast('台帳を作成しました');
   }).catch(function(err){hideLoad();toast('作成に失敗：'+err.message);});
 }
