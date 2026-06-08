@@ -18,6 +18,9 @@
   .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;}
   .dot.ok{background:#4ade80;}.dot.busy{background:#fde047;}.dot.off{background:#f87171;}
   .ghost{padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.15);color:#fff;font-size:13px;cursor:pointer;}
+  .hd-btns{display:flex;gap:8px;}
+  .ghost.clearbtn{background:#e5484d;border-color:#e5484d;font-weight:700;}
+  .ghost.clearbtn:active{background:#c93b40;}
   .navbar{display:flex;align-items:center;justify-content:center;gap:16px;padding:8px 12px;background:var(--bg);position:sticky;top:54px;z-index:10;}
   .navbar button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;font-size:16px;cursor:pointer;color:var(--ink);}
   .navbar .ym{font-size:17px;font-weight:700;min-width:130px;text-align:center;}
@@ -159,7 +162,10 @@
     <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
   </div>
   <div class="hd-row" style="margin-top:6px;"><h1>スケジュール</h1>
-    <button class="ghost" onclick="reload()">↻ 更新</button>
+    <div class="hd-btns">
+      <button class="ghost clearbtn" onclick="clearPeriod()">🗑 クリア</button>
+      <button class="ghost" onclick="reload()">↻ 更新</button>
+    </div>
   </div>
 </header>
 
@@ -504,6 +510,29 @@ function pasteRange(dsA,dsB){ if(!clip){toast('先に予定をコピーしてく
     var lo=Math.min(rng.a,rng.b),hi=Math.max(rng.a,rng.b);
     if(!rng.moved||lo===hi){ clearRange(); return; }
     var a=cellDs(lo),b=cellDs(hi); if(a&&b)showRangeBar(a,b); }); })();
+/* === 表示中の期間（1ヶ月／1週／2週）の予定を確認のうえ一括クリア === */
+function periodRange(){
+  if(viewMode==='month'){ var s=new Date(cur.getFullYear(),cur.getMonth(),1),e=new Date(cur.getFullYear(),cur.getMonth()+1,0); return [ymd(s),ymd(e)]; }
+  var s2=weekStart(cur),n=(viewMode==='week2'?14:7),e2=new Date(s2);e2.setDate(s2.getDate()+n-1); return [ymd(s2),ymd(e2)];
+}
+function eventsInRange(a,b){ return schedules.filter(function(ev){ var s=String(ev['日付']||'').slice(0,10); if(!s)return false;
+  var en=String(ev['終了日']||'').slice(0,10)||s; if(en<s)en=s; return s<=b&&a<=en; }); }
+function clearPeriod(){
+  var pr=periodRange(),a=pr[0],b=pr[1];
+  var unit=(viewMode==='month')?'1ヶ月':(viewMode==='week2'?'2週間':'1週間');
+  var label=(viewMode==='month')?(cur.getFullYear()+'年'+(cur.getMonth()+1)+'月'):(mdLabel(a)+'〜'+mdLabel(b));
+  var list=eventsInRange(a,b);
+  if(!list.length){ toast('この'+unit+'に消去する予定はありません'); return; }
+  if(!confirm('【'+unit+'】'+label+' の予定（'+list.length+'件）をすべて消去します。\nよろしいですか？（消去すると元に戻せません）')) return;
+  var ids=list.map(function(e){return String(e['予定ID']||'');}).filter(Boolean);
+  var ok=0,fail=0,i=0; toast('消去中…（'+ids.length+'件）');
+  (function step(){ if(i>=ids.length){ render();
+      toast(ok+'件を消去しました'+(fail?(' / '+fail+'件失敗'):''));
+      if(window._selDate&&document.getElementById('ovDay').classList.contains('show'))openDay(window._selDate); return; }
+    var id=ids[i++];
+    callGAS({action:'deleteSchedule',id:id}).then(function(res){ if(res&&res.ok){ schedules=schedules.filter(function(s){return String(s['予定ID'])!==id;}); ok++; } else { fail++; } })
+      .catch(function(){fail++;}).then(function(){step();}); })();
+}
 function closeDay(){document.getElementById('ovDay').classList.remove('show');}
 var evdCur=null;
 function fmtDate(e){ var s=String(e['日付']||'').slice(0,10); if(!s)return ''; var d=new Date(s); var t=(d.getMonth()+1)+'月'+d.getDate()+'日（'+'日月火水木金土'[d.getDay()]+'）'; var en=String(e['終了日']||'').slice(0,10); if(en&&en!==s){var d2=new Date(en);t+=' 〜 '+(d2.getMonth()+1)+'月'+d2.getDate()+'日';} return t; }
