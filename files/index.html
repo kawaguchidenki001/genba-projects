@@ -65,6 +65,10 @@
 </header>
 
 <div class="wrap">
+  <div class="fld"><label>種別</label>
+    <select class="f" id="f_ctype" onchange="onCType()"><option value="">（すべて）</option><option>官公庁</option><option>法人</option><option>個人</option></select></div>
+  <div class="fld"><label>取引先</label>
+    <select class="f" id="f_cand" onchange="onCand()"><option value="">（取引先を選択）</option></select></div>
   <div class="fld"><label>現場 ／ 案件を選ぶ</label>
     <select class="f" id="projSel" onchange="onSelect()"><option value="">― 選択 ―</option></select></div>
 
@@ -82,16 +86,20 @@
       <datalist id="kindList"><option value="電気配線工事"></option><option value="盤・分電盤設置"></option><option value="照明器具取付"></option><option value="コンセント・スイッチ"></option><option value="配管・配線工事"></option><option value="接地工事"></option><option value="受変電設備"></option><option value="撤去・改修"></option></datalist>
     </div>
     <div class="btnrow">
-      <a class="btn primary" id="openBtn" target="_blank">📷 写真を追加</a>
-      <button class="btn open" id="ledgerBtn" onclick="makeLedger()">🧾 工事写真台帳作成</button>
+      <a class="btn primary" id="openBtn" target="_blank">① 写真・ファイルの追加</a>
+      <button class="btn open" id="viewBtn" onclick="showPhotos()">② 写真・ファイルの閲覧</button>
+      <button class="btn open" id="ledgerBtn" onclick="showLedger()">③ 工事写真台帳作成</button>
     </div>
     <input type="file" id="file" accept="image/*" multiple>
     <div class="hint" id="hint">「写真を追加」を押すと、この現場の写真フォルダ(Googleドライブ)が開きます。そこに写真を入れてください。</div>
     <div class="prog" id="prog" style="display:none;"></div>
 
+    <div id="gridArea" style="display:none;">
     <div class="sec">写真一覧 <span id="phCount" style="color:var(--sub);font-weight:400;"></span></div>
     <div id="selBar"><span id="selCount"></span><button onclick="delSelected()" style="color:#c0392b;border-color:#e3b7b0;">削除</button><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div>
     <div id="photos"><div class="empty">読込中…</div></div>
+    <div id="outBar" style="display:none;margin-top:12px;"><button class="btn primary" onclick="makeLedger()">📄 PDFで出力</button></div>
+    </div>
   </div>
 </div>
 
@@ -103,7 +111,7 @@ var GAS_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4
 var SECRET  = 'kawaguchi-genba-2026';
 var MAXPX = 800, QUALITY = 0.80;
 
-var projects=[], curId='', folderReady=false;
+var projects=[], customers=[], curId='', folderReady=false;
 var CACHE='genba_projects_cache_files';
 // 案件管理からタップで来たとき用：?case=案件ID（id / proj でも可）
 var INIT_CASE=(function(){try{var p=new URLSearchParams(location.search);return p.get('case')||p.get('id')||p.get('proj')||'';}catch(e){return '';}})();
@@ -131,17 +139,26 @@ function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st
 
 function loadProjects(){
   setSync('busy','同期中…');
-  callGAS({action:'list'}).then(function(res){
+  callGAS({action:'calendarData'}).then(function(res){
     if(!res.ok)throw new Error(res.error||'エラー');
-    projects=res.projects||[]; try{localStorage.setItem(CACHE,JSON.stringify(projects));}catch(e){}
+    projects=res.projects||[]; customers=res.customers||[]; try{localStorage.setItem(CACHE,JSON.stringify({p:projects,c:customers}));}catch(e){}
     buildSel(); setSync('ok','同期済み');
   }).catch(function(err){
-    try{projects=JSON.parse(localStorage.getItem(CACHE)||'[]');}catch(e){projects=[];}
+    try{var cc=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=cc.p||[];customers=cc.c||[];}catch(e){projects=[];customers=[];}
     buildSel(); setSync('off','オフライン'); toast('読込失敗：'+err.message);
   });
 }
-function buildSel(){ var s=document.getElementById('projSel'),cur=s.value; s.innerHTML='<option value="">― 選択 ―</option>';
-  projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);}); s.value=cur; applyInit(); }
+function buildSel(){ buildCand(); buildProj(); }
+function buildCand(){ var t=document.getElementById('f_ctype').value,sel=document.getElementById('f_cand'),cur=sel.value;
+  var list=customers.filter(function(c){return !t||String(c['区分']||'')===t;});
+  sel.innerHTML='<option value="">（取引先を選択）</option>';
+  list.forEach(function(c){var nm=String(c['顧客名']||'');if(!nm)return;var o=document.createElement('option');o.value=nm;o.textContent=nm;sel.appendChild(o);}); sel.value=cur; }
+function buildProj(){ var cust=document.getElementById('f_cand').value,s=document.getElementById('projSel'),cur=s.value;
+  var list=projects.filter(function(p){return !cust||String(p['顧客']||'')===cust;});
+  s.innerHTML='<option value="">― 選択 ―</option>';
+  list.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);}); s.value=cur; applyInit(); }
+function onCType(){ buildCand(); buildProj(); }
+function onCand(){ buildProj(); }
 
 function onSelect(){
   curId=document.getElementById('projSel').value;
@@ -156,10 +173,12 @@ function onSelect(){
   // フォルダを用意（無ければ作成）してから一覧
   callGAS({action:'ensureFolder',id:curId}).then(function(res){
     if(!res.ok)throw new Error(res.error||'フォルダ準備失敗');
-    document.getElementById('openBtn').href=res.photoUrl||res.url; folderReady=true; loadPhotos();
+    document.getElementById('openBtn').href=res.url; folderReady=true; document.getElementById('gridArea').style.display='none'; document.getElementById('outBar').style.display='none';
   }).catch(function(err){ document.getElementById('photos').innerHTML='<div class="empty">フォルダ準備に失敗しました。<br>↻でやり直すか、少し待って再選択してください。</div>'; toast(err.message); });
 }
 
+function showPhotos(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;} document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='none'; loadPhotos(); }
+function showLedger(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;} document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='block'; loadPhotos(); }
 function loadPhotos(){
   if(!curId)return;
   callGAS({action:'listPhotos',id:curId}).then(function(res){
