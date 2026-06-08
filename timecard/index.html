@@ -159,12 +159,12 @@
   <!-- 申請 -->
   <div class="pane" id="pApp">
     <div class="ksum" id="apLeave" style="display:none;"></div>
-    <div class="setbox" style="margin-bottom:12px;">
+    <div class="setbox" id="apSubmitBox" style="margin-bottom:12px;">
       <h3 style="font-size:14px;color:var(--teal2);margin:0 0 8px;">申請する</h3>
       <div class="krrow"><label>種別</label>
-        <select id="ap_type" onchange="onAppType()" style="width:170px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:#fff;">
+        <select id="ap_type" style="width:170px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:#fff;">
           <option value="有給休暇">有給休暇</option>
-          <option value="打刻修正">打刻修正</option>
+          <option value="代休">代休</option>
           <option value="残業事前申請">残業事前申請</option>
           <option value="遅刻">遅刻</option>
           <option value="早退">早退</option>
@@ -173,11 +173,6 @@
         </select>
       </div>
       <div class="krrow"><label>対象日</label><input id="ap_date" type="date" style="width:170px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;"></div>
-      <div id="ap_fix" style="display:none;">
-        <div class="krrow"><label>修正後 出勤</label><input id="ap_in" type="time" step="600"></div>
-        <div class="krrow"><label>修正後 退勤</label><input id="ap_out" type="time" step="600"></div>
-        <div class="krrow"><label>休憩（分）</label><input id="ap_brk" type="number" min="0" step="5" value="60" inputmode="numeric"></div>
-      </div>
       <div style="margin-top:10px;"><label style="font-size:12px;color:var(--sub);">理由・内容</label>
         <textarea id="ap_note" rows="2" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;resize:vertical;"></textarea></div>
       <button onclick="submitApp()" style="width:100%;margin-top:10px;padding:12px;border:none;background:var(--teal2);color:#fff;border-radius:11px;font-weight:700;cursor:pointer;">申請する</button>
@@ -546,14 +541,25 @@ function saveKrule(){ var g=function(id){return document.getElementById(id).valu
 function logout(){localStorage.removeItem('genba_user');location.href='https://kawaguchidenki001.github.io/genba-projects/';}
 
 /* ===== 申請・承認 ===== */
-function onAppType(){ var t=document.getElementById('ap_type').value; document.getElementById('ap_fix').style.display=(t==='打刻修正')?'block':'none'; }
 function loadApp(){ if(!me)return; showLoad();
-  callGAS({action:'applicationsMine',wid:me['作業員ID']}).then(function(res){ if(res&&res.ok)myApps=res.apps||[]; renderApMine(); }).catch(function(){})
-   .then(function(){ return callGAS({action:'leaveMine',wid:me['作業員ID']}).then(function(res){ renderLeaveMine(res&&res.ok?res.leave:null); }).catch(function(){ renderLeaveMine(null); }); })
-   .then(function(){ if(!admTok()){ renderApAdmin(); var b=document.getElementById('apLeaveBox'); if(b)b.style.display='none'; return; }
-     return callGAS({action:'applicationsPending'}).then(function(res){ if(res&&res.ok)pendApps=res.apps||[]; renderApAdmin(); }).catch(function(){ renderApAdmin(); })
-       .then(function(){ return callGAS({action:'leaveSummary'}).then(function(res){ renderLeaveAdmin(res&&res.ok?(res.rows||[]):[]); }).catch(function(){}); });
-   }).then(hideLoad);
+  var coop=(me['区分']==='協力業者'||me['区分']==='協力会社');
+  var sb=document.getElementById('apSubmitBox'); if(sb)sb.style.display=coop?'none':'';
+  var lvMine=null, lvSum=[], admin=!!admTok(), calls=[];
+  if(coop){ var al=document.getElementById('apLeave'); if(al)al.style.display='none';
+    var am=document.getElementById('apMine'); if(am)am.innerHTML='<div class="needlogin" style="margin:6px auto 10px;">申請は社員のみご利用いただけます。</div>'; }
+  else {
+    calls.push(callGAS({action:'applicationsMine',wid:me['作業員ID']}).then(function(res){ myApps=(res&&res.ok)?(res.apps||[]):[]; }).catch(function(){ myApps=[]; }));
+    calls.push(callGAS({action:'leaveMine',wid:me['作業員ID']}).then(function(res){ lvMine=(res&&res.ok)?res.leave:null; }).catch(function(){ lvMine=null; }));
+  }
+  if(admin){
+    calls.push(callGAS({action:'applicationsPending'}).then(function(res){ pendApps=(res&&res.ok)?(res.apps||[]):[]; }).catch(function(){ pendApps=[]; }));
+    calls.push(callGAS({action:'leaveSummary'}).then(function(res){ lvSum=(res&&res.ok)?(res.rows||[]):[]; }).catch(function(){ lvSum=[]; }));
+  }
+  Promise.all(calls).then(function(){
+    if(!coop){ renderApMine(); renderLeaveMine(lvMine); }
+    renderApAdmin();
+    if(admin){ renderLeaveAdmin(lvSum); } else { var b=document.getElementById('apLeaveBox'); if(b)b.style.display='none'; }
+  }).then(hideLoad,hideLoad);
 }
 function renderLeaveMine(lv){ var el=document.getElementById('apLeave'); if(!el)return;
   if(!lv){ el.style.display='none'; return; } el.style.display='block';
@@ -606,16 +612,12 @@ function renderApAdmin(){ var el=document.getElementById('apAdmin');
   }).join('');
 }
 function submitApp(){ if(!me){toast('ログインしてください');return;}
+  if(me['区分']==='協力業者'||me['区分']==='協力会社'){ toast('申請は社員のみです'); return; }
   var type=document.getElementById('ap_type').value, date=document.getElementById('ap_date').value, note=document.getElementById('ap_note').value;
+  if(type!=='その他' && !date){ toast('対象日を選んでください'); return; }
   var d={'作業員ID':me['作業員ID'],'氏名':me['氏名'],'種別':type,'対象日':date,'詳細':note};
-  if(type==='打刻修正'){ var i=document.getElementById('ap_in').value,o=document.getElementById('ap_out').value,b=document.getElementById('ap_brk').value||0;
-    if(!date){toast('対象日を選んでください');return;} if(!i&&!o){toast('修正後の出勤か退勤を入力してください');return;}
-    d['修正_出勤']=i; d['修正_退勤']=o; d['修正_休憩分']=Number(b);
-  } else if(type!=='その他' && !date){ toast('対象日を選んでください'); return; }
   showLoad(); callGAS({action:'applicationAdd',data:d}).then(function(res){ if(!res.ok)throw new Error(res.error||'申請失敗');
-    toast('申請しました'); document.getElementById('ap_note').value='';
-    if(document.getElementById('ap_in'))document.getElementById('ap_in').value=''; if(document.getElementById('ap_out'))document.getElementById('ap_out').value='';
-    loadApp();
+    toast('申請しました'); document.getElementById('ap_note').value=''; loadApp();
   }).catch(function(e){toast('失敗：'+e.message);}).then(hideLoad);
 }
 function cancelApp(id){ if(!confirm('この申請を取り消しますか？'))return; showLoad();
