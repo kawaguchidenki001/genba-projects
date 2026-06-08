@@ -156,6 +156,39 @@
     </div>
   </div>
 
+  <!-- 申請 -->
+  <div class="pane" id="pApp">
+    <div class="setbox" style="margin-bottom:12px;">
+      <h3 style="font-size:14px;color:var(--teal2);margin:0 0 8px;">申請する</h3>
+      <div class="krrow"><label>種別</label>
+        <select id="ap_type" onchange="onAppType()" style="width:170px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:#fff;">
+          <option value="有給休暇">有給休暇</option>
+          <option value="打刻修正">打刻修正</option>
+          <option value="残業事前申請">残業事前申請</option>
+          <option value="遅刻">遅刻</option>
+          <option value="早退">早退</option>
+          <option value="在宅勤務">在宅勤務</option>
+          <option value="その他">その他</option>
+        </select>
+      </div>
+      <div class="krrow"><label>対象日</label><input id="ap_date" type="date" style="width:170px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;"></div>
+      <div id="ap_fix" style="display:none;">
+        <div class="krrow"><label>修正後 出勤</label><input id="ap_in" type="time" step="600"></div>
+        <div class="krrow"><label>修正後 退勤</label><input id="ap_out" type="time" step="600"></div>
+        <div class="krrow"><label>休憩（分）</label><input id="ap_brk" type="number" min="0" step="5" value="60" inputmode="numeric"></div>
+      </div>
+      <div style="margin-top:10px;"><label style="font-size:12px;color:var(--sub);">理由・内容</label>
+        <textarea id="ap_note" rows="2" style="width:100%;margin-top:4px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;resize:vertical;"></textarea></div>
+      <button onclick="submitApp()" style="width:100%;margin-top:10px;padding:12px;border:none;background:var(--teal2);color:#fff;border-radius:11px;font-weight:700;cursor:pointer;">申請する</button>
+    </div>
+    <div class="logttl">自分の申請</div>
+    <div id="apMine"></div>
+    <div class="setbox" style="margin-top:14px;">
+      <h3 style="font-size:14px;color:var(--teal2);margin:0 0 8px;">承認待ち（管理者）</h3>
+      <div id="apAdmin"></div>
+    </div>
+  </div>
+
   <!-- 設定 -->
   <div class="pane" id="pSet">
     <div class="setbox">
@@ -195,6 +228,7 @@
   <button id="tabHome" class="on" onclick="setTab('home')"><span class="i">🏠</span>ホーム</button>
   <button id="tabMonth" onclick="setTab('month')"><span class="i">📋</span>勤怠表</button>
   <button id="tabManual" onclick="setTab('manual')"><span class="i">✏️</span>手修正</button>
+  <button id="tabApp" onclick="setTab('app')"><span class="i">📝</span>申請</button>
   <button id="tabAll" onclick="setTab('all')"><span class="i">👥</span>全員</button>
   <button id="tabSet" onclick="setTab('set')"><span class="i">⚙️</span>設定</button>
 </div>
@@ -206,7 +240,7 @@
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var T_GENERAL='kawaguchi-genba-2026';
 var me=null,workers=[],todayK=[],monthK=[],mCur=new Date(),tab='home',brk={am:30,noon:60,pm:30},manualRows=[];
-var S={},adminOK=false;
+var S={},adminOK=false,myApps=[],pendApps=[];
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||T_GENERAL;}
@@ -231,13 +265,15 @@ function tickClock(){var n=new Date();
   document.getElementById('ht').textContent=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2)+':'+('0'+n.getSeconds()).slice(-2);}
 
 function setTab(t){tab=t;
-  ['Home','Month','Manual','All','Set'].forEach(function(x){document.getElementById('tab'+x).className=('tab'+x==='tab'+cap(t))?'on':'';});
+  ['Home','Month','Manual','App','All','Set'].forEach(function(x){document.getElementById('tab'+x).className=('tab'+x==='tab'+cap(t))?'on':'';});
   document.getElementById('pHome').className='pane'+(t==='home'?' on':'');
   document.getElementById('pMonth').className='pane'+(t==='month'?' on':'');
   document.getElementById('pManual').className='pane'+(t==='manual'?' on':'');
+  document.getElementById('pApp').className='pane'+(t==='app'?' on':'');
   document.getElementById('pAll').className='pane'+(t==='all'?' on':'');
   document.getElementById('pSet').className='pane'+(t==='set'?' on':'');
   if(t==='month')loadMonth(); if(t==='all')renderAll();
+  if(t==='app'){ var ad=document.getElementById('ap_date'); if(ad&&!ad.value)ad.value=ymd(new Date()); loadApp(); }
   if(t==='manual'){ var di=document.getElementById('mDate'); if(di&&!di.value)di.value=ymd(new Date()); manualLoad(); }
 }
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
@@ -481,6 +517,58 @@ function saveKrule(){ var g=function(id){return document.getElementById(id).valu
 }
 
 function logout(){localStorage.removeItem('genba_user');location.href='https://kawaguchidenki001.github.io/genba-projects/';}
+
+/* ===== 申請・承認 ===== */
+function onAppType(){ var t=document.getElementById('ap_type').value; document.getElementById('ap_fix').style.display=(t==='打刻修正')?'block':'none'; }
+function loadApp(){ if(!me)return; showLoad();
+  callGAS({action:'applicationsMine',wid:me['作業員ID']}).then(function(res){ if(res&&res.ok)myApps=res.apps||[]; renderApMine(); }).catch(function(){})
+   .then(function(){ if(admTok()){ return callGAS({action:'applicationsPending'}).then(function(res){ if(res&&res.ok)pendApps=res.apps||[]; renderApAdmin(); }).catch(function(){ renderApAdmin(); }); } else { renderApAdmin(); } })
+   .then(hideLoad);
+}
+function renderApMine(){ var el=document.getElementById('apMine');
+  if(!myApps.length){ el.innerHTML='<div class="needlogin" style="margin:6px auto 10px;">申請はまだありません。</div>'; return; }
+  el.innerHTML=myApps.map(function(a){ var st=String(a['状態']||''); var cl=(st==='承認')?'b1':((st==='却下')?'b2':'b3');
+    var head=esc(a['種別']||'')+(a['対象日']?'・'+esc(String(a['対象日']).slice(5)):'');
+    var det=(a['種別']==='打刻修正')?(' '+esc((a['修正_出勤']||'')+'〜'+(a['修正_退勤']||''))):(a['詳細']?(' '+esc(a['詳細'])):'');
+    var cancel=(st==='申請中')?('<button onclick="cancelApp(\''+esc(a['申請ID'])+'\')" style="padding:6px 10px;border:1px solid var(--red);color:var(--red);background:#fff;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">取消</button>'):'';
+    return '<div class="row"><span class="nm" style="font-weight:600;">'+head+'<span style="color:var(--sub);font-weight:400;">'+det+'</span></span><span class="bdg '+cl+'">'+esc(st)+'</span>'+cancel+'</div>';
+  }).join('');
+}
+function renderApAdmin(){ var el=document.getElementById('apAdmin');
+  if(!admTok()){ el.innerHTML='<div style="font-size:12px;color:var(--sub);margin-bottom:8px;">承認は管理者のみ。管理者PINを入力してください。</div>'
+    +'<div style="display:flex;gap:8px;"><input id="apPin" type="password" inputmode="numeric" placeholder="管理者PIN" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px;"><button onclick="apUnlock()" style="padding:10px 16px;border:none;background:var(--teal2);color:#fff;border-radius:10px;font-weight:700;cursor:pointer;">表示</button></div>'; return; }
+  if(!pendApps.length){ el.innerHTML='<div class="needlogin" style="margin:6px auto 2px;">承認待ちはありません。</div>'; return; }
+  el.innerHTML=pendApps.map(function(a){ var id=esc(a['申請ID']);
+    var det=(a['種別']==='打刻修正')?('出勤 '+esc(a['修正_出勤']||'—')+' ／ 退勤 '+esc(a['修正_退勤']||'—')+' ／ 休憩 '+esc((a['修正_休憩分']||0)+'分')):esc(a['詳細']||'');
+    return '<div class="brkcard" style="padding:12px;margin-bottom:10px;">'
+      +'<div style="font-weight:700;">'+esc(a['氏名']||'')+' ・ '+esc(a['種別']||'')+(a['対象日']?'（'+esc(a['対象日'])+'）':'')+'</div>'
+      +(det?'<div style="font-size:13px;color:var(--ink);margin-top:4px;">'+det+'</div>':'')
+      +'<div style="display:flex;gap:8px;margin-top:10px;"><button onclick="decideApp(\''+id+'\',\'承認\')" style="flex:1;padding:10px;border:none;background:var(--green);color:#fff;border-radius:9px;font-weight:700;cursor:pointer;">承認</button>'
+      +'<button onclick="decideApp(\''+id+'\',\'却下\')" style="flex:1;padding:10px;border:1px solid var(--red);color:var(--red);background:#fff;border-radius:9px;font-weight:700;cursor:pointer;">却下</button></div></div>';
+  }).join('');
+}
+function submitApp(){ if(!me){toast('ログインしてください');return;}
+  var type=document.getElementById('ap_type').value, date=document.getElementById('ap_date').value, note=document.getElementById('ap_note').value;
+  var d={'作業員ID':me['作業員ID'],'氏名':me['氏名'],'種別':type,'対象日':date,'詳細':note};
+  if(type==='打刻修正'){ var i=document.getElementById('ap_in').value,o=document.getElementById('ap_out').value,b=document.getElementById('ap_brk').value||0;
+    if(!date){toast('対象日を選んでください');return;} if(!i&&!o){toast('修正後の出勤か退勤を入力してください');return;}
+    d['修正_出勤']=i; d['修正_退勤']=o; d['修正_休憩分']=Number(b);
+  } else if(type!=='その他' && !date){ toast('対象日を選んでください'); return; }
+  showLoad(); callGAS({action:'applicationAdd',data:d}).then(function(res){ if(!res.ok)throw new Error(res.error||'申請失敗');
+    toast('申請しました'); document.getElementById('ap_note').value='';
+    if(document.getElementById('ap_in'))document.getElementById('ap_in').value=''; if(document.getElementById('ap_out'))document.getElementById('ap_out').value='';
+    loadApp();
+  }).catch(function(e){toast('失敗：'+e.message);}).then(hideLoad);
+}
+function cancelApp(id){ if(!confirm('この申請を取り消しますか？'))return; showLoad();
+  callGAS({action:'applicationCancel',id:id,wid:me['作業員ID']}).then(function(res){ if(!res.ok)throw new Error(res.error||'取消失敗'); toast('取り消しました'); loadApp(); }).catch(function(e){toast('失敗：'+e.message);}).then(hideLoad); }
+function decideApp(id,dec){ showLoad();
+  callGAS({action:'applicationDecide',id:id,decision:dec}).then(function(res){ if(!res.ok)throw new Error(res.error||'処理失敗'); toast(dec+'しました'); loadApp(); reload(); }).catch(function(e){toast('失敗：'+e.message);}).then(hideLoad); }
+function apUnlock(){ var pin=document.getElementById('apPin').value; if(!pin){toast('管理者PINを入力してください');return;}
+  var prev=localStorage.getItem('genba_admin'); localStorage.setItem('genba_admin',pin); showLoad();
+  callGAS({action:'checkRole'}).then(function(res){ if(res&&res.ok&&res.role==='admin'){ adminOK=true; toast('承認できます'); loadApp(); }
+    else { if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('管理者PINが違います'); }
+  }).catch(function(e){ if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('通信エラー：'+e.message); }).then(hideLoad); }
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
