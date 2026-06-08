@@ -31,11 +31,11 @@
   .btn.primary{background:var(--accent);color:#fff;} .btn.open{background:#eef1f5;color:var(--ink);}
   .hint{font-size:12.5px;color:var(--sub);margin-top:10px;}
   .prog{font-size:13px;color:var(--accent-d);margin-top:10px;font-weight:600;}
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px;margin-top:12px;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
   .ph{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f1f2f4;aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;text-decoration:none;}
   .ph img{width:100%;height:100%;object-fit:cover;display:block;}
   .ph .fallback{font-size:26px;color:#9aa1ab;}
-  .ph .cap{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ph .cap{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.ph{cursor:pointer;}.ph.selected{outline:3px solid #1f7a4d;outline-offset:-3px;}.ph.selected::after{content:'✓';position:absolute;top:4px;right:4px;background:#1f7a4d;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:14px;}#selBar{display:flex;align-items:center;gap:8px;margin-top:8px;}#selBar button{font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;}#selCount{font-size:13px;color:var(--sub);flex:1;}
   .empty{text-align:center;color:var(--sub);padding:30px 10px;font-size:14px;}
   .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:60;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
   .toast.show{opacity:1;}
@@ -72,7 +72,7 @@
     <div class="pname" id="pName"></div>
     <div class="pid" id="pId"></div>
 
-    <div class="board" id="board">
+    <div class="board" id="board" style="display:none">
       <label class="bdtog"><input type="checkbox" id="bdOn" checked onchange="toggleBoard()"><span>小黒板を写真に焼き込んで保存</span></label>
       <div id="bdFields">
         <div class="bdrow"><label>工種</label><input id="bdKind" type="text" list="kindList" placeholder="例：電気配線工事"></div>
@@ -84,13 +84,14 @@
     <div class="btnrow">
       <button class="btn primary" id="addBtn" onclick="pickFiles()">＋ 写真を追加</button>
       <a class="btn open" id="openBtn" target="_blank">📁 ドライブフォルダを開く</a>
-      <button class="btn open" id="ledgerBtn" onclick="makeLedger()">🧾 写真台帳PDF</button>
+      <button class="btn open" id="ledgerBtn" onclick="makeLedger()">写真台帳作成</button>
     </div>
     <input type="file" id="file" accept="image/*" multiple>
     <div class="hint" id="hint">選んだ写真は、この現場の「写真」フォルダ(Googleドライブ)に保存されます。</div>
     <div class="prog" id="prog" style="display:none;"></div>
 
     <div class="sec">写真一覧 <span id="phCount" style="color:var(--sub);font-weight:400;"></span></div>
+    <div id="selBar"><span id="selCount"></span><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div>
     <div id="photos"><div class="empty">読込中…</div></div>
   </div>
 </div>
@@ -101,7 +102,7 @@
 <script>
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var SECRET  = 'kawaguchi-genba-2026';
-var MAXPX = 1600, QUALITY = 0.72;
+var MAXPX = 800, QUALITY = 0.80;
 
 var projects=[], curId='', folderReady=false;
 var CACHE='genba_projects_cache_files';
@@ -171,9 +172,9 @@ function renderPhotos(arr){
   document.getElementById('phCount').textContent=arr.length?('（'+arr.length+'枚）'):'';
   var el=document.getElementById('photos');
   if(!arr.length){el.innerHTML='<div class="empty">まだ写真がありません。<br>「＋写真を追加」から登録できます。</div>';return;}
-  el.innerHTML='';
+  el.innerHTML='';el.className='grid';
   arr.forEach(function(f){
-    var a=document.createElement('a');a.className='ph';a.href=f.url;a.target='_blank';
+    var a=document.createElement('div');a.className='ph';a.id='ph_'+f.id;a.dataset.id=f.id;a.onclick=function(){togglePhSel(this);};
     var img=document.createElement('img');img.loading='lazy';
     img.src='https://drive.google.com/thumbnail?id='+f.id+'&sz=w300';
     img.onerror=function(){a.innerHTML='<span class="fallback">🖼</span><span class="cap">'+esc(f.name)+'</span>';};
@@ -215,38 +216,11 @@ function ledgerCover(nm){
  x.font='bold 32px '+F;x.fillStyle='#1f2733';x.fillText('河口電機',W/2,H*0.60);
  return c.toDataURL('image/jpeg',0.9);
 }
-function ledgerLoad(u){return new Promise(function(res,rej){var im=new Image();im.crossOrigin='anonymous';im.onload=function(){res(im);};im.onerror=function(){rej();};im.src=u;});}
-function makeLedger(){
- if(!curId){toast('現場を選んでください');return;}
- if(!(window.jspdf&&window.jspdf.jsPDF)){toast('PDFの準備中です。少し待って再度お試しください');return;}
- toast('写真を集めています…');
- callGAS({action:'listPhotos',id:curId}).then(function(res){
-  if(!res.ok)throw new Error(res.error||'取得失敗');
-  var ph=res.photos||[]; if(!ph.length){toast('写真がありません');return;}
-  ph.sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));}); buildLedger(ph);
- }).catch(function(e){toast('台帳：'+(e&&e.message||'失敗'));});
-}
-function buildLedger(photos){
- var pj=(projects.filter(function(x){return x['案件ID']===curId;})[0]||{}),nm=pj['案件名']||'';
- var doc=new window.jspdf.jsPDF({orientation:'p',unit:'mm',format:'a4'});
- var pw=210,ph2=297,m=12,gap=8,cols=1,rows=3,per=3,cw=(pw-m*2-gap*(cols-1))/cols,chh=(ph2-m*2-gap*(rows-1))/rows,fail=0;
- doc.addImage(ledgerCover(nm),'JPEG',0,0,pw,ph2);
- var prog=document.getElementById('prog');if(prog)prog.style.display='block';
- function step(i){
-  if(prog)prog.textContent='台帳に追加中… '+Math.min(i,photos.length)+'/'+photos.length;
-  if(i>=photos.length){doc.save('写真台帳_'+(nm||curId)+'.pdf');if(prog){prog.textContent='台帳を作成しました（'+(photos.length-fail)+'枚'+(fail?'／取込不可'+fail:'')+'）';setTimeout(function(){prog.style.display='none';},2600);}toast('写真台帳を作成しました');return;}
-  var pos=i%per;if(pos===0)doc.addPage();
-  var r=Math.floor(pos/cols),c=pos%cols,x=m+c*(cw+gap),y=m+r*(chh+gap);
-  ledgerLoad('https://drive.google.com/thumbnail?id='+photos[i].id+'&sz=w1000').then(function(im){
-   try{var iw=im.naturalWidth||800,ih=im.naturalHeight||600,ar=iw/ih,w=cw,h=w/ar;if(h>chh){h=chh;w=h*ar;}
-    var cv=document.createElement('canvas');cv.width=iw;cv.height=ih;cv.getContext('2d').drawImage(im,0,0);
-    doc.addImage(cv.toDataURL('image/jpeg',0.72),'JPEG',x+(cw-w)/2,y+(chh-h)/2,w,h);}catch(e){fail++;}
-   step(i+1);
-  }).catch(function(){fail++;step(i+1);});
+function callGAS({action:'getPhotoB64',fileId:photos[i].id}).then(function(res){if(!res.ok||!res.b64){fail++;return step(i+1);}var d='data:image/jpeg;base64,'+res.b64,m=new Image();m.onload=function(){var r=(m.naturalWidth/m.naturalHeight)||1.333,w=cw,h=w/r;if(h>chh){h=chh;w=h*r;}try{doc.addImage(d,'JPEG',x+(cw-w)/2,y+(chh-h)/2,w,h);}catch(e){fail++;}step(i+1);};m.onerror=function(){fail++;step(i+1);};m.src=d;}).catch(function(){fail++;step(i+1);});;
  }
  step(0);
 }
-function pickFiles(){ if(!folderReady){toast('フォルダ準備中です。少し待ってください');return;} document.getElementById('file').click(); }
+function togglePhSel(e){e.classList.toggle('selected');var n=document.querySelectorAll('#photos .ph.selected').length,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function selAll(b){document.querySelectorAll('#photos .ph').forEach(function(e){b?e.classList.add('selected'):e.classList.remove('selected');});var n=b?document.querySelectorAll('#photos .ph').length:0,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function pickFiles(){ if(!folderReady){toast('フォルダ準備中です。少し待ってください');return;} document.getElementById('file').click(); }
 document.getElementById('file').addEventListener('change',function(e){ var fs=e.target.files; if(fs&&fs.length)uploadAll(fs); this.value=''; });
 
 function uploadAll(files){
