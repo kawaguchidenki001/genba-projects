@@ -84,6 +84,7 @@
     <div class="btnrow">
       <button class="btn primary" id="addBtn" onclick="pickFiles()">＋ 写真を追加</button>
       <a class="btn open" id="openBtn" target="_blank">📁 ドライブフォルダを開く</a>
+      <button class="btn open" id="ledgerBtn" onclick="makeLedger()">🧾 写真台帳PDF</button>
     </div>
     <input type="file" id="file" accept="image/*" multiple>
     <div class="hint" id="hint">選んだ写真は、この現場の「写真」フォルダ(Googleドライブ)に保存されます。</div>
@@ -204,6 +205,47 @@ function drawBoard(ctx,cw,ch){
   while(t.length>1&&ctx.measureText(t).width>vM)t=t.slice(0,-1);if(t!==r[1]&&t.length>1)t=t.slice(0,-1)+'…';
   ctx.fillText(t,x+lw,ry);});
 }
+function ledgerCover(nm){
+ var W=1240,H=1754,c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
+ var F='"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+ x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#14532d';x.fillRect(0,0,W,20);x.fillRect(0,H-20,W,20);
+ x.textAlign='center';x.fillStyle='#1f2733';x.font='bold 66px '+F;x.fillText('工事写真台帳',W/2,H*0.30);
+ x.font='bold 40px '+F;x.fillText(nm||'',W/2,H*0.42);
+ x.font='28px '+F;x.fillStyle='#6b7280';x.fillText('作成日　'+bdToday().replace(/-/g,'/'),W/2,H*0.52);
+ x.font='bold 32px '+F;x.fillStyle='#1f2733';x.fillText('河口電機',W/2,H*0.60);
+ return c.toDataURL('image/jpeg',0.9);
+}
+function ledgerLoad(u){return new Promise(function(res,rej){var im=new Image();im.crossOrigin='anonymous';im.onload=function(){res(im);};im.onerror=function(){rej();};im.src=u;});}
+function makeLedger(){
+ if(!curId){toast('現場を選んでください');return;}
+ if(!(window.jspdf&&window.jspdf.jsPDF)){toast('PDFの準備中です。少し待って再度お試しください');return;}
+ toast('写真を集めています…');
+ callGAS({action:'listPhotos',id:curId}).then(function(res){
+  if(!res.ok)throw new Error(res.error||'取得失敗');
+  var ph=res.photos||[]; if(!ph.length){toast('写真がありません');return;}
+  ph.sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));}); buildLedger(ph);
+ }).catch(function(e){toast('台帳：'+(e&&e.message||'失敗'));});
+}
+function buildLedger(photos){
+ var pj=(projects.filter(function(x){return x['案件ID']===curId;})[0]||{}),nm=pj['案件名']||'';
+ var doc=new window.jspdf.jsPDF({orientation:'p',unit:'mm',format:'a4'});
+ var pw=210,ph2=297,m=12,gap=8,cols=2,rows=2,per=4,cw=(pw-m*2-gap)/cols,chh=(ph2-m*2-gap)/rows,fail=0;
+ doc.addImage(ledgerCover(nm),'JPEG',0,0,pw,ph2);
+ var prog=document.getElementById('prog');if(prog)prog.style.display='block';
+ function step(i){
+  if(prog)prog.textContent='台帳に追加中… '+Math.min(i,photos.length)+'/'+photos.length;
+  if(i>=photos.length){doc.save('写真台帳_'+(nm||curId)+'.pdf');if(prog){prog.textContent='台帳を作成しました（'+(photos.length-fail)+'枚'+(fail?'／取込不可'+fail:'')+'）';setTimeout(function(){prog.style.display='none';},2600);}toast('写真台帳を作成しました');return;}
+  var pos=i%per;if(pos===0)doc.addPage();
+  var r=Math.floor(pos/cols),c=pos%cols,x=m+c*(cw+gap),y=m+r*(chh+gap);
+  ledgerLoad('https://drive.google.com/thumbnail?id='+photos[i].id+'&sz=w1000').then(function(im){
+   try{var iw=im.naturalWidth||800,ih=im.naturalHeight||600,ar=iw/ih,w=cw,h=w/ar;if(h>chh){h=chh;w=h*ar;}
+    var cv=document.createElement('canvas');cv.width=iw;cv.height=ih;cv.getContext('2d').drawImage(im,0,0);
+    doc.addImage(cv.toDataURL('image/jpeg',0.72),'JPEG',x+(cw-w)/2,y+(chh-h)/2,w,h);}catch(e){fail++;}
+   step(i+1);
+  }).catch(function(){fail++;step(i+1);});
+ }
+ step(0);
+}
 function pickFiles(){ if(!folderReady){toast('フォルダ準備中です。少し待ってください');return;} document.getElementById('file').click(); }
 document.getElementById('file').addEventListener('change',function(e){ var fs=e.target.files; if(fs&&fs.length)uploadAll(fs); this.value=''; });
 
@@ -245,5 +287,6 @@ try{document.getElementById('bdDate').value=bdToday();}catch(e){}
 try{projects=JSON.parse(localStorage.getItem(CACHE)||'[]');buildSel();}catch(e){}
 loadProjects();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
 </html>
