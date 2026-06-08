@@ -1,382 +1,893 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>写真・ファイル｜河口電機</title>
-<style>
-  :root{
-    --bg:#f4f5f7; --card:#fff; --line:#e3e6ea; --ink:#1f2733; --sub:#6b7280;
-    --accent:#b4791a; --accent-d:#8a5c11;
-    --radius:12px; --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);
-  }
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:24px;}
-  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
-  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .hd-row h1{font-size:17px;margin:0;font-weight:700;}
-  .back{color:#fef3c7;text-decoration:none;font-size:13px;}
-  .sync{font-size:12px;display:flex;align-items:center;gap:5px;color:#fef3c7;}
-  .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;}
-  .dot.ok{background:#4ade80;} .dot.busy{background:#fde047;} .dot.off{background:#f87171;}
-  .wrap{padding:12px;}
-  .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:600;}
-  select.f{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:15px;font-family:inherit;}
-  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-top:12px;}
-  .pname{font-weight:700;font-size:16px;}
-  .pid{font-size:12px;color:var(--sub);}
-  .btnrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
-  .btn{flex:1;min-width:130px;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
-  .btn.primary{background:var(--accent);color:#fff;} .btn.open{background:#eef1f5;color:var(--ink);}
-  .hint{font-size:12.5px;color:var(--sub);margin-top:10px;}
-  .prog{font-size:13px;color:var(--accent-d);margin-top:10px;font-weight:600;}
-  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px;}
-  .ph{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f1f2f4;display:flex;align-items:center;justify-content:center;text-decoration:none;}
-  .ph img{width:100%;height:auto;display:block;}
-  .ph .fallback{font-size:26px;color:#9aa1ab;}
-  .ph .cap{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);color:#fff;font-size:10px;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.ph{cursor:pointer;}.ph.selected{outline:3px solid #1f7a4d;outline-offset:-3px;}.ph.selected::after{content:'✓';position:absolute;top:4px;right:4px;background:#1f7a4d;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:14px;}#selBar{display:flex;align-items:center;gap:8px;margin-top:8px;}#selBar button{font-size:12px;padding:4px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;}#selCount{font-size:13px;color:var(--sub);flex:1;}
-  .empty{text-align:center;color:var(--sub);padding:30px 10px;font-size:14px;}
-  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:60;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
-  .toast.show{opacity:1;}
-  .sec{font-size:13px;font-weight:700;color:var(--accent-d);margin-top:16px;}
-  input[type=file]{display:none;}
-  .board{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:#fbfbfc;}
-  .bdtog{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;color:var(--ink);cursor:pointer;}
-  .bdtog input{width:20px;height:20px;flex:0 0 auto;}
-  .bdrow{display:flex;align-items:center;gap:10px;margin-top:8px;}
-  .bdrow label{font-size:13px;color:var(--sub);width:84px;flex:0 0 auto;}
-  .bdrow input{flex:1;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;font-family:inherit;background:#fff;}
-  .loading{position:fixed;inset:0;z-index:1000;background:rgba(240,242,245,.72);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
-  .loading.show{display:flex;}
-  .lbox{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(20,30,50,.18);padding:24px 32px;text-align:center;}
-  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
-  @keyframes sp{to{transform:rotate(360deg);}}
-  .lbox .txt{font-size:14px;font-weight:700;}
-</style>
-</head>
-<body>
-<header>
-  <div class="hd-row">
-    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
-    <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
-  </div>
-  <div class="hd-row" style="margin-top:6px;"><h1>写真・ファイル</h1></div>
-</header>
+/**
+ * 河口電機 現場管理システム ― フルバックエンド v9（打刻仕様変更）
+ * ★v8 を丸ごと置き換える版です。
+ * v9の変更点（勤怠の打刻を「1行＝1勤務（出勤→退勤のペア）」方式に変更）：
+ *   ・出勤を押すと新しい勤務行を作成。1日に何度でも出勤・退勤できる。
+ *   ・退勤は「未退勤の勤務（出勤あり・退勤なし）」を閉じる。日付をまたぐ夜勤は出勤日に集計。
+ *   ・実働は退勤時に計算（退勤＜出勤なら翌日扱いで+24h）。
+ *   ・【新】「現場管理DB」とは別の Google スプレッドシート（＝出勤簿ファイル）に社員ごと1シートで
+ *     月次タイムシートを出力（年月/集計欄＋日別：勤怠・出退勤・休憩・勤務時間・普通残業・深夜残業・
+ *     休日労働・休日深夜・備考、欄外に出勤位置/退勤位置のGoogleマップリンク）。打刻のたびに自動更新。
+ *     ※残業/深夜は標準ルールの目安（所定8h/日・深夜22-5）。土日も「出勤」として通常計算（休日区分は未適用）。
+ *     ※欠勤/遅刻/早退/有給/休日は打刻から判定不可のため空欄。1日複数回は日付/勤怠/曜日を結合して各回を行表示。
+ *     初回はメニュー「▶勤怠→出勤簿ファイルを更新（全員）」を実行。
+ * ★管理者PIN（TOKEN_ADMIN）は『kawaden』に設定済みです。このまま貼り替えてOK（書き換え不要）。
+ *   PINを変えたいときは下の TOKEN_ADMIN の値だけ直してください。
+ * ★既存の勤怠シートにある「テスト打刻の行」は、1行=1勤務の新方式と混ざるので、
+ *   勤怠シートの見出し行（1行目）を残して、それ以下のデータ行を削除してから使ってください。
+ * 更新手順: 全部貼り替え →（setup実行は不要）→ 既存デプロイを「新バージョン」で再デプロイ
+ *   ※必ず既存デプロイの編集（鉛筆→バージョン:新規）で更新（URLは変わりません）。
+ */
 
-<div class="wrap">
-  <div class="fld"><label>種別</label>
-    <select class="f" id="f_ctype" onchange="onCType()"><option value="">（すべて）</option><option>官公庁</option><option>法人</option><option>個人</option></select></div>
-  <div class="fld"><label>取引先</label>
-    <select class="f" id="f_cand" onchange="onCand()"><option value="">（取引先を選択）</option></select></div>
-  <div class="fld"><label>現場 ／ 案件を選ぶ</label>
-    <select class="f" id="projSel" onchange="onSelect()"><option value="">― 選択 ―</option></select></div>
+/* ★v14（このファイル）の変更点：
+ *   ・【重要修正】作業員・取引先・先方担当者のID発番を「件数+1」→「一意ID」に変更（削除後の追加で既存IDと重複し、別の人が上書き・削除される不具合を解消）。
+ *     既存データの重複IDは、デプロイ後にエディタから関数 repairIds を1回実行して修復してください。
+ *   ・【追記】案件マスタに「略称」、作業員マスタに「氏・名・略称」の列を追加（日報・スケジュールの表示やフォームで使用）。
+ *   ・【追記】カレンダー用データ(calendarData)に作業員一覧を同梱（スケジュールの担当者を社員・協力業者から選べるように）。
+ *   ・【修正】使うシートが無い場合は見出し付きで自動作成（setup未実行でも「シートがありません」になりません）。
+ *   ・「取引先」マスタを整備：顧客マスタに「区分（企業／官公庁／協力業者）」列を追加。既存の顧客は区分が空＝企業として扱います。
+ *   ・「先方担当者マスタ」を新設（取引先・担当者名・役職・電話・メール）。管理画面から登録、各画面でプルダウン選択に使います。
+ *   ・取引先の更新/削除、先方担当者の追加/更新/削除アクションを追加（管理者のみ）。一覧の取得は誰でも可（プルダウン用）。
+ *   ・all / calendarData / reportData の応答に取引先・先方担当者を同梱。
+ *   〔v13〕案件（現場）の追加・編集・削除を誰でも可能に開放（顧客・社員マスタ追加と勤怠削除は管理者のみ）。
+ *   〔v12〕現場フォルダを「ファイル／図面／書類／写真」の4つに。写真の中に「調査／施工／完了」を自動生成。案件マスタに先方担当者/電話番号/メールアドレス列を追加。
+ *   更新手順：全部貼り替え → 既存デプロイを「新バージョン」で再デプロイ（URL・PINは変わりません）。※新シート作成のため、初回は一度「setup」を実行すると確実です（しなくても保存時に自動生成されます）。
+ */
+var TOKEN_ADMIN   = 'kawaden';   // 管理者PIN（金額表示・顧客/社員登録に必要）
+var TOKEN_GENERAL = 'kawaguchi-genba-2026';
 
-  <div class="panel" id="panel" style="display:none;">
-    <div class="pname" id="pName"></div>
-    <div class="pid" id="pId"></div>
+var SHEET_PROJECTS='案件マスタ', SHEET_CUSTOMERS='顧客マスタ', SHEET_WORKERS='作業員マスタ', SHEET_REPORTS='作業日報', SHEET_SCHEDULE='スケジュール', SHEET_KINTAI='勤怠', SHEET_CONTACTS='先方担当者マスタ', SHEET_SETTINGS='設定', SHEET_APPLICATIONS='申請', SHEET_LEAVE='有給';
+var PARENT_FOLDER_NAME='河口電機_現場管理';
 
-    <div class="board" id="board" style="display:none">
-      <label class="bdtog"><input type="checkbox" id="bdOn" checked onchange="toggleBoard()"><span>小黒板を写真に焼き込んで保存</span></label>
-      <div id="bdFields">
-        <div class="bdrow"><label>工種</label><input id="bdKind" type="text" list="kindList" placeholder="例：電気配線工事"></div>
-        <div class="bdrow"><label>内容・状況</label><input id="bdMemo" type="text" placeholder="例：施工後"></div>
-        <div class="bdrow"><label>日付</label><input id="bdDate" type="date"></div>
-      </div>
-      <datalist id="kindList"><option value="電気配線工事"></option><option value="盤・分電盤設置"></option><option value="照明器具取付"></option><option value="コンセント・スイッチ"></option><option value="配管・配線工事"></option><option value="接地工事"></option><option value="受変電設備"></option><option value="撤去・改修"></option></datalist>
-    </div>
-    <div class="btnrow">
-      <button class="btn primary" id="addBtn" onclick="pickFiles()">① 写真・ファイルの追加</button>
-      <a class="btn open" id="openBtn" target="_blank">② 写真・ファイルの閲覧</a>
-      <button class="btn open" id="ledgerBtn" onclick="showLedger()">③ 工事写真台帳作成</button>
-    </div>
-    <input type="file" id="file" multiple>
-    <div class="hint" id="hint">「① 写真・ファイルの追加」で、スマホやPCの写真・ファイルをこの現場のドライブに保存できます（写真は写真フォルダ、その他はファイルフォルダ）。</div>
-    <div class="prog" id="prog" style="display:none;"></div>
+var PROJECT_HEADERS=['案件ID','案件名','顧客','場所','種別','ステータス','工期開始','工期完了','受注金額税抜','受注金額税込','実行予算','担当','段取り','Driveフォルダ','備考','登録日時','更新日時','先方担当者','電話番号','メールアドレス','略称'];
+var CUSTOMER_HEADERS=['顧客ID','顧客名','担当者','電話','住所','備考','登録日時','区分'];
+var CONTACT_HEADERS=['担当者ID','取引先','担当者名','役職','電話','メール','備考','登録日時','更新日時'];
+var WORKER_HEADERS=['作業員ID','氏名','区分','所属','標準単価','表示順','備考','登録日時','ログインID','パスワード','氏','名','略称'];
+var REPORT_HEADERS=['日報ID','日付','案件ID','案件名','作業員ID','氏名','区分','所属','作業内容','開始','終了','作業時間','人工','単価','労務費','備考','登録日時','更新日時'];
+var SCHEDULE_HEADERS=['予定ID','日付','終了日','案件ID','案件名','予定内容','区分','担当','開始','終了','備考','登録日時','更新日時'];
+var KINTAI_HEADERS=['勤怠ID','日付','作業員ID','氏名','出勤','退勤','休憩分','実働時間','現場ID','現場名','出勤位置','退勤位置','備考','登録日時','更新日時'];
+var SETTINGS_HEADERS=['キー','値'];
+var SETTINGS_DEFAULT={'会社名':'河口電機','定時開始':'09:00','定時終了':'18:00','締日':'15','丸め単位':'15','所定労働時間':'8','深夜開始':'22:00','深夜終了':'05:00','残業上限月':'45','残業警告率':'80','有給付与日':'04-01','有給義務日数':'5','有給警告日':'180'};
+var APPLICATION_HEADERS=['申請ID','申請日時','作業員ID','氏名','種別','対象日','詳細','修正_出勤','修正_退勤','修正_休憩分','状態','処理日時'];
+var LEAVE_HEADERS=['記録ID','作業員ID','氏名','区分','日付','日数','メモ','登録日時'];
 
-    <div id="gridArea" style="display:none;">
-    <div id="folderRow" style="display:none;margin-bottom:8px;"><label style="font-size:13px;color:var(--sub);margin-right:6px;">フォルダ</label><select class="f" id="folderSel" onchange="loadCurFolderPhotos()" style="display:inline-block;width:auto;min-width:60%;"></select></div>
-    <div class="sec">写真一覧 <span id="phCount" style="color:var(--sub);font-weight:400;"></span></div>
-    <div id="selBar"><span id="selCount"></span><button onclick="delSelected()" style="color:#c0392b;border-color:#e3b7b0;">削除</button><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div>
-    <div id="photos"><div class="empty">読込中…</div></div>
-    <div id="outBar" style="display:none;margin-top:12px;"><button class="btn primary" onclick="buildLedgerFiles('pdf')">📄 PDFで作成</button> <button class="btn open" onclick="buildLedgerFiles('xlsx')">📊 エクセルで作成</button><div id="ledgerResult" style="display:none;margin-top:10px;font-size:14px;line-height:1.7;"></div></div>
-    </div>
-  </div>
-</div>
-
-<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<div class="toast" id="toast"></div>
-
-<script>
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var SECRET  = 'kawaguchi-genba-2026';
-var MAXPX = 800, QUALITY = 0.80;
-
-var projects=[], customers=[], curId='', folderReady=false;
-var CACHE='genba_projects_cache_files';
-// 案件管理からタップで来たとき用：?case=案件ID（id / proj でも可）
-var INIT_CASE=(function(){try{var p=new URLSearchParams(location.search);return p.get('case')||p.get('id')||p.get('proj')||'';}catch(e){return '';}})();
-var initApplied=false;
-function applyInit(){ if(initApplied||!INIT_CASE)return; var s=document.getElementById('projSel');
-  for(var i=0;i<s.options.length;i++){ if(s.options[i].value===INIT_CASE){ initApplied=true; s.value=INIT_CASE; onSelect(); return; } } }
-
-var loadCnt=0,loadShownAt=0;
-function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
-function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
-function callGAS(params,timeoutMs){
-  return new Promise(function(resolve,reject){
-    showLoad();
-    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
-    var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},timeoutMs||30000);
-    function cleanup(){hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
-    window[cb]=function(res){cleanup();resolve(res);};
-    var q=Object.assign({secret:SECRET,callback:cb},params);
-    s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
-    s.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(s);
-  });
+function setup(){
+  var ss=SpreadsheetApp.getActiveSpreadsheet();
+  ensureSheet_(ss,SHEET_PROJECTS,PROJECT_HEADERS); ensureSheet_(ss,SHEET_CUSTOMERS,CUSTOMER_HEADERS);
+  ensureSheet_(ss,SHEET_WORKERS,WORKER_HEADERS); ensureSheet_(ss,SHEET_REPORTS,REPORT_HEADERS);
+  ensureSheet_(ss,SHEET_SCHEDULE,SCHEDULE_HEADERS); ensureSheet_(ss,SHEET_KINTAI,KINTAI_HEADERS);
+  ensureSheet_(ss,SHEET_CONTACTS,CONTACT_HEADERS);
+  ensureSheet_(ss,SHEET_SETTINGS,SETTINGS_HEADERS);
+  ensureSheet_(ss,SHEET_APPLICATIONS,APPLICATION_HEADERS);
+  ensureSheet_(ss,SHEET_LEAVE,LEAVE_HEADERS);
+  // 既存シートに不足列を追加（ログインID・パスワード／先方担当者／取引先の区分など）
+  ensureColumns_(ss.getSheetByName(SHEET_WORKERS),WORKER_HEADERS);
+  ensureColumns_(ss.getSheetByName(SHEET_PROJECTS),PROJECT_HEADERS);
+  ensureColumns_(ss.getSheetByName(SHEET_CUSTOMERS),CUSTOMER_HEADERS);
+  ensureColumns_(ss.getSheetByName(SHEET_CONTACTS),CONTACT_HEADERS);
+  getParent_();
+  try{ SpreadsheetApp.getUi().alert('セットアップ完了（v7・ログイン対応）。'); }catch(e){}
 }
-function postNoCors(obj){ obj.secret=SECRET; return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)}); }
-function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
+function ensureSheet_(ss,name,headers){ var sh=ss.getSheetByName(name); if(!sh)sh=ss.insertSheet(name);
+  var f=sh.getRange(1,1,1,headers.length).getValues()[0];
+  if(f.every(function(v){return v===''||v===null;})){ sh.getRange(1,1,1,headers.length).setValues([headers]).setFontWeight('bold'); sh.setFrozenRows(1);} }
+function ensureColumns_(sh,headers){ if(!sh)return; var lastCol=sh.getLastColumn();
+  var cur=lastCol>0?sh.getRange(1,1,1,lastCol).getValues()[0]:[];
+  headers.forEach(function(h){ if(cur.indexOf(h)<0){ lastCol++; sh.getRange(1,lastCol).setValue(h).setFontWeight('bold'); cur.push(h);} }); }
 
-function loadProjects(){
-  setSync('busy','同期中…');
-  callGAS({action:'calendarData'}).then(function(res){
-    if(!res.ok)throw new Error(res.error||'エラー');
-    projects=res.projects||[]; customers=res.customers||[]; try{localStorage.setItem(CACHE,JSON.stringify({p:projects,c:customers}));}catch(e){}
-    buildSel(); setSync('ok','同期済み');
-  }).catch(function(err){
-    try{var cc=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=cc.p||[];customers=cc.c||[];}catch(e){projects=[];customers=[];}
-    buildSel(); setSync('off','オフライン'); toast('読込失敗：'+err.message);
-  });
-}
-function buildSel(){ buildCand(); buildProj(); }
-function buildCand(){ var t=document.getElementById('f_ctype').value,sel=document.getElementById('f_cand'),cur=sel.value;
-  var list=customers.filter(function(c){return !t||String(c['区分']||'')===t;});
-  sel.innerHTML='<option value="">（取引先を選択）</option>';
-  list.forEach(function(c){var nm=String(c['顧客名']||'');if(!nm)return;var o=document.createElement('option');o.value=nm;o.textContent=nm;sel.appendChild(o);}); sel.value=cur; }
-function buildProj(){ var cust=document.getElementById('f_cand').value,s=document.getElementById('projSel'),cur=s.value;
-  var list=projects.filter(function(p){return !cust||String(p['顧客']||'')===cust;});
-  s.innerHTML='<option value="">― 選択 ―</option>';
-  list.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);}); s.value=cur; applyInit(); }
-function onCType(){ buildCand(); buildProj(); }
-function onCand(){ buildProj(); }
+function doGet(e){ return handle_(e,(e&&e.parameter)||{}); }
+function doPost(e){ var p={}; try{p=JSON.parse(e.postData.contents);}catch(err){} return handle_(e,p); }
 
-function onSelect(){
-  curId=document.getElementById('projSel').value;
-  var panel=document.getElementById('panel');
-  if(!curId){panel.style.display='none';return;}
-  var p=projects.filter(function(x){return x['案件ID']===curId;})[0]||{};
-  document.getElementById('pName').textContent=p['案件名']||'';
-  document.getElementById('pId').textContent=curId;
-  panel.style.display='block';
-  document.getElementById('photos').innerHTML='<div class="empty">フォルダを準備中…</div>';
-  folderReady=false;
-  // フォルダを用意（無ければ作成）してから一覧
-  callGAS({action:'ensureFolder',id:curId}).then(function(res){
-    if(!res.ok)throw new Error(res.error||'フォルダ準備失敗');
-    document.getElementById('openBtn').href=res.url; folderReady=true; document.getElementById('gridArea').style.display='none'; document.getElementById('outBar').style.display='none';
-  }).catch(function(err){ document.getElementById('photos').innerHTML='<div class="empty">フォルダ準備に失敗しました。<br>↻でやり直すか、少し待って再選択してください。</div>'; toast(err.message); });
+function roleOf_(s){ s=String(s||''); if(s===TOKEN_ADMIN)return'admin'; if(s===TOKEN_GENERAL)return'general'; return''; }
+function needAdmin_(role){ if(role!=='admin') throw '権限がありません（管理者のみ）'; }
+
+function handle_(e,params){
+  var cb=(e&&e.parameter&&e.parameter.callback)?e.parameter.callback:'';
+  try{
+    var role=roleOf_(params.secret);
+    if(!role) return json_({ok:false,error:'認証エラー'},cb);
+    if(params.action==='checkRole') return json_({ok:true,role:role},cb);
+    if(params.action==='login'){ var w=login_(params.id,params.pw); if(!w)return json_({ok:false,error:'IDまたはパスワードが違います'},cb); return json_({ok:true,worker:w},cb); }
+    if(typeof params.data==='string'&&params.action!=='uploadPhoto'){ try{params.data=JSON.parse(params.data);}catch(er){params.data={};} }
+    var a=params.action||'all', pay;
+    switch(a){
+      case 'list':          pay={projects:listProjects_()}; break;
+      case 'customers':     pay={customers:listCustomers_()}; break;
+      case 'contacts':      pay={contacts:listContacts_()}; break;
+      case 'all':           pay={projects:listProjects_(),customers:listCustomers_(),contacts:listContacts_()}; break;
+      case 'reportData':    pay={projects:listProjects_(),workers:listWorkers_(),reports:listReports_(),customers:listCustomers_(),contacts:listContacts_()}; break;
+      case 'workers':       pay={workers:listWorkers_()}; break;
+      case 'reports':       pay={reports:listReports_()}; break;
+      case 'addReport':     pay={report:addReport_(params.data||{})}; break;
+      case 'addReportMulti':pay={reports:addReportMulti_(params.data||{})}; break;
+      case 'updateReport':  pay={report:updateReport_(params.id,params.data||{})}; break;
+      case 'deleteReport':  pay={deleted:deleteReport_(params.id)}; break;
+      case 'ensureFolder':  { var f=getCaseFolder_(params.id); pay={url:f.getUrl(),photoUrl:ensureSub_(f,'写真').getUrl(),fileUrl:ensureSub_(f,'ファイル').getUrl()}; break; }
+      case 'listPhotos':    pay={photos:listPhotos_(params.id)}; break;
+      case 'uploadPhoto':   pay={name:uploadPhoto_(params)}; break; case 'getPhotoB64': pay={b64:getPhotoB64_(params.fileId)}; break; case 'deletePhotos': pay={deleted:deletePhotos_(params.ids)}; break; case 'makeLedgerFiles': pay=makeLedgerFiles_(params); break; case 'photoFolders': pay=listPhotoFolders_(params.id); break; case 'photosByFolder': pay={photos:listPhotosByFolder_(params.fid)}; break;
+      case 'calendarData':  pay={projects:listProjects_(),schedules:listSchedules_(),workers:listWorkers_(),customers:listCustomers_(),contacts:listContacts_()}; break;
+      case 'schedules':     pay={schedules:listSchedules_()}; break;
+      case 'addSchedule':   pay={schedule:addSchedule_(params.data||{})}; break;
+      case 'updateSchedule':pay={schedule:updateSchedule_(params.id,params.data||{})}; break;
+      case 'deleteSchedule':pay={deleted:deleteSchedule_(params.id)}; break;
+      case 'punchData':     pay={workers:listOwnWorkers_(),kintai:kintaiForToday_(params.date)}; break;
+      case 'punch':         pay={kintai:punch_(params.data||{})}; break;
+      case 'kintaiMonth':   pay={kintai:kintaiByMonth_(params.ym)}; break;
+      case 'updateKintai':  pay={kintai:updateKintai_(params.id,params.data||{})}; break;
+      case 'deleteKintai':  needAdmin_(role); pay={deleted:deleteKintai_(params.id)}; break;
+      case 'kintaiByDate':  pay={kintai:kintaiByDate_(params.date)}; break;
+      case 'kintaiRange':   pay={kintai:kintaiRange_(params.from,params.to)}; break;
+      case 'settings':      pay={settings:getSettings_()}; break;
+      case 'holidays':      pay={holidays:getHolidays_(params.from,params.to)}; break;
+      case 'applicationsMine':    pay={apps:applicationsByWorker_(params.wid)}; break;
+      case 'applicationAdd':      pay={app:applicationAdd_(params.data||{})}; break;
+      case 'applicationCancel':   pay={ok:applicationCancelOwn_(params.id,params.wid)}; break;
+      case 'applicationsPending': needAdmin_(role); pay={apps:applicationsPending_()}; break;
+      case 'applicationDecide':   needAdmin_(role); pay=applicationDecide_(params.id,params.decision); break;
+      case 'leaveMine':     pay={leave:leaveMine_(params.wid)}; break;
+      case 'leaveSummary':  needAdmin_(role); pay={rows:leaveSummary_()}; break;
+      case 'leaveAdd':      needAdmin_(role); pay={leave:leaveAdd_(params.data||{})}; break;
+      case 'leaveDelete':   needAdmin_(role); pay={deleted:leaveDelete_(params.id)}; break;
+      case 'saveSettings':  needAdmin_(role); pay={settings:saveSettings_(params.data||{})}; break;
+      case 'kintaiAdd':     pay={kintai:kintaiAdd_(params.data||{})}; break;
+      case 'kintaiDeleteOwn': pay={deleted:kintaiDeleteOwn_(params.id, params.wid)}; break;
+      case 'addProject':    pay={project:addProject_(params.data||{})}; break;   // 誰でも登録可
+      case 'updateProject': pay={project:updateProject_(params.id,params.data||{})}; break;
+      case 'deleteProject': pay={deleted:deleteProject_(params.id)}; break;
+      case 'addCustomer':   needAdmin_(role); pay={customer:addCustomer_(params.data||{})}; break;
+      case 'updateCustomer':needAdmin_(role); pay={customer:updateCustomer_(params.id,params.data||{})}; break;
+      case 'deleteCustomer':needAdmin_(role); pay={deleted:deleteCustomer_(params.id)}; break;
+      case 'addContact':    needAdmin_(role); pay={contact:addContact_(params.data||{})}; break;
+      case 'updateContact': needAdmin_(role); pay={contact:updateContact_(params.id,params.data||{})}; break;
+      case 'deleteContact': needAdmin_(role); pay={deleted:deleteContact_(params.id)}; break;
+      case 'addWorker':     needAdmin_(role); pay={worker:addWorker_(params.data||{})}; break;
+      case 'updateWorker':  needAdmin_(role); pay={worker:updateWorker_(params.id,params.data||{})}; break;
+      case 'deleteWorker':  needAdmin_(role); pay={deleted:deleteWorker_(params.id)}; break;
+      case 'clearAll':      needAdmin_(role); pay={cleared:clearAllData_()}; break;
+      default:              return json_({ok:false,error:'不明なaction: '+a},cb);
+    }
+    return out_(role,pay,cb);
+  }catch(err){ return json_({ok:false,error:String(err)},cb); }
 }
 
-function buildLedgerFiles(fmt){
-  if(!curId){toast('案件を選んでください');return;}
-  var ids=[];document.querySelectorAll('#photos .ph.selected').forEach(function(el){ids.push(el.dataset.id);});
-  if(!ids.length){toast('写真を選択してください');return;}
-  var nm=(document.getElementById('pName')||{}).textContent||'';
-  var box=document.getElementById('ledgerResult'); if(box){box.style.display='none';box.innerHTML='';}
-  toast((fmt==='xlsx'?'エクセル':'PDF')+'を作成中です。少し時間がかかります…'); showLoad();
-  callGAS({action:'makeLedgerFiles',id:curId,ids:ids.join(','),name:nm,fmt:fmt},180000).then(function(res){
-    hideLoad();
-    if(!res||!res.ok){toast('作成に失敗：'+((res&&res.error)||'不明なエラー'));return;}
-    var url=(fmt==='xlsx')?res.xlsxUrl:res.pdfUrl, lbl=(fmt==='xlsx')?'📊 Excelを開く':'📄 PDFを開く';
-    if(box&&url){box.innerHTML='台帳ができました（'+res.n+'枚）<br><a href="'+url+'" target="_blank">'+lbl+'</a><br><span style="color:var(--sub);font-size:12px;">ドライブの「台帳」フォルダにも保存されています。</span>';box.style.display='block';}
-    toast('台帳を作成しました');
-  }).catch(function(err){hideLoad();toast('作成に失敗：'+err.message);});
+function out_(role,pay,cb){
+  if(role==='general'){
+    (pay.projects||[]).forEach(stripProj_); if(pay.project)stripProj_(pay.project);
+    (pay.reports||[]).forEach(stripRep_);  if(pay.report)stripRep_(pay.report);
+    (pay.workers||[]).forEach(stripWk_);   if(pay.worker)stripWk_(pay.worker);
+  } else { (pay.workers||[]).forEach(function(w){delete w['パスワード'];}); if(pay.worker)delete pay.worker['パスワード']; }
+  pay.ok=true; return json_(pay,cb);
 }
-function showPhotos(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;} document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='none'; loadPhotos(); }
-function showLedger(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;}
-  document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='block';
-  document.getElementById('photos').innerHTML='<div class="empty">読込中…</div>';
-  callGAS({action:'photoFolders',id:curId}).then(function(res){
-    var fr=document.getElementById('folderRow'), fs=document.getElementById('folderSel');
-    var folders=(res&&res.folders)||[], rootId=res&&res.rootId;
-    fs.innerHTML='';
-    var o0=document.createElement('option'); o0.value=rootId||''; o0.textContent='写真フォルダ全体'; fs.appendChild(o0);
-    folders.forEach(function(x){var o=document.createElement('option');o.value=x.id;o.textContent=x.name;fs.appendChild(o);});
-    fr.style.display=folders.length?'block':'none';
-    loadCurFolderPhotos();
-  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">フォルダの取得に失敗しました</div>';toast(err.message);});
+function stripProj_(o){ delete o['受注金額税抜']; delete o['受注金額税込']; delete o['実行予算']; return o; }
+function stripRep_(o){ delete o['単価']; delete o['労務費']; return o; }
+function stripWk_(o){ delete o['標準単価']; delete o['パスワード']; delete o['ログインID']; return o; }
+
+function login_(id,pw){ id=String(id||'').trim(); pw=String(pw==null?'':pw); if(!id)return null;
+  var ws=listWorkers_();
+  for(var i=0;i<ws.length;i++){ if(String(ws[i]['ログインID']||'').trim()===id && String(ws[i]['パスワード']==null?'':ws[i]['パスワード'])===pw){
+    return {'作業員ID':ws[i]['作業員ID'],'氏名':ws[i]['氏名'],'区分':ws[i]['区分'],'所属':ws[i]['所属']}; } }
+  return null; }
+
+// ===== 案件 =====
+function listProjects_(){ return readAll_(SHEET_PROJECTS,PROJECT_HEADERS,'案件ID'); }
+function addProject_(data){ var lock=LockService.getScriptLock();lock.waitLock(20000);
+  try{ var sh=sheet_(SHEET_PROJECTS),id=data['案件ID']||newProjectId_(),now=new Date();
+    ensureColumns_(sh,PROJECT_HEADERS);
+    var rec=merge_(blank_(PROJECT_HEADERS),data);rec['案件ID']=id;rec['登録日時']=now;rec['更新日時']=now;
+    sh.appendRow(PROJECT_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));return readObj_(rec);
+  }finally{lock.releaseLock();} }
+function updateProject_(id,data){ var sh=sheet_(SHEET_PROJECTS);ensureColumns_(sh,PROJECT_HEADERS);var r=findRow_(sh,'案件ID',id);if(r<0)throw'案件IDが見つかりません: '+id;
+  var rec=merge_(rowToObj_(sh,r,PROJECT_HEADERS),data);rec['案件ID']=id;rec['更新日時']=new Date();
+  sh.getRange(r,1,1,PROJECT_HEADERS.length).setValues([PROJECT_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';})]);return readObj_(rec); }
+function deleteProject_(id){ var sh=sheet_(SHEET_PROJECTS),r=findRow_(sh,'案件ID',id);if(r<0)return false;sh.deleteRow(r);return true; }
+function newProjectId_(){ var y=new Date().getFullYear(),ids=listProjects_().map(function(o){return String(o['案件ID']||'');}),max=0,re=new RegExp('^'+y+'-(\\d+)$');
+  ids.forEach(function(s){var m=s.match(re);if(m)max=Math.max(max,parseInt(m[1],10));});return y+'-'+('0000'+(max+1)).slice(-4); }
+
+// ===== 取引先（顧客マスタ：区分=企業/官公庁/協力業者）=====
+function listCustomers_(){ return readAll_(SHEET_CUSTOMERS,CUSTOMER_HEADERS,'顧客ID'); }
+function addCustomer_(data){ var sh=sheet_(SHEET_CUSTOMERS);ensureColumns_(sh,CUSTOMER_HEADERS);var now=new Date(),id=data['顧客ID']||uid_('C');
+  var rec=merge_(blank_(CUSTOMER_HEADERS),data);rec['顧客ID']=id;rec['登録日時']=now;
+  sh.appendRow(CUSTOMER_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));return readObj_(rec); }
+function updateCustomer_(id,data){ var sh=sheet_(SHEET_CUSTOMERS);ensureColumns_(sh,CUSTOMER_HEADERS);var r=findRow_(sh,'顧客ID',id);if(r<0)throw'取引先IDが見つかりません: '+id;
+  var rec=merge_(rowToObj_(sh,r,CUSTOMER_HEADERS),data);rec['顧客ID']=id;
+  sh.getRange(r,1,1,CUSTOMER_HEADERS.length).setValues([CUSTOMER_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';})]);return readObj_(rec); }
+function deleteCustomer_(id){ var sh=sheet_(SHEET_CUSTOMERS),r=findRow_(sh,'顧客ID',id);if(r<0)return false;sh.deleteRow(r);return true; }
+
+// ===== 先方担当者マスタ =====
+function listContacts_(){ return readAll_(SHEET_CONTACTS,CONTACT_HEADERS,'担当者ID'); }
+function addContact_(data){ var sh=sheet_(SHEET_CONTACTS);ensureColumns_(sh,CONTACT_HEADERS);var now=new Date(),id=data['担当者ID']||uid_('K');
+  var rec=merge_(blank_(CONTACT_HEADERS),data);rec['担当者ID']=id;rec['登録日時']=now;rec['更新日時']=now;
+  sh.appendRow(CONTACT_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));return readObj_(rec); }
+function updateContact_(id,data){ var sh=sheet_(SHEET_CONTACTS);ensureColumns_(sh,CONTACT_HEADERS);var r=findRow_(sh,'担当者ID',id);if(r<0)throw'担当者IDが見つかりません: '+id;
+  var rec=merge_(rowToObj_(sh,r,CONTACT_HEADERS),data);rec['担当者ID']=id;rec['更新日時']=new Date();
+  sh.getRange(r,1,1,CONTACT_HEADERS.length).setValues([CONTACT_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';})]);return readObj_(rec); }
+function deleteContact_(id){ var sh=sheet_(SHEET_CONTACTS),r=findRow_(sh,'担当者ID',id);if(r<0)return false;sh.deleteRow(r);return true; }
+
+// ===== 作業員 =====
+function listWorkers_(){ return readAll_(SHEET_WORKERS,WORKER_HEADERS,'作業員ID'); }
+function listOwnWorkers_(){ return listWorkers_().filter(function(w){return w['区分']!=='協力会社';}); }
+function uid_(prefix){ return prefix+Date.now().toString(36)+Math.floor(Math.random()*1679616).toString(36); }
+/* 既存の重複・空IDを一意IDに修復（作業員・取引先・先方担当者）。重複した行だけ振り直し、ユニークなIDはそのまま残す。
+ * 編集→デプロイ後にエディタからこの repairIds を1回実行してください。 */
+function repairIds(){ var ss=SpreadsheetApp.getActiveSpreadsheet(),rep=[];
+  [[SHEET_WORKERS,'作業員ID','W'],[SHEET_CUSTOMERS,'顧客ID','C'],[SHEET_CONTACTS,'担当者ID','K']].forEach(function(t){
+    var sh=ss.getSheetByName(t[0]); if(!sh)return; var last=sh.getLastRow(); if(last<2){rep.push(t[0]+':0');return;}
+    var hs=sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0],col=hs.indexOf(t[1])+1; if(col<1){rep.push(t[0]+':列なし');return;}
+    var vals=sh.getRange(2,col,last-1,1).getValues(),seen={},changed=0;
+    for(var i=0;i<vals.length;i++){ var id=String(vals[i][0]||'').trim();
+      if(!id||seen[id]){ id=uid_(t[2]); changed++; } seen[id]=1; vals[i][0]=id; }
+    if(changed)sh.getRange(2,col,last-1,1).setValues(vals);
+    rep.push(t[0]+'：'+changed+'件修正'); });
+  var msg=rep.join(' / '); try{ ss.toast(msg,'ID修復 完了',8); }catch(e){} Logger.log(msg); return msg; }
+function addWorker_(data){ var sh=sheet_(SHEET_WORKERS);ensureColumns_(sh,WORKER_HEADERS);var now=new Date(),id=data['作業員ID']||uid_('W');
+  var rec=merge_(blank_(WORKER_HEADERS),data);rec['作業員ID']=id;rec['登録日時']=now;
+  sh.appendRow(WORKER_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));return readObj_(rec); }
+function updateWorker_(id,data){ var sh=sheet_(SHEET_WORKERS);ensureColumns_(sh,WORKER_HEADERS);var r=findRow_(sh,'作業員ID',id);if(r<0)throw'作業員IDが見つかりません: '+id;
+  var rec=merge_(rowToObj_(sh,r,WORKER_HEADERS),data);rec['作業員ID']=id;
+  sh.getRange(r,1,1,WORKER_HEADERS.length).setValues([WORKER_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';})]);return readObj_(rec); }
+function deleteWorker_(id){ var sh=sheet_(SHEET_WORKERS),r=findRow_(sh,'作業員ID',id);if(r<0)return false;sh.deleteRow(r);return true; }
+function workerRate_(id){ if(!id)return 0; var w=listWorkers_();for(var i=0;i<w.length;i++)if(String(w[i]['作業員ID'])===String(id))return numv_(w[i]['標準単価']);return 0; }
+
+// ===== 作業日報 =====
+function listReports_(){ return readAll_(SHEET_REPORTS,REPORT_HEADERS,'日報ID'); }
+function addReport_(data){ var lock=LockService.getScriptLock();lock.waitLock(20000);
+  try{ var sh=sheet_(SHEET_REPORTS),id=data['日報ID']||newReportId_(),now=new Date();
+    var rec=merge_(blank_(REPORT_HEADERS),data);rec['日報ID']=id;
+    rec['単価']=workerRate_(rec['作業員ID']); rec['労務費']=numv_(rec['人工'])*numv_(rec['単価']);
+    rec['登録日時']=now;rec['更新日時']=now;
+    sh.appendRow(REPORT_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));return readObj_(rec);
+  }finally{lock.releaseLock();} }
+// 複数作業員分の日報を一度に作成（共通項目＋作業員ごとに1行）
+function addReportMulti_(data){ var lock=LockService.getScriptLock();lock.waitLock(30000);
+  try{ var sh=sheet_(SHEET_REPORTS),now=new Date();
+    var ws=(data&&data['_workers'])||[];
+    var common={}; REPORT_HEADERS.forEach(function(h){ if(h!=='_workers'&&data[h]!==undefined)common[h]=data[h]; });
+    var ids=listReports_().map(function(o){return String(o['日報ID']||'');}),max=0;
+    ids.forEach(function(s){var m=s.match(/^R(\d+)$/);if(m)max=Math.max(max,parseInt(m[1],10));});
+    var out=[];
+    ws.forEach(function(w){ max++; var id='R'+('00000'+max).slice(-5);
+      var rec=merge_(blank_(REPORT_HEADERS),common); rec['日報ID']=id;
+      rec['作業員ID']=String(w['作業員ID']||''); rec['氏名']=w['氏名']||''; rec['区分']=w['区分']||''; rec['所属']=w['所属']||'';
+      rec['単価']=workerRate_(rec['作業員ID']); rec['労務費']=numv_(rec['人工'])*numv_(rec['単価']);
+      rec['登録日時']=now; rec['更新日時']=now;
+      sh.appendRow(REPORT_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));
+      out.push(readObj_(rec));
+    });
+    return out;
+  }finally{lock.releaseLock();} }
+function updateReport_(id,data){ var sh=sheet_(SHEET_REPORTS),r=findRow_(sh,'日報ID',id);if(r<0)throw'日報IDが見つかりません: '+id;
+  var rec=merge_(rowToObj_(sh,r,REPORT_HEADERS),data);rec['日報ID']=id;
+  rec['単価']=workerRate_(rec['作業員ID']); rec['労務費']=numv_(rec['人工'])*numv_(rec['単価']); rec['更新日時']=new Date();
+  sh.getRange(r,1,1,REPORT_HEADERS.length).setValues([REPORT_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';})]);return readObj_(rec); }
+function deleteReport_(id){ var sh=sheet_(SHEET_REPORTS),r=findRow_(sh,'日報ID',id);if(r<0)return false;sh.deleteRow(r);return true; }
+function newReportId_(){ var ids=listReports_().map(function(o){return String(o['日報ID']||'');}),max=0;
+  ids.forEach(function(s){var m=s.match(/^R(\d+)$/);if(m)max=Math.max(max,parseInt(m[1],10));});return'R'+('00000'+(max+1)).slice(-5); }
+
+// ===== スケジュール =====
+function listSchedules_(){ return readAll_(SHEET_SCHEDULE,SCHEDULE_HEADERS,'予定ID'); }
+function addSchedule_(data){ var lock=LockService.getScriptLock();lock.waitLock(20000);
+  try{ var sh=sheet_(SHEET_SCHEDULE),id=data['予定ID']||newScheduleId_(),now=new Date();
+    var rec=merge_(blank_(SCHEDULE_HEADERS),data);rec['予定ID']=id;rec['登録日時']=now;rec['更新日時']=now;
+    sh.appendRow(SCHEDULE_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));return readObj_(rec);
+  }finally{lock.releaseLock();} }
+function updateSchedule_(id,data){ var sh=sheet_(SHEET_SCHEDULE),r=findRow_(sh,'予定ID',id);if(r<0)throw'予定IDが見つかりません: '+id;
+  var rec=merge_(rowToObj_(sh,r,SCHEDULE_HEADERS),data);rec['予定ID']=id;rec['更新日時']=new Date();
+  sh.getRange(r,1,1,SCHEDULE_HEADERS.length).setValues([SCHEDULE_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';})]);return readObj_(rec); }
+function deleteSchedule_(id){ var sh=sheet_(SHEET_SCHEDULE),r=findRow_(sh,'予定ID',id);if(r<0)return false;sh.deleteRow(r);return true; }
+function newScheduleId_(){ var ids=listSchedules_().map(function(o){return String(o['予定ID']||'');}),max=0;
+  ids.forEach(function(s){var m=s.match(/^S(\d+)$/);if(m)max=Math.max(max,parseInt(m[1],10));});return'S'+('00000'+(max+1)).slice(-5); }
+
+// ===== 勤怠（タイムカード）=====
+function listKintai_(){ return readAll_(SHEET_KINTAI,KINTAI_HEADERS,'勤怠ID'); }
+function kintaiByDate_(date){ date=String(date||'').slice(0,10); return listKintai_().filter(function(k){return String(k['日付']||'').slice(0,10)===date;}); }
+// 当日分（出勤日=今日）＋ 未退勤の勤務（夜勤の継続中など、日付を問わず）を返す
+function kintaiForToday_(date){ date=String(date||'').slice(0,10); return listKintai_().filter(function(k){
+  var d=String(k['日付']||'').slice(0,10), hasIn=(k['出勤']!==''&&k['出勤']!=null), hasOut=(k['退勤']!==''&&k['退勤']!=null);
+  return d===date || (hasIn&&!hasOut); }); }
+function kintaiByMonth_(ym){ ym=String(ym||'').slice(0,7); return listKintai_().filter(function(k){return String(k['日付']||'').slice(0,7)===ym;})
+  .sort(function(a,b){return (String(a['日付'])+a['氏名']).localeCompare(String(b['日付'])+b['氏名']);}); }
+function toMin_(t){ var m=String(t||'').match(/(\d{1,2}):(\d{2})/); return m?(+m[1]*60+ +m[2]):null; }
+function calcWork_(inT,outT,brk){ var a=toMin_(inT),b=toMin_(outT); if(a==null||b==null)return ''; if(b<a)b+=1440; var w=b-a-numv_(brk); return Math.round(Math.max(0,w)/60*100)/100; }
+// 1行＝1勤務（出勤→退勤のペア）。出勤=新規行を作成、退勤=未退勤の最新行を閉じる。
+function punch_(d){
+  var lock=LockService.getScriptLock();lock.waitLock(20000);
+  try{
+    var sh=sheet_(SHEET_KINTAI), wid=String(d['作業員ID']||''), type=d['種別'], t=String(d['時刻']||'');
+    if(!wid) throw '作業員IDが必要です';
+    var last=sh.getLastRow();
+    var rows = last>=2 ? sh.getRange(2,1,last-1,KINTAI_HEADERS.length).getValues() : [];
+    // この作業員の「未退勤（出勤あり・退勤なし）」の最新行を探す
+    var openIdx=-1, openObj=null;
+    for(var i=0;i<rows.length;i++){ var o={}; KINTAI_HEADERS.forEach(function(h,k){o[h]=rows[i][k];});
+      if(String(o['作業員ID'])!==wid) continue;
+      var hasIn=(o['出勤']!==''&&o['出勤']!=null), hasOut=(o['退勤']!==''&&o['退勤']!=null);
+      if(hasIn&&!hasOut){ openIdx=i+2; openObj=o; } }
+    var now=new Date(), tz=Session.getScriptTimeZone();
+    if(type==='出勤'){
+      if(openIdx>0) throw 'すでに出勤中です。先に退勤してください';
+      var rec=blank_(KINTAI_HEADERS);
+      rec['勤怠ID']=newKintaiId_();
+      rec['日付']=(String(d['日付']||'').slice(0,10))||Utilities.formatDate(now,tz,'yyyy-MM-dd');
+      rec['作業員ID']=wid; if(d['氏名'])rec['氏名']=d['氏名'];
+      rec['出勤']=t; if(d['位置'])rec['出勤位置']=d['位置'];
+      if(d['現場ID']!==undefined){rec['現場ID']=d['現場ID'];rec['現場名']=d['現場名']||'';}
+      if(d['休憩分']!==undefined&&d['休憩分']!=='') rec['休憩分']=d['休憩分'];
+      rec['実働時間']=''; rec['登録日時']=now; rec['更新日時']=now;
+      sh.appendRow(KINTAI_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));
+      try{ updateBookForWorker_(wid); }catch(e){}   // 出勤簿ファイルにも反映（失敗しても打刻は成立）
+      return readObj_(rec);
+    } else if(type==='退勤'){
+      if(openIdx<0) throw '出勤の記録がありません。先に出勤してください';
+      var rec=openObj;
+      rec['退勤']=t; if(d['位置'])rec['退勤位置']=d['位置'];
+      if(d['休憩分']!==undefined&&d['休憩分']!=='') rec['休憩分']=d['休憩分'];
+      rec['実働時間']=calcWork_(fmt_(rec['出勤']),t,rec['休憩分']);
+      rec['更新日時']=now;
+      sh.getRange(openIdx,1,1,KINTAI_HEADERS.length).setValues([KINTAI_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';})]);
+      try{ updateBookForWorker_(wid); }catch(e){}   // 出勤簿ファイルにも反映（失敗しても打刻は成立）
+      return readObj_(rec);
+    } else { throw '種別が不正です'; }
+  }finally{lock.releaseLock();}
 }
-function loadCurFolderPhotos(){
-  var fs=document.getElementById('folderSel'), fid=fs&&fs.value;
-  if(!fid){toast('フォルダがありません');return;}
-  document.getElementById('photos').innerHTML='<div class="empty">読込中…</div>';
-  callGAS({action:'photosByFolder',fid:fid}).then(function(res){ renderPhotos((res&&res.photos)||[]); }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">写真の取得に失敗しました</div>';toast(err.message);});
+function updateKintai_(id,data){ var sh=sheet_(SHEET_KINTAI),r=findRow_(sh,'勤怠ID',id);if(r<0)throw'勤怠IDが見つかりません: '+id;
+  var rec=merge_(rowToObj_(sh,r,KINTAI_HEADERS),data);rec['勤怠ID']=id;
+  rec['実働時間']=calcWork_(rec['出勤'],rec['退勤'],rec['休憩分']); rec['更新日時']=new Date();
+  sh.getRange(r,1,1,KINTAI_HEADERS.length).setValues([KINTAI_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';})]);
+  try{ updateBookForWorker_(rec['作業員ID']); }catch(e){}
+  return readObj_(rec); }
+function deleteKintai_(id){ var sh=sheet_(SHEET_KINTAI),r=findRow_(sh,'勤怠ID',id);if(r<0)return false;
+  var wid=String(rowToObj_(sh,r,KINTAI_HEADERS)['作業員ID']||''); sh.deleteRow(r);
+  try{ updateBookForWorker_(wid); }catch(e){} return true; }
+// 手入力で1勤務を追加（日付・出勤・退勤・休憩を指定。出退勤がそろえば実働を計算）
+function kintaiAdd_(d){
+  var lock=LockService.getScriptLock(); lock.waitLock(20000);
+  try{
+    var sh=sheet_(SHEET_KINTAI), wid=String(d['作業員ID']||''), date=String(d['日付']||'').slice(0,10);
+    if(!wid||!date) throw '作業員と日付が必要です';
+    var rec=blank_(KINTAI_HEADERS); rec['勤怠ID']=newKintaiId_(); rec['日付']=date; rec['作業員ID']=wid; if(d['氏名'])rec['氏名']=d['氏名'];
+    rec['出勤']=String(d['出勤']||''); rec['退勤']=String(d['退勤']||'');
+    rec['休憩分']=(d['休憩分']!==undefined&&d['休憩分']!=='')?d['休憩分']:0;
+    rec['実働時間']=calcWork_(rec['出勤'],rec['退勤'],rec['休憩分']);
+    rec['備考']=String(d['備考']||'手入力'); var now=new Date(); rec['登録日時']=now; rec['更新日時']=now;
+    sh.appendRow(KINTAI_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));
+    try{ updateBookForWorker_(wid); }catch(e){}
+    return readObj_(rec);
+  } finally{ lock.releaseLock(); }
 }
-function loadPhotos(){
-  if(!curId)return;
-  callGAS({action:'listPhotos',id:curId}).then(function(res){
-    if(!res.ok)throw new Error(res.error||'一覧取得失敗');
-    renderPhotos(res.photos||[]);
-  }).catch(function(err){toast('一覧：'+err.message);});
+// 本人の記録だけ削除（作業員IDが一致する場合のみ）
+function kintaiDeleteOwn_(id, wid){
+  var sh=sheet_(SHEET_KINTAI), r=findRow_(sh,'勤怠ID',id); if(r<0) return false;
+  var obj=rowToObj_(sh,r,KINTAI_HEADERS);
+  if(wid && String(obj['作業員ID'])!==String(wid)) throw '他の人の記録は削除できません';
+  sh.deleteRow(r); try{ updateBookForWorker_(wid||obj['作業員ID']); }catch(e){} return true;
 }
-function renderPhotos(arr){
-  document.getElementById('phCount').textContent=arr.length?('（'+arr.length+'枚）'):'';
-  var el=document.getElementById('photos');
-  if(!arr.length){el.innerHTML='<div class="empty">まだ写真がありません。<br>「＋写真を追加」から登録できます。</div>';return;}
-  el.innerHTML='';el.className='grid';
-  arr.forEach(function(f){
-    var a=document.createElement('div');a.className='ph';a.id='ph_'+f.id;a.dataset.id=f.id;a.onclick=function(){togglePhSel(this);};
-    var img=document.createElement('img');img.loading='lazy';
-    img.src='https://drive.google.com/thumbnail?id='+f.id+'&sz=w300';
-    img.onerror=function(){a.innerHTML='<span class="fallback">🖼</span><span class="cap">'+esc(f.name)+'</span>';};
-    a.appendChild(img);
-    var cap=document.createElement('span');cap.className='cap';cap.textContent=f.name;a.appendChild(cap);
-    el.appendChild(a);
-  });
+function newKintaiId_(){ var ids=listKintai_().map(function(o){return String(o['勤怠ID']||'');}),max=0;
+  ids.forEach(function(s){var m=s.match(/^K(\d+)$/);if(m)max=Math.max(max,parseInt(m[1],10));});return'K'+('00000'+(max+1)).slice(-5); }
+// 締日など期間指定で勤怠を取得（from〜to を含む）
+function kintaiRange_(from,to){ from=String(from||'').slice(0,10); to=String(to||'').slice(0,10);
+  return listKintai_().filter(function(k){var d=String(k['日付']||'').slice(0,10); return d&&d>=from&&d<=to;})
+    .sort(function(a,b){return (String(a['日付'])+(a['氏名']||'')).localeCompare(String(b['日付'])+(b['氏名']||''));}); }
+// 勤怠の計算ルール（設定シート：キー／値）。未設定キーは既定値で補完
+function getSettings_(){ var sh=sheet_(SHEET_SETTINGS),last=sh.getLastRow(),o={};
+  for(var k in SETTINGS_DEFAULT){ if(SETTINGS_DEFAULT.hasOwnProperty(k))o[k]=SETTINGS_DEFAULT[k]; }
+  if(last>=2){ var rows=sh.getRange(2,1,last-1,2).getValues();
+    for(var i=0;i<rows.length;i++){ var key=String(rows[i][0]||'').trim(); if(key)o[key]=String(rows[i][1]==null?'':rows[i][1]); } }
+  return o; }
+function saveSettings_(data){ var sh=sheet_(SHEET_SETTINGS),last=sh.getLastRow(),map={};
+  if(last>=2){ var keys=sh.getRange(2,1,last-1,1).getValues();
+    for(var i=0;i<keys.length;i++){ var k=String(keys[i][0]||'').trim(); if(k)map[k]=i+2; } }
+  for(var key in data){ if(!data.hasOwnProperty(key))continue; var val=String(data[key]==null?'':data[key]);
+    if(map[key]) sh.getRange(map[key],2).setValue(val); else sh.appendRow([String(key),val]); }
+  return getSettings_(); }
+// 祝日（内閣府の公開CSV：Shift_JIS）。全件を6時間キャッシュし、from〜toで返す
+function getHolidays_(from,to){ from=String(from||'').slice(0,10); to=String(to||'').slice(0,10);
+  var cache=null; try{cache=CacheService.getScriptCache();}catch(e){}
+  var map=null, cached=cache?cache.get('jp_holidays'):null;
+  if(cached){ try{map=JSON.parse(cached);}catch(e){map=null;} }
+  if(!map){ map={};
+    var urls=['https://www8.cao.go.jp/chosei/shukujitsu/syukujitsu.csv','https://www8.cao.go.jp/chosei/shukujitsu/shukujitsu.csv'];
+    for(var u=0;u<urls.length;u++){
+      try{ var res=UrlFetchApp.fetch(urls[u],{muteHttpExceptions:true,followRedirects:true});
+        if(res.getResponseCode()===200){ var txt=res.getBlob().getDataAsString('Shift_JIS'); var rows=Utilities.parseCsv(txt);
+          for(var i=1;i<rows.length;i++){ var r=rows[i]; if(!r||!r[0])continue;
+            var m=String(r[0]).match(/(\d{4})\/(\d{1,2})\/(\d{1,2})/); if(!m)continue;
+            var key=m[1]+'-'+('0'+m[2]).slice(-2)+'-'+('0'+m[3]).slice(-2); map[key]=String(r[1]||'祝日').trim(); }
+          if(Object.keys(map).length){ if(cache)cache.put('jp_holidays',JSON.stringify(map),21600); break; } }
+      }catch(e){} } }
+  var out={}; for(var k in map){ if(map.hasOwnProperty(k)&&(!from||k>=from)&&(!to||k<=to))out[k]=map[k]; }
+  return out; }
+
+/* ===== 申請・承認ワークフロー ===== */
+function listApplications_(){ return readAll_(SHEET_APPLICATIONS,APPLICATION_HEADERS,'申請ID'); }
+function newAppId_(){ var ids=listApplications_().map(function(o){return String(o['申請ID']||'');}),max=0;
+  ids.forEach(function(s){var m=s.match(/^A(\d+)$/);if(m)max=Math.max(max,parseInt(m[1],10));});return'A'+('00000'+(max+1)).slice(-5); }
+function applicationsByWorker_(wid){ wid=String(wid||''); return listApplications_().filter(function(a){return String(a['作業員ID'])===wid;})
+  .sort(function(a,b){return String(b['申請日時']).localeCompare(String(a['申請日時']));}); }
+function applicationsPending_(){ return listApplications_().filter(function(a){return String(a['状態'])==='申請中';})
+  .sort(function(a,b){return String(a['申請日時']).localeCompare(String(b['申請日時']));}); }
+function applicationAdd_(d){ var lock=LockService.getScriptLock(); lock.waitLock(20000);
+  try{ var sh=sheet_(SHEET_APPLICATIONS), wid=String(d['作業員ID']||''); if(!wid) throw '作業員IDが必要です';
+    var type=String(d['種別']||''); if(!type) throw '種別を選んでください';
+    var rec=blank_(APPLICATION_HEADERS); rec['申請ID']=newAppId_(); rec['申請日時']=new Date();
+    rec['作業員ID']=wid; rec['氏名']=String(d['氏名']||''); rec['種別']=type;
+    rec['対象日']=String(d['対象日']||'').slice(0,10); rec['詳細']=String(d['詳細']||'');
+    rec['修正_出勤']=String(d['修正_出勤']||''); rec['修正_退勤']=String(d['修正_退勤']||'');
+    rec['修正_休憩分']=(d['修正_休憩分']!==undefined&&d['修正_休憩分']!=='')?d['修正_休憩分']:'';
+    rec['状態']='申請中'; rec['処理日時']='';
+    sh.appendRow(APPLICATION_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));
+    return readObj_(rec);
+  } finally{ lock.releaseLock(); } }
+function applicationCancelOwn_(id,wid){ var sh=sheet_(SHEET_APPLICATIONS), r=findRow_(sh,'申請ID',id); if(r<0) return false;
+  var app=rowToObj_(sh,r,APPLICATION_HEADERS);
+  if(wid && String(app['作業員ID'])!==String(wid)) throw '他の人の申請は取り消せません';
+  if(String(app['状態'])!=='申請中') throw '処理済みの申請は取り消せません';
+  sh.deleteRow(r); return true; }
+function applicationDecide_(id,decision){ var lock=LockService.getScriptLock(); lock.waitLock(20000);
+  try{ var sh=sheet_(SHEET_APPLICATIONS), r=findRow_(sh,'申請ID',id); if(r<0) throw '申請が見つかりません: '+id;
+    var app=rowToObj_(sh,r,APPLICATION_HEADERS);
+    if(String(app['状態'])!=='申請中') throw 'この申請はすでに処理済みです';
+    var dec=(decision==='承認')?'承認':'却下', applied=null;
+    if(dec==='承認'){ var ty=String(app['種別']);
+      if(ty==='打刻修正') applied=applyPunchFix_(app);
+      else if(ty==='有給休暇'||ty==='代休') applied=applyLeaveToSchedule_(app);
+    }
+    app['状態']=dec; app['処理日時']=new Date();
+    sh.getRange(r,1,1,APPLICATION_HEADERS.length).setValues([APPLICATION_HEADERS.map(function(h){return app[h]!==undefined?app[h]:'';})]);
+    return {app:readObj_(app), result:applied};
+  } finally{ lock.releaseLock(); } }
+// 打刻修正の承認 → 勤怠へ反映（その日の行があれば更新、なければ作成）
+function applyPunchFix_(app){
+  var wid=String(app['作業員ID']||''), date=String(app['対象日']||'').slice(0,10); if(!wid||!date) return null;
+  var inT=String(app['修正_出勤']||''), outT=String(app['修正_退勤']||'');
+  var brk=(app['修正_休憩分']!==undefined&&app['修正_休憩分']!=='')?app['修正_休憩分']:0;
+  var sh=sheet_(SHEET_KINTAI), last=sh.getLastRow(), foundRow=-1;
+  if(last>=2){ var rows=sh.getRange(2,1,last-1,KINTAI_HEADERS.length).getValues();
+    for(var i=0;i<rows.length;i++){ var o={}; KINTAI_HEADERS.forEach(function(h,k){o[h]=rows[i][k];});
+      if(String(o['作業員ID'])===wid && String(o['日付']).slice(0,10)===date){ foundRow=i+2; break; } } }
+  var now=new Date();
+  if(foundRow>0){ var rec=rowToObj_(sh,foundRow,KINTAI_HEADERS);
+    if(inT)rec['出勤']=inT; if(outT)rec['退勤']=outT; rec['休憩分']=brk;
+    rec['実働時間']=calcWork_(rec['出勤'],rec['退勤'],rec['休憩分']); rec['更新日時']=now;
+    sh.getRange(foundRow,1,1,KINTAI_HEADERS.length).setValues([KINTAI_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';})]);
+    try{ updateBookForWorker_(wid); }catch(e){} return readObj_(rec);
+  } else {
+    var nr=blank_(KINTAI_HEADERS); nr['勤怠ID']=newKintaiId_(); nr['日付']=date; nr['作業員ID']=wid; nr['氏名']=String(app['氏名']||'');
+    nr['出勤']=inT; nr['退勤']=outT; nr['休憩分']=brk; nr['実働時間']=calcWork_(inT,outT,brk);
+    nr['備考']='打刻修正(申請承認)'; nr['登録日時']=now; nr['更新日時']=now;
+    sh.appendRow(KINTAI_HEADERS.map(function(h){return nr[h]!==undefined?nr[h]:'';}));
+    try{ updateBookForWorker_(wid); }catch(e){} return readObj_(nr);
+  } }
+// 有給・代休の承認 → スケジュール（カレンダー）に終日予定として登録
+function applyLeaveToSchedule_(app){
+  var date=String(app['対象日']||'').slice(0,10); if(!date) return null;
+  var type=String(app['種別']||''), wid=String(app['作業員ID']||''), ryaku='';
+  try{ var ws=listWorkers_(); for(var i=0;i<ws.length;i++){ if(String(ws[i]['作業員ID'])===wid){ ryaku=String(ws[i]['略称']||ws[i]['氏名']||''); break; } } }catch(e){}
+  if(!ryaku)ryaku=String(app['氏名']||'');
+  var sh=sheet_(SHEET_SCHEDULE), now=new Date();
+  var rec=blank_(SCHEDULE_HEADERS); rec['予定ID']=newScheduleId_(); rec['日付']=date; rec['予定内容']=type; rec['区分']='その他';
+  rec['担当']=ryaku; rec['備考']='申請承認'; rec['登録日時']=now; rec['更新日時']=now;
+  sh.appendRow(SCHEDULE_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));
+  return readObj_(rec);
 }
 
-function bdToday(){var d=new Date();function z(n){return(n<10?'0':'')+n;}return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());}
-function bdSan(s){return String(s||'').replace(/[\\\/:*?"<>|]/g,'').replace(/\s+/g,'').slice(0,40);}
-function toggleBoard(){var f=document.getElementById('bdFields');if(f)f.style.display=document.getElementById('bdOn').checked?'block':'none';}
-function bdFileName(file){var on=document.getElementById('bdOn')&&document.getElementById('bdOn').checked;
- if(on){var kd=bdSan(document.getElementById('bdKind').value);var dv=(document.getElementById('bdDate').value||bdToday()).replace(/-/g,'');return [kd||'写真',dv,(''+Date.now()).slice(-6)].join('_')+'.jpg';}
- return (file.name||('photo_'+Date.now())).replace(/\.[^.]+$/,'')+'.jpg';}
-function drawBoard(ctx,cw,ch){
- var pj=(projects.filter(function(x){return x['案件ID']===curId;})[0]||{});
- var v=function(id){return (document.getElementById(id).value||'').trim();};
- var rows=[['工事名',(pj['案件名']||'').trim()],['工種',v('bdKind')],['内容',v('bdMemo')],['日付',(v('bdDate')||bdToday()).replace(/-/g,'/')]].filter(function(r){return r[1];});
- var fs=Math.max(13,Math.round(cw*0.03)),lh=Math.round(fs*1.5),pad=Math.round(fs*0.6),lw=Math.round(fs*3.4),F='"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
- ctx.font='bold '+fs+'px '+F;var mv=0;rows.forEach(function(r){mv=Math.max(mv,ctx.measureText(r[1]).width);});
- var bW=Math.min(Math.round(cw*0.78),lw+Math.ceil(mv)+pad*3),vM=bW-lw-pad*2,bH=pad*2+rows.length*lh,x=pad,y=ch-bH-pad,bw=Math.max(2,Math.round(fs*0.12));
- ctx.fillStyle='rgba(15,61,46,0.84)';ctx.fillRect(x,y,bW,bH);
- ctx.lineWidth=bw;ctx.strokeStyle='rgba(255,255,255,0.9)';ctx.strokeRect(x+bw/2,y+bw/2,bW-bw,bH-bw);
- ctx.textBaseline='top';
- rows.forEach(function(r,i){var ry=y+pad+i*lh;
-  ctx.font=Math.round(fs*0.86)+'px '+F;ctx.fillStyle='rgba(220,255,235,0.95)';ctx.fillText(r[0],x+pad,ry+Math.round(fs*0.08));
-  ctx.font='bold '+fs+'px '+F;ctx.fillStyle='#fff';var t=r[1];
-  while(t.length>1&&ctx.measureText(t).width>vM)t=t.slice(0,-1);if(t!==r[1]&&t.length>1)t=t.slice(0,-1)+'…';
-  ctx.fillText(t,x+lw,ry);});
+/* ===== 有給休暇 ===== */
+function listLeave_(){ return readAll_(SHEET_LEAVE,LEAVE_HEADERS,'記録ID'); }
+function newLeaveId_(){ var ids=listLeave_().map(function(o){return String(o['記録ID']||'');}),max=0;
+  ids.forEach(function(s){var m=s.match(/^L(\d+)$/);if(m)max=Math.max(max,parseInt(m[1],10));});return'L'+('00000'+(max+1)).slice(-5); }
+// 承認済みの有給休暇（取得＝1件1日として数える）
+function approvedLeave_(){ return listApplications_().filter(function(a){return String(a['種別'])==='有給休暇'&&String(a['状態'])==='承認';}); }
+function leaveAdd_(d){ var lock=LockService.getScriptLock(); lock.waitLock(20000);
+  try{ var sh=sheet_(SHEET_LEAVE), wid=String(d['作業員ID']||''); if(!wid) throw '作業員を選んでください';
+    var rec=blank_(LEAVE_HEADERS); rec['記録ID']=newLeaveId_(); rec['作業員ID']=wid; rec['氏名']=String(d['氏名']||'');
+    rec['区分']=String(d['区分']||'付与'); rec['日付']=String(d['日付']||'').slice(0,10); rec['日数']=numv_(d['日数']);
+    rec['メモ']=String(d['メモ']||''); rec['登録日時']=new Date();
+    sh.appendRow(LEAVE_HEADERS.map(function(h){return rec[h]!==undefined?rec[h]:'';}));
+    return readObj_(rec);
+  } finally{ lock.releaseLock(); } }
+function leaveDelete_(id){ var sh=sheet_(SHEET_LEAVE), r=findRow_(sh,'記録ID',id); if(r<0) return false; sh.deleteRow(r); return true; }
+// 全員の残数（付与・調整の合計 − 承認済み有給の件数）
+function leaveSummary_(){ var workers=listWorkers_(), leave=listLeave_(), used=approvedLeave_(), grantBy={}, usedBy={};
+  leave.forEach(function(l){ var w=String(l['作業員ID']); grantBy[w]=(grantBy[w]||0)+numv_(l['日数']); });
+  used.forEach(function(a){ var w=String(a['作業員ID']); usedBy[w]=(usedBy[w]||0)+1; });
+  return workers.map(function(w){ var id=String(w['作業員ID']), g=grantBy[id]||0, u=usedBy[id]||0;
+    return {作業員ID:id, 氏名:String(w['氏名']||((w['氏']||'')+(w['名']||''))), 付与:g, 取得:u, 残:Math.round((g-u)*10)/10}; }); }
+// 本人の有給（残数＋付与/調整明細＋取得明細）
+function leaveMine_(wid){ wid=String(wid||'');
+  var leave=listLeave_().filter(function(l){return String(l['作業員ID'])===wid;});
+  var used=approvedLeave_().filter(function(a){return String(a['作業員ID'])===wid;});
+  var g=0; leave.forEach(function(l){g+=numv_(l['日数']);}); var u=used.length;
+  return {granted:Math.round(g*10)/10, used:u, balance:Math.round((g-u)*10)/10,
+    grants:leave.sort(function(a,b){return String(b['日付']).localeCompare(String(a['日付']));}),
+    usedList:used.sort(function(a,b){return String(b['対象日']).localeCompare(String(a['対象日']));})}; }
+
+// ===== ドライブ =====
+function getParent_(){ var it=DriveApp.getFoldersByName(PARENT_FOLDER_NAME);return it.hasNext()?it.next():DriveApp.createFolder(PARENT_FOLDER_NAME); }
+function ensureSub_(folder,name){ var it=folder.getFoldersByName(name);return it.hasNext()?it.next():folder.createFolder(name); }
+function extractFolderId_(url){ if(!url)return'';var m=String(url).match(/[-\w]{25,}/);return m?m[0]:''; }
+function getCaseFolder_(id){ if(!id)throw'案件IDが空です';
+  var sh=sheet_(SHEET_PROJECTS),r=findRow_(sh,'案件ID',id);if(r<0)throw'案件IDが見つかりません: '+id;
+  var obj=rowToObj_(sh,r,PROJECT_HEADERS),fid=extractFolderId_(obj['Driveフォルダ']),folder=null;
+  if(fid){try{folder=DriveApp.getFolderById(fid);}catch(e){folder=null;}}
+  if(!folder){ // 種別 → 顧客 → 案件名 の順でフォルダを作成
+    var parent=getParent_();
+    var kind=String(obj['種別']||'').trim()||'未分類';
+    var cust=String(obj['顧客']||'').trim()||'未分類';
+    var name=String(obj['案件名']||'').trim()||id;
+    var kf=ensureSub_(parent,kind), cf=ensureSub_(kf,cust);
+    var it=cf.getFoldersByName(name); folder=it.hasNext()?it.next():cf.createFolder(name);
+    setProjectField_(sh,r,'Driveフォルダ',folder.getUrl()); }
+  // 現場フォルダの中身：ファイル／図面／書類／写真 の4つ（既にあれば再利用）
+  ensureSub_(folder,'ファイル');
+  ensureSub_(folder,'図面');
+  ensureSub_(folder,'書類');
+  var photo=ensureSub_(folder,'写真');
+  // 写真の中：調査／施工／完了
+  ensureSub_(photo,'調査');
+  ensureSub_(photo,'施工');
+  ensureSub_(photo,'完了');
+  return folder; }
+function getPhotoFolder_(id){ return ensureSub_(getCaseFolder_(id),'写真'); }
+function getFileFolder_(id){ return ensureSub_(getCaseFolder_(id),'ファイル'); }
+function setProjectField_(sh,r,header,value){ var hs=sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0],c=hs.indexOf(header)+1;if(c>0)sh.getRange(r,c).setValue(value); }
+function listPhotos_(id){ var pf=getPhotoFolder_(id),it=pf.getFiles(),out=[];while(it.hasNext()){var f=it.next();out.push({name:f.getName(),id:f.getId(),url:f.getUrl()});}out.sort(function(a,b){return a.name<b.name?1:-1;});return out; }
+function uploadPhoto_(p){ var pf=(p.dest==='file')?getFileFolder_(p.id):getPhotoFolder_(p.id);var blob=Utilities.newBlob(Utilities.base64Decode(p.data),p.mime||'image/jpeg',p.name||('photo_'+Date.now()+'.jpg'));var nf=pf.createFile(blob);try{nf.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);}catch(e){}return nf.getName(); }function getPhotoB64_(fileId){ try{var f=DriveApp.getFileById(fileId);return Utilities.base64Encode(f.getBlob().getBytes());}catch(e){return '';} }
+function deletePhotos_(ids){ var arr=String(ids||'').split(',').filter(function(x){return x;}),n=0; for(var i=0;i<arr.length;i++){ try{DriveApp.getFileById(arr[i]).setTrashed(true);n++;}catch(e){} } return n; }
+
+// ===== 共通 =====
+function headersFor_(name){ switch(name){
+  case SHEET_PROJECTS: return PROJECT_HEADERS; case SHEET_CUSTOMERS: return CUSTOMER_HEADERS;
+  case SHEET_WORKERS:  return WORKER_HEADERS;  case SHEET_REPORTS:   return REPORT_HEADERS;
+  case SHEET_SCHEDULE: return SCHEDULE_HEADERS; case SHEET_KINTAI:    return KINTAI_HEADERS;
+  case SHEET_CONTACTS: return CONTACT_HEADERS;  case SHEET_SETTINGS:  return SETTINGS_HEADERS;
+  case SHEET_APPLICATIONS: return APPLICATION_HEADERS;  case SHEET_LEAVE: return LEAVE_HEADERS;  default: return null; } }
+/* 全データ削除：各シートの見出し行（1行目）は残し、データ行をすべて削除（写真・ファイル等のDriveは対象外）*/
+function clearAllData_(){
+  var names=[SHEET_PROJECTS,SHEET_CUSTOMERS,SHEET_CONTACTS,SHEET_WORKERS,SHEET_REPORTS,SHEET_SCHEDULE,SHEET_KINTAI];
+  var out={};
+  names.forEach(function(n){ var sh=sheet_(n),last=sh.getLastRow(),rows=Math.max(0,last-1);
+    if(rows>0)sh.deleteRows(2,rows); out[n]=rows; });
+  return out;
 }
-function ledgerCover(nm){
- var W=1240,H=1754,c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
- var F='"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
- x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#14532d';x.fillRect(0,0,W,20);x.fillRect(0,H-20,W,20);
- x.textAlign='center';x.fillStyle='#1f2733';x.font='bold 66px '+F;x.fillText('工事写真台帳',W/2,H*0.30);
- x.font='bold 40px '+F;x.fillText(nm||'',W/2,H*0.42);
- x.font='28px '+F;x.fillStyle='#6b7280';x.fillText('作成日　'+bdToday().replace(/-/g,'/'),W/2,H*0.52);
- x.font='bold 32px '+F;x.fillStyle='#1f2733';x.fillText('河口電機',W/2,H*0.60);
- return c.toDataURL('image/jpeg',0.9);
+function sheet_(name){ var ss=SpreadsheetApp.getActiveSpreadsheet(),sh=ss.getSheetByName(name);
+  if(!sh){ sh=ss.insertSheet(name); var hs=headersFor_(name);
+    if(hs){ sh.getRange(1,1,1,hs.length).setValues([hs]).setFontWeight('bold'); sh.setFrozenRows(1); } }
+  return sh; }
+function readAll_(name,headers,keyCol){ var sh=sheet_(name),last=sh.getLastRow();if(last<2)return[];
+  var nc=Math.min(headers.length, sh.getLastColumn());   // シートの実列数を超えて読まない（列追加直後のエラー防止）
+  return sh.getRange(2,1,last-1,nc).getValues().map(function(row){var o={};headers.forEach(function(h,i){o[h]=fmt_(row[i]);});return o;}).filter(function(o){return String(o[keyCol]||'')!=='';}); }
+function rowToObj_(sh,r,headers){ var row=sh.getRange(r,1,1,headers.length).getValues()[0],o={};headers.forEach(function(h,i){o[h]=fmt_(row[i]);});return o; }
+function findRow_(sh,header,value){ var hs=sh.getRange(1,1,1,sh.getLastColumn()).getValues()[0],col=hs.indexOf(header)+1;if(col<1)return-1;var last=sh.getLastRow();if(last<2)return-1;
+  var vals=sh.getRange(2,col,last-1,1).getValues();for(var i=0;i<vals.length;i++)if(String(vals[i][0])===String(value))return i+2;return-1; }
+function blank_(headers){ var o={};headers.forEach(function(h){o[h]='';});return o; }
+function merge_(a,b){ var o={};for(var k in a)o[k]=a[k];for(var k2 in b)if(b[k2]!==undefined)o[k2]=b[k2];return o; }
+function readObj_(rec){ var o={};for(var k in rec)o[k]=fmt_(rec[k]);return o; }
+function numv_(v){ var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN(n)?0:n; }
+function fmt_(v){ if(v instanceof Date){var tz=Session.getScriptTimeZone();
+  if(v.getFullYear()<1900) return Utilities.formatDate(v,tz,'HH:mm');   // 時刻のみの値（シート基準日1899-12-30）は時刻だけ返す
+  var t=v.getHours()||v.getMinutes()||v.getSeconds();return Utilities.formatDate(v,tz,t?'yyyy-MM-dd HH:mm':'yyyy-MM-dd');}return v; }
+function json_(obj,cb){ var s=JSON.stringify(obj);if(cb)return ContentService.createTextOutput(cb+'('+s+')').setMimeType(ContentService.MimeType.JAVASCRIPT);return ContentService.createTextOutput(s).setMimeType(ContentService.MimeType.JSON); }
+
+// ===== 出勤簿（別ファイル：社員ごと1シート）=====
+// 「現場管理DB」とは別の Google スプレッドシート（＝出勤簿ファイル）に、社員ごと1シートで出力します。
+// ・初回：メニュー「▶勤怠 → 出勤簿ファイルを更新（全員）」を1回実行すると出勤簿ファイルが作られます。
+// ・以後：打刻のたびに、その社員のシートが自動で最新化されます（開けば最新）。
+// ・全員を一括で作り直すのも上記メニュー。URLは「出勤簿ファイルを開く」で確認できます。
+// ★出勤簿ファイルは自動生成です。手で編集しても次回更新時に上書きされます。元データは「勤怠」シート。
+var BOOK_FILE_NAME='出勤簿（河口電機）';
+function bookProps_(){ return PropertiesService.getScriptProperties(); }
+function getBookSS_(){
+  var pid=bookProps_().getProperty('BOOK_SS_ID');
+  if(pid){ try{ return SpreadsheetApp.openById(pid); }catch(e){} }   // ファイルが消えていたら作り直す
+  var ss=SpreadsheetApp.create(BOOK_FILE_NAME); bookProps_().setProperty('BOOK_SS_ID', ss.getId()); return ss;
 }
-function makeLedger(){
-  if(!curId){toast('案件を選んでください');return;}
-  var sd={};
-  document.querySelectorAll('#photos .ph.selected').forEach(function(el){sd[el.dataset.id]=1;});
-  if(!Object.keys(sd).length){toast('写真を選択してください');return;}
-  if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF機能の読込に失敗しました');return;}
-  if(!confirm('選択した写真で台帳を作成します。\n作成後、その写真は一覧から削除（ゴミ箱へ移動）します。\nよろしいですか？'))return;
-  showLoad();
-  callGAS({action:'listPhotos',id:curId}).then(function(lp){
-    var all=(lp&&lp.photos)||[];
-    var sel=all.filter(function(x){return sd[x.id];});
-    sel.sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));});
-    if(!sel.length){hideLoad();toast('写真を選択してください');return;}
-    var nm=(document.getElementById('pName')||{}).textContent||'';
-    var doc=new window.jspdf.jsPDF('p','mm','a4');
-    try{doc.addImage(ledgerCover(nm),'JPEG',0,0,210,297);}catch(e){}
-    var M=10,rows=3,per=rows;
-    var cellW=210-M*2,cellH=(297-M*2)/rows,capH=9,gap=3,imgH=cellH-capH-gap;
-    var SC=5,fail=0,okIds=[];
-    function step(i){
-      if(i>=sel.length){
-        var saved=false;
-        try{doc.save((nm||'写真台帳')+'_写真台帳.pdf');saved=true;}catch(e){}
-        hideLoad();
-        if(saved&&okIds.length){
-          callGAS({action:'deletePhotos',ids:okIds.join(',')}).then(function(){loadPhotos();}).catch(function(){loadPhotos();});
-          toast('台帳を作成し、'+okIds.length+'枚をゴミ箱へ移動しました'+(fail?'（'+fail+'枚は取得失敗）':''));
-        }else{
-          toast(saved?'台帳を作成しました':'台帳の作成に失敗しました');
-        }
-        return;
+function onOpen(){
+  try{ SpreadsheetApp.getUi().createMenu('▶勤怠')
+        .addItem('出勤簿ファイルを更新（全員）','menuRebuildBookFile')
+        .addItem('出勤簿ファイルを開く（URL表示）','menuOpenBookFile')
+        .addToUi(); }catch(e){}
+}
+function menuRebuildBookFile(){ var r=rebuildBookFile_();
+  try{ SpreadsheetApp.getUi().alert('出勤簿ファイルを更新しました（'+r.n+'名）。\n\n下のURLを開いてください（ブックマーク推奨）：\n'+r.url); }catch(e){} }
+function menuOpenBookFile(){ var ss=getBookSS_();
+  try{ SpreadsheetApp.getUi().alert('出勤簿ファイルのURL：\n\n'+ss.getUrl()); }catch(e){} }
+
+function rebuildBookFile_(){
+  var book=getBookSS_();
+  var ws=listWorkers_(); ws.sort(function(a,b){return (numv_(a['表示順'])||9999)-(numv_(b['表示順'])||9999);});
+  var all=listKintai_(), keep={};
+  for(var i=0;i<ws.length;i++){ keep[buildBookSheet_(book, ws[i], all)]=true; }
+  cleanupBookSheets_(book, keep);
+  return {url:book.getUrl(), n:ws.length};
+}
+function updateBookForWorker_(wid){
+  var pid=bookProps_().getProperty('BOOK_SS_ID'); if(!pid) return;   // 出勤簿ファイル未作成なら何もしない
+  var book; try{ book=SpreadsheetApp.openById(pid); }catch(e){ return; }
+  var w=listWorkers_().filter(function(x){return String(x['作業員ID'])===String(wid);})[0]; if(!w) return;
+  buildBookSheet_(book, w, listKintai_());
+}
+function cleanupBookSheets_(book, keep){
+  var sheets=book.getSheets(), del=[];
+  for(var i=0;i<sheets.length;i++){ if(!keep[sheets[i].getName()]) del.push(sheets[i]); }   // 社員シート以外（既定のシート1・空タブ・改名前の古いタブ等）
+  for(var j=0;j<del.length;j++){ if(book.getSheets().length<=1) break; try{ book.deleteSheet(del[j]); }catch(e){} }   // 最低1シートは残す
+}
+function bookSheetName_(w){ var nm=String(w['氏名']||'').replace(/[:\\\/\?\*\[\]]/g,' ').trim(); if(!nm)nm=String(w['作業員ID']||'?'); return nm.slice(0,95); }
+
+function isRestDay_(y,mo,day){ var d=new Date(y,mo-1,day).getDay(); return d===0||d===6; }  // 土日を休日扱い（祝日は含めない）
+function minToHM_(min){ min=Math.round(min); if(min<0)min=0; var h=Math.floor(min/60), m=min%60; return h+':'+('0'+m).slice(-2); }
+function overlapNight_(a,b){ var W=[[0,300],[1320,1440],[1440,1740],[2760,2880]],t=0;   // 深夜=22:00〜翌5:00
+  for(var i=0;i<W.length;i++){ var s=Math.max(a,W[i][0]), e=Math.min(b,W[i][1]); if(e>s)t+=e-s; } return t; }
+// 緯度経度→住所（逆ジオコーディング）。同じ地点はScriptPropertiesにキャッシュして繰り返し検索を防ぐ。
+function cleanAddr_(a){ return String(a||'').replace(/^日本[、,]?\s*/,'').replace(/^〒?\s*\d{3}-?\d{4}\s*/,'').trim(); }  // 「日本、」と郵便番号を除去
+function getAddress_(latlng){ latlng=String(latlng||'').trim(); if(!latlng)return '';
+  var m=latlng.match(/(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/); if(!m)return '';
+  var key='GEO_'+m[1].replace('.','_').slice(0,12)+'_'+m[2].replace('.','_').slice(0,12);
+  var p=bookProps_(); var c=null; try{ c=p.getProperty(key); }catch(e){}
+  if(c!=null) return cleanAddr_(c);   // 既存キャッシュにも整形を適用（郵便番号を消す）
+  var addr=''; try{ var g=Maps.newGeocoder().setLanguage('ja').reverseGeocode(parseFloat(m[1]),parseFloat(m[2]));
+    if(g&&g.results&&g.results.length){ addr=String(g.results[0].formatted_address||''); } }catch(e){ addr=''; }
+  try{ p.setProperty(key, addr); }catch(e){} return cleanAddr_(addr); }
+// 位置セル＝Googleマップへのリンク（表示は住所、なければ座標）
+function mapsCell_(latlng){ latlng=String(latlng||'').trim(); if(!latlng)return '';
+  var m=latlng.match(/(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)/); if(!m)return '';
+  var url='https://www.google.com/maps?q='+m[1]+','+m[2];
+  var label=(getAddress_(latlng)||latlng).replace(/"/g,'""'); return '=HYPERLINK("'+url+'","'+label+'")'; }
+
+// 月次タイムシート（社員ごと1シートに、月ブロックを新しい月から縦に並べる）。純粋関数。位置はlocsで返す。
+// ★残業/深夜/休日の区分は標準ルールの目安です（所定8h/日・深夜22:00〜5:00・休日=土日）。会社の規定に合わせて要調整。
+// ★欠勤/遅刻/早退/有給は打刻からは判定できないため空欄です。
+function bookMatrix_(w, rows){
+  var wid=String(w['作業員ID']||''), name=String(w['氏名']||''), dept=String(w['所属']||w['区分']||'');
+  var YOUBI=['日','月','火','水','木','金','土'];
+  var HEAD=['日','勤怠','曜日','出勤時刻','退勤時刻','休憩','勤務時間','普通残業時間','深夜残業時間','休日労働時間','休日深夜労働時間','備考','出勤位置','退勤位置'];
+  var C=HEAD.length, values=[], types=[], locs=[];
+  function pad(a){ while(a.length<C)a.push(''); return a; }
+  function push(row,type,loc){ values.push(pad(row.slice())); types.push(type); locs.push(loc||null); }
+  push(['出勤簿　'+name+'（'+wid+'）'],'title');
+  var byDay={};
+  rows.forEach(function(k){ if(String(k['作業員ID'])!==wid)return; var d=String(k['日付']||'').slice(0,10);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(d))return; (byDay[d]=byDay[d]||[]).push(k); });
+  var months={}; Object.keys(byDay).forEach(function(d){months[d.slice(0,7)]=true;});
+  var monthKeys=Object.keys(months).sort().reverse();
+  if(!monthKeys.length){ push(['（打刻データがありません）'],'empty'); return {values:values,types:types,locs:locs,C:C}; }
+  monthKeys.forEach(function(mk,mi){
+    var y=+mk.slice(0,4), mo=+mk.slice(5,7);
+    if(mi>0) push([''],'blank');
+    push([y+'年 '+mo+'月'],'month');
+    push(['社員番号',wid,'氏名',name,'所属',dept],'emp');
+    var totW=0,totOT=0,totNW=0,totHW=0,totHN=0,cSh=0,cKy=0, dayRows=[], last=new Date(y,mo,0).getDate();
+    for(var day=1; day<=last; day++){
+      var ds=mk+'-'+('0'+day).slice(-2), dow=YOUBI[new Date(y,mo-1,day).getDay()];
+      var list=(byDay[ds]||[]).slice().sort(function(a,b){return String(a['出勤']||'').localeCompare(String(b['出勤']||''));});
+      if(!list.length){ dayRows.push({row:[mo+'/'+day,'',dow,'','','','','','','','','','',''], loc:null}); continue; }
+      var hasInDay=false, cumWorked=0;   // 1日の所定8h(=480分)を各勤務に順番に配分して普通残業を出す
+      for(var si=0; si<list.length; si++){
+        var s=list[si], sIn=s['出勤']||'', sOut=s['退勤']||'', sInLoc=s['出勤位置']||'', sOutLoc=s['退勤位置']||'';
+        var hasIn=sIn!==''; if(hasIn)hasInDay=true;
+        var a=toMin_(sIn), bRaw=toMin_(sOut), sWorked=0, sNight=0, crossed=false, open=(hasIn&&sOut==='');
+        if(a!=null&&bRaw!=null){ var b=bRaw; if(b<a){b+=1440;crossed=true;} sWorked=Math.max(0,b-a-numv_(s['休憩分'])); sNight=overlapNight_(a,b); }
+        var regBefore=Math.min(cumWorked,480), regAfter=Math.min(cumWorked+sWorked,480), sOT=sWorked-(regAfter-regBefore), sNW=sNight;
+        cumWorked+=sWorked;
+        totW+=sWorked; totOT+=sOT; totNW+=sNW;
+        var note=[]; if(crossed)note.push('夜勤'); if(open)note.push('未退勤');
+        dayRows.push({row:[mo+'/'+day,'出勤',dow,sIn,sOut,minToHM_(numv_(s['休憩分'])),
+          (sWorked>0?minToHM_(sWorked):''),(sOT>0?minToHM_(sOT):''),(sNW>0?minToHM_(sNW):''),'','',
+          note.join('・'),'',''], loc:{in:sInLoc,out:sOutLoc}});
       }
-      if(i%per===0)doc.addPage();
-      var pos=i%per,x=M,y=M+pos*cellH;
-      callGAS({action:'getPhotoB64',fileId:sel[i].id}).then(function(res){
-        if(!res||!res.ok||!res.b64){fail++;return step(i+1);}
-        var im=new Image();
-        im.onload=function(){
-          var cwp=Math.round(cellW*SC),ihp=Math.round(imgH*SC),chp=Math.round(capH*SC);
-          var cv=document.createElement('canvas');cv.width=cwp;cv.height=ihp+chp;
-          var g=cv.getContext('2d');
-          g.fillStyle='#fff';g.fillRect(0,0,cwp,ihp+chp);
-          var r=(im.naturalWidth/im.naturalHeight)||1.333,w=cwp,h=w/r;
-          if(h>ihp){h=ihp;w=h*r;}
-          g.drawImage(im,(cwp-w)/2,(ihp-h)/2,w,h);
-          g.fillStyle='#0f3d2e';g.fillRect(0,ihp,cwp,chp);
-          g.fillStyle='#fff';g.textBaseline='middle';
-          var fp=Math.round(chp*0.46);
-          g.font='bold '+fp+'px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
-          var cap=sel[i].name||'';
-          while(cap.length>1&&g.measureText(cap).width>cwp-24)cap=cap.slice(0,-1);
-          g.fillText(cap,14,ihp+chp/2);
-          try{doc.addImage(cv.toDataURL('image/jpeg',0.85),'JPEG',x,y,cellW,imgH+capH);okIds.push(sel[i].id);}catch(e){fail++;}
-          step(i+1);
-        };
-        im.onerror=function(){fail++;step(i+1);};
-        im.src='data:image/jpeg;base64,'+res.b64;
-      }).catch(function(){fail++;step(i+1);});
+      if(hasInDay)cSh++;
     }
-    step(0);
-  }).catch(function(){hideLoad();toast('写真の取得に失敗しました');});
+    push(['出勤日数','欠勤日数','遅刻日数','早退日数','休日出勤','有給休暇'],'cnthdr');
+    push([cSh,'','','',cKy,''],'cntval');
+    push(['勤務時間','普通残業時間','深夜残業時間','休日労働時間','休日深夜労働時間'],'timehdr');
+    push([minToHM_(totW),minToHM_(totOT),minToHM_(totNW),minToHM_(totHW),minToHM_(totHN)],'timeval');
+    push([''],'blank');
+    push(HEAD.slice(),'head');
+    dayRows.forEach(function(d){ push(d.row,'day',d.loc); });
+  });
+  return {values:values, types:types, locs:locs, C:C};
 }
-function delSelected(){var ids=[];document.querySelectorAll('#photos .ph.selected').forEach(function(el){ids.push(el.dataset.id);});if(!ids.length){toast('写真を選択してください');return;}if(!confirm('選択した'+ids.length+'枚をゴミ箱に移動します。よろしいですか？'))return;callGAS({action:'deletePhotos',ids:ids.join(',')}).then(function(res){toast(((res&&res.deleted)||0)+'枚をゴミ箱に移動しました');loadPhotos();}).catch(function(){toast('削除に失敗しました');});}function togglePhSel(e){e.classList.toggle('selected');var n=document.querySelectorAll('#photos .ph.selected').length,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function selAll(b){document.querySelectorAll('#photos .ph').forEach(function(e){b?e.classList.add('selected'):e.classList.remove('selected');});var n=b?document.querySelectorAll('#photos .ph').length:0,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function pickFiles(){ if(!folderReady){toast('フォルダ準備中です。少し待ってください');return;} document.getElementById('file').click(); }
-document.getElementById('file').addEventListener('change',function(e){ var fs=e.target.files; if(fs&&fs.length)uploadAll(fs); this.value=''; });
 
-function uploadAll(files){
-  var arr=Array.prototype.slice.call(files),done=0,fail=0,i=0;
-  var prog=document.getElementById('prog');prog.style.display='block';
-  function next(){
-    if(i>=arr.length){
-      prog.textContent='アップロード完了（'+done+'件'+(fail?'／失敗'+fail:'')+'）';
-      setTimeout(function(){prog.style.display='none';},4000);
-      toast('ドライブに保存しました（'+done+'件）');
-      return;
-    }
-    var file=arr[i++];
-    prog.textContent='送信中… '+i+'/'+arr.length;
-    if((file.type||'').indexOf('image')===0){
-      resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
-        return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',name:file.name,mime:'image/jpeg',data:dataUrl.split(',')[1]});
-      }).then(function(){done++;next();}).catch(function(){fail++;next();});
-    }else{
-      readB64(file).then(function(b64){
-        return postNoCors({action:'uploadPhoto',id:curId,dest:'file',name:file.name,mime:file.type||'application/octet-stream',data:b64});
-      }).then(function(){done++;next();}).catch(function(){fail++;next();});
+function buildBookSheet_(book, w, allKintai){
+  var name=bookSheetName_(w);
+  var sh=book.getSheetByName(name);
+  if(sh){ try{ sh.getRange(1,1,sh.getMaxRows(),3).breakApart(); }catch(e){} sh.clear(); } else { sh=book.insertSheet(name); }
+  var m=bookMatrix_(w, allKintai), V=m.values, T=m.types, L=m.locs, C=m.C, R=V.length;
+  sh.getRange(1,1,R,12).setNumberFormat('@');     // 1〜12列は文字列（時刻/日付の自動変換を防ぐ）※書き込み前に指定
+  sh.getRange(1,1,R,C).setValues(V);
+  var loc=[]; for(var i=0;i<R;i++){ loc.push(T[i]==='day'&&L[i] ? [mapsCell_(L[i].in),mapsCell_(L[i].out)] : [V[i][12],V[i][13]]); }
+  sh.getRange(1,13,R,2).setValues(loc);            // 出勤位置・退勤位置＝Googleマップへのリンク（住所表示）。日付行以外は見出し等の元の値を保持
+  var bg=[],fw=[],fc=[];
+  for(var r=0;r<R;r++){ var t=T[r], dark=(t==='head'||t==='cnthdr'||t==='timehdr'), rb='#ffffff', bold=false;
+    if(t==='title'){ rb='#2bb6a0'; bold=true; }
+    else if(t==='month'){ rb='#d6f1ea'; bold=true; }
+    else if(dark){ rb='#374151'; bold=true; }
+    else if(t==='cntval'||t==='timeval'){ rb='#f3f7f6'; bold=true; }
+    else if(t==='emp'){ rb='#eef2f5'; }
+    else if(t==='day'){ var dw=V[r][2]; rb = dw==='日'?'#fdecec':(dw==='土'?'#eaf2fb':'#ffffff'); }
+    var BR=[],BF=[],CF=[];
+    for(var c=0;c<C;c++){ BR.push(rb); BF.push(bold?'bold':'normal');
+      var col=(dark||t==='title')?'#ffffff':'#2b323c';
+      if(t==='day'&&c===2){ var d2=V[r][2]; col=d2==='日'?'#dd2222':(d2==='土'?'#2a6fb5':'#2b323c'); }
+      CF.push(col); }
+    bg.push(BR); fw.push(BF); fc.push(CF);
+  }
+  var rng=sh.getRange(1,1,R,C);
+  rng.setBackgrounds(bg); rng.setFontWeights(fw); rng.setFontColors(fc); rng.setVerticalAlignment('middle');
+  sh.getRange(1,1,R,12).setHorizontalAlignment('center');
+  sh.getRange(1,13,R,2).setHorizontalAlignment('left');
+  sh.getRange(1,1).setHorizontalAlignment('left').setFontSize(13);
+  for(var r2=0;r2<R;r2++){
+    if(T[r2]==='head'){ sh.getRange(r2+1,4,1,2).setBackground('#e2574c');   // 出勤時刻・退勤時刻を赤
+      var e=r2; while(e+1<R&&T[e+1]==='day')e++;
+      sh.getRange(r2+1,1,e-r2+1,C).setBorder(true,true,true,true,true,true,'#c8ced6',SpreadsheetApp.BorderStyle.SOLID); }
+    if(T[r2]==='emp'){ sh.getRange(r2+1,1,5,6).setBorder(true,true,true,true,true,true,'#c8ced6',SpreadsheetApp.BorderStyle.SOLID); }
+  }
+  // 同じ日に複数行ある場合、日付・勤怠・曜日のセルを縦結合して1つにまとめる
+  var rr=0;
+  while(rr<R){ if(T[rr]==='day'){ var st=rr, dt=V[rr][0];
+      while(rr+1<R && T[rr+1]==='day' && V[rr+1][0]===dt) rr++;
+      if(rr-st+1>=2 && dt!=='') sh.getRange(st+1,1,rr-st+1,3).mergeVertically(); rr++;
+    } else rr++; }
+  var widths=[52,64,40,66,66,54,72,86,86,86,98,90,230,230];
+  for(var cw=0;cw<widths.length;cw++) sh.setColumnWidth(cw+1, widths[cw]);
+  sh.setFrozenRows(1);
+  return name;
+}
+
+// ===== 工事写真台帳（テンプレートに写真貼付→Excel/PDF出力）=====
+function ymd_(){ return Utilities.formatDate(new Date(), Session.getScriptTimeZone()||'Asia/Tokyo','yyyy-MM-dd'); }
+
+function findTemplate_(){
+  var TPL_ID='';
+  if(TPL_ID){ try{return DriveApp.getFileById(TPL_ID);}catch(e){} }
+  var it=DriveApp.searchFiles('title contains "工事写真台帳" and title contains "テンプレート" and mimeType="application/vnd.google-apps.spreadsheet" and trashed=false');
+  if(it.hasNext()) return it.next();
+  return buildDefaultTemplate_();
+}
+
+function findPhotoSlots_(sheet){
+  var merges=sheet.getMergedRanges(), slots=[];
+  for(var i=0;i<merges.length;i++){
+    var r=merges[i], v=String(r.getCell(1,1).getValue()||'');
+    if(v.indexOf('ここに写真')>=0){ slots.push({row:r.getRow(),col:r.getColumn(),nr:r.getNumRows(),nc:r.getNumColumns()}); }
+  }
+  slots.sort(function(a,b){return (a.row-b.row)||(a.col-b.col);});
+  return slots;
+}
+
+function clearSlot_(sheet,s){ try{sheet.getRange(s.row,s.col).setValue('');}catch(e){} }
+
+function photoBlob_(id, token){
+  try{
+    var u='https://drive.google.com/thumbnail?id='+id+'&sz=w1600';
+    var r=UrlFetchApp.fetch(u,{headers:{Authorization:'Bearer '+token}, muteHttpExceptions:true});
+    if(r.getResponseCode()===200){ var b=r.getBlob(); if(String(b.getContentType()||'').indexOf('image')===0 && b.getBytes().length>1500) return b; }
+  }catch(e){}
+  return DriveApp.getFileById(id).getBlob();
+}
+
+function placePhoto_(sheet,s,blob){
+  sheet.getRange(s.row,s.col).setValue('');
+  var aw=0,ah=0,c,r;
+  for(c=s.col;c<s.col+s.nc;c++) aw+=sheet.getColumnWidth(c);
+  for(r=s.row;r<s.row+s.nr;r++) ah+=sheet.getRowHeight(r);
+  var pad=6, fw=aw-pad*2, fh=ah-pad*2;
+  var img=sheet.insertImage(blob, s.col, s.row);
+  var iw=img.getWidth()||4, ih=img.getHeight()||3;
+  var sc=Math.min(fw/iw, fh/ih); if(sc>3)sc=3; if(!(sc>0))sc=1;
+  var w=Math.max(1,Math.round(iw*sc)), h=Math.max(1,Math.round(ih*sc));
+  img.setWidth(w).setHeight(h);
+  img.setAnchorCellXOffset(Math.max(0,Math.round((aw-w)/2)));
+  img.setAnchorCellYOffset(Math.max(0,Math.round((ah-h)/2)));
+}
+
+function setByLabel_(sheet,label,val){
+  var data=sheet.getDataRange().getValues(), key=String(label).replace(/\s/g,'');
+  for(var r=0;r<data.length;r++){ for(var c=0;c<data[r].length;c++){
+    if(String(data[r][c]).replace(/\s/g,'')===key){ try{sheet.getRange(r+1,c+2).setValue(val);}catch(e){} return; }
+  } }
+}
+
+function makeLedgerFiles_(p){
+  var ids=String(p.ids||'').split(',').filter(function(x){return x;});
+  if(!ids.length) throw '写真が選択されていません';
+  var name=String(p.name||'')||p.id;
+  var tpl=findTemplate_();
+  var token=ScriptApp.getOAuthToken();
+  var outName='工事写真台帳_'+name+'_'+ymd_();
+  var dest=ensureSub_(getCaseFolder_(p.id),'台帳');
+  var outFile=tpl.makeCopy(outName, dest);
+  var ss=SpreadsheetApp.openById(outFile.getId());
+  var page=ss.getSheets()[0];
+  var per=findPhotoSlots_(page).length||3;
+  var pages=Math.ceil(ids.length/per);
+  page.setName('1'); var pg=[page];
+  for(var i=1;i<pages;i++){ var cp=page.copyTo(ss); cp.setName(String(i+1)); pg.push(cp); }
+  for(var pi=0;pi<pages;pi++){
+    var sh=pg[pi];
+    setByLabel_(sh,'工事名',name); setByLabel_(sh,'作成日',ymd_());
+    var slots=findPhotoSlots_(sh);
+    for(var si=0;si<slots.length;si++){
+      var idx=pi*per+si;
+      if(idx>=ids.length){ clearSlot_(sh,slots[si]); continue; }
+      try{ placePhoto_(sh,slots[si], photoBlob_(ids[idx],token)); }catch(e){ clearSlot_(sh,slots[si]); }
     }
   }
-  next();
-}
-function readB64(file){ return new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){ res(String(r.result).split(',')[1]); }; r.onerror=function(){rej(new Error('読込失敗'));}; r.readAsDataURL(file); }); }
-function resizeImage(file,max,q){
-  return new Promise(function(res,rej){
-    var img=new Image(),url=URL.createObjectURL(file);
-    img.onload=function(){ var w=img.width,h=img.height,s=Math.min(1,max/Math.max(w,h));
-      var cw=Math.max(1,Math.round(w*s)),ch=Math.max(1,Math.round(h*s));
-      var c=document.createElement('canvas');c.width=cw;c.height=ch;var ctx=c.getContext('2d');ctx.drawImage(img,0,0,cw,ch);
-      if(document.getElementById('bdOn')&&document.getElementById('bdOn').checked){try{drawBoard(ctx,cw,ch);}catch(e){}}
-      URL.revokeObjectURL(url); try{res(c.toDataURL('image/jpeg',q));}catch(e){rej(e);} };
-    img.onerror=function(){URL.revokeObjectURL(url);rej(new Error('画像読込失敗'));}; img.src=url;
-  });
+  SpreadsheetApp.flush();
+  var fmt=String(p.fmt||'both');
+  var base='https://docs.google.com/spreadsheets/d/'+outFile.getId()+'/export';
+  var opt={headers:{Authorization:'Bearer '+token}, muteHttpExceptions:true};
+  var out={name:outName, n:ids.length};
+  if(fmt==='xlsx'||fmt==='both'){
+    var xb=UrlFetchApp.fetch(base+'?format=xlsx',opt).getBlob().setName(outName+'.xlsx');
+    var xf=dest.createFile(xb); try{xf.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);}catch(e){} out.xlsxUrl=xf.getUrl();
+  }
+  if(fmt==='pdf'||fmt==='both'){
+    var pp='?format=pdf&size=A4&portrait=true&fitw=true&gridlines=false&sheetnames=false&printtitle=false&pagenumbers=false&fzr=false&top_margin=0.4&bottom_margin=0.4&left_margin=0.4&right_margin=0.4';
+    var pb=UrlFetchApp.fetch(base+pp,opt).getBlob().setName(outName+'.pdf');
+    var pf=dest.createFile(pb); try{pf.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW);}catch(e){} out.pdfUrl=pf.getUrl();
+  }
+  try{outFile.setTrashed(true);}catch(e){}
+  return out;
 }
 
-function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
+function listPhotoFolders_(id){
+  var pf=getPhotoFolder_(id), out=[];
+  try{ if(pf.getSharingAccess()!==DriveApp.Access.ANYONE_WITH_LINK) pf.setSharing(DriveApp.Access.ANYONE_WITH_LINK,DriveApp.Permission.VIEW); }catch(e){}
+  collectFolders_(pf,'',out,0);
+  return {rootId:pf.getId(), rootName:pf.getName(), folders:out};
+}
+function collectFolders_(folder, prefix, out, depth){
+  if(depth>6 || out.length>200) return;
+  var it=folder.getFolders(), arr=[];
+  while(it.hasNext()) arr.push(it.next());
+  arr.sort(function(a,b){return a.getName()<b.getName()?-1:1;});
+  for(var i=0;i<arr.length;i++){
+    var f=arr[i], nm=(prefix?prefix+' / ':'')+f.getName();
+    out.push({id:f.getId(), name:nm});
+    collectFolders_(f, nm, out, depth+1);
+    if(out.length>200) return;
+  }
+}
+function listPhotosByFolder_(fid){
+  var f=DriveApp.getFolderById(fid), out=[];
+  collectPhotos_(f, out, 0);
+  out.sort(function(a,b){return a.name<b.name?1:-1;});
+  return out;
+}
+function collectPhotos_(folder, out, depth){
+  if(depth>6 || out.length>500) return;
+  var it=folder.getFiles();
+  while(it.hasNext()){ var x=it.next(); if(String(x.getMimeType()||'').indexOf('image')===0){ out.push({name:x.getName(), id:x.getId(), url:x.getUrl()}); if(out.length>500) return; } }
+  var fit=folder.getFolders();
+  while(fit.hasNext()){ collectPhotos_(fit.next(), out, depth+1); if(out.length>500) return; }
+}
 
-try{document.getElementById('bdDate').value=bdToday();}catch(e){}
-try{projects=JSON.parse(localStorage.getItem(CACHE)||'[]');buildSel();}catch(e){}
-loadProjects();
-</script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-</body>
-</html>
+function buildDefaultTemplate_(){
+  var ss=SpreadsheetApp.create('工事写真台帳テンプレート');
+  var sh=ss.getSheets()[0]; sh.setName('台帳');
+  var cw=[90,120,150,90,120,100];
+  for(var c=0;c<cw.length;c++) sh.setColumnWidth(c+1, cw[c]);
+  sh.getRange('A1:F1').merge().setValue('工事写真台帳').setFontSize(18).setFontWeight('bold').setHorizontalAlignment('center').setBackground('#D97B12').setFontColor('#FFFFFF');
+  sh.setRowHeight(1,34);
+  sh.getRange('A3').setValue('工事名'); sh.getRange('B3:F3').merge();
+  sh.getRange('A4').setValue('施工場所'); sh.getRange('B4:C4').merge(); sh.getRange('D4').setValue('工期'); sh.getRange('E4:F4').merge();
+  sh.getRange('A5').setValue('作成日'); sh.getRange('B5:C5').merge(); sh.getRange('D5').setValue('施工業者'); sh.getRange('E5:F5').merge().setValue('河口電機');
+  var lbls=sh.getRangeList(['A3','A4','D4','A5','D5']); lbls.setBackground('#F3E0C5').setFontWeight('bold').setHorizontalAlignment('center');
+  var base=7;
+  for(var b=0;b<3;b++){
+    var n=b+1, cap=base, p1=base+1, p2=base+12, com=base+13;
+    sh.getRange(cap,1).setValue('No.'+n).setFontWeight('bold');
+    sh.getRange(cap,2).setValue('工種').setFontWeight('bold'); sh.getRange(cap,3).merge();
+    sh.getRange(cap,4).setValue('撮影日').setFontWeight('bold'); sh.getRange(cap,5,1,2).merge();
+    sh.getRange(p1,1,p2-p1+1,6).merge().setValue('（ここに写真'+n+'が入ります）').setHorizontalAlignment('center').setVerticalAlignment('middle').setFontColor('#999999');
+    for(var r=p1;r<=p2;r++) sh.setRowHeight(r,15);
+    sh.getRange(com,1).setValue('内容・状況').setFontWeight('bold').setBackground('#F3E0C5'); sh.getRange(com,2,1,5).merge();
+    sh.setRowHeight(com,26);
+    sh.getRange(cap,1,com-cap+1,6).setBorder(true,true,true,true,true,true);
+    base=com+2;
+  }
+  sh.getRange('A3:F5').setBorder(true,true,true,true,true,true);
+  sh.setHiddenGridlines(true);
+  SpreadsheetApp.flush();
+  return DriveApp.getFileById(ss.getId());
+}
