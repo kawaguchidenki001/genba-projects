@@ -54,17 +54,19 @@
   .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
   @keyframes sp{to{transform:rotate(360deg);}}
   .lbox .txt{font-size:14px;font-weight:700;}
-  /* 危険な操作（全データ削除）*/
-  #sec-danger{margin-top:30px;border-top:1px solid var(--line);padding-top:16px;}
-  .danger-ttl{color:#b91c1c;}
-  .danger-box{border:1px solid #f3c0bd;background:#fff5f4;border-radius:12px;padding:14px;}
+  /* 全データ削除の確認ポップアップ用 */
   .danger-txt{font-size:13px;color:#7f1d1d;margin:0 0 12px;line-height:1.6;}
-  .btn-danger{width:100%;padding:13px;border:none;border-radius:11px;background:#dc2626;color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
-  .btn-danger:active{background:#b91c1c;}
   /* グリッドレイアウト */
   .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
   @media(max-width:600px){.grid-3{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:400px){.grid-3{grid-template-columns:1fr;}}
+  /* ヘッダーのデータ削除ボタン */
+  .ghost.danger-ghost{border-color:rgba(255,170,170,.55);background:rgba(220,50,50,.28);}
+  .ghost.danger-ghost:active{background:rgba(220,50,50,.45);}
+  /* 中央配置モーダル（確認ポップアップ）*/
+  .ov-center{align-items:center;}
+  .ov-center .sheet{width:auto;max-width:380px;border-radius:16px;margin:0 16px;}
+  .ov-center .sheet h2{text-align:center;}
 </style>
 </head>
 <body>
@@ -74,7 +76,10 @@
     <span id="who" style="font-size:12px;color:#d1d5db;"></span>
   </div>
   <div class="hd-row" style="margin-top:6px;"><h1>管理画面</h1>
-    <button class="ghost" id="logoutBtn" style="display:none;" onclick="adminLogout()">ログアウト</button>
+    <div style="display:flex;gap:8px;">
+      <button class="ghost danger-ghost" id="clearBtn" style="display:none;" onclick="openClearModal()">データ削除</button>
+      <button class="ghost" id="logoutBtn" style="display:none;" onclick="adminLogout()">ログアウト</button>
+    </div>
   </div>
 </header>
 
@@ -105,15 +110,6 @@
   <div id="sec-contact" style="display:none;">
     <div class="sec">先方担当者マスタ（取引先ごとの担当者）</div>
     <div id="listK"><div class="empty">読込中…</div></div>
-  </div>
-
-  <!-- 全データ削除 -->
-  <div id="sec-danger">
-    <div class="sec danger-ttl">全データを削除します</div>
-    <div class="danger-box">
-      <p class="danger-txt">案件・取引先・先方担当者・作業員・作業日報・スケジュール・勤怠を完全に削除します。<b>元に戻せません。</b><br>※ 写真・ファイル（Google Drive内）は削除されません。</p>
-      <div style="text-align:center;"><button class="btn-danger" onclick="clearAllData()" style="width:auto;padding:13px 32px;">🗑 データを削除</button></div>
-    </div>
   </div>
 </main>
 
@@ -190,6 +186,19 @@
   </div>
 </div>
 
+<!-- 全データ削除 確認ポップアップ -->
+<div class="ov ov-center" id="ovDel">
+  <div class="sheet">
+    <div style="font-size:40px;text-align:center;line-height:1;margin-bottom:8px;">⚠️</div>
+    <h2 style="color:#b91c1c;margin-top:0;">全データを削除します</h2>
+    <p class="danger-txt" style="text-align:center;">案件・取引先・先方担当者・作業員・作業日報・スケジュール・勤怠を完全に削除します。<b>元に戻せません。</b><br>※ 写真・ファイル（Google Drive内）は削除されません。</p>
+    <div class="acts">
+      <button class="btn sub" onclick="closeClearModal()">キャンセル</button>
+      <button class="btn primary" id="delConfirmBtn" style="background:#dc2626;" onclick="doClearAll()">削除する</button>
+    </div>
+  </div>
+</div>
+
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
@@ -215,8 +224,8 @@ function callGAS(params,secretOverride){
   });
 }
 
-function showGate(){document.getElementById('gate').style.display='block';document.getElementById('content').style.display='none';document.getElementById('fab').style.display='none';document.getElementById('logoutBtn').style.display='none';document.getElementById('who').textContent='';}
-function showContent(){document.getElementById('gate').style.display='none';document.getElementById('content').style.display='block';document.getElementById('fab').style.display='block';document.getElementById('logoutBtn').style.display='inline-block';document.getElementById('who').textContent='管理者';}
+function showGate(){document.getElementById('gate').style.display='block';document.getElementById('content').style.display='none';document.getElementById('fab').style.display='none';document.getElementById('logoutBtn').style.display='none';document.getElementById('clearBtn').style.display='none';document.getElementById('who').textContent='';}
+function showContent(){document.getElementById('gate').style.display='none';document.getElementById('content').style.display='block';document.getElementById('fab').style.display='block';document.getElementById('logoutBtn').style.display='inline-block';document.getElementById('clearBtn').style.display='inline-block';document.getElementById('who').textContent='管理者';}
 
 function init(){
   if(!admTok()){showGate();return;}
@@ -299,16 +308,14 @@ function delWorker(ev){
 }
 
 function loadAll(){ loadWorkers(); loadCustomers(); loadContacts(); }
-function clearAllData(){
-  if(!confirm('全データ（案件・取引先・先方担当者・作業員・作業日報・スケジュール・勤怠）を完全に削除します。\nこの操作は元に戻せません。本当によろしいですか？'))return;
-  var t=prompt('確認のため「削除」と入力してください。');
-  if(t===null)return;
-  if(String(t).trim()!=='削除'){toast('「削除」と入力されなかったため中止しました');return;}
+function openClearModal(){document.getElementById('ovDel').classList.add('show');}
+function closeClearModal(){document.getElementById('ovDel').classList.remove('show');}
+function doClearAll(){
+  var btn=document.getElementById('delConfirmBtn');btn.disabled=true;btn.textContent='削除中…';
   callGAS({action:'clearAll'}).then(function(res){
     if(!res||!res.ok)throw new Error((res&&res.error)||'削除に失敗しました');
-    toast('全データを削除しました');
-    loadAll();
-  }).catch(function(err){toast('失敗：'+err.message);});
+    closeClearModal();toast('全データを削除しました');loadAll();
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='削除する';});
 }
 function switchTab(t){ curTab=t;
   ['worker','partner','contact'].forEach(function(x){
@@ -435,7 +442,7 @@ function numv(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN
 function yen(v){var n=numv(v);return n?('¥'+Math.round(n).toLocaleString('ja-JP')):'';}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
-['ov','ovp','ovk'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
+['ov','ovp','ovk','ovDel'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
 init();
 </script>
 </body>
