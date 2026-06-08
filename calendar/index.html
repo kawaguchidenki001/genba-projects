@@ -95,6 +95,19 @@
   .dc-link{background:#f1f3f6;color:#475569;border:1px solid #e1e5ea;}
   .dc-del{background:#fdeaea;color:#d32f2f;border:1px solid #f5cccc;}
   .pastebar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#eef4ff;border:1px solid #cfe0fb;border-radius:10px;padding:8px 10px;margin-bottom:10px;}
+  /* 期間ドラッグ選択（PC・マウス）*/
+  .cell.rangesel{background:#ece7fb;box-shadow:inset 0 0 0 2px var(--accent);}
+  .cell.dim.rangesel{background:#e6e1f5;}
+  #grid.dragging{-webkit-user-select:none;user-select:none;}
+  .rangebar{position:fixed;left:50%;transform:translateX(-50%);bottom:70px;z-index:55;display:none;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);box-shadow:0 8px 24px rgba(20,30,50,.20);border-radius:12px;padding:8px 12px;max-width:calc(100% - 20px);}
+  .rangebar.show{display:flex;flex-wrap:wrap;}
+  .rangebar .rb-info{font-weight:700;font-size:14px;color:var(--ink);}
+  .rangebar .rb-hint{font-size:12px;color:var(--sub);}
+  .rangebar .rb-acts{display:flex;gap:8px;margin-left:auto;}
+  .rangebar button{border:none;border-radius:9px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer;}
+  .rangebar .rb-paste{background:var(--accent);color:#fff;}
+  .rangebar .rb-new{background:#eef1f5;color:var(--ink);}
+  .rangebar .rb-x{background:#f3f4f6;color:#6b7280;padding:9px 11px;}
   .pb-info{font-size:12.5px;color:#1e3a8a;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .pb-acts{display:flex;gap:6px;flex:0 0 auto;}
   .pb-paste{background:#2563eb;color:#fff;border:none;border-radius:9px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;}
@@ -230,6 +243,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
+<div class="rangebar" id="rangeBar"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -321,6 +335,7 @@ function setMode(m){ viewMode=m;
   render(); }
 
 function render(){
+  hideRangeBar();
   var lbl=periodLabel();
   document.getElementById('ym').textContent=lbl;
   document.getElementById('capPeriod').textContent=lbl;
@@ -345,6 +360,7 @@ function renderMonth(){
     var d=new Date(start);d.setDate(start.getDate()+i);var ds=ymd(d),inM=d.getMonth()===cur.getMonth(),dow=d.getDay();
     var holN=holidays[ds]||'';
     var cell=document.createElement('div');cell.className='cell'+(inM?'':' dim')+(ds===today?' today':'')+(dow===0?' sun':'')+(dow===6?' sat':'')+(holN?' hol':'');
+    cell.setAttribute('data-idx',i);cell.setAttribute('data-ds',ds);
     cell.onclick=(function(x){return function(){openDay(x);};})(ds);
     var html='<div class="dnum">'+d.getDate()+'</div>'+(holN?'<div class="holname">'+esc(holN)+'</div>':''),evs=eventsOn(ds);
     for(var j=0;j<evs.length;j++){var e=evs[j];
@@ -384,7 +400,7 @@ function renderAgenda(numDays){
   for(var c=0;c<rows.length;c++){(function(r){r.onclick=function(){openDay(r.getAttribute('data-ds'));};})(rows[c]);}
 }
 
-function openDay(ds){ window._selDate=ds;
+function openDay(ds){ window._selDate=ds; hideRangeBar();
   var d=new Date(ds);document.getElementById('dayTitle').textContent=(d.getMonth()+1)+'月'+d.getDate()+'日（'+'日月火水木金土'[d.getDay()]+'）'+(holidays[ds]?' ・'+holidays[ds]:'');
   var evs=eventsOn(ds),el=document.getElementById('dayList');
   var pb=pasteBarHtml();
@@ -439,6 +455,55 @@ function pasteBarHtml(){ if(!clip)return '';
   return '<div class="pastebar"><div class="pb-info">📋 コピー中：<b>'+esc(nm)+esc(sub)+'</b></div>'+
          '<div class="pb-acts"><button class="pb-paste" onclick="pasteToDay(window._selDate)">この日に貼り付け</button>'+
          '<button class="pb-x" onclick="clearClip()" title="解除">×</button></div></div>'; }
+/* === 期間ドラッグ選択（PC・マウス）→ コピー済み予定を期間にまとめて貼り付け === */
+var rng={on:false,a:-1,b:-1,moved:false};
+var DRAG_FINE=!!(window.matchMedia&&window.matchMedia('(pointer: fine)').matches);
+var _touching=false,_touchT;
+document.addEventListener('touchstart',function(){_touching=true;clearTimeout(_touchT);},{passive:true});
+document.addEventListener('touchend',function(){clearTimeout(_touchT);_touchT=setTimeout(function(){_touching=false;},700);},{passive:true});
+function cellDs(idx){var c=document.querySelector('#grid .cell[data-idx="'+idx+'"]');return c?c.getAttribute('data-ds'):'';}
+function paintRange(){var lo=Math.min(rng.a,rng.b),hi=Math.max(rng.a,rng.b),cells=document.querySelectorAll('#grid .cell');
+  for(var i=0;i<cells.length;i++){var ix=+cells[i].getAttribute('data-idx');cells[i].classList.toggle('rangesel',ix>=lo&&ix<=hi);}}
+function clearRange(){var cells=document.querySelectorAll('#grid .cell');for(var i=0;i<cells.length;i++)cells[i].classList.remove('rangesel');}
+function daysBetween(a,b){var out=[],d=new Date(a),e=new Date(b);if(e<d){var t=d;d=e;e=t;}var guard=0;
+  while(ymd(d)<=ymd(e)&&guard++<400){out.push(ymd(d));d.setDate(d.getDate()+1);}return out;}
+function mdLabel(s){var d=new Date(s);return (d.getMonth()+1)+'/'+d.getDate();}
+function showRangeBar(dsA,dsB){var lo=dsA,hi=dsB;if(hi<lo){var t=lo;lo=hi;hi=t;}
+  window._rngA=lo;window._rngB=hi;
+  var n=daysBetween(lo,hi).length,label=mdLabel(lo)+'〜'+mdLabel(hi)+'（'+n+'日間）';
+  var paste=clip?'<button class="rb-paste" onclick="pasteRange(window._rngA,window._rngB)">この期間に貼り付け</button>':'';
+  var hint=clip?'':'<span class="rb-hint">予定をコピーすると期間に貼り付けできます</span>';
+  document.getElementById('rangeBar').innerHTML='<div class="rb-info">📆 '+label+'</div>'+hint+
+    '<div class="rb-acts">'+paste+'<button class="rb-new" onclick="openRangeNew(window._rngA,window._rngB)">新規予定</button>'+
+    '<button class="rb-x" onclick="hideRangeBar()" title="解除">×</button></div>';
+  document.getElementById('rangeBar').classList.add('show');}
+function hideRangeBar(){var b=document.getElementById('rangeBar');if(b)b.classList.remove('show');clearRange();}
+function openRangeNew(dsA,dsB){var lo=dsA,hi=dsB;if(hi<lo){var t=lo;lo=hi;hi=t;}hideRangeBar();openEvent(null,lo);
+  document.getElementById('f_date').value=lo;document.getElementById('f_end').value=hi;}
+function pasteRange(dsA,dsB){ if(!clip){toast('先に予定をコピーしてください');return;}
+  var days=daysBetween(dsA,dsB); if(days.length>62){toast('期間が長すぎます（最大62日）');return;}
+  hideRangeBar(); var ok=0,skip=0,fail=0,i=0; toast('貼り付け中…（'+days.length+'日）');
+  (function step(){ if(i>=days.length){ render();
+      var m=ok+'日に貼り付けました'; if(skip)m+=' / '+skip+'日スキップ（時間帯重複）'; if(fail)m+=' / '+fail+'日失敗'; toast(m);
+      if(window._selDate&&document.getElementById('ovDay').classList.contains('show'))openDay(window._selDate); return; }
+    var ds=days[i++];
+    var d={'予定ID':'','日付':ds,'終了日':'','案件ID':clip['案件ID'],'案件名':clip['案件名'],'予定内容':clip['予定内容'],'区分':clip['区分'],'担当':clip['担当'],'開始':clip['開始'],'終了':clip['終了'],'備考':clip['備考']};
+    if(findOwnerTimeConflict(d)){skip++;step();return;}
+    callGAS({action:'addSchedule',data:d}).then(function(res){ if(res&&res.ok&&res.schedule){schedules.push(res.schedule);ok++;}else{fail++;} })
+      .catch(function(){fail++;}).then(function(){step();}); })();
+}
+/* 月グリッドにドラッグ選択を有効化（マウス環境のみ・スマホのタップは従来どおり） */
+(function(){ var grid=document.getElementById('grid'); if(!grid)return;
+  grid.addEventListener('mousedown',function(e){ if(!DRAG_FINE||_touching||e.button!==0)return;
+    var cell=e.target.closest('.cell'); if(!cell)return;
+    rng.on=true; rng.a=+cell.getAttribute('data-idx'); rng.b=rng.a; rng.moved=false;
+    grid.classList.add('dragging'); e.preventDefault(); paintRange(); });
+  grid.addEventListener('mouseover',function(e){ if(!rng.on)return; var cell=e.target.closest('.cell'); if(!cell)return;
+    var idx=+cell.getAttribute('data-idx'); if(idx!==rng.b){rng.b=idx;rng.moved=true;paintRange();} });
+  document.addEventListener('mouseup',function(){ if(!rng.on)return; rng.on=false; grid.classList.remove('dragging');
+    var lo=Math.min(rng.a,rng.b),hi=Math.max(rng.a,rng.b);
+    if(!rng.moved||lo===hi){ clearRange(); return; }
+    var a=cellDs(lo),b=cellDs(hi); if(a&&b)showRangeBar(a,b); }); })();
 function closeDay(){document.getElementById('ovDay').classList.remove('show');}
 var evdCur=null;
 function fmtDate(e){ var s=String(e['日付']||'').slice(0,10); if(!s)return ''; var d=new Date(s); var t=(d.getMonth()+1)+'月'+d.getDate()+'日（'+'日月火水木金土'[d.getDay()]+'）'; var en=String(e['終了日']||'').slice(0,10); if(en&&en!==s){var d2=new Date(en);t+=' 〜 '+(d2.getMonth()+1)+'月'+d2.getDate()+'日';} return t; }
