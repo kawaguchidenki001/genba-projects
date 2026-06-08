@@ -80,6 +80,14 @@
   .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;font-family:inherit;}
   .fld textarea{resize:vertical;min-height:48px;}
   .two{display:flex;gap:8px;}.two>.fld{flex:1;}
+  /* 担当の選択UI（日報と同じ方式・配色はカレンダーに合わせて紫系）*/
+  .wgroup{border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .wghd{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:#f3f0fb;font-size:12.5px;font-weight:700;color:var(--accent-d);}
+  .wghd a{font-size:12px;color:var(--accent-d);text-decoration:none;cursor:pointer;}
+  .wlist{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;}
+  .wchk{display:flex;align-items:center;gap:6px;padding:7px 9px;border:1px solid var(--line);border-radius:9px;font-size:13px;cursor:pointer;flex:1 1 30%;min-width:calc(33% - 6px);background:#fbfbfe;}
+  .wchk input{width:17px;height:17px;flex:0 0 auto;accent-color:var(--accent);}
+  .wgroup .wempty{padding:9px 11px;border-top:1px solid var(--line);color:var(--sub);font-size:13px;}
   .acts{display:flex;gap:8px;margin-top:6px;}.btn{flex:1;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
   .btn.primary{background:var(--accent);color:#fff;}.btn.sub{background:#eef1f5;color:var(--ink);}
   .dc-copy{background:#e8f0ff;color:#1d4ed8;border:1px solid #c9ddfc;}
@@ -204,16 +212,17 @@
     <div class="fld"><label>予定内容 *</label><input id="f_ttl" placeholder="例）配線工事 / 現場打合せ"></div>
     <div class="two">
       <div class="fld"><label>区分</label><select id="f_kind">
-        <option>工事</option><option>打合せ</option><option>検査</option><option>納品</option><option>搬入</option><option>その他</option></select></div>
+        <option>工事</option><option>現場調査</option><option>打ち合わせ</option><option>その他</option></select></div>
       <div class="fld"><label>現場 ／ 案件</label><select id="f_proj"><option value="">（現場なし）</option></select></div>
     </div>
     <div class="two">
       <div class="fld"><label>開始（任意）</label><input id="f_start" type="time"></div>
       <div class="fld"><label>終了（任意）</label><input id="f_etime" type="time"></div>
     </div>
-    <div class="fld"><label>担当</label>
-      <select id="f_owner" onchange="onOwner()"></select>
-      <input id="f_owner_other" style="display:none;margin-top:6px;" placeholder="担当者名を直接入力"></div>
+    <div class="fld" id="wmFld"><label>担当（複数選択できます）</label>
+      <div id="wmEmp" class="wgroup"></div>
+      <div id="wmPart" class="wgroup" style="margin-top:8px;"></div>
+    </div>
     <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
     <div class="acts"><button class="btn sub" onclick="closeEv()">キャンセル</button><button class="btn primary" id="saveBtn" onclick="saveEvent()">保存</button></div>
   </div>
@@ -262,7 +271,7 @@ var PROJ_ACCENT=['#378ADD','#E24B4A','#639922','#BA7517','#7F77DD','#1D9E75','#D
 function hashStr(s){s=String(s||'');var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return h;}
 function projColor(pid){ if(!pid)return '#eef0f2'; return PROJ_PALETTE[hashStr(pid)%PROJ_PALETTE.length]; }
 function projAccent(pid){ if(!pid)return '#c2c7ce'; return PROJ_ACCENT[hashStr(pid)%PROJ_ACCENT.length]; }
-function hm(t){ t=String(t||'').slice(0,5); var m=t.match(/^(\d{1,2}):(\d{2})$/); if(!m)return ''; var h=parseInt(m[1],10); return m[2]==='00'?String(h):(h+':'+m[2]); }
+function hm(t){ t=String(t||'').slice(0,5); var m=t.match(/^(\d{1,2}):(\d{2})$/); if(!m)return ''; var h=parseInt(m[1],10); return h+':'+m[2]; }
 function timeLabel(e){ var s=hm(e['開始']),en=hm(e['終了']); if(!s&&!en)return '終日'; if(s&&en)return s+'～'+en; if(s)return s+'～'; return '～'+en; }
 function projShort(pid,fallbackName){ var p=projects.filter(function(x){return String(x['案件ID'])===String(pid);})[0];
   return (p&&p['略称'])?p['略称']:((p&&p['案件名'])||fallbackName||''); }
@@ -272,21 +281,28 @@ function ownerShort(name){ if(!name)return ''; var n=normName(name);
   return w?(w['略称']||w['氏名']||name):name; }
 /* 担当（社員・協力業者から選択）*/
 function isKyoW(w){return String(w['区分']||'').indexOf('協力')>=0;}
-function buildOwnerSelect(val){
-  var sel=document.getElementById('f_owner'); if(!sel)return;
-  var emp=[],part=[]; workers.forEach(function(w){(isKyoW(w)?part:emp).push(w);});
-  sel.innerHTML='<option value="">（担当なし）</option>';
-  function addGroup(label,arr){ if(!arr.length)return; var og=document.createElement('optgroup');og.label=label;
-    arr.forEach(function(w){var o=document.createElement('option');o.value=w['略称']||w['氏名']||'';o.textContent=(w['氏名']||w['略称']||'')+(w['略称']?'（'+w['略称']+'）':'')+(w['所属']?'／'+w['所属']:'');og.appendChild(o);});
-    sel.appendChild(og); }
-  addGroup('社員',emp); addGroup('協力業者',part);
-  var ot=document.createElement('option');ot.value='__other__';ot.textContent='＋ 直接入力';sel.appendChild(ot);
-  var other=document.getElementById('f_owner_other'); other.value=''; other.style.display='none';
-  if(val){ sel.value=val;
-    if(sel.value!==val){ sel.value='__other__'; other.value=val; other.style.display='block'; } }
-}
-function onOwner(){ var sel=document.getElementById('f_owner'),other=document.getElementById('f_owner_other');
-  if(sel.value==='__other__'){ other.style.display='block'; } else { other.style.display='none'; } }
+/* 担当：日報と同じチェックボックス選択方式 */
+function buildWorkerChecks(){var emp=[],part=[],seen={};
+  workers.forEach(function(w){var k=String(w['作業員ID']);if(!k||seen[k])return;seen[k]=1;(isKyoW(w)?part:emp).push(w);});
+  renderWGroup('wmEmp','社員',emp); renderWGroup('wmPart','協力業者',part);}
+function renderWGroup(boxId,title,arr){var box=document.getElementById(boxId);if(!box)return;
+  var h='<div class="wghd"><span>'+title+'（'+arr.length+'）</span>'+(arr.length?'<span><a onclick="toggleGroup(\''+boxId+'\',true)">全員</a> ／ <a onclick="toggleGroup(\''+boxId+'\',false)">解除</a></span>':'')+'</div>';
+  if(!arr.length){h+='<div class="wempty">登録なし</div>';box.innerHTML=h;return;}
+  h+='<div class="wlist">';
+  arr.forEach(function(w){var nm=esc(w['氏名']||w['略称']||'')+(w['所属']?'（'+esc(w['所属'])+'）':'');
+    h+='<label class="wchk"><input type="checkbox" class="wcb" value="'+esc(w['作業員ID'])+'"> '+nm+'</label>';});
+  h+='</div>'; box.innerHTML=h;}
+function toggleGroup(boxId,on){var cbs=document.querySelectorAll('#'+boxId+' .wcb');for(var i=0;i<cbs.length;i++)cbs[i].checked=on;}
+function checkedOwnerStr(){var cbs=document.querySelectorAll('#wmFld .wcb:checked'),out=[];
+  for(var i=0;i<cbs.length;i++){var w=workers.filter(function(x){return String(x['作業員ID'])===String(cbs[i].value);})[0];
+    if(w){var t=w['略称']||w['氏名']||'';if(t)out.push(t);}}
+  return out.join('・');}
+function setOwnerChecks(ownerStr){ buildWorkerChecks();
+  var toks=String(ownerStr||'').split(/[・、,，\/\s　]+/).map(normName).filter(Boolean); if(!toks.length)return;
+  var cbs=document.querySelectorAll('#wmFld .wcb');
+  for(var i=0;i<cbs.length;i++){var w=workers.filter(function(x){return String(x['作業員ID'])===String(cbs[i].value);})[0];if(!w)continue;
+    var a=normName(w['略称']),b=normName(w['氏名']);
+    if((a&&toks.indexOf(a)>=0)||(b&&toks.indexOf(b)>=0))cbs[i].checked=true;}}
 function eventsOn(ds){ return schedules.filter(function(s){var a=String(s['日付']||'').slice(0,10);if(!a)return false;var b=String(s['終了日']||'').slice(0,10)||a;return ds>=a&&ds<=b;})
   .sort(function(x,y){return String(x['開始']||'').localeCompare(String(y['開始']||''));}); }
 
@@ -457,14 +473,13 @@ function openEvent(e,presetDate){
   g('f_kind').value=e?(e['区分']||'工事'):'工事';
   g('f_proj').value=e?(e['案件ID']||''):'';
   g('f_start').value=e?(e['開始']||''):'';g('f_etime').value=e?(e['終了']||''):'';
-  buildOwnerSelect(e?(e['担当']||''):'');g('f_note').value=e?(e['備考']||''):'';
+  setOwnerChecks(e?(e['担当']||''):'');g('f_note').value=e?(e['備考']||''):'';
   document.getElementById('ovEv').classList.add('show');
 }
 function buildProj(){var s=document.getElementById('f_proj');s.innerHTML='<option value="">（現場なし）</option>';projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);});}
 function closeEv(){document.getElementById('ovEv').classList.remove('show');}
 function gather(){var g=function(id){return document.getElementById(id).value;};var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
-  var ov=g('f_owner'),owner=(ov==='__other__')?g('f_owner_other').trim():ov;
-  return {'予定ID':g('f_id'),'日付':g('f_date'),'終了日':g('f_end'),'案件ID':pid,'案件名':p['案件名']||'','予定内容':g('f_ttl').trim(),'区分':g('f_kind'),'担当':owner,'開始':g('f_start'),'終了':g('f_etime'),'備考':g('f_note').trim()};}
+  return {'予定ID':g('f_id'),'日付':g('f_date'),'終了日':g('f_end'),'案件ID':pid,'案件名':p['案件名']||'','予定内容':g('f_ttl').trim(),'区分':g('f_kind'),'担当':checkedOwnerStr(),'開始':g('f_start'),'終了':g('f_etime'),'備考':g('f_note').trim()};}
 /* 同じ担当者が同じ時間帯に予定を持っていないかチェック（2重登録防止） */
 function _toMin(t){ var m=String(t||'').match(/^(\d{1,2}):(\d{2})/); return m?(parseInt(m[1],10)*60+parseInt(m[2],10)):null; }
 function _timeRange(e){ var s=_toMin(e['開始']),en=_toMin(e['終了']);
