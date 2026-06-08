@@ -231,8 +231,8 @@
     </div>
     <!-- 2. 時間（10分単位）-->
     <div class="two">
-      <div class="fld"><label>開始</label><input id="f_start" type="time" step="600"></div>
-      <div class="fld"><label>終了</label><input id="f_etime" type="time" step="600"></div>
+      <div class="fld"><label>開始（任意）</label><input id="f_start" type="time" step="600" onfocus="timeFocus(this,'08:00')"></div>
+      <div class="fld"><label>終了（任意）</label><input id="f_etime" type="time" step="600" onfocus="timeFocus(this,'12:00')"></div>
     </div>
     <!-- 3. 種別 ／ 候補（取引先）-->
     <div class="two">
@@ -449,6 +449,8 @@ function closeEvD(){document.getElementById('ovEvD').classList.remove('show');}
 function evdEdit(){ var e=evdCur; closeEvD(); if(e)openEvent(e); }
 function evdOpenProject(ev){ if(ev)ev.preventDefault(); var e=evdCur; if(e&&e['案件ID'])location.href='../projects/?case='+encodeURIComponent(e['案件ID']); }
 
+/* 時刻欄：空欄のときだけ、時計を開いた初期位置として既定時刻を入れる（無記入のままなら終日）*/
+function timeFocus(el,def){ if(!el.value)el.value=def; }
 function openEvent(e,presetDate){
   closeDay();
   document.getElementById('evTitle').textContent=e?'予定の編集':'予定の追加';
@@ -459,7 +461,7 @@ function openEvent(e,presetDate){
   g('f_ttl').value=e?(e['予定内容']||''):'';
   g('f_kind').value=e?(e['区分']||'工事'):'工事';
   setProjCascade(e?(e['案件ID']||''):'');
-  g('f_start').value=e?(e['開始']||''):'08:00';g('f_etime').value=e?(e['終了']||''):'12:00';
+  g('f_start').value=e?(e['開始']||''):'';g('f_etime').value=e?(e['終了']||''):'';
   setOwnerChecks(e?(e['担当']||''):'');g('f_note').value=e?(e['備考']||''):'';
   document.getElementById('ovEv').classList.add('show');
 }
