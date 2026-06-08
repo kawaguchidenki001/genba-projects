@@ -84,6 +84,10 @@
   .ks-c{background:#f3faf8;border:1px solid #d9efe9;border-radius:9px;text-align:center;padding:8px 4px;}
   .ks-v{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);}
   .ks-l{font-size:10.5px;color:var(--sub);}
+  /* アラート */
+  .alert{border-radius:10px;padding:10px 12px;font-size:13px;margin-bottom:10px;line-height:1.5;}
+  .alert.warn{background:var(--orangebg);color:#9a6a12;border:1px solid #f3d79a;}
+  .alert.bad{background:#fdeaea;color:#b3271e;border:1px solid #f3c2bd;}
 </style>
 </head>
 <body>
@@ -99,6 +103,7 @@
   <div class="pane on" id="pHome">
     <div id="needLogin" class="needlogin" style="display:none;">ログインしていません。<br>メニューからログインしてください。<br><a href="https://kawaguchidenki001.github.io/genba-projects/">ログイン画面へ</a></div>
     <div id="homeBody">
+      <div id="alerts"></div>
       <div class="grid2">
         <button class="pbtn b-in" id="btnIn" onclick="punch('出勤')">出勤</button>
         <button class="pbtn b-out" id="btnOut" onclick="punch('退勤')">退勤</button>
@@ -177,6 +182,8 @@
         <div class="krrow"><label>所定労働時間（時間/日）</label><input id="s_shotei" type="number" min="1" max="24" step="0.5" inputmode="decimal"></div>
         <div class="krrow"><label>深夜割増 開始</label><input id="s_nstart" type="time" step="600"></div>
         <div class="krrow"><label>深夜割増 終了</label><input id="s_nend" type="time" step="600"></div>
+        <div class="krrow"><label>残業上限（月／時間）</label><input id="s_otmax" type="number" min="0" max="300" inputmode="numeric"></div>
+        <div class="krrow"><label>残業の警告（上限の％）</label><input id="s_otwarn" type="number" min="0" max="100" inputmode="numeric"></div>
         <button onclick="saveKrule()" style="width:100%;margin-top:12px;padding:12px;border:none;background:var(--teal2);color:#fff;border-radius:11px;font-weight:700;cursor:pointer;">保存</button>
         <div style="font-size:11px;color:var(--sub);margin-top:8px;line-height:1.6;">※ 残業・丸め・深夜などの計算方法は、給与や労務で正式に使う前に社労士にご確認ください。</div>
       </div>
@@ -241,8 +248,8 @@ function brkTot(){return brk.am+brk.noon+brk.pm;}
 function showBrk(){document.getElementById('bAm').textContent=brk.am+'分';document.getElementById('bNoon').textContent=brk.noon+'分';document.getElementById('bPm').textContent=brk.pm+'分';document.getElementById('bTot').textContent=brkTot();}
 function stB(k,d){brk[k]=Math.max(0,Math.min(180,brk[k]+d));try{localStorage.setItem(brkKey(),JSON.stringify(brk));}catch(e){}showBrk();}
 
-function reload(){ if(!me)return; showLoad();
-  callGAS({action:'punchData',date:ymd(new Date())}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
+function reload(){ if(!me)return Promise.resolve(); showLoad();
+  return callGAS({action:'punchData',date:ymd(new Date())}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
     workers=res.workers||[];todayK=res.kintai||[];renderHome();if(tab==='all')renderAll();
   }).catch(function(err){toast('読込失敗：'+err.message);}).then(hideLoad); }
 
@@ -288,7 +295,7 @@ function punch(type){
   document.getElementById('btnIn').disabled=true;document.getElementById('btnOut').disabled=true;showLoad();
   getPos().then(function(pos){var n=new Date();
     return callGAS({action:'punch',data:{'作業員ID':me['作業員ID'],'氏名':me['氏名'],'種別':type,'時刻':hm(n),'日付':ymd(n),'位置':pos,'休憩分':brkTot()}});
-  }).then(function(res){if(!res.ok)throw new Error(res.error||'記録失敗');upTodayK(res.kintai);renderHome();toast(type+'を記録しました');})
+  }).then(function(res){if(!res.ok)throw new Error(res.error||'記録失敗');upTodayK(res.kintai);renderHome();loadAlerts();toast(type+'を記録しました');})
   .catch(function(err){toast('失敗：'+err.message);renderHome();}).then(hideLoad);
 }
 
@@ -427,14 +434,36 @@ function manualDelete(id){ if(!confirm('この記録を削除しますか？'))r
    .catch(function(e){toast('失敗：'+e.message);}).then(hideLoad); }
 
 function loadSettings(){ return callGAS({action:'settings'}).then(function(res){ if(res&&res.ok&&res.settings)S=res.settings; renderKruleView(); }).catch(function(){}); }
+// ホームのアラート（打刻漏れ・残業上限接近）
+function loadAlerts(){ if(!me)return; var box=document.getElementById('alerts'); if(!box)return;
+  var msgs=[], t=ymd(new Date());
+  var op=myOpen();
+  if(op && String(op['日付']).slice(0,10)<t){ msgs.push({c:'warn',h:'前回の<b>退勤打刻</b>がまだのようです（'+esc(String(op['日付']).slice(5))+' 出勤 '+esc(op['出勤']||'')+'）。「手修正」から退勤時刻を入れてください。'}); }
+  var draw=function(){ box.innerHTML=msgs.map(function(m){return '<div class="alert '+m.c+'">'+m.h+'</div>';}).join(''); };
+  var limH=parseFloat(gset('残業上限月','45'))||0, warnP=parseFloat(gset('残業警告率','80'))||0;
+  if(limH>0){ var pr=periodRange();
+    callGAS({action:'kintaiRange',from:ymd(pr.start),to:ymd(pr.end)}).then(function(res){
+      if(res&&res.ok){ var mine=(res.kintai||[]).filter(function(k){return String(k['作業員ID'])===String(me['作業員ID']);});
+        var byDate={}; mine.forEach(function(k){var d=String(k['日付']).slice(0,10);(byDate[d]=byDate[d]||[]).push(k);});
+        var otMin=0; Object.keys(byDate).forEach(function(d){ otMin+=calcDay(byDate[d]).otMin; });
+        var limMin=limH*60, otH=Math.round(otMin/60*10)/10;
+        if(otMin>=limMin){ msgs.push({c:'bad',h:'今期の<b>残業が '+otH+'h</b> で、上限 '+limH+'h に達しています。'}); }
+        else if(warnP>0 && otMin>=limMin*warnP/100){ msgs.push({c:'warn',h:'今期の<b>残業が '+otH+'h</b>（上限 '+limH+'h の約'+Math.round(otMin/limMin*100)+'%）です。'}); }
+      }
+      draw();
+    }).catch(draw);
+  } else { draw(); }
+}
 function renderKruleView(){ var v=document.getElementById('krView'); if(!v)return;
   v.innerHTML='会社名：'+esc(gset('会社名','河口電機'))+'<br>定時 '+esc(gset('定時開始','09:00'))+'〜'+esc(gset('定時終了','18:00'))
     +' ／ 締日 '+esc(gset('締日','15'))+'<br>丸め '+esc(gset('丸め単位','15'))+'分 ／ 所定 '+esc(gset('所定労働時間','8'))+'h'
-    +'<br>深夜 '+esc(gset('深夜開始','22:00'))+'〜'+esc(gset('深夜終了','05:00')); }
+    +'<br>深夜 '+esc(gset('深夜開始','22:00'))+'〜'+esc(gset('深夜終了','05:00'))
+    +'<br>残業上限 月'+esc(gset('残業上限月','45'))+'h（警告 '+esc(gset('残業警告率','80'))+'%）'; }
 function fillKruleForm(){ var g=function(id){return document.getElementById(id);};
   g('s_company').value=gset('会社名','河口電機'); g('s_tstart').value=gset('定時開始','09:00'); g('s_tend').value=gset('定時終了','18:00');
   g('s_close').value=gset('締日','15'); g('s_round').value=gset('丸め単位','15'); g('s_shotei').value=gset('所定労働時間','8');
-  g('s_nstart').value=gset('深夜開始','22:00'); g('s_nend').value=gset('深夜終了','05:00'); }
+  g('s_nstart').value=gset('深夜開始','22:00'); g('s_nend').value=gset('深夜終了','05:00');
+  g('s_otmax').value=gset('残業上限月','45'); g('s_otwarn').value=gset('残業警告率','80'); }
 function krUnlock(){ var pin=document.getElementById('krPin').value; if(!pin){toast('管理者PINを入力してください');return;}
   var prev=localStorage.getItem('genba_admin'); localStorage.setItem('genba_admin',pin); showLoad();
   callGAS({action:'checkRole'}).then(function(res){
@@ -444,7 +473,7 @@ function krUnlock(){ var pin=document.getElementById('krPin').value; if(!pin){to
   }).catch(function(e){ if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('通信エラー：'+e.message); }).then(hideLoad);
 }
 function saveKrule(){ var g=function(id){return document.getElementById(id).value;};
-  var data={'会社名':g('s_company'),'定時開始':g('s_tstart'),'定時終了':g('s_tend'),'締日':g('s_close'),'丸め単位':g('s_round'),'所定労働時間':g('s_shotei'),'深夜開始':g('s_nstart'),'深夜終了':g('s_nend')};
+  var data={'会社名':g('s_company'),'定時開始':g('s_tstart'),'定時終了':g('s_tend'),'締日':g('s_close'),'丸め単位':g('s_round'),'所定労働時間':g('s_shotei'),'深夜開始':g('s_nstart'),'深夜終了':g('s_nend'),'残業上限月':g('s_otmax'),'残業警告率':g('s_otwarn')};
   if(!data['定時開始']||!data['定時終了']){toast('定時の開始・終了を入力してください');return;}
   showLoad(); callGAS({action:'saveSettings',data:data}).then(function(res){ if(!res.ok)throw new Error(res.error||'保存失敗');
     if(res.settings)S=res.settings; renderKruleView(); toast('保存しました'); if(tab==='month')loadMonth();
@@ -464,7 +493,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden&&me)
     document.getElementById('meName').textContent='未ログイン';return; }
   document.getElementById('meName').textContent=me['氏名']+' さん';
   document.getElementById('setName').textContent=me['氏名'];
-  loadBrk();showBrk();reload();loadSettings();
+  loadBrk();showBrk();Promise.all([reload(),loadSettings()]).then(loadAlerts);
 })();
 </script>
 </body>
