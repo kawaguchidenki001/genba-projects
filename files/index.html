@@ -91,7 +91,7 @@
     <div class="prog" id="prog" style="display:none;"></div>
 
     <div class="sec">写真一覧 <span id="phCount" style="color:var(--sub);font-weight:400;"></span></div>
-    <div id="selBar"><span id="selCount"></span><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div>
+    <div id="selBar"><span id="selCount"></span><button onclick="delSelected()" style="color:#c0392b;border-color:#e3b7b0;">削除</button><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div>
     <div id="photos"><div class="empty">読込中…</div></div>
   </div>
 </div>
@@ -222,6 +222,7 @@ function makeLedger(){
   document.querySelectorAll('#photos .ph.selected').forEach(function(el){sd[el.dataset.id]=1;});
   if(!Object.keys(sd).length){toast('写真を選択してください');return;}
   if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF機能の読込に失敗しました');return;}
+  if(!confirm('選択した写真で台帳を作成します。\n作成後、その写真は一覧から削除（ゴミ箱へ移動）します。\nよろしいですか？'))return;
   showLoad();
   callGAS({action:'listPhotos',id:curId}).then(function(lp){
     var all=(lp&&lp.photos)||[];
@@ -233,12 +234,18 @@ function makeLedger(){
     try{doc.addImage(ledgerCover(nm),'JPEG',0,0,210,297);}catch(e){}
     var M=10,rows=3,per=rows;
     var cellW=210-M*2,cellH=(297-M*2)/rows,capH=9,gap=3,imgH=cellH-capH-gap;
-    var SC=5,fail=0;
+    var SC=5,fail=0,okIds=[];
     function step(i){
       if(i>=sel.length){
-        try{doc.save((nm||'写真台帳')+'_写真台帳.pdf');}catch(e){}
+        var saved=false;
+        try{doc.save((nm||'写真台帳')+'_写真台帳.pdf');saved=true;}catch(e){}
         hideLoad();
-        if(fail)toast(fail+'枚は取得できませんでした');
+        if(saved&&okIds.length){
+          callGAS({action:'deletePhotos',ids:okIds.join(',')}).then(function(){loadPhotos();}).catch(function(){loadPhotos();});
+          toast('台帳を作成し、'+okIds.length+'枚をゴミ箱へ移動しました'+(fail?'（'+fail+'枚は取得失敗）':''));
+        }else{
+          toast(saved?'台帳を作成しました':'台帳の作成に失敗しました');
+        }
         return;
       }
       if(i%per===0)doc.addPage();
@@ -261,7 +268,7 @@ function makeLedger(){
           var cap=sel[i].name||'';
           while(cap.length>1&&g.measureText(cap).width>cwp-24)cap=cap.slice(0,-1);
           g.fillText(cap,14,ihp+chp/2);
-          try{doc.addImage(cv.toDataURL('image/jpeg',0.85),'JPEG',x,y,cellW,imgH+capH);}catch(e){fail++;}
+          try{doc.addImage(cv.toDataURL('image/jpeg',0.85),'JPEG',x,y,cellW,imgH+capH);okIds.push(sel[i].id);}catch(e){fail++;}
           step(i+1);
         };
         im.onerror=function(){fail++;step(i+1);};
@@ -271,7 +278,7 @@ function makeLedger(){
     step(0);
   }).catch(function(){hideLoad();toast('写真の取得に失敗しました');});
 }
-function togglePhSel(e){e.classList.toggle('selected');var n=document.querySelectorAll('#photos .ph.selected').length,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function selAll(b){document.querySelectorAll('#photos .ph').forEach(function(e){b?e.classList.add('selected'):e.classList.remove('selected');});var n=b?document.querySelectorAll('#photos .ph').length:0,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function pickFiles(){ if(!folderReady){toast('フォルダ準備中です。少し待ってください');return;} document.getElementById('file').click(); }
+function delSelected(){var ids=[];document.querySelectorAll('#photos .ph.selected').forEach(function(el){ids.push(el.dataset.id);});if(!ids.length){toast('写真を選択してください');return;}if(!confirm('選択した'+ids.length+'枚をゴミ箱に移動します。よろしいですか？'))return;callGAS({action:'deletePhotos',ids:ids.join(',')}).then(function(res){toast(((res&&res.deleted)||0)+'枚をゴミ箱に移動しました');loadPhotos();}).catch(function(){toast('削除に失敗しました');});}function togglePhSel(e){e.classList.toggle('selected');var n=document.querySelectorAll('#photos .ph.selected').length,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function selAll(b){document.querySelectorAll('#photos .ph').forEach(function(e){b?e.classList.add('selected'):e.classList.remove('selected');});var n=b?document.querySelectorAll('#photos .ph').length:0,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function pickFiles(){ if(!folderReady){toast('フォルダ準備中です。少し待ってください');return;} document.getElementById('file').click(); }
 document.getElementById('file').addEventListener('change',function(e){ var fs=e.target.files; if(fs&&fs.length)uploadAll(fs); this.value=''; });
 
 function uploadAll(files){
