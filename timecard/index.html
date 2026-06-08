@@ -71,6 +71,19 @@
   .toast.show{opacity:1;}
   .needlogin{max-width:340px;margin:70px auto;text-align:center;color:var(--sub);padding:0 20px;}
   .needlogin a{display:inline-block;margin-top:14px;background:var(--teal2);color:#fff;text-decoration:none;padding:12px 20px;border-radius:11px;font-weight:700;}
+  /* 勤怠ルール設定フォーム */
+  .krrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);}
+  .krrow:first-of-type{border-top:none;}
+  .krrow label{font-size:13px;color:var(--ink);flex:1;}
+  .krrow input{width:128px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;text-align:right;}
+  .krrow input[type=text]{text-align:left;}
+  /* 月次サマリー */
+  .ksum{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;}
+  .ks-hd{font-size:12px;color:var(--sub);font-weight:700;margin-bottom:8px;}
+  .ks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .ks-c{background:#f3faf8;border:1px solid #d9efe9;border-radius:9px;text-align:center;padding:8px 4px;}
+  .ks-v{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .ks-l{font-size:10.5px;color:var(--sub);}
 </style>
 </head>
 <body>
@@ -146,6 +159,28 @@
       <button class="lo" onclick="logout()">ログアウト</button>
       <div style="font-size:12px;color:var(--sub);margin-top:12px;">ログアウトすると次回はメニューでID・パスワードの入力が必要です。</div>
     </div>
+    <!-- 勤怠の計算ルール（管理者） -->
+    <div class="setbox" style="margin-top:14px;">
+      <h3 style="font-size:14px;color:var(--teal2);margin:0 0 4px;">勤怠の計算ルール（管理者）</h3>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:10px;">定時・締日・丸め・所定労働時間・深夜帯。勤怠表の残業／深夜／遅刻早退の自動計算に使われます。</div>
+      <div id="krView" style="font-size:13px;color:var(--ink);line-height:1.7;"></div>
+      <div id="krGate" style="margin-top:10px;display:flex;gap:8px;">
+        <input id="krPin" type="password" inputmode="numeric" placeholder="管理者PIN" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px;">
+        <button onclick="krUnlock()" style="padding:10px 16px;border:none;background:var(--teal2);color:#fff;border-radius:10px;font-weight:700;cursor:pointer;">編集</button>
+      </div>
+      <div id="krForm" style="display:none;margin-top:6px;">
+        <div class="krrow"><label>会社名</label><input id="s_company" type="text"></div>
+        <div class="krrow"><label>定時 開始</label><input id="s_tstart" type="time" step="600"></div>
+        <div class="krrow"><label>定時 終了</label><input id="s_tend" type="time" step="600"></div>
+        <div class="krrow"><label>締日（1〜31／月末は31）</label><input id="s_close" type="number" min="1" max="31" inputmode="numeric"></div>
+        <div class="krrow"><label>丸め単位（分）</label><input id="s_round" type="number" min="1" max="60" inputmode="numeric"></div>
+        <div class="krrow"><label>所定労働時間（時間/日）</label><input id="s_shotei" type="number" min="1" max="24" step="0.5" inputmode="decimal"></div>
+        <div class="krrow"><label>深夜割増 開始</label><input id="s_nstart" type="time" step="600"></div>
+        <div class="krrow"><label>深夜割増 終了</label><input id="s_nend" type="time" step="600"></div>
+        <button onclick="saveKrule()" style="width:100%;margin-top:12px;padding:12px;border:none;background:var(--teal2);color:#fff;border-radius:11px;font-weight:700;cursor:pointer;">保存</button>
+        <div style="font-size:11px;color:var(--sub);margin-top:8px;line-height:1.6;">※ 残業・丸め・深夜などの計算方法は、給与や労務で正式に使う前に社労士にご確認ください。</div>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -164,6 +199,7 @@
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var T_GENERAL='kawaguchi-genba-2026';
 var me=null,workers=[],todayK=[],monthK=[],mCur=new Date(),tab='home',brk={am:30,noon:60,pm:30},manualRows=[];
+var S={},adminOK=false;
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||T_GENERAL;}
@@ -275,43 +311,76 @@ function renderAll(){
 }
 
 function moveM(n){mCur=new Date(mCur.getFullYear(),mCur.getMonth()+n,1);loadMonth();}
+function gset(k,def){ return (S&&S[k]!=null&&S[k]!=='')?S[k]:def; }
+function ovl(a0,a1,b0,b1){ return Math.max(0,Math.min(a1,b1)-Math.max(a0,b0)); }
+function roundU(m,u){ u=parseInt(u,10); return (u>0)?Math.round(m/u)*u:Math.round(m); }
+function fmtH(min){ return Math.round(min/60*100)/100; }
+function mmh(min){ return (Math.round(min/60*100)/100)+'h'; }
+function clampDay(y,m0,d){ var last=new Date(y,m0+1,0).getDate(); return Math.min(Math.max(1,d),last); }
+function periodRange(){ var d=parseInt(gset('締日','15'),10); if(isNaN(d))d=15;
+  var y=mCur.getFullYear(), m0=mCur.getMonth();
+  var end=new Date(y,m0,clampDay(y,m0,d));
+  var pm=new Date(y,m0-1,1), sb=new Date(pm.getFullYear(),pm.getMonth(),clampDay(pm.getFullYear(),pm.getMonth(),d));
+  var start=new Date(sb.getFullYear(),sb.getMonth(),sb.getDate()+1);
+  return {start:start,end:end}; }
+// 1日分（複数勤務をまとめて）残業・深夜・遅刻・早退を計算
+function calcDay(sessions){
+  var teiStart=toMinC(gset('定時開始','09:00')), teiEnd=toMinC(gset('定時終了','18:00'));
+  var shoteiMin=(parseFloat(gset('所定労働時間','8'))||8)*60;
+  var unit=gset('丸め単位','15');
+  var ns=toMinC(gset('深夜開始','22:00')), ne=toMinC(gset('深夜終了','05:00'));
+  var ss=sessions.slice().sort(function(a,b){return String(a['出勤']||'').localeCompare(String(b['出勤']||''));});
+  var firstIn='',lastOut='',workMin=0,nightMin=0;
+  ss.forEach(function(k){ if(k['出勤']&&!firstIn)firstIn=k['出勤']; if(k['退勤'])lastOut=k['退勤'];
+    var v=parseFloat(k['実働時間']); if(!isNaN(v))workMin+=v*60;
+    var i=toMinC(k['出勤']),o=toMinC(k['退勤']);
+    if(i!=null&&o!=null&&ns!=null&&ne!=null){ if(o<=i)o+=1440; nightMin+=ovl(i,o,ns,ne+1440)+ovl(i,o,ns-1440,ne); } });
+  var fi=toMinC(firstIn), lo=toMinC(lastOut);
+  var late=(fi!=null&&teiStart!=null&&teiEnd!=null&&fi>teiStart&&fi<=teiEnd)?roundU(fi-teiStart,unit):0;
+  var early=(lo!=null&&teiStart!=null&&teiEnd!=null&&lo<teiEnd&&lo>=teiStart&&(fi==null||lo>=fi))?roundU(teiEnd-lo,unit):0;
+  var ot=roundU(Math.max(0,workMin-shoteiMin),unit);
+  return {firstIn:firstIn,lastOut:lastOut,workMin:workMin,otMin:ot,nightMin:Math.round(nightMin),lateMin:late,earlyMin:early};
+}
+function ksum(lab,val){ return '<div class="ks-c"><div class="ks-v">'+esc(val)+'</div><div class="ks-l">'+esc(lab)+'</div></div>'; }
 function loadMonth(){ if(!me)return;
-  var ym=mCur.getFullYear()+'-'+('0'+(mCur.getMonth()+1)).slice(-2);
-  document.getElementById('mym').textContent=mCur.getFullYear()+'年'+(mCur.getMonth()+1)+'月';
+  var pr=periodRange(), from=ymd(pr.start), to=ymd(pr.end);
+  document.getElementById('mym').textContent=mCur.getFullYear()+'年'+(mCur.getMonth()+1)+'月度';
   document.getElementById('mTable').innerHTML='<div class="needlogin">読み込み中…</div>';showLoad();
-  callGAS({action:'kintaiMonth',ym:ym}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
-    monthK=(res.kintai||[]).filter(function(k){return String(k['作業員ID'])===String(me['作業員ID']);});renderMonth();
+  callGAS({action:'kintaiRange',from:from,to:to}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
+    monthK=(res.kintai||[]).filter(function(k){return String(k['作業員ID'])===String(me['作業員ID']);});
+    window._period={from:from,to:to}; renderMonth();
   }).catch(function(err){document.getElementById('mTable').innerHTML='<div class="needlogin">読込失敗：'+esc(err.message)+'</div>';}).then(hideLoad);
 }
 function renderMonth(){
-  var el=document.getElementById('mTable');
-  if(!monthK.length){el.innerHTML='<div class="needlogin">この月の打刻はありません。</div>';return;}
+  var el=document.getElementById('mTable'); var per=window._period||{};
   var byDate={}; monthK.forEach(function(k){var d=String(k['日付']).slice(0,10);(byDate[d]=byDate[d]||[]).push(k);});
   var dates=Object.keys(byDate).sort();
-  var h='<table><tr><th>日付</th><th>出勤</th><th>退勤</th><th>休憩</th><th>実働</th></tr>';
-  var monthTot=0;
-  dates.forEach(function(d){
-    var list=byDate[d].sort(function(a,b){return String(a['出勤']||'').localeCompare(String(b['出勤']||''));});
-    var dayTot=0;
-    list.forEach(function(k,idx){
-      var v=parseFloat(k['実働時間']); if(!isNaN(v))dayTot+=v;
-      var nd=(k['出勤']&&k['退勤']&&toMinC(k['退勤'])<toMinC(k['出勤']))?'翌':'';
-      h+='<tr><td>'+(idx===0?esc(d.slice(5)):'')+'</td><td>'+esc(k['出勤']||'')+'</td><td>'+(k['退勤']?nd+esc(k['退勤']):'')+'</td><td>'+esc((k['休憩分']||0)+'分')+'</td><td>'+esc(k['実働時間']!==''&&k['実働時間']!=null?k['実働時間']+'h':'')+'</td></tr>';
-    });
-    if(list.length>1){ h+='<tr style="background:#f7fbfa;"><td style="font-weight:700;">'+esc(d.slice(5))+' 計</td><td></td><td></td><td></td><td style="font-weight:700;">'+(Math.round(dayTot*100)/100)+'h</td></tr>'; }
-    monthTot+=dayTot;
+  var tWork=0,tOt=0,tNight=0,tLate=0,tEarly=0,days=0,dc={};
+  dates.forEach(function(d){ var c=calcDay(byDate[d]); dc[d]=c;
+    if(c.firstIn||c.workMin>0)days++; tWork+=c.workMin; tOt+=c.otMin; tNight+=c.nightMin; tLate+=c.lateMin; tEarly+=c.earlyMin; });
+  var sum='<div class="ksum"><div class="ks-hd">'+esc((per.from||'').slice(5).replace('-','/'))+' 〜 '+esc((per.to||'').slice(5).replace('-','/'))+' の集計</div>'
+    +'<div class="ks-grid">'+ksum('出勤',days+'日')+ksum('実働',mmh(tWork))+ksum('残業',mmh(tOt))
+    +ksum('深夜',mmh(tNight))+ksum('遅刻',tLate+'分')+ksum('早退',tEarly+'分')+'</div></div>';
+  if(!dates.length){ el.innerHTML=sum+'<div class="needlogin">この期間の打刻はありません。</div>'; return; }
+  var h=sum+'<table><tr><th>日付</th><th>出勤</th><th>退勤</th><th>実働</th><th>残業</th><th>深夜</th></tr>';
+  dates.forEach(function(d){ var c=dc[d];
+    var nd=(c.firstIn&&c.lastOut&&toMinC(c.lastOut)<toMinC(c.firstIn))?'翌':'';
+    h+='<tr><td>'+esc(d.slice(5))+'</td><td>'+esc(c.firstIn||'')+'</td><td>'+(c.lastOut?nd+esc(c.lastOut):'')+'</td>'
+      +'<td>'+(c.workMin?fmtH(c.workMin)+'h':'')+'</td>'
+      +'<td>'+(c.otMin?fmtH(c.otMin)+'h':'')+'</td>'
+      +'<td>'+(c.nightMin?fmtH(c.nightMin)+'h':'')+'</td></tr>';
   });
-  h+='<tr style="background:#eef5f3;font-weight:800;"><td colspan="4">月合計</td><td>'+(Math.round(monthTot*100)/100)+'h</td></tr>';
-  h+='</table>';el.innerHTML=h;
+  h+='<tr style="background:#eef5f3;font-weight:800;"><td>合計</td><td></td><td></td><td>'+fmtH(tWork)+'h</td><td>'+fmtH(tOt)+'h</td><td>'+fmtH(tNight)+'h</td></tr></table>';
+  h+='<div style="font-size:11px;color:var(--sub);margin-top:8px;line-height:1.6;">※ 残業＝実働−所定、深夜＝深夜帯の重なり、遅刻早退＝定時との差（丸め単位で計算）。給与・労務の正式利用は社労士にご確認ください。</div>';
+  el.innerHTML=h;
 }
 function downloadCSV(){
   if(!monthK.length){toast('データがありません');return;}
-  var rows=[['日付','氏名','出勤','退勤','休憩分','実働時間']];
   var byDate={}; monthK.forEach(function(k){var d=String(k['日付']).slice(0,10);(byDate[d]=byDate[d]||[]).push(k);});
-  Object.keys(byDate).sort().forEach(function(d){
-    byDate[d].sort(function(a,b){return String(a['出勤']||'').localeCompare(String(b['出勤']||''));}).forEach(function(k){
-      rows.push([k['日付'],k['氏名']||'',k['出勤']||'',k['退勤']||'',k['休憩分']||'',k['実働時間']||'']);
-    });
+  var rows=[['日付','氏名','出勤','退勤','休憩分','実働(h)','残業(h)','深夜(h)','遅刻(分)','早退(分)']];
+  Object.keys(byDate).sort().forEach(function(d){ var c=calcDay(byDate[d]);
+    var brkM=byDate[d].reduce(function(s,k){var v=parseFloat(k['休憩分']);return s+(isNaN(v)?0:v);},0);
+    rows.push([d,(me?me['氏名']:''),c.firstIn||'',c.lastOut||'',brkM,fmtH(c.workMin),fmtH(c.otMin),fmtH(c.nightMin),c.lateMin,c.earlyMin]);
   });
   var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   var blob=new Blob(['\uFEFF'+csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');
@@ -357,6 +426,31 @@ function manualDelete(id){ if(!confirm('この記録を削除しますか？'))r
    .then(function(res){if(!res.ok)throw new Error(res.error||'削除失敗');toast('削除しました');manualLoad();reload();})
    .catch(function(e){toast('失敗：'+e.message);}).then(hideLoad); }
 
+function loadSettings(){ return callGAS({action:'settings'}).then(function(res){ if(res&&res.ok&&res.settings)S=res.settings; renderKruleView(); }).catch(function(){}); }
+function renderKruleView(){ var v=document.getElementById('krView'); if(!v)return;
+  v.innerHTML='会社名：'+esc(gset('会社名','河口電機'))+'<br>定時 '+esc(gset('定時開始','09:00'))+'〜'+esc(gset('定時終了','18:00'))
+    +' ／ 締日 '+esc(gset('締日','15'))+'<br>丸め '+esc(gset('丸め単位','15'))+'分 ／ 所定 '+esc(gset('所定労働時間','8'))+'h'
+    +'<br>深夜 '+esc(gset('深夜開始','22:00'))+'〜'+esc(gset('深夜終了','05:00')); }
+function fillKruleForm(){ var g=function(id){return document.getElementById(id);};
+  g('s_company').value=gset('会社名','河口電機'); g('s_tstart').value=gset('定時開始','09:00'); g('s_tend').value=gset('定時終了','18:00');
+  g('s_close').value=gset('締日','15'); g('s_round').value=gset('丸め単位','15'); g('s_shotei').value=gset('所定労働時間','8');
+  g('s_nstart').value=gset('深夜開始','22:00'); g('s_nend').value=gset('深夜終了','05:00'); }
+function krUnlock(){ var pin=document.getElementById('krPin').value; if(!pin){toast('管理者PINを入力してください');return;}
+  var prev=localStorage.getItem('genba_admin'); localStorage.setItem('genba_admin',pin); showLoad();
+  callGAS({action:'checkRole'}).then(function(res){
+    if(res&&res.ok&&res.role==='admin'){ adminOK=true; fillKruleForm();
+      document.getElementById('krGate').style.display='none'; document.getElementById('krForm').style.display='block'; toast('編集できます'); }
+    else { if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('管理者PINが違います'); }
+  }).catch(function(e){ if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('通信エラー：'+e.message); }).then(hideLoad);
+}
+function saveKrule(){ var g=function(id){return document.getElementById(id).value;};
+  var data={'会社名':g('s_company'),'定時開始':g('s_tstart'),'定時終了':g('s_tend'),'締日':g('s_close'),'丸め単位':g('s_round'),'所定労働時間':g('s_shotei'),'深夜開始':g('s_nstart'),'深夜終了':g('s_nend')};
+  if(!data['定時開始']||!data['定時終了']){toast('定時の開始・終了を入力してください');return;}
+  showLoad(); callGAS({action:'saveSettings',data:data}).then(function(res){ if(!res.ok)throw new Error(res.error||'保存失敗');
+    if(res.settings)S=res.settings; renderKruleView(); toast('保存しました'); if(tab==='month')loadMonth();
+  }).catch(function(e){toast('失敗：'+e.message);}).then(hideLoad);
+}
+
 function logout(){localStorage.removeItem('genba_user');location.href='https://kawaguchidenki001.github.io/genba-projects/';}
 
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -370,7 +464,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden&&me)
     document.getElementById('meName').textContent='未ログイン';return; }
   document.getElementById('meName').textContent=me['氏名']+' さん';
   document.getElementById('setName').textContent=me['氏名'];
-  loadBrk();showBrk();reload();
+  loadBrk();showBrk();reload();loadSettings();
 })();
 </script>
 </body>
