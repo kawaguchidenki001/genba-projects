@@ -215,7 +215,7 @@
     <div class="setbox" style="margin-top:14px;">
       <h3 style="font-size:14px;color:var(--teal2);margin:0 0 4px;">勤怠の計算ルール（管理者）</h3>
       <div style="font-size:12px;color:var(--sub);margin-bottom:10px;">定時・締日・丸め・所定労働時間・深夜帯。勤怠表の残業／深夜／遅刻早退の自動計算に使われます。</div>
-      <div id="krView" style="font-size:13px;color:var(--ink);line-height:1.7;"></div>
+      <div id="krView" style="display:none;font-size:13px;color:var(--ink);line-height:1.7;"></div>
       <div id="krGate" style="margin-top:10px;display:flex;gap:8px;">
         <input id="krPin" type="password" inputmode="numeric" placeholder="管理者PIN" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px;">
         <button onclick="krUnlock()" style="padding:10px 16px;border:none;background:var(--teal2);color:#fff;border-radius:10px;font-weight:700;cursor:pointer;">編集</button>
@@ -531,7 +531,7 @@ function krUnlock(){ var pin=document.getElementById('krPin').value; if(!pin){to
   var prev=localStorage.getItem('genba_admin'); localStorage.setItem('genba_admin',pin); showLoad();
   callGAS({action:'checkRole'}).then(function(res){
     if(res&&res.ok&&res.role==='admin'){ adminOK=true; fillKruleForm();
-      document.getElementById('krGate').style.display='none'; document.getElementById('krForm').style.display='block'; toast('編集できます'); }
+      document.getElementById('krGate').style.display='none'; document.getElementById('krForm').style.display='block'; document.getElementById('krView').style.display='block'; toast('編集できます'); }
     else { if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('管理者PINが違います'); }
   }).catch(function(e){ if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('通信エラー：'+e.message); }).then(hideLoad);
 }
