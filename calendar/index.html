@@ -38,6 +38,22 @@
   .ev-proj{display:block;background:#eef0f2;color:var(--ink);border-radius:3px;padding:0 3px;font-weight:700;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .ev-sub{font-size:9.5px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .ev-tm{color:var(--sub);}
+  /* スマホの「月」表示：セル内の時間は非表示／担当名は「…」省略をやめ、折り返して全員表示 */
+  @media (max-width:767px){
+    #monthView .ev-tm{display:none;}
+    #monthView .ev-sub{white-space:normal;overflow:visible;word-break:break-word;line-height:1.3;}
+  }
+  /* パソコン（PC）表示：中央寄せの「中間」サイズ＋少し大きめの文字。担当名は省略せず全表示。詳細シートのボタンも大きめ */
+  @media (min-width:768px){
+    .cal{max-width:900px;margin:0 auto;}
+    .wk,.grid{gap:4px;}
+    .cell{min-height:92px;padding:4px 5px;}
+    .dnum{font-size:13px;}
+    #monthView .ev-proj{font-size:12px;padding:1px 5px;}
+    #monthView .ev-sub{font-size:11.5px;white-space:normal;overflow:visible;word-break:break-word;line-height:1.35;}
+    .addmini{font-size:15px;padding:0 16px;min-height:42px;}
+    .evd-side{flex:0 0 108px;} .evd-side .btn{font-size:12.5px;padding:6px;min-height:42px;}
+  }
   .ov{position:fixed;inset:0;background:rgba(15,23,40,.45);z-index:40;display:none;align-items:flex-end;justify-content:center;}
   .ov.show{display:flex;}
   .sheet{background:#fff;width:100%;max-width:560px;max-height:90vh;overflow:auto;border-radius:16px 16px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);}
