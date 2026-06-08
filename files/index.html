@@ -188,8 +188,9 @@ function buildLedgerFiles(fmt){
   callGAS({action:'makeLedgerFiles',id:curId,ids:ids.join(','),name:nm,fmt:fmt},180000).then(function(res){
     hideLoad();
     if(!res||!res.ok){var em=(res&&res.error)||'不明なエラー';if(box){box.innerHTML='作成に失敗しました：<br>'+esc(em);box.style.display='block';}toast('作成に失敗しました');return;}
-    var url=(fmt==='xlsx')?res.xlsxUrl:res.pdfUrl, lbl=(fmt==='xlsx')?'📊 Excelを開く':'📄 PDFを開く';
-    if(box&&url){box.innerHTML='台帳ができました（'+res.n+'枚）<br><a href="'+url+'" target="_blank">'+lbl+'</a><br><span style="color:var(--sub);font-size:12px;">ドライブの「台帳」フォルダにも保存されています。</span>';box.style.display='block';}
+    var url=(fmt==='xlsx')?res.xlsxUrl:res.pdfUrl, lbl=(fmt==='xlsx')?'📊 スプレッドシートを開く':'📄 PDFを開く';
+    var note=(fmt==='xlsx')?'開いたら〔ファイル〕→〔ダウンロード〕→〔Microsoft Excel(.xlsx)〕でExcelとして保存できます。ドライブの「台帳」フォルダにも残っています。':'ドライブの「台帳」フォルダにも保存されています。';
+    if(box&&url){box.innerHTML='台帳ができました（'+res.n+'枚）<br><a href="'+url+'" target="_blank">'+lbl+'</a><br><span style="color:var(--sub);font-size:12px;">'+note+'</span>';box.style.display='block';}
     toast('台帳を作成しました');
   }).catch(function(err){hideLoad();toast('作成に失敗：'+err.message);});
 }
