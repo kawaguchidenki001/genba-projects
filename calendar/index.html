@@ -60,7 +60,14 @@
   .evd-side{display:flex;flex-direction:column;gap:8px;flex:0 0 96px;}
   .evd-side .btn{flex:none;width:100%;padding:9px 6px;font-size:12px;border-radius:10px;}
   .dc-edit{background:#0d9488;color:#fff;}
+  .dc-copy{background:#2563eb;color:#fff;}
   .dc-del{background:#dc2626;color:#fff;}
+  /* コピー中の貼り付けバー */
+  .pastebar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:#eef4ff;border:1px solid #cfe0fb;border-radius:10px;padding:8px 10px;margin-bottom:10px;}
+  .pb-info{font-size:12.5px;color:#1e3a8a;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .pb-acts{display:flex;gap:6px;flex:0 0 auto;}
+  .pb-paste{background:#2563eb;color:#fff;border:none;border-radius:9px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;}
+  .pb-x{background:#fff;color:#64748b;border:1px solid #cfe0fb;border-radius:9px;width:36px;font-size:17px;line-height:1;cursor:pointer;}
   .daycard{display:flex;gap:12px;align-items:flex-start;padding:12px 2px;border-top:1px solid var(--line);}
   .daycard:first-child{border-top:none;padding-top:2px;}
   .dc-info{flex:1;min-width:0;}
@@ -403,8 +410,9 @@ function renderAgenda(numDays){
 function openDay(ds){ window._selDate=ds;
   var d=new Date(ds);document.getElementById('dayTitle').textContent=(d.getMonth()+1)+'月'+d.getDate()+'日（'+'日月火水木金土'[d.getDay()]+'）';
   var evs=eventsOn(ds),el=document.getElementById('dayList');
-  if(!evs.length){el.innerHTML='<div class="empty">予定はありません。<br>右上の「＋予定」から追加できます。</div>';document.getElementById('ovDay').classList.add('show');return;}
-  el.innerHTML='';
+  var pb=pasteBarHtml();
+  if(!evs.length){el.innerHTML=pb+'<div class="empty">予定はありません。<br>右上の「＋予定」から追加できます。</div>';document.getElementById('ovDay').classList.add('show');return;}
+  el.innerHTML=pb;
   evs.forEach(function(e){
     var p=projects.filter(function(x){return String(x['案件ID'])===String(e['案件ID']);})[0]||{};
     var who=ownerShort(e['担当']);
@@ -419,14 +427,41 @@ function openDay(ds){ window._selDate=ds;
     card.innerHTML='<div class="dc-info">'+info+'</div>'+
       '<div class="evd-side"><button class="btn dc-edit">編集</button>'+
       (e['案件ID']?'<button class="btn sub dc-link">📁 案件情報</button>':'')+
+      '<button class="btn dc-copy">📋 コピー</button>'+
       '<button class="btn dc-del">予定削除</button></div>';
     card.querySelector('.dc-edit').onclick=(function(ev){return function(){closeDay();openEvent(ev);};})(e);
     var lk=card.querySelector('.dc-link');if(lk)lk.onclick=(function(ev){return function(){location.href='../projects/?case='+encodeURIComponent(ev['案件ID']);};})(e);
+    card.querySelector('.dc-copy').onclick=(function(ev){return function(){copyEvent(ev);};})(e);
     card.querySelector('.dc-del').onclick=(function(ev){return function(){delSchedule(ev['予定ID']);};})(e);
     el.appendChild(card);
   });
   document.getElementById('ovDay').classList.add('show');
 }
+/* === 予定のコピー＆別日へ貼り付け === */
+var clip=null; try{ clip=JSON.parse(localStorage.getItem('genba_clip')||'null'); }catch(e){ clip=null; }
+function copyEvent(e){
+  clip={'案件ID':e['案件ID']||'','案件名':e['案件名']||'','予定内容':e['予定内容']||'','区分':e['区分']||'','担当':e['担当']||'','開始':e['開始']||'','終了':e['終了']||'','備考':e['備考']||''};
+  try{localStorage.setItem('genba_clip',JSON.stringify(clip));}catch(_){}
+  var nm=projShort(clip['案件ID'],clip['案件名'])||clip['予定内容']||'予定';
+  toast('「'+nm+'」をコピーしました。貼り付け先の日をタップしてください');
+  if(window._selDate&&document.getElementById('ovDay').classList.contains('show'))openDay(window._selDate);
+}
+function clearClip(){ clip=null; try{localStorage.removeItem('genba_clip');}catch(_){}
+  if(window._selDate&&document.getElementById('ovDay').classList.contains('show'))openDay(window._selDate);
+  toast('コピーを解除しました'); }
+function pasteToDay(ds){ if(!clip||!ds)return;
+  var d={'予定ID':'','日付':ds,'終了日':'','案件ID':clip['案件ID'],'案件名':clip['案件名'],'予定内容':clip['予定内容'],'区分':clip['区分'],'担当':clip['担当'],'開始':clip['開始'],'終了':clip['終了'],'備考':clip['備考']};
+  var cf=findOwnerTimeConflict(d); if(cf){var ce=cf.ev,pn=projShort(ce['案件ID'],ce['案件名'])||ce['予定内容']||'予定'; toast(cf.name+' さんは同じ時間帯に予定があります：'+pn+'（'+timeLabel(ce)+'）'); return;}
+  callGAS({action:'addSchedule',data:d}).then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
+    schedules.push(res.schedule); render(); toast('貼り付けました');
+    if(window._selDate)openDay(window._selDate);
+  }).catch(function(err){toast('失敗：'+err.message);}); }
+function pasteBarHtml(){ if(!clip)return '';
+  var nm=projShort(clip['案件ID'],clip['案件名'])||clip['予定内容']||'予定';
+  var tm=timeLabel(clip),sub=(tm&&tm!=='終日')?(' '+tm):'';
+  return '<div class="pastebar"><div class="pb-info">📋 コピー中：<b>'+esc(nm)+esc(sub)+'</b></div>'+
+         '<div class="pb-acts"><button class="pb-paste" onclick="pasteToDay(window._selDate)">この日に貼り付け</button>'+
+         '<button class="pb-x" onclick="clearClip()" title="解除">×</button></div></div>'; }
 function closeDay(){document.getElementById('ovDay').classList.remove('show');}
 var evdCur=null;
 function fmtDate(e){ var s=String(e['日付']||'').slice(0,10); if(!s)return ''; var d=new Date(s); var t=(d.getMonth()+1)+'月'+d.getDate()+'日（'+'日月火水木金土'[d.getDay()]+'）'; var en=String(e['終了日']||'').slice(0,10); if(en&&en!==s){var d2=new Date(en);t+=' 〜 '+(d2.getMonth()+1)+'月'+d2.getDate()+'日';} return t; }
