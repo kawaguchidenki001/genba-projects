@@ -255,7 +255,7 @@ function uploadAll(files){
   function next(){
     if(i>=arr.length){
       prog.textContent='アップロード完了（'+done+'枚'+(fail?'／失敗'+fail:'')+'）。一覧を更新します…';
-      setTimeout(function(){loadPhotos();prog.style.display='none';toast(done+'枚を保存しました');},1800);
+      var _t=[1200,3000,5500,8500];_t.forEach(function(d,k){setTimeout(function(){loadPhotos();if(k===_t.length-1)prog.style.display='none';},d);});toast(done+'枚を保存しました');
       return;
     }
     var file=arr[i++];
