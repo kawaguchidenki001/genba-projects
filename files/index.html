@@ -28,7 +28,8 @@
   .pid{font-size:12px;color:var(--sub);}
   .btnrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
   .btn{flex:1;min-width:130px;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;}
-  .btn.primary{background:var(--accent);color:#fff;} .btn.open{background:#eef1f5;color:var(--ink);}
+  .btn.primary{background:var(--accent);color:#fff;} .btn.open{background:#eef1f5;color:var(--ink);} .btn.excel{background:#1e8e3e;color:#fff;}
+  #photos{margin-bottom:120px;}
   .hint{font-size:12.5px;color:var(--sub);margin-top:10px;}
   .prog{font-size:13px;color:var(--accent-d);margin-top:10px;font-weight:600;}
   .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
@@ -99,7 +100,7 @@
     <div class="sec">写真一覧 <span id="phCount" style="color:var(--sub);font-weight:400;"></span></div>
     <div id="selBar"><span id="selCount"></span><button onclick="delSelected()" style="color:#c0392b;border-color:#e3b7b0;">削除</button><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div>
     <div id="photos"><div class="empty">読込中…</div></div>
-    <div id="outBar" style="display:none;margin-top:12px;"><button class="btn primary" onclick="buildLedgerFiles('pdf')">📄 PDFで作成</button> <button class="btn open" onclick="buildLedgerFiles('xlsx')">📊 エクセルで作成</button><div id="ledgerResult" style="display:none;margin-top:10px;font-size:14px;line-height:1.7;"></div></div>
+    <div id="outBar" style="display:none;position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(0,0,0,.10);padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);z-index:50;"><div id="ledgerResult" style="display:none;margin-bottom:8px;font-size:14px;line-height:1.6;"></div><div style="display:flex;gap:10px;max-width:760px;margin:0 auto;"><button class="btn primary" onclick="buildLedgerFiles('pdf')">📄 PDFで作成</button><button class="btn excel" onclick="buildLedgerFiles('xlsx')">📊 エクセルで作成</button></div></div>
     </div>
   </div>
 </div>
@@ -191,7 +192,6 @@ function buildLedgerFiles(fmt){
     var url=(fmt==='xlsx')?res.xlsxUrl:res.pdfUrl, lbl=(fmt==='xlsx')?'📊 スプレッドシートを開く':'📄 PDFを開く';
     var note=(fmt==='xlsx')?'開いたら〔ファイル〕→〔ダウンロード〕→〔Microsoft Excel(.xlsx)〕でExcelとして保存できます。ドライブの「台帳」フォルダにも残っています。':'ドライブの「台帳」フォルダにも保存されています。';
     if(box&&url){box.innerHTML='台帳ができました（'+res.n+'枚）<br><a href="'+url+'" target="_blank">'+lbl+'</a><br><span style="color:var(--sub);font-size:12px;">'+note+'</span>';box.style.display='block';}
-    if(box&&res.debug){box.innerHTML+='<br><br><b>診断</b>（この内容を送ってください）:<br><span style="font-size:11px;font-family:monospace;white-space:pre-wrap;word-break:break-all;">'+esc(JSON.stringify(res.debug))+'</span>';box.style.display='block';}
     toast('台帳を作成しました');
   }).catch(function(err){hideLoad();toast('作成に失敗：'+err.message);});
 }
