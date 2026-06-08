@@ -216,9 +216,60 @@ function ledgerCover(nm){
  x.font='bold 32px '+F;x.fillStyle='#1f2733';x.fillText('河口電機',W/2,H*0.60);
  return c.toDataURL('image/jpeg',0.9);
 }
-function callGAS({action:'getPhotoB64',fileId:photos[i].id}).then(function(res){if(!res.ok||!res.b64){fail++;return step(i+1);}var d='data:image/jpeg;base64,'+res.b64,m=new Image();m.onload=function(){var r=(m.naturalWidth/m.naturalHeight)||1.333,w=cw,h=w/r;if(h>chh){h=chh;w=h*r;}try{doc.addImage(d,'JPEG',x+(cw-w)/2,y+(chh-h)/2,w,h);}catch(e){fail++;}step(i+1);};m.onerror=function(){fail++;step(i+1);};m.src=d;}).catch(function(){fail++;step(i+1);});;
- }
- step(0);
+function makeLedger(){
+  if(!curId){toast('案件を選んでください');return;}
+  var sd={};
+  document.querySelectorAll('#photos .ph.selected').forEach(function(el){sd[el.dataset.id]=1;});
+  if(!Object.keys(sd).length){toast('写真を選択してください');return;}
+  if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF機能の読込に失敗しました');return;}
+  showLoad();
+  callGAS({action:'listPhotos',id:curId}).then(function(lp){
+    var all=(lp&&lp.photos)||[];
+    var sel=all.filter(function(x){return sd[x.id];});
+    sel.sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));});
+    if(!sel.length){hideLoad();toast('写真を選択してください');return;}
+    var nm=(document.getElementById('pName')||{}).textContent||'';
+    var doc=new window.jspdf.jsPDF('p','mm','a4');
+    try{doc.addImage(ledgerCover(nm),'JPEG',0,0,210,297);}catch(e){}
+    var M=10,rows=3,per=rows;
+    var cellW=210-M*2,cellH=(297-M*2)/rows,capH=9,gap=3,imgH=cellH-capH-gap;
+    var SC=5,fail=0;
+    function step(i){
+      if(i>=sel.length){
+        try{doc.save((nm||'写真台帳')+'_写真台帳.pdf');}catch(e){}
+        hideLoad();
+        if(fail)toast(fail+'枚は取得できませんでした');
+        return;
+      }
+      if(i%per===0)doc.addPage();
+      var pos=i%per,x=M,y=M+pos*cellH;
+      callGAS({action:'getPhotoB64',fileId:sel[i].id}).then(function(res){
+        if(!res||!res.ok||!res.b64){fail++;return step(i+1);}
+        var im=new Image();
+        im.onload=function(){
+          var cwp=Math.round(cellW*SC),ihp=Math.round(imgH*SC),chp=Math.round(capH*SC);
+          var cv=document.createElement('canvas');cv.width=cwp;cv.height=ihp+chp;
+          var g=cv.getContext('2d');
+          g.fillStyle='#fff';g.fillRect(0,0,cwp,ihp+chp);
+          var r=(im.naturalWidth/im.naturalHeight)||1.333,w=cwp,h=w/r;
+          if(h>ihp){h=ihp;w=h*r;}
+          g.drawImage(im,(cwp-w)/2,(ihp-h)/2,w,h);
+          g.fillStyle='#0f3d2e';g.fillRect(0,ihp,cwp,chp);
+          g.fillStyle='#fff';g.textBaseline='middle';
+          var fp=Math.round(chp*0.46);
+          g.font='bold '+fp+'px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
+          var cap=sel[i].name||'';
+          while(cap.length>1&&g.measureText(cap).width>cwp-24)cap=cap.slice(0,-1);
+          g.fillText(cap,14,ihp+chp/2);
+          try{doc.addImage(cv.toDataURL('image/jpeg',0.85),'JPEG',x,y,cellW,imgH+capH);}catch(e){fail++;}
+          step(i+1);
+        };
+        im.onerror=function(){fail++;step(i+1);};
+        im.src='data:image/jpeg;base64,'+res.b64;
+      }).catch(function(){fail++;step(i+1);});
+    }
+    step(0);
+  }).catch(function(){hideLoad();toast('写真の取得に失敗しました');});
 }
 function togglePhSel(e){e.classList.toggle('selected');var n=document.querySelectorAll('#photos .ph.selected').length,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function selAll(b){document.querySelectorAll('#photos .ph').forEach(function(e){b?e.classList.add('selected'):e.classList.remove('selected');});var n=b?document.querySelectorAll('#photos .ph').length:0,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function pickFiles(){ if(!folderReady){toast('フォルダ準備中です。少し待ってください');return;} document.getElementById('file').click(); }
 document.getElementById('file').addEventListener('change',function(e){ var fs=e.target.files; if(fs&&fs.length)uploadAll(fs); this.value=''; });
