@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<!-- toolbox version 1 (2026-06-09) -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ツールボックス｜現場管理</title>
+<link rel="apple-touch-icon" href="https://kawaguchidenki001.github.io/genba-projects/icon-180.png">
+<meta name="apple-mobile-web-app-title" content="ツールボックス">
+<meta name="theme-color" content="#1f5f8b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{min-height:100vh;color:#fff;font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.6;
+    background:linear-gradient(150deg,#1f5f8b 0%,#2a7d9e 38%,#27a4a0 100%);background-attachment:fixed;}
+  .wrap{max-width:680px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 20px) 16px 44px;}
+
+  /* ヘッダ */
+  .head{margin:0 2px 18px;}
+  .head .back{display:inline-block;font-size:13px;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);border-radius:9px;padding:7px 13px;text-decoration:none;margin-bottom:14px;}
+  .head .back:active{background:rgba(255,255,255,.28);}
+  .kicker{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.26em;font-size:11px;color:rgba(255,255,255,.72);text-transform:uppercase;}
+  .head h1{font-weight:700;font-size:28px;letter-spacing:.05em;margin-top:6px;text-shadow:0 2px 12px rgba(0,40,60,.25);}
+  .head .co{color:rgba(255,255,255,.8);font-size:13px;margin-top:3px;}
+
+  /* pane切替 */
+  .pane{display:none;}
+  .pane.on{display:block;}
+
+  /* トップのツールタイル */
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .sq{position:relative;display:flex;flex-direction:column;aspect-ratio:1/1;border-radius:18px;padding:13px;color:#fff;
+    border:1px solid rgba(255,255,255,.28);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    box-shadow:0 8px 24px rgba(10,40,55,.18);cursor:pointer;transition:transform .12s ease,filter .12s ease;}
+  .sq:active{transform:scale(.97);filter:brightness(1.06);}
+  .sq .ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;border:1px solid rgba(255,255,255,.3);}
+  .sq .txt{margin-top:auto;min-width:0;}
+  .sq .nm{font-weight:700;font-size:13px;letter-spacing:.01em;}
+  .sq .ds{display:none;}
+  .sq .cor{position:absolute;top:10px;right:11px;font-size:14px;color:rgba(255,255,255,.9);}
+  .sq.soon{opacity:.82;}
+  .sq.soon .cor{font-size:10px;letter-spacing:.08em;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:2px 7px;font-family:"Manrope",sans-serif;}
+
+  /* 色分け */
+  .t-memo{background:rgba(34,178,96,.34);border-color:rgba(150,240,185,.5);}.t-memo .ic{background:#1f9d57;}
+  .t-check{background:rgba(42,118,224,.36);border-color:rgba(155,198,255,.55);}.t-check .ic{background:#1f6fd0;}
+  .t-draw{background:rgba(124,58,180,.38);border-color:rgba(200,170,240,.5);}.t-draw .ic{background:#7c3ab4;}
+  .t-rec{background:rgba(214,70,70,.36);border-color:rgba(255,170,160,.5);}.t-rec .ic{background:#cf3b3b;}
+  .t-board{background:rgba(214,123,18,.36);border-color:rgba(255,205,130,.5);}.t-board .ic{background:#d97b12;}
+  .t-elec{background:rgba(206,165,30,.42);border-color:rgba(255,225,140,.55);}.t-elec .ic{background:#bd941c;}
+  .t-area{background:rgba(20,140,150,.40);border-color:rgba(150,215,225,.55);}.t-area .ic{background:#0e8a96;}
+
+  @media (min-width:680px){
+    .grid{grid-template-columns:1fr 1fr;}
+    .sq{flex-direction:row;align-items:center;aspect-ratio:auto;padding:16px 18px;gap:14px;}
+    .sq .ic{width:48px;height:48px;font-size:24px;}
+    .sq .txt{margin-top:0;}
+    .sq .nm{font-size:16px;}
+    .sq .ds{display:block;font-size:12.5px;color:rgba(255,255,255,.85);margin-top:2px;}
+    .sq .cor{position:static;margin-left:auto;font-size:18px;}
+    .sq.soon .cor{font-size:11px;}
+  }
+
+  /* ツール画面 共通 */
+  .thead{display:flex;align-items:center;gap:10px;margin:0 2px 16px;}
+  .thead h2{font-size:20px;font-weight:700;letter-spacing:.04em;flex:1;min-width:0;}
+  .back2{font-size:13px;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.32);border-radius:9px;padding:7px 12px;cursor:pointer;white-space:nowrap;}
+  .back2:active{background:rgba(255,255,255,.28);}
+  .thead .del{font-size:13px;color:#ffdede;background:rgba(226,87,76,.32);border:1px solid rgba(255,170,160,.42);border-radius:9px;padding:7px 12px;cursor:pointer;white-space:nowrap;}
+
+  /* 現場メモ */
+  .addbtn{width:100%;padding:14px;border:1px dashed rgba(255,255,255,.5);border-radius:14px;background:rgba(255,255,255,.1);color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .addbtn:active{background:rgba(255,255,255,.2);}
+  .memo{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);}
+  .memo:active{background:rgba(255,255,255,.2);}
+  .memo .m-t{font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .memo .m-p{color:rgba(255,255,255,.82);font-size:13px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .memo .m-d{color:rgba(255,255,255,.62);font-size:11px;margin-top:7px;font-family:"Manrope",sans-serif;letter-spacing:.03em;}
+  .empty{text-align:center;color:rgba(255,255,255,.78);padding:44px 16px;font-size:14px;line-height:1.8;}
+  #memoTitle{width:100%;padding:13px 14px;border:1px solid rgba(255,255,255,.3);border-radius:12px;background:rgba(255,255,255,.96);color:#15233a;font-size:16px;font-weight:700;margin-bottom:10px;}
+  #memoBody{width:100%;min-height:48vh;padding:14px;border:1px solid rgba(255,255,255,.3);border-radius:12px;background:rgba(255,255,255,.96);color:#15233a;font-size:16px;line-height:1.7;resize:vertical;font-family:inherit;}
+  .savehint{font-size:12px;color:rgba(255,255,255,.78);margin-top:10px;text-align:center;min-height:16px;opacity:0;transition:opacity .2s;font-family:"Manrope",sans-serif;}
+  .savehint.show{opacity:1;}
+
+  /* toast */
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:30px;z-index:200;background:#15233a;color:#fff;padding:11px 18px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.28);max-width:88%;text-align:center;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v1</div>
+
+<div class="wrap">
+
+  <!-- ========== トップ ========== -->
+  <div class="pane on" id="p-home">
+    <div class="head">
+      <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
+      <div class="kicker">Toolbox</div>
+      <h1>ツールボックス</h1>
+      <div class="co">現場で使う道具をまとめて</div>
+    </div>
+    <div class="grid">
+      <div class="sq t-memo"  onclick="openTool('memo')"><span class="ic">📝</span><span class="txt"><span class="nm">現場メモ</span><span class="ds">サッとテキストでメモ</span></span><span class="cor">→</span></div>
+      <div class="sq t-check soon" onclick="openTool('check')"><span class="ic">✅</span><span class="txt"><span class="nm">チェックリスト</span><span class="ds">確認項目を管理</span></span><span class="cor">準備中</span></div>
+      <div class="sq t-draw soon"  onclick="openTool('draw')"><span class="ic">✍️</span><span class="txt"><span class="nm">手書きメモ</span><span class="ds">指で書ける</span></span><span class="cor">準備中</span></div>
+      <div class="sq t-rec soon"   onclick="openTool('rec')"><span class="ic">🎙️</span><span class="txt"><span class="nm">録音機</span><span class="ds">音声を記録</span></span><span class="cor">準備中</span></div>
+      <div class="sq t-board soon" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">準備中</span></div>
+      <div class="sq t-elec soon"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">準備中</span></div>
+      <div class="sq t-area soon"  onclick="openTool('area')"><span class="ic">📐</span><span class="txt"><span class="nm">坪・㎡・畳</span><span class="ds">面積の換算</span></span><span class="cor">準備中</span></div>
+    </div>
+  </div>
+
+  <!-- ========== ① 現場メモ（一覧） ========== -->
+  <div class="pane" id="p-memo">
+    <div class="thead">
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
+      <h2>現場メモ</h2>
+    </div>
+    <button class="addbtn" onclick="newMemo()">＋ 新しいメモ</button>
+    <div id="memoList"></div>
+  </div>
+
+  <!-- 現場メモ（編集） -->
+  <div class="pane" id="p-memoEdit">
+    <div class="thead">
+      <span class="back2" onclick="backToMemoList()">← 一覧</span>
+      <h2>メモ</h2>
+      <span class="del" onclick="deleteMemo()">削除</span>
+    </div>
+    <input id="memoTitle" placeholder="タイトル（任意）" autocapitalize="off" oninput="saveMemoDraft()">
+    <textarea id="memoBody" placeholder="ここにメモ…" oninput="saveMemoDraft()"></textarea>
+    <div class="savehint" id="memoSaved"></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== 共通 ===== */
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastT;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
+function go(id){var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');var el=document.getElementById(id);if(el)el.classList.add('on');window.scrollTo(0,0);}
+function tbGet(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v;}catch(e){return d;}}
+function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
+
+/* 実装済みツール */
+var READY={memo:1};
+function openTool(k){
+  if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
+  go('p-'+k);
+  if(k==='memo')renderMemoList();
+}
+function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳'}[k]||k;}
+
+/* ===== ① 現場メモ ===== */
+var MEMOS_KEY='tb_memos';
+var curMemo=null;
+function loadMemos(){return tbGet(MEMOS_KEY,[]);}
+function saveMemos(a){tbSet(MEMOS_KEY,a);}
+function renderMemoList(){
+  var a=loadMemos().slice().sort(function(x,y){return y.ts-x.ts;});
+  var el=document.getElementById('memoList');
+  if(!a.length){ el.innerHTML='<div class="empty">まだメモがありません。<br>「＋ 新しいメモ」で作成できます。</div>'; return; }
+  el.innerHTML=a.map(function(m){
+    var ttl=esc(m.title||'(無題)');
+    var prev=esc((m.body||'').replace(/\s+/g,' ').slice(0,80))||'（本文なし）';
+    return '<div class="memo" onclick="openMemo(\''+m.id+'\')"><div class="m-t">'+ttl+'</div><div class="m-p">'+prev+'</div><div class="m-d">'+fmtTs(m.ts)+'</div></div>';
+  }).join('');
+}
+function newMemo(){
+  curMemo=null;
+  document.getElementById('memoTitle').value='';
+  document.getElementById('memoBody').value='';
+  document.getElementById('memoSaved').classList.remove('show');
+  go('p-memoEdit');
+  setTimeout(function(){document.getElementById('memoBody').focus();},150);
+}
+function openMemo(id){
+  var m=loadMemos().filter(function(x){return x.id===id;})[0];
+  if(!m)return;
+  curMemo=id;
+  document.getElementById('memoTitle').value=m.title||'';
+  document.getElementById('memoBody').value=m.body||'';
+  document.getElementById('memoSaved').classList.remove('show');
+  go('p-memoEdit');
+}
+function saveMemoDraft(){
+  var t=document.getElementById('memoTitle').value;
+  var b=document.getElementById('memoBody').value;
+  if(curMemo===null && !t && !b) return; /* 空の新規はまだ作らない */
+  var a=loadMemos();
+  if(curMemo===null){
+    curMemo='m'+Date.now();
+    a.push({id:curMemo,title:t,body:b,ts:Date.now()});
+  }else{
+    var hit=false;
+    for(var i=0;i<a.length;i++){ if(a[i].id===curMemo){ a[i].title=t; a[i].body=b; a[i].ts=Date.now(); hit=true; break; } }
+    if(!hit){ a.push({id:curMemo,title:t,body:b,ts:Date.now()}); }
+  }
+  saveMemos(a);
+  var s=document.getElementById('memoSaved');
+  s.textContent='保存しました ・ '+fmtTs(Date.now());
+  s.classList.add('show');
+}
+function backToMemoList(){
+  /* タイトルも本文も空のメモは残さない */
+  var t=document.getElementById('memoTitle').value;
+  var b=document.getElementById('memoBody').value;
+  if(curMemo!==null && !t && !b){
+    saveMemos(loadMemos().filter(function(x){return x.id!==curMemo;}));
+  }
+  curMemo=null;
+  go('p-memo');
+  renderMemoList();
+}
+function deleteMemo(){
+  if(curMemo===null){ backToMemoList(); return; }
+  if(!confirm('このメモを削除しますか？'))return;
+  saveMemos(loadMemos().filter(function(x){return x.id!==curMemo;}));
+  curMemo=null;
+  go('p-memo');
+  renderMemoList();
+  toast('削除しました');
+}
+</script>
+</body>
+</html>
