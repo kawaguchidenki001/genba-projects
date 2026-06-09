@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 39 (2026-06-10) -->
+<!-- version 40 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -136,7 +136,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v39</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v40</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -381,7 +381,7 @@ function kindKey(p){var k=String(p['種別']||'').trim();return k||'未分類';}
 function buildKindOptions(){var sel=document.getElementById('f_kind');if(!sel)return;
   var list=KINDS.slice();
   projects.forEach(function(p){var k=kindKey(p);if(list.indexOf(k)<0)list.push(k);});
-  var cur=sel.value;sel.innerHTML='';
+  var cur=sel.value;sel.innerHTML='<option value="">（すべて）</option>';
   list.forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o);});
   if(cur&&list.indexOf(cur)>=0)sel.value=cur;}
 function kindOfProj(pid){var p=projects.filter(function(x){return x['案件ID']===pid;})[0];return p?kindKey(p):'';}
