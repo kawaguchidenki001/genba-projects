@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 5 (2026-06-09) -->
+<!-- toolbox version 6 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -109,10 +109,17 @@
   .tltxt{font-size:14px;font-weight:700;color:#15233a;}
   .linkbtn{width:100%;padding:11px;border:1px solid rgba(255,255,255,.4);border-radius:11px;background:rgba(255,255,255,.12);color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
   .linkbtn:active{background:rgba(255,255,255,.22);}
+  .citem{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);border-radius:11px;padding:9px 11px;margin-bottom:8px;}
+  .citem input[type=checkbox]{width:24px;height:24px;flex:0 0 auto;}
+  .citem input[type=text]{flex:1;min-width:0;padding:9px 10px;border:1px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.96);color:#15233a;font-size:15px;}
+  .citem.done input[type=text]{text-decoration:line-through;opacity:.55;}
+  .citem .cdel{flex:0 0 auto;background:none;border:none;color:#ffd2d2;font-size:22px;line-height:1;cursor:pointer;padding:2px 6px;}
+  .additem{width:100%;padding:11px;border:1px dashed rgba(255,255,255,.45);border-radius:11px;background:rgba(255,255,255,.1);color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .additem:active{background:rgba(255,255,255,.2);}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v5</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v6</div>
 
 <div class="wrap">
 
@@ -139,9 +146,9 @@
   <div class="pane" id="p-memo-select">
     <div class="thead">
       <span class="back2" onclick="go('p-home')">← ツールボックス</span>
-      <h2>現場メモ</h2>
+      <h2 id="selTitle">現場メモ</h2>
     </div>
-    <div class="lead">メモを保存する現場を選んでください。</div>
+    <div class="lead">保存する現場を選んでください。</div>
     <label class="slbl">種別</label>
     <select id="selKind" class="sel" onchange="onKind()"><option value="">― 選択 ―</option></select>
     <label class="slbl">会社</label>
@@ -179,6 +186,36 @@
     <div class="savehint" id="noteSaved"></div>
   </div>
 
+  <!-- ② 現場チェックリスト：一覧 -->
+  <div class="pane" id="p-check-list">
+    <div class="thead">
+      <span class="back2" onclick="go('p-memo-select')">← 現場を変える</span>
+      <h2>現場チェックリスト</h2>
+    </div>
+    <div class="sitebar" id="checkSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <button class="addbtn" onclick="newCheck()">＋ 新しいチェックリスト</button>
+    <div id="checkList"></div>
+  </div>
+
+  <!-- 現場チェックリスト：編集 -->
+  <div class="pane" id="p-check-edit">
+    <div class="thead">
+      <span class="back2" onclick="openSiteCheckList()">← 一覧</span>
+      <h2>チェックリスト</h2>
+      <span class="del" onclick="deleteCheck()">削除</span>
+    </div>
+    <div class="sitebar" id="checkEditSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <label class="slbl">タイトル（何のチェックか）</label>
+    <input id="checkTitle" placeholder="例：着工前チェック" autocapitalize="off">
+    <label class="slbl">項目（チェックを入れると完了）</label>
+    <div id="checkItems"></div>
+    <button class="additem" onclick="addCheckItem()">＋ 項目を追加</button>
+    <button class="savebtn" onclick="saveCheck()">保存する</button>
+    <div class="savehint" id="checkSaved"></div>
+  </div>
+
 </div>
 
 <div class="tload" id="tload"><div class="tlbox"><div class="tspin"></div><div class="tltxt" id="tltxt">読み込み中…</div></div></div>
@@ -213,10 +250,10 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
 /* 実装済みツール */
-var READY={memo:1};
+var READY={memo:1,check:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
-  if(k==='memo'){ go('p-memo-select'); loadSites(); return; }
+  if(k==='memo'||k==='check'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='check'?'現場チェックリスト':'現場メモ'); go('p-memo-select'); loadSites(); return; }
   go('p-'+k);
 }
 function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳'}[k]||k;}
@@ -225,6 +262,7 @@ function toolName(k){return {memo:'現場メモ',check:'チェックリスト',d
 var PROJ_KEY='tb_projects';
 var tbProjects=[];
 var curSite=null;
+var curTool='memo';
 var curNote=null;
 var noteCache={};
 var pendingNote=null;
@@ -259,7 +297,7 @@ function onSite(){
   var id=document.getElementById('selSite').value; if(!id)return;
   var p=tbProjects.filter(function(x){return String(x['案件ID'])===String(id);})[0]||{};
   curSite={id:id,name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
-  openSiteMemoList();
+  if(curTool==='check')openSiteCheckList(); else openSiteMemoList();
 }
 function siteBarHtml(){ if(!curSite)return ''; return '<b>'+esc(curSite.cust||'—')+'</b> ／ '+esc(curSite.name||'—')+(curSite.kind?'　<span style="opacity:.7;">'+esc(curSite.kind)+'</span>':''); }
 function openSiteMemoList(){
@@ -341,7 +379,108 @@ function openMemoForCase(id){
     openSiteMemoList();
   }).catch(function(){ hideLoad(); fillKinds(); go('p-memo-select'); });
 }
-(function(){ var m=location.search.match(/[?&]memo=([^&]+)/); if(m){ var nm=location.search.match(/[?&]note=([^&]+)/); if(nm)pendingNote=decodeURIComponent(nm[1]); openMemoForCase(decodeURIComponent(m[1])); } })();
+
+/* ===== ② 現場チェックリスト（現場ごと・サーバー保存） ===== */
+var curCheck=null;
+var checkItems=[];
+var checkCache={};
+function parseItems(t){ try{var a=JSON.parse(t||'[]');return Array.isArray(a)?a:[];}catch(e){return [];} }
+function openSiteCheckList(){
+  if(!curSite){ go('p-memo-select'); return; }
+  go('p-check-list');
+  document.getElementById('checkSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('checkList').innerHTML='<div class="empty">読み込み中…</div>';
+  callGAS({action:'notesList',id:curSite.id}).then(function(res){
+    var list=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'')==='check';});
+    renderCheckList(list);
+    if(pendingNote){ var _t=pendingNote; pendingNote=null; if(checkCache[_t]) openCheck(_t); }
+  }).catch(function(e){ document.getElementById('checkList').innerHTML='<div class="empty">読み込みに失敗しました。<br>電波を確認して、もう一度お試しください。</div>'; });
+}
+function renderCheckList(list){
+  var el=document.getElementById('checkList');
+  list.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
+  checkCache={}; list.forEach(function(n){checkCache[n['メモID']]=n;});
+  if(!list.length){ el.innerHTML='<div class="empty">この現場のチェックリストはまだありません。<br>「＋ 新しいチェックリスト」で作成できます。</div>'; return; }
+  el.innerHTML=list.map(function(n){
+    var items=parseItems(n['内容']); var done=items.filter(function(it){return it&&it.d;}).length;
+    var ttl=esc(n['タイトル']||'(無題)');
+    return '<div class="memo" onclick="openCheck(\''+esc(n['メモID'])+'\')"><div class="m-t">'+ttl+'</div><div class="m-p">'+done+' / '+items.length+' 完了</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
+  }).join('');
+}
+function newCheck(){
+  curCheck=null; checkItems=[{t:'',d:false}];
+  document.getElementById('checkTitle').value='';
+  document.getElementById('checkSaved').classList.remove('show');
+  document.getElementById('checkEditSiteBar').innerHTML=siteBarHtml();
+  renderCheckItems();
+  go('p-check-edit');
+  setTimeout(function(){document.getElementById('checkTitle').focus();},150);
+}
+function openCheck(id){
+  var n=checkCache[id]||{};
+  curCheck=id; checkItems=parseItems(n['内容']); if(!checkItems.length)checkItems=[{t:'',d:false}];
+  document.getElementById('checkTitle').value=n['タイトル']||'';
+  document.getElementById('checkSaved').classList.remove('show');
+  document.getElementById('checkEditSiteBar').innerHTML=siteBarHtml();
+  renderCheckItems();
+  go('p-check-edit');
+}
+function renderCheckItems(){
+  var el=document.getElementById('checkItems');
+  el.innerHTML=checkItems.map(function(it,i){
+    return '<div class="citem'+(it.d?' done':'')+'"><input type="checkbox" '+(it.d?'checked':'')+' onchange="toggleItem('+i+',this.checked)"><input type="text" value="'+esc(it.t||'')+'" placeholder="項目" oninput="setItem('+i+',this.value)"><button class="cdel" onclick="delItem('+i+')">×</button></div>';
+  }).join('');
+}
+function toggleItem(i,v){ if(checkItems[i]){ checkItems[i].d=v; var el=document.getElementById('checkItems').children[i]; if(el){ if(v)el.classList.add('done'); else el.classList.remove('done'); } } }
+function setItem(i,v){ if(checkItems[i])checkItems[i].t=v; }
+function delItem(i){ checkItems.splice(i,1); if(!checkItems.length)checkItems=[{t:'',d:false}]; renderCheckItems(); }
+function addCheckItem(){ checkItems.push({t:'',d:false}); renderCheckItems(); var ins=document.getElementById('checkItems').querySelectorAll('input[type=text]'); if(ins.length)ins[ins.length-1].focus(); }
+function saveCheck(){
+  var t=document.getElementById('checkTitle').value.trim();
+  if(!t){ toast('タイトルを入力してください'); document.getElementById('checkTitle').focus(); return; }
+  if(!curSite){ toast('現場が選ばれていません'); go('p-memo-select'); return; }
+  var items=checkItems.filter(function(it){return String(it.t||'').trim()!=='';});
+  var u=gUser()||{};
+  var data={'案件ID':curSite.id,'種類':'check','タイトル':t,'内容':JSON.stringify(items),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  if(curCheck)data['メモID']=curCheck;
+  showLoad('保存中…');
+  callGAS({action:'noteSave',data:data},true).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'保存に失敗しました');
+    if(res.note&&res.note['メモID']){ curCheck=res.note['メモID']; checkCache[curCheck]=res.note; }
+    var sv=document.getElementById('checkSaved'); sv.textContent='保存しました'; sv.classList.add('show');
+    toast('保存しました');
+  }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
+}
+function deleteCheck(){
+  if(!curCheck){ openSiteCheckList(); return; }
+  if(!confirm('このチェックリストを削除しますか？'))return;
+  showLoad('削除中…');
+  callGAS({action:'noteDelete',id:curCheck},true).then(function(res){
+    if(!res||!res.ok)throw new Error('削除に失敗しました');
+    toast('削除しました'); curCheck=null; openSiteCheckList();
+  }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
+}
+function openCheckForCase(id){
+  curTool='check';
+  showLoad('読み込み中…');
+  callGAS({action:'list'},true).then(function(res){
+    var ps=(res&&res.ok&&res.projects)||[]; tbProjects=ps;
+    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
+    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
+    hideLoad();
+    var st=document.getElementById('selTitle'); if(st)st.textContent='現場チェックリスト';
+    if(!p){ toast('現場が見つかりませんでした'); fillKinds(); go('p-memo-select'); return; }
+    curSite={id:String(id),name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
+    openSiteCheckList();
+  }).catch(function(){ hideLoad(); fillKinds(); go('p-memo-select'); });
+}
+(function(){
+  var q=location.search;
+  var cm=q.match(/[?&]check=([^&]+)/), mm=q.match(/[?&]memo=([^&]+)/), nm=q.match(/[?&]note=([^&]+)/);
+  if(nm)pendingNote=decodeURIComponent(nm[1]);
+  if(cm){ openCheckForCase(decodeURIComponent(cm[1])); }
+  else if(mm){ openMemoForCase(decodeURIComponent(mm[1])); }
+})();
 </script>
 </body>
 </html>
