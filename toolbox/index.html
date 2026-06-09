@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 8 (2026-06-09) -->
+<!-- toolbox version 10 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -143,10 +143,29 @@
   .eres.err{background:rgba(226,87,76,.2);border-color:rgba(255,170,160,.5);color:#ffe2e2;}
   .eres .big{font-size:25px;font-weight:800;letter-spacing:.02em;}
   .eres .sub{font-size:13px;color:rgba(255,255,255,.85);margin-top:7px;line-height:1.6;}
+  /* 坪・㎡・畳 換算 */
+  .aconv{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end;margin-bottom:14px;}
+  .aconv-eq{padding-bottom:14px;text-align:center;font-size:22px;color:rgba(255,255,255,.7);font-family:"Manrope",sans-serif;}
+  .afrom{padding:13px 14px;border:1px solid rgba(255,255,255,.3);border-radius:12px;background:rgba(255,255,255,.96);color:#15233a;font-size:17px;font-weight:700;width:100%;}
+  .ato{padding:13px 14px;border-radius:12px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:17px;font-weight:700;text-align:center;min-height:51px;display:flex;align-items:center;justify-content:center;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .aunit{font-size:12px;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.82);margin-bottom:5px;margin-left:2px;}
+  .asep{height:1px;background:rgba(255,255,255,.2);margin:20px 2px 18px;}
+  .atbl{width:100%;border-collapse:collapse;font-size:14px;}
+  .atbl th{text-align:left;padding:9px 10px;color:rgba(255,255,255,.72);font-size:12px;font-weight:700;letter-spacing:.05em;border-bottom:1px solid rgba(255,255,255,.15);}
+  .atbl td{padding:11px 10px;border-bottom:1px solid rgba(255,255,255,.1);vertical-align:top;}
+  .atbl tr:last-child td{border-bottom:none;}
+  .atbl .av{font-size:18px;font-weight:800;color:#fff;}
+  .atbl .au{font-size:12px;color:rgba(255,255,255,.75);margin-top:2px;}
+  /* 小黒板カメラ */
+  .bcam-wrap{position:relative;border-radius:12px;overflow:hidden;background:#111;margin-bottom:14px;line-height:0;}
+  #boardVideo{width:100%;max-height:48vh;object-fit:cover;display:block;}
+  .bcam-overlay{position:absolute;bottom:0;left:0;right:0;padding:10px 14px 12px;background:rgba(15,45,20,.88);border-top:2px solid rgba(255,255,255,.35);display:none;}
+  .bov-line{color:#fff;font-size:12px;font-weight:700;line-height:1.9;letter-spacing:.02em;}
+  .board-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:2px;}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v8</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v10</div>
 
 <div class="wrap">
 
@@ -163,9 +182,9 @@
       <div class="sq t-check" onclick="openTool('check')"><span class="ic">✅</span><span class="txt"><span class="nm">チェックリスト</span><span class="ds">確認項目を管理</span></span><span class="cor">→</span></div>
       <div class="sq t-draw"  onclick="openTool('draw')"><span class="ic">✍️</span><span class="txt"><span class="nm">手書きメモ</span><span class="ds">指で書ける</span></span><span class="cor">→</span></div>
       <div class="sq t-rec soon"   onclick="openTool('rec')"><span class="ic">🎙️</span><span class="txt"><span class="nm">録音機</span><span class="ds">音声を記録</span></span><span class="cor">準備中</span></div>
-      <div class="sq t-board soon" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">準備中</span></div>
+      <div class="sq t-board" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">→</span></div>
       <div class="sq t-elec"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">→</span></div>
-      <div class="sq t-area soon"  onclick="openTool('area')"><span class="ic">📐</span><span class="txt"><span class="nm">坪・㎡・畳</span><span class="ds">面積の換算</span></span><span class="cor">準備中</span></div>
+      <div class="sq t-area"  onclick="openTool('area')"><span class="ic">📐</span><span class="txt"><span class="nm">坪・㎡・畳</span><span class="ds">面積の換算</span></span><span class="cor">→</span></div>
     </div>
   </div>
 
@@ -344,6 +363,62 @@
     </div>
   </div>
 
+  <!-- ========== ⑦ 坪・㎡・畳 換算 ========== -->
+  <div class="pane" id="p-area">
+    <div class="thead">
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
+      <h2>坪・㎡・畳の換算</h2>
+    </div>
+
+    <!-- 入力欄（3行：坪→、㎡→、畳→） -->
+    <div id="areaBlock">
+      <!-- 坪 入力 -->
+      <div class="aconv">
+        <div><div class="aunit">坪</div><input class="afrom" id="aFrom_tsubo" inputmode="decimal" oninput="aConv('tsubo')" placeholder="例 30"></div>
+        <div class="aconv-eq">=</div>
+        <div id="aTo_tsubo_right"></div>
+      </div>
+      <!-- ㎡ 入力 -->
+      <div class="aconv">
+        <div><div class="aunit">㎡（平米）</div><input class="afrom" id="aFrom_m2" inputmode="decimal" oninput="aConv('m2')" placeholder="例 100"></div>
+        <div class="aconv-eq">=</div>
+        <div id="aTo_m2_right"></div>
+      </div>
+      <!-- 畳 入力 -->
+      <div class="aconv">
+        <div><div class="aunit">畳（江戸間）</div><input class="afrom" id="aFrom_jou" inputmode="decimal" oninput="aConv('jou')" placeholder="例 6"></div>
+        <div class="aconv-eq">=</div>
+        <div id="aTo_jou_right"></div>
+      </div>
+    </div>
+
+    <div class="asep"></div>
+
+    <!-- 一覧表示エリア -->
+    <div id="areaTable"></div>
+    <div class="enote" style="margin-top:10px;">1坪 ≒ 3.30579 ㎡ ／ 1畳（江戸間）≒ 1.65289 ㎡。建物の規格により畳サイズは異なります。</div>
+  </div>
+
+  <!-- ========== ⑤ 小黒板カメラ ========== -->
+  <div class="pane" id="p-board">
+    <div class="thead">
+      <span class="back2" onclick="boardBack()">← ツールボックス</span>
+      <h2>小黒板カメラ</h2>
+    </div>
+    <div class="sitebar" id="boardSiteBar">現場: <b>—</b></div>
+    <div class="bcam-wrap">
+      <video id="boardVideo" autoplay playsinline muted></video>
+      <div class="bcam-overlay" id="boardOverlay"></div>
+    </div>
+    <div class="board-grid">
+      <div><label class="slbl">現場名</label><input class="enum" id="boardSiteName" oninput="bov()" placeholder="現場名"></div>
+      <div><label class="slbl">工程</label><input class="enum" id="boardProcess" oninput="bov()" placeholder="例 配線工事"></div>
+      <div><label class="slbl">日付</label><input class="enum" id="boardDate" type="date" oninput="bov()"></div>
+      <div><label class="slbl">備考（任意）</label><input class="enum" id="boardMemo" oninput="bov()" placeholder="任意"></div>
+    </div>
+    <button class="savebtn" style="background:#d97b12;margin-top:14px;" onclick="boardShoot()">📷 撮影してDriveに保存</button>
+  </div>
+
 </div>
 
 <div class="tload" id="tload"><div class="tlbox"><div class="tspin"></div><div class="tltxt" id="tltxt">読み込み中…</div></div></div>
@@ -378,10 +453,10 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
 /* 実装済みツール */
-var READY={memo:1,check:1,draw:1,elec:1};
+var READY={memo:1,check:1,draw:1,elec:1,area:1,board:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
-  if(k==='memo'||k==='check'||k==='draw'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='check'?'現場チェックリスト':k==='draw'?'手書きメモ':'現場メモ'); go('p-memo-select'); loadSites(); return; }
+  if(k==='memo'||k==='check'||k==='draw'||k==='board'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='check'?'現場チェックリスト':k==='draw'?'手書きメモ':k==='board'?'小黒板カメラ':'現場メモ'); go('p-memo-select'); loadSites(); return; }
   go('p-'+k);
 }
 function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳'}[k]||k;}
@@ -425,7 +500,7 @@ function onSite(){
   var id=document.getElementById('selSite').value; if(!id)return;
   var p=tbProjects.filter(function(x){return String(x['案件ID'])===String(id);})[0]||{};
   curSite={id:id,name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
-  if(curTool==='check')openSiteCheckList(); else if(curTool==='draw')openSiteDrawList(); else openSiteMemoList();
+  if(curTool==='check')openSiteCheckList(); else if(curTool==='draw')openSiteDrawList(); else if(curTool==='board')openBoardCamera(); else openSiteMemoList();
 }
 function siteBarHtml(){ if(!curSite)return ''; return '<b>'+esc(curSite.cust||'—')+'</b> ／ '+esc(curSite.name||'—')+(curSite.kind?'　<span style="opacity:.7;">'+esc(curSite.kind)+'</span>':''); }
 function openSiteMemoList(){
@@ -838,6 +913,143 @@ function calcVd(){
   var html='<div class="big">電圧降下 = '+eFmt(e)+' V</div>';
   if(base!==null&&base>0)html+='<div class="sub">降下率 '+eFmt(e/base*100)+' % （基準 '+eFmt(base)+' V）</div>';
   res.className='eres ok';res.innerHTML=html;
+}
+
+
+/* ===== ⑦ 坪・㎡・畳 換算 ===== */
+var A_TSUBO=3.30579;   // 1坪 = 3.30579 m2
+var A_JOU  =1.65289;   // 1畳(江戸間) = 1.65289 m2
+
+function aFmt(n){
+  if(!isFinite(n))return '—';
+  var a=Math.abs(n);
+  var dp=a>=1000?0:(a>=100?1:(a>=10?2:3));
+  var x=n.toFixed(dp);
+  if(x.indexOf('.')>=0)x=x.replace(/0+$/,'').replace(/\.$/,'');
+  return x;
+}
+function aRow(label,val,unit2){
+  return '<tr><td class="av">'+aFmt(val)+'<div class="au">'+unit2+'</div></td></tr>';
+}
+function aRenderRight(id,html){ var el=document.getElementById(id); if(el){ el.className='ato'; el.innerHTML=html; } }
+function aRenderTable(m2){
+  var tsubo=m2/A_TSUBO, jou=m2/A_JOU;
+  var el=document.getElementById('areaTable');
+  if(!el||!isFinite(m2)){if(el)el.innerHTML='';return;}
+  el.innerHTML='<table class="atbl">'+
+    '<thead><tr><th>単位</th><th>換算値</th></tr></thead>'+
+    '<tbody>'+
+    '<tr><td>坪</td><td class="av">'+aFmt(tsubo)+'<div class="au">坪</div></td></tr>'+
+    '<tr><td>㎡（平米）</td><td class="av">'+aFmt(m2)+'<div class="au">㎡</div></td></tr>'+
+    '<tr><td>畳（江戸間）</td><td class="av">'+aFmt(jou)+'<div class="au">畳</div></td></tr>'+
+    '</tbody></table>';
+}
+function aClearAll(){
+  ['tsubo','m2','jou'].forEach(function(k){
+    var el=document.getElementById('aFrom_'+k); if(el)el.value='';
+    var rt=document.getElementById('aTo_'+k+'_right');
+    if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(255,255,255,.45);font-size:13px;">―</span>';}
+  });
+  var t=document.getElementById('areaTable'); if(t)t.innerHTML='';
+}
+function aConv(from){
+  // 他の入力をクリア（1つのみアクティブ）
+  ['tsubo','m2','jou'].forEach(function(k){
+    if(k!==from){
+      var el=document.getElementById('aFrom_'+k); if(el)el.value='';
+      var rt=document.getElementById('aTo_'+k+'_right');
+      if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(255,255,255,.45);font-size:13px;">―</span>';}
+    }
+  });
+  var input=document.getElementById('aFrom_'+from);
+  var v=input?parseFloat(input.value):NaN;
+  if(isNaN(v)||v<0){
+    var rt=document.getElementById('aTo_'+from+'_right');
+    if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(255,255,255,.45);font-size:13px;">―</span>';}
+    document.getElementById('areaTable').innerHTML=''; return;
+  }
+  var m2 = from==='tsubo'?v*A_TSUBO:(from==='jou'?v*A_JOU:v);
+  var tsubo=m2/A_TSUBO, jou=m2/A_JOU;
+  // 右側に答えを表示
+  var others={tsubo:aFmt(tsubo)+' 坪', m2:aFmt(m2)+' ㎡', jou:aFmt(jou)+' 畳'};
+  var rt=document.getElementById('aTo_'+from+'_right');
+  if(rt){
+    var ans=(from==='tsubo')?aFmt(m2)+' ㎡':(from==='m2')?aFmt(tsubo)+' 坪':aFmt(m2)+' ㎡';
+    rt.className='ato'; rt.textContent=ans;
+  }
+  aRenderTable(m2);
+}
+// 初期状態で右側を「―」にセット
+(function aInit(){
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',aInit);return;}
+  aClearAll();
+})();
+
+
+/* ===== 共通 POST（アップロード用） ===== */
+function tbPost(obj){obj.secret=T_GENERAL;return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)});}
+
+/* ===== ⑤ 小黒板カメラ ===== */
+var boardStream=null,boardSiteId=null,boardSiteName_='';
+function openBoardCamera(){
+  if(!curSite){go('p-memo-select');return;}
+  boardSiteId=curSite.id; boardSiteName_=curSite.name||'';
+  document.getElementById('boardSiteBar').innerHTML='現場：<b>'+esc(curSite.cust||'')+(curSite.name?' ／ '+esc(curSite.name):'')+'</b>';
+  var bsn=document.getElementById('boardSiteName');if(bsn&&!bsn.value)bsn.value=boardSiteName_;
+  var bd=document.getElementById('boardDate');
+  if(bd&&!bd.value){var n=new Date();bd.value=n.getFullYear()+'-'+('0'+(n.getMonth()+1)).slice(-2)+'-'+('0'+n.getDate()).slice(-2);}
+  bov(); go('p-board'); startBoardCamera();
+}
+function startBoardCamera(){
+  if(!navigator||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('カメラに対応していません');return;}
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false})
+    .then(function(stream){boardStream=stream;var v=document.getElementById('boardVideo');v.srcObject=stream;v.play();})
+    .catch(function(e){toast('カメラを起動できませんでした（'+e.message+'）');});
+}
+function stopBoardCamera(){
+  if(boardStream){boardStream.getTracks().forEach(function(t){t.stop();});boardStream=null;}
+  var v=document.getElementById('boardVideo');if(v)v.srcObject=null;
+}
+function boardBack(){stopBoardCamera();go('p-home');}
+function bov(){
+  var site=document.getElementById('boardSiteName').value;
+  var proc=document.getElementById('boardProcess').value;
+  var date=document.getElementById('boardDate').value;
+  var memo=document.getElementById('boardMemo').value;
+  var lines=[];
+  if(site)lines.push('現場：'+site);
+  if(proc)lines.push('工程：'+proc);
+  if(date)lines.push('日付：'+date);
+  if(memo)lines.push('備考：'+memo);
+  var ov=document.getElementById('boardOverlay');if(!ov)return;
+  ov.innerHTML=lines.map(function(l){return '<div class="bov-line">'+esc(l)+'</div>';}).join('');
+  ov.style.display=lines.length?'block':'none';
+}
+function boardShoot(){
+  var vid=document.getElementById('boardVideo');
+  if(!vid||!vid.videoWidth){toast('カメラが準備できていません');return;}
+  var cw=vid.videoWidth,ch=vid.videoHeight;
+  var cvs=document.createElement('canvas');cvs.width=cw;cvs.height=ch;
+  var ctx=cvs.getContext('2d');
+  ctx.drawImage(vid,0,0);
+  var bh=Math.floor(ch*0.30),by=ch-bh;
+  ctx.fillStyle='rgba(15,45,20,0.88)';ctx.fillRect(0,by,cw,bh);
+  ctx.strokeStyle='rgba(255,255,255,0.6)';ctx.lineWidth=2;ctx.strokeRect(6,by+6,cw-12,bh-12);
+  var fs=Math.max(16,Math.floor(cw/32));
+  var lx=22,cx=lx+Math.floor(cw/12),ly=by+fs+16,lh=Math.floor(fs*1.7);
+  var site=document.getElementById('boardSiteName').value;
+  var proc=document.getElementById('boardProcess').value;
+  var date=document.getElementById('boardDate').value;
+  var memo=document.getElementById('boardMemo').value;
+  function dLine(label,val){if(!val)return;ctx.font=(fs-4)+'px sans-serif';ctx.fillStyle='rgba(255,255,255,0.65)';ctx.fillText(label,lx,ly);ctx.font='bold '+fs+'px sans-serif';ctx.fillStyle='#ffffff';ctx.fillText(val,cx,ly);ly+=lh;}
+  dLine('現場',site);dLine('工程',proc);dLine('日付',date);dLine('備考',memo);
+  var base64=cvs.toDataURL('image/jpeg',0.82).split(',')[1];
+  var stamp=(date||new Date().toISOString().slice(0,10)).replace(/-/g,'');
+  var fname='board_'+stamp+'_'+Date.now()+'.jpg';
+  toast('Driveに保存中...');
+  tbPost({action:'uploadPhoto',id:boardSiteId,dest:'photo',name:fname,mime:'image/jpeg',data:base64})
+    .then(function(){setTimeout(function(){toast('✓ 保存しました');},1800);})
+    .catch(function(){toast('保存に失敗しました');});
 }
 
 (function(){
