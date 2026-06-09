@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 14 (2026-06-09) -->
+<!-- toolbox version 15 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -175,7 +175,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v14</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v15</div>
 
 <div class="wrap">
 
@@ -1140,10 +1140,12 @@ function boardShoot(){
   ctx.font=Math.max(9,Math.floor(bw/24))+'px sans-serif';ctx.textAlign='right';
   if(company)ctx.fillText(company,bx+bw-pad,botY+Math.max(botH/2,fs),bw-pad*2);
   var base64=cvs.toDataURL('image/jpeg',0.82).split(',')[1];
+  if(!boardSiteId){toast('エラー：案件が未選択です。← で戻って選び直してください。');return;}
+  if(!base64||base64.length<200){toast('エラー：画像データの取得に失敗しました。');return;}
   var fname='board_'+Date.now()+'.jpg';
-  toast('Driveに保存中...');
+  toast('Driveに保存中… ('+Math.round(base64.length/1024)+'KB)');
   tbPost({action:'uploadPhoto',id:boardSiteId,dest:'photo',name:fname,mime:'image/jpeg',data:base64})
-    .then(function(){setTimeout(function(){toast('✓ 保存しました');},1800);})
+    .then(function(){setTimeout(function(){toast('✓ Driveに保存しました');},2000);})
     .catch(function(){toast('保存に失敗しました');});
 }
 
