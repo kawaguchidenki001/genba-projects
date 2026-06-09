@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- version 35 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -131,6 +132,7 @@
 </style>
 </head>
 <body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v35</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -239,7 +241,6 @@
       <div id="d_cust" class="d-sub"></div>
       <div class="d-rows" id="d_rows"></div>
       <a id="d_map" class="d-map" target="_blank" rel="noopener" style="display:none;">📍 地図で見る（Googleマップ）</a>
-      <button onclick="openPhotos(curDetail)" style="display:block;width:100%;text-align:center;padding:14px;background:#1f7a4d;color:#fff;border:none;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:10px;font-family:inherit;">🧾 工事台帳作成</button>
       <a id="d_folder" class="d-folder" target="_blank" rel="noopener">📁 フォルダを開く（Googleドライブ）</a>
       <div id="d_adminbtns" style="display:none;">
         <button class="btn primary" style="width:100%;" onclick="editFromDetail()">✎ この現場を編集</button>
@@ -267,14 +268,14 @@ var CACHE_P = 'genba_projects', CACHE_C = 'genba_customers', CACHE_K = 'genba_co
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
 function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
-function callGAS(params,secretOverride){
+function callGAS(params,secretOverride,silent){
   return new Promise(function(resolve,reject){
     if(!GAS_URL){ reject(new Error('GAS_URL が未設定です')); return; }
-    showLoad();
+    if(!silent) showLoad();
     var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6);
     var s=document.createElement('script');
     var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
-    function cleanup(){hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    function cleanup(){if(!silent) hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
     window[cb]=function(res){cleanup();resolve(res);};
     var q=Object.assign({secret:secretOverride||tok(),callback:cb},params);
     if(q.data && typeof q.data!=='string') q.data=JSON.stringify(q.data);
@@ -302,16 +303,15 @@ function saveCache(){
       localStorage.setItem(CACHE_C,JSON.stringify(customers));
       localStorage.setItem(CACHE_K,JSON.stringify(contacts));}catch(e){}
 }
-function reload(){
+function reload(silent){
   setSync('busy','同期中…');
-  callGAS({action:'all'}).then(function(res){
+  callGAS({action:'all'},null,silent).then(function(res){
     if(!res.ok){throw new Error(res.error||'エラー');}
     projects=res.projects||[]; customers=res.customers||[]; contacts=res.contacts||[];
     saveCache(); buildChips(); buildCustList(); render();
     setSync('ok','同期済み'); openCaseFromUrl();
   }).catch(function(err){
-    setSync('off','オフライン'); render();
-    toast('読込失敗：'+err.message);
+    setSync('off','オフライン'); if(!silent){ render(); toast('読込失敗：'+err.message); }
   });
 }
 
@@ -550,7 +550,7 @@ function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.c
 /* 背景タップで閉じる */
 ['ov','ovc','ovd'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
 /* タブ復帰で自動更新 */
-document.addEventListener('visibilitychange',function(){if(!document.hidden && GAS_URL)reload();});
+document.addEventListener('visibilitychange',function(){if(!document.hidden && GAS_URL)reload(true);});
 
 /* ===== 管理者ログイン ===== */
 function showGate(msg){document.getElementById('gate').style.display='flex';document.getElementById('gateMsg').textContent=msg||'';}
@@ -572,11 +572,12 @@ function toggleAdmin(){
 /* 起動：全員が閲覧可。管理者のみ追加・編集ができる */
 loadCache();
 buildChips(); render(); applyAdminUI();
-callGAS({action:'checkRole'}).then(function(res){
+var hadCacheP=(projects&&projects.length>0)||(customers&&customers.length>0);
+callGAS({action:'checkRole'},null,hadCacheP).then(function(res){
   ROLE=(res&&res.ok)?res.role:'';
   if(!ROLE){ if(admTok())localStorage.removeItem('genba_admin'); showGate('認証できませんでした。共通リンクから開き直してください。'); return; }
   if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin');
-  hideGate(); applyAdminUI(); buildChips(); buildCustList(); render(); reload();
+  hideGate(); applyAdminUI(); buildChips(); buildCustList(); render(); reload(hadCacheP);
 }).catch(function(){ setSync('off','オフライン'); });
 </script>
 </body>
