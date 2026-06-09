@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 15 (2026-06-09) -->
+<!-- toolbox version 16 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -175,7 +175,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v15</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v16</div>
 
 <div class="wrap">
 
@@ -481,7 +481,6 @@ function toast(m){var t=document.getElementById('toast');t.textContent=m;t.class
 function go(id){var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');var el=document.getElementById(id);if(el)el.classList.add('on');window.scrollTo(0,0);}
 /* ===== サーバー通信 ===== */
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var GAS_URL_FILES='https://script.google.com/macros/s/AKfycbxXMRu6EmwddNKb69v0ojDf_iXFDj50v3xf5Z1FBJtm1J51TztReJ934BQxW2M5zaHg/exec';
 var T_GENERAL='kawaguchi-genba-2026';
 function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
 var loadCnt=0;
@@ -1063,7 +1062,7 @@ function aConv(from){
 
 
 /* ===== 共通 POST（アップロード用） ===== */
-function tbPost(obj){obj.secret=T_GENERAL;return fetch(GAS_URL_FILES,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)});}
+function tbPost(obj){obj.secret=T_GENERAL;return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)});}
 
 /* ===== ⑤ 小黒板カメラ ===== */
 var boardStream=null,boardSiteId=null,boardSiteName_='';
