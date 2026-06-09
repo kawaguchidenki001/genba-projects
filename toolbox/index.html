@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 7 (2026-06-09) -->
+<!-- toolbox version 8 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -125,10 +125,28 @@
   .dcard{display:flex;gap:12px;align-items:center;}
   .dcard .draw-thumb-cv{flex:0 0 80px;width:80px;height:60px;border-radius:8px;border:1px solid rgba(255,255,255,.2);background:#fff;}
   .dcard .dcard-info{flex:1;min-width:0;}
+  /* 電気計算機 */
+  .etabs{display:flex;gap:6px;margin:0 2px 16px;}
+  .etab{flex:1;padding:11px 5px;border-radius:11px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);color:#fff;font-size:13px;font-weight:700;cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .etab.on{background:rgba(255,225,140,.32);border-color:rgba(255,225,140,.72);}
+  .epanel{display:none;}
+  .epanel.on{display:block;}
+  .ehint{color:rgba(255,255,255,.85);font-size:12.5px;line-height:1.7;margin:0 2px 12px;}
+  .enote{color:rgba(255,255,255,.75);font-size:12px;line-height:1.7;margin:14px 2px 0;}
+  .eseg{display:flex;gap:6px;margin-bottom:2px;}
+  .eseg button{flex:1;padding:12px 5px;border-radius:11px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
+  .eseg button.on{background:rgba(255,225,140,.3);border-color:rgba(255,225,140,.72);}
+  .ecell{margin-bottom:2px;}
+  .enum{width:100%;padding:13px 14px;border:1px solid rgba(255,255,255,.3);border-radius:12px;background:rgba(255,255,255,.96);color:#15233a;font-size:17px;font-weight:700;}
+  .eres{margin-top:18px;padding:18px 16px;border-radius:14px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);text-align:center;color:rgba(255,255,255,.82);font-size:14px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);min-height:60px;display:flex;flex-direction:column;justify-content:center;}
+  .eres.ok{background:rgba(255,225,140,.16);border-color:rgba(255,225,140,.5);color:#fff;}
+  .eres.err{background:rgba(226,87,76,.2);border-color:rgba(255,170,160,.5);color:#ffe2e2;}
+  .eres .big{font-size:25px;font-weight:800;letter-spacing:.02em;}
+  .eres .sub{font-size:13px;color:rgba(255,255,255,.85);margin-top:7px;line-height:1.6;}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v7</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v8</div>
 
 <div class="wrap">
 
@@ -142,11 +160,11 @@
     </div>
     <div class="grid">
       <div class="sq t-memo"  onclick="openTool('memo')"><span class="ic">📝</span><span class="txt"><span class="nm">現場メモ</span><span class="ds">サッとテキストでメモ</span></span><span class="cor">→</span></div>
-      <div class="sq t-check soon" onclick="openTool('check')"><span class="ic">✅</span><span class="txt"><span class="nm">チェックリスト</span><span class="ds">確認項目を管理</span></span><span class="cor">準備中</span></div>
-      <div class="sq t-draw soon"  onclick="openTool('draw')"><span class="ic">✍️</span><span class="txt"><span class="nm">手書きメモ</span><span class="ds">指で書ける</span></span><span class="cor">準備中</span></div>
+      <div class="sq t-check" onclick="openTool('check')"><span class="ic">✅</span><span class="txt"><span class="nm">チェックリスト</span><span class="ds">確認項目を管理</span></span><span class="cor">→</span></div>
+      <div class="sq t-draw"  onclick="openTool('draw')"><span class="ic">✍️</span><span class="txt"><span class="nm">手書きメモ</span><span class="ds">指で書ける</span></span><span class="cor">→</span></div>
       <div class="sq t-rec soon"   onclick="openTool('rec')"><span class="ic">🎙️</span><span class="txt"><span class="nm">録音機</span><span class="ds">音声を記録</span></span><span class="cor">準備中</span></div>
       <div class="sq t-board soon" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">準備中</span></div>
-      <div class="sq t-elec soon"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">準備中</span></div>
+      <div class="sq t-elec"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">→</span></div>
       <div class="sq t-area soon"  onclick="openTool('area')"><span class="ic">📐</span><span class="txt"><span class="nm">坪・㎡・畳</span><span class="ds">面積の換算</span></span><span class="cor">準備中</span></div>
     </div>
   </div>
@@ -266,6 +284,66 @@
     <div class="savehint" id="drawSaved"></div>
   </div>
 
+  <!-- ========== ⑥ 電気計算機 ========== -->
+  <div class="pane" id="p-elec">
+    <div class="thead">
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
+      <h2>電気計算機</h2>
+    </div>
+
+    <div class="etabs">
+      <button class="etab on" id="etab-ohm" onclick="elecTab('ohm')">オームの法則</button>
+      <button class="etab" id="etab-pow" onclick="elecTab('pow')">電力・電流</button>
+      <button class="etab" id="etab-vd" onclick="elecTab('vd')">電圧降下</button>
+    </div>
+
+    <!-- オームの法則 -->
+    <div class="epanel on" id="ep-ohm">
+      <div class="ehint">分かっている2つを入力すると、残り1つを自動で計算します。</div>
+      <div class="ecell"><label class="slbl">電圧 V（ボルト）</label><input class="enum" id="ohmV" inputmode="decimal" oninput="calcOhm()" placeholder="例 100"></div>
+      <div class="ecell"><label class="slbl">電流 I（アンペア）</label><input class="enum" id="ohmI" inputmode="decimal" oninput="calcOhm()" placeholder="例 5"></div>
+      <div class="ecell"><label class="slbl">抵抗 R（オーム）</label><input class="enum" id="ohmR" inputmode="decimal" oninput="calcOhm()" placeholder="例 20"></div>
+      <div class="eres" id="ohmRes">分かっている2つを入力してください</div>
+      <div class="enote">計算式：電圧 ＝ 電流 × 抵抗。電力（W）も合わせて表示します。</div>
+    </div>
+
+    <!-- 電力・電流 -->
+    <div class="epanel" id="ep-pow">
+      <label class="slbl">求めるもの</label>
+      <div class="eseg" id="powMode">
+        <button class="on" data-v="kw" onclick="powSetMode('kw')">電力（kW）</button>
+        <button data-v="a" onclick="powSetMode('a')">電流（A）</button>
+      </div>
+      <label class="slbl">回路の種類</label>
+      <div class="eseg" id="powPhase">
+        <button class="on" data-v="1" onclick="powSetPhase('1')">単相</button>
+        <button data-v="3" onclick="powSetPhase('3')">三相</button>
+      </div>
+      <div class="ecell" id="powCellP" style="display:none"><label class="slbl">電力 P（kW）</label><input class="enum" id="powP" inputmode="decimal" oninput="calcPow()" placeholder="例 2"></div>
+      <div class="ecell"><label class="slbl">電圧 V（ボルト）</label><input class="enum" id="powV" inputmode="decimal" oninput="calcPow()" placeholder="例 200"></div>
+      <div class="ecell" id="powCellI"><label class="slbl">電流 I（アンペア）</label><input class="enum" id="powI" inputmode="decimal" oninput="calcPow()" placeholder="例 10"></div>
+      <div class="ecell"><label class="slbl">力率（cosφ・不明なら 1）</label><input class="enum" id="powPf" inputmode="decimal" oninput="calcPow()" value="1"></div>
+      <div class="eres" id="powRes">数値を入力してください</div>
+      <div class="enote">単相：電力 ＝ 電圧 × 電流 × 力率／三相：電力 ＝ √3 × 電圧 × 電流 × 力率。皮相電力（kVA）も表示します。</div>
+    </div>
+
+    <!-- 電圧降下 -->
+    <div class="epanel" id="ep-vd">
+      <label class="slbl">配線方式</label>
+      <div class="eseg" id="vdMethod">
+        <button class="on" data-v="1p2" onclick="vdSetMethod('1p2')">単相2線</button>
+        <button data-v="3p3" onclick="vdSetMethod('3p3')">三相3線</button>
+        <button data-v="1p3" onclick="vdSetMethod('1p3')">単相3線</button>
+      </div>
+      <div class="ecell"><label class="slbl">電線の長さ L（m・片道）</label><input class="enum" id="vdL" inputmode="decimal" oninput="calcVd()" placeholder="例 30"></div>
+      <div class="ecell"><label class="slbl">電流 I（アンペア）</label><input class="enum" id="vdI" inputmode="decimal" oninput="calcVd()" placeholder="例 20"></div>
+      <div class="ecell"><label class="slbl">電線の太さ（mm²）</label><input class="enum" id="vdA" inputmode="decimal" oninput="calcVd()" placeholder="例 5.5"></div>
+      <div class="ecell"><label class="slbl">基準電圧 V（降下率を出す場合・任意）</label><input class="enum" id="vdBase" inputmode="decimal" oninput="calcVd()" placeholder="例 200"></div>
+      <div class="eres" id="vdRes">長さ・電流・太さを入力してください</div>
+      <div class="enote">銅線（IV・CV など）の目安です。係数 単相2線＝35.6／三相3線＝30.8／単相3線＝17.8 を使用。</div>
+    </div>
+  </div>
+
 </div>
 
 <div class="tload" id="tload"><div class="tlbox"><div class="tspin"></div><div class="tltxt" id="tltxt">読み込み中…</div></div></div>
@@ -300,7 +378,7 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
 /* 実装済みツール */
-var READY={memo:1,check:1,draw:1};
+var READY={memo:1,check:1,draw:1,elec:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
   if(k==='memo'||k==='check'||k==='draw'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='check'?'現場チェックリスト':k==='draw'?'手書きメモ':'現場メモ'); go('p-memo-select'); loadSites(); return; }
@@ -678,6 +756,90 @@ function openDrawForCase(id){
     openSiteDrawList();
   }).catch(function(){hideLoad();fillKinds();go('p-memo-select');});
 }
+
+/* ===== ⑥ 電気計算機 ===== */
+function elecTab(t){
+  var ks=['ohm','pow','vd'];
+  for(var i=0;i<ks.length;i++){
+    var on=(ks[i]===t);
+    document.getElementById('etab-'+ks[i]).classList.toggle('on',on);
+    document.getElementById('ep-'+ks[i]).classList.toggle('on',on);
+  }
+}
+function eNum(id){var el=document.getElementById(id);if(!el)return null;var v=parseFloat(el.value);return isNaN(v)?null:v;}
+function eFmt(n){
+  if(!isFinite(n))return '—';
+  var a=Math.abs(n),dp=a>=100?1:(a>=1?2:3);
+  var x=n.toFixed(dp);
+  if(x.indexOf('.')>=0)x=x.replace(/0+$/,'').replace(/\.$/,'');
+  return x;
+}
+function elecSeg(cid,val){
+  var bs=document.getElementById(cid).getElementsByTagName('button');
+  for(var i=0;i<bs.length;i++)bs[i].classList.toggle('on',bs[i].getAttribute('data-v')===val);
+}
+function elecErr(res,msg){res.className='eres err';res.textContent=msg;}
+
+/* オームの法則 */
+function calcOhm(){
+  var V=eNum('ohmV'),I=eNum('ohmI'),R=eNum('ohmR');
+  var res=document.getElementById('ohmRes');
+  if([V,I,R].filter(function(x){return x!==null;}).length<2){res.className='eres';res.textContent='分かっている2つを入力してください';return;}
+  var ans=null;
+  if(V===null){V=I*R;ans={l:'電圧 V',v:V,u:'V'};}
+  else if(I===null){if(R===0){return elecErr(res,'抵抗が0だと計算できません');}I=V/R;ans={l:'電流 I',v:I,u:'A'};}
+  else if(R===null){if(I===0){return elecErr(res,'電流が0だと計算できません');}R=V/I;ans={l:'抵抗 R',v:R,u:'Ω'};}
+  var P=V*I,html='';
+  if(ans)html+='<div class="big">'+ans.l+' = '+eFmt(ans.v)+' '+ans.u+'</div>';
+  html+='<div class="sub">電力 P = '+eFmt(P)+' W （'+eFmt(P/1000)+' kW）</div>';
+  res.className='eres ok';res.innerHTML=html;
+}
+
+/* 電力・電流 */
+var elPowMode='kw',elPowPhase='1';
+function powSetMode(m){
+  elPowMode=m;elecSeg('powMode',m);
+  document.getElementById('powCellP').style.display=(m==='kw')?'none':'block';
+  document.getElementById('powCellI').style.display=(m==='a')?'none':'block';
+  calcPow();
+}
+function powSetPhase(p){elPowPhase=p;elecSeg('powPhase',p);calcPow();}
+function calcPow(){
+  var V=eNum('powV'),pf=eNum('powPf');if(pf===null)pf=1;
+  var res=document.getElementById('powRes'),k=(elPowPhase==='3')?Math.sqrt(3):1;
+  if(elPowMode==='kw'){
+    var I=eNum('powI');
+    if(V===null||I===null){res.className='eres';res.textContent='電圧と電流を入力してください';return;}
+    var S=k*V*I,P=S*pf;
+    res.className='eres ok';
+    res.innerHTML='<div class="big">電力 = '+eFmt(P/1000)+' kW</div>'+
+      '<div class="sub">'+eFmt(P)+' W ／ 皮相電力 '+eFmt(S/1000)+' kVA</div>';
+  }else{
+    var Pin=eNum('powP');
+    if(V===null||Pin===null){res.className='eres';res.textContent='電力と電圧を入力してください';return;}
+    if(V===0||pf===0){return elecErr(res,'電圧・力率を確認してください');}
+    var Ia=(Pin*1000)/(k*V*pf);
+    res.className='eres ok';
+    res.innerHTML='<div class="big">電流 = '+eFmt(Ia)+' A</div>'+
+      '<div class="sub">'+(elPowPhase==='3'?'三相':'単相')+'・力率 '+eFmt(pf)+'</div>';
+  }
+}
+
+/* 電圧降下 */
+var elVdMethod='1p2';
+function vdSetMethod(m){elVdMethod=m;elecSeg('vdMethod',m);calcVd();}
+function calcVd(){
+  var L=eNum('vdL'),I=eNum('vdI'),A=eNum('vdA'),base=eNum('vdBase');
+  var res=document.getElementById('vdRes');
+  if(L===null||I===null||A===null){res.className='eres';res.textContent='長さ・電流・太さを入力してください';return;}
+  if(A===0){return elecErr(res,'電線の太さを確認してください');}
+  var K={'1p2':35.6,'3p3':30.8,'1p3':17.8}[elVdMethod];
+  var e=K*L*I/(1000*A);
+  var html='<div class="big">電圧降下 = '+eFmt(e)+' V</div>';
+  if(base!==null&&base>0)html+='<div class="sub">降下率 '+eFmt(e/base*100)+' % （基準 '+eFmt(base)+' V）</div>';
+  res.className='eres ok';res.innerHTML=html;
+}
+
 (function(){
   var q=location.search;
   var dm=q.match(/[?&]draw=([^&]+)/),cm=q.match(/[?&]check=([^&]+)/),mm=q.match(/[?&]memo=([^&]+)/),nm=q.match(/[?&]note=([^&]+)/);
