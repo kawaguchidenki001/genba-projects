@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 18 (2026-06-09) -->
+<!-- toolbox version 19 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -158,10 +158,17 @@
   .atbl .av{font-size:18px;font-weight:800;color:#fff;}
   .atbl .au{font-size:12px;color:rgba(255,255,255,.75);margin-top:2px;}
   /* 小黒板カメラ */
-  .bcam-wrap{position:relative;border-radius:12px;overflow:hidden;background:#111;margin-bottom:14px;line-height:0;}
-  #boardVideo{width:100%;max-height:48vh;object-fit:cover;display:block;}
-  .bcam-overlay{position:absolute;bottom:0;left:0;right:0;padding:10px 14px 12px;background:rgba(15,45,20,.88);border-top:2px solid rgba(255,255,255,.35);display:none;}
-  .bov-line{color:#fff;font-size:12px;font-weight:700;line-height:1.9;letter-spacing:.02em;}
+  .bcam-wrap{position:relative;border-radius:12px;overflow:hidden;background:#111;margin-bottom:10px;line-height:0;aspect-ratio:4/3;}
+  #boardVideo{width:100%;height:100%;object-fit:cover;display:block;}
+  .bov-bd{position:absolute;background:#1a8c78;border:2px solid #fff;box-sizing:border-box;cursor:move;touch-action:none;user-select:none;-webkit-user-select:none;font-size:10px;line-height:1;overflow:hidden;}
+  .bov-row{display:flex;border-bottom:1px solid rgba(255,255,255,.5);height:21%;}
+  .bov-lb{width:28%;border-right:1px solid rgba(255,255,255,.5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .bov-vl{flex:1;color:#fff;display:flex;align-items:center;padding-left:5%;font-weight:700;white-space:nowrap;overflow:hidden;}
+  .bov-ph{height:42%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}
+  .bov-co{height:16%;color:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:flex-end;padding-right:5%;font-weight:700;}
+  .bsize-row{display:flex;align-items:center;gap:10px;margin:0 2px 12px;}
+  .bsize-row label{font-size:12px;font-weight:700;color:rgba(255,255,255,.82);white-space:nowrap;}
+  .bsize-row input[type=range]{flex:1;accent-color:#d97b12;}
   .board-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:2px;}
   /* 録音機 */
   .rec-center{text-align:center;padding:24px 0 10px;}
@@ -176,7 +183,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v18</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v19</div>
 
 <div class="wrap">
 
@@ -414,10 +421,15 @@
       <h2>小黒板カメラ</h2>
     </div>
     <div class="sitebar" id="boardSiteBar">現場: <b>—</b></div>
-    <div class="bcam-wrap">
+    <div class="bcam-wrap" id="bcamWrap">
       <video id="boardVideo" autoplay playsinline muted></video>
-      <div class="bcam-overlay" id="boardOverlay"></div>
+      <div class="bov-bd" id="boardOverlay" style="display:none;"></div>
     </div>
+    <div class="bsize-row">
+      <label>黒板の大きさ</label>
+      <input type="range" id="boardSizeRange" min="20" max="55" value="33" oninput="boardSetSize(this.value)">
+    </div>
+    <div class="enote" style="margin:0 2px 12px;">黒板はドラッグで好きな位置に動かせます。</div>
     <div class="board-grid">
       <div><label class="slbl">修繕名</label><input class="enum" id="boardProjName" oninput="bov()" placeholder="例 時計修繕"></div>
       <div><label class="slbl">場所</label><input class="enum" id="boardPlace" oninput="bov()" placeholder="例 天王公園"></div>
@@ -1096,7 +1108,7 @@ function openBoardCamera(){
   boardSiteId=curSite.id; boardSiteName_=curSite.name||'';
   document.getElementById('boardSiteBar').innerHTML='現場：<b>'+esc(curSite.cust||'')+(curSite.name?' ／ '+esc(curSite.name):'')+'</b>';
   var bsn=document.getElementById('boardProjName');if(bsn&&!bsn.value)bsn.value=boardSiteName_;
-  bov(); go('p-board'); startBoardCamera();
+  go('p-board'); startBoardCamera(); setTimeout(function(){bov();},50);
 }
 function startBoardCamera(){
   if(!navigator||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('カメラに対応していません');return;}
@@ -1115,15 +1127,53 @@ function bov(){
   var psel=document.getElementById('boardPhase');
   var phase=psel?psel.value:'';
   var comp=document.getElementById('boardCompany').value;
-  var lines=[];
-  if(name)lines.push('修繕名：'+name);
-  if(place)lines.push('場所：'+place);
-  if(phase)lines.push(phase);
-  if(comp)lines.push(comp);
   var ov=document.getElementById('boardOverlay');if(!ov)return;
-  ov.innerHTML=lines.map(function(l){return '<div class="bov-line">'+esc(l)+'</div>';}).join('');
-  ov.style.display=lines.length?'block':'none';
+  ov.innerHTML=
+    '<div class="bov-row"><div class="bov-lb">修繕名</div><div class="bov-vl">'+esc(name)+'</div></div>'+
+    '<div class="bov-row"><div class="bov-lb">場所</div><div class="bov-vl">'+esc(place)+'</div></div>'+
+    '<div class="bov-ph">'+esc(phase)+'</div>'+
+    '<div class="bov-co">'+esc(comp)+'</div>';
+  ov.style.display='block';
+  boardLayout();
 }
+
+/* 黒板の位置・サイズ（フレームに対する比率） */
+var boardRect={x:0.02,y:0.50,w:0.33};
+var BOARD_HR=1.045; // 黒板の縦横比（px比）
+function boardLayout(){
+  var wrap=document.getElementById('bcamWrap'),ov=document.getElementById('boardOverlay');
+  if(!wrap||!ov)return;
+  var W=wrap.clientWidth,H=wrap.clientHeight;
+  if(!W||!H)return;
+  var bw=W*boardRect.w, bh=bw*BOARD_HR;
+  if(bh>H*0.9){bh=H*0.9;bw=bh/BOARD_HR;boardRect.w=bw/W;}
+  var x=Math.min(Math.max(boardRect.x,0),1-bw/W);
+  var y=Math.min(Math.max(boardRect.y,0),1-bh/H);
+  boardRect.x=x;boardRect.y=y;
+  ov.style.left=(x*W)+'px';ov.style.top=(y*H)+'px';
+  ov.style.width=bw+'px';ov.style.height=bh+'px';
+  // フォントサイズを黒板幅に連動
+  ov.style.fontSize=Math.max(8,Math.floor(bw/16))+'px';
+  var ph=ov.querySelector('.bov-ph');if(ph)ph.style.fontSize=Math.max(13,Math.floor(bw/6.5))+'px';
+  var co=ov.querySelector('.bov-co');if(co)co.style.fontSize=Math.max(7,Math.floor(bw/22))+'px';
+}
+function boardSetSize(v){boardRect.w=parseInt(v,10)/100;boardLayout();}
+(function boardDragInit(){
+  document.addEventListener('pointerdown',function(e){
+    var ov=document.getElementById('boardOverlay');
+    if(!ov||e.target!==ov&&!ov.contains(e.target))return;
+    var wrap=document.getElementById('bcamWrap');
+    if(!wrap)return;
+    e.preventDefault();
+    var W=wrap.clientWidth,H=wrap.clientHeight;
+    var sx=e.clientX,sy=e.clientY,ox=boardRect.x,oy=boardRect.y;
+    function mv(ev){boardRect.x=ox+(ev.clientX-sx)/W;boardRect.y=oy+(ev.clientY-sy)/H;boardLayout();}
+    function up(){document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);}
+    document.addEventListener('pointermove',mv);
+    document.addEventListener('pointerup',up);
+  });
+})();
+
 function boardShoot(){
   var vid=document.getElementById('boardVideo');
   if(!vid||!vid.videoWidth){toast('カメラが準備できていません');return;}
@@ -1153,9 +1203,11 @@ function boardShoot(){
     ctx.drawImage(vid,0,sy,sw,sh,0,0,sw,sh);
     ctx.restore();
   }
-  // 黒板（左下・参考写真に合わせたサイズ 幅33%・高さ46%）
-  var bw=Math.floor(outW*0.33),bh=Math.floor(outH*0.46);
-  var bx=Math.floor(outW*0.02),by=outH-bh-Math.floor(outH*0.02);
+  // 黒板（プレビューで調整した位置・サイズを反映）
+  var bw=Math.floor(outW*boardRect.w),bh=Math.floor(bw*BOARD_HR);
+  if(bh>outH*0.9){bh=Math.floor(outH*0.9);bw=Math.floor(bh/BOARD_HR);}
+  var bx=Math.floor(outW*boardRect.x),by=Math.floor(outH*boardRect.y);
+  if(bx+bw>outW)bx=outW-bw; if(by+bh>outH)by=outH-bh; if(bx<0)bx=0; if(by<0)by=0;
   ctx.fillStyle='#1a8c78';ctx.fillRect(bx,by,bw,bh);
   ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.strokeRect(bx+2,by+2,bw-4,bh-4);
   var fs=Math.max(11,Math.floor(bw/18));
