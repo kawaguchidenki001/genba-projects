@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- version 35 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -16,8 +17,8 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
   body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:66px;}
   .head{background:linear-gradient(135deg,var(--teal1),var(--teal2));color:#fff;text-align:center;padding:calc(env(safe-area-inset-top) + 14px) 16px 18px;position:relative;}
-  .head .bar{position:absolute;z-index:5;pointer-events:none;top:calc(env(safe-area-inset-top) + 10px);left:14px;right:14px;display:flex;justify-content:space-between;}
-  .head .bar a,.head .bar button{pointer-events:auto;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:5px 9px;font-size:13px;cursor:pointer;text-decoration:none;}
+  .head .bar{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:14px;right:14px;display:flex;justify-content:space-between;}
+  .head .bar a,.head .bar button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:5px 9px;font-size:13px;cursor:pointer;text-decoration:none;}
   .head .me{font-size:14px;opacity:.95;margin-bottom:4px;font-weight:700;}
   .head .d{font-size:14px;opacity:.92;}
   .head .t{font-size:44px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:.03em;line-height:1.15;}
@@ -96,8 +97,9 @@
 </style>
 </head>
 <body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v35</div>
 <div class="head">
-  <div class="bar"><a href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a><button onclick="reload()">↻</button></div>
+  <div class="bar"><a href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a><button onclick="reload()">↻</button></div>
   <div class="me" id="meName">―</div>
   <div class="d" id="hd">―</div>
   <div class="t" id="ht">--:--:--</div>
@@ -213,11 +215,11 @@
     </div>
     <!-- 勤怠の計算ルール（管理者） -->
     <div class="setbox" style="margin-top:14px;">
-      <h3 id="krHead" style="display:none;font-size:14px;color:var(--teal2);margin:0 0 4px;">勤怠の計算ルール（管理者）</h3>
-      <div id="krDesc" style="display:none;font-size:12px;color:var(--sub);margin-bottom:10px;">定時・締日・丸め・所定労働時間・深夜帯。勤怠表の残業／深夜／遅刻早退の自動計算に使われます。</div>
-      <div id="krView" style="display:none;font-size:13px;color:var(--ink);line-height:1.7;"></div>
+      <h3 style="font-size:14px;color:var(--teal2);margin:0 0 4px;">勤怠の計算ルール（管理者）</h3>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:10px;">定時・締日・丸め・所定労働時間・深夜帯。勤怠表の残業／深夜／遅刻早退の自動計算に使われます。</div>
+      <div id="krView" style="font-size:13px;color:var(--ink);line-height:1.7;"></div>
       <div id="krGate" style="margin-top:10px;display:flex;gap:8px;">
-        <input id="krPin" type="password" autocapitalize="off" autocorrect="off" placeholder="管理者PIN" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px;">
+        <input id="krPin" type="password" inputmode="numeric" placeholder="管理者PIN" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px;">
         <button onclick="krUnlock()" style="padding:10px 16px;border:none;background:var(--teal2);color:#fff;border-radius:10px;font-weight:700;cursor:pointer;">編集</button>
       </div>
       <div id="krForm" style="display:none;margin-top:6px;">
@@ -301,10 +303,10 @@ function brkTot(){return brk.am+brk.noon+brk.pm;}
 function showBrk(){document.getElementById('bAm').textContent=brk.am+'分';document.getElementById('bNoon').textContent=brk.noon+'分';document.getElementById('bPm').textContent=brk.pm+'分';document.getElementById('bTot').textContent=brkTot();}
 function stB(k,d){brk[k]=Math.max(0,Math.min(180,brk[k]+d));try{localStorage.setItem(brkKey(),JSON.stringify(brk));}catch(e){}showBrk();}
 
-function reload(){ if(!me)return Promise.resolve(); showLoad();
+function reload(silent){ if(!me)return Promise.resolve(); if(!silent)showLoad();
   return callGAS({action:'punchData',date:ymd(new Date())}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
-    workers=res.workers||[];todayK=res.kintai||[];renderHome();if(tab==='all')renderAll();
-  }).catch(function(err){toast('読込失敗：'+err.message);}).then(hideLoad); }
+    workers=res.workers||[];todayK=res.kintai||[];try{localStorage.setItem('genba_tc',JSON.stringify({date:ymd(new Date()),workers:workers,kintai:todayK}));}catch(e){}renderHome();if(tab==='all')renderAll();
+  }).catch(function(err){if(!silent)toast('読込失敗：'+err.message);}).then(function(){if(!silent)hideLoad();}); }
 
 function mySessions(){ if(!me)return []; var wid=String(me['作業員ID']);
   return todayK.filter(function(k){return String(k['作業員ID'])===wid;})
@@ -348,7 +350,7 @@ function punch(type){
   document.getElementById('btnIn').disabled=true;document.getElementById('btnOut').disabled=true;showLoad();
   getPos().then(function(pos){var n=new Date();
     return callGAS({action:'punch',data:{'作業員ID':me['作業員ID'],'氏名':me['氏名'],'種別':type,'時刻':hm(n),'日付':ymd(n),'位置':pos,'休憩分':brkTot()}});
-  }).then(function(res){if(!res.ok)throw new Error(res.error||'記録失敗');upTodayK(res.kintai);renderHome();loadAlerts();toast(type+'を記録しました');})
+  }).then(function(res){if(!res.ok)throw new Error(res.error||'記録失敗');upTodayK(res.kintai);renderHome();try{localStorage.setItem('genba_tc',JSON.stringify({date:ymd(new Date()),workers:workers,kintai:todayK}));}catch(e){}loadAlerts();toast(type+'を記録しました');})
   .catch(function(err){toast('失敗：'+err.message);renderHome();}).then(hideLoad);
 }
 
@@ -531,7 +533,7 @@ function krUnlock(){ var pin=document.getElementById('krPin').value; if(!pin){to
   var prev=localStorage.getItem('genba_admin'); localStorage.setItem('genba_admin',pin); showLoad();
   callGAS({action:'checkRole'}).then(function(res){
     if(res&&res.ok&&res.role==='admin'){ adminOK=true; fillKruleForm();
-      document.getElementById('krGate').style.display='none'; document.getElementById('krForm').style.display='block'; document.getElementById('krView').style.display='block'; document.getElementById('krHead').style.display='block'; document.getElementById('krDesc').style.display='block'; toast('編集できます'); }
+      document.getElementById('krGate').style.display='none'; document.getElementById('krForm').style.display='block'; toast('編集できます'); }
     else { if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('管理者PINが違います'); }
   }).catch(function(e){ if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('通信エラー：'+e.message); }).then(hideLoad);
 }
@@ -605,7 +607,7 @@ function renderApMine(){ var el=document.getElementById('apMine');
 }
 function renderApAdmin(){ var el=document.getElementById('apAdmin');
   if(!admTok()){ el.innerHTML='<div style="font-size:12px;color:var(--sub);margin-bottom:8px;">承認は管理者のみ。管理者PINを入力してください。</div>'
-    +'<div style="display:flex;gap:8px;"><input id="apPin" type="password" autocapitalize="off" autocorrect="off" placeholder="管理者PIN" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px;"><button onclick="apUnlock()" style="padding:10px 16px;border:none;background:var(--teal2);color:#fff;border-radius:10px;font-weight:700;cursor:pointer;">表示</button></div>'; return; }
+    +'<div style="display:flex;gap:8px;"><input id="apPin" type="password" inputmode="numeric" placeholder="管理者PIN" style="flex:1;padding:10px;border:1px solid var(--line);border-radius:10px;font-size:15px;"><button onclick="apUnlock()" style="padding:10px 16px;border:none;background:var(--teal2);color:#fff;border-radius:10px;font-weight:700;cursor:pointer;">表示</button></div>'; return; }
   if(!pendApps.length){ el.innerHTML='<div class="needlogin" style="margin:6px auto 2px;">承認待ちはありません。</div>'; return; }
   el.innerHTML=pendApps.map(function(a){ var id=esc(a['申請ID']);
     var det=(a['種別']==='打刻修正')?('出勤 '+esc(a['修正_出勤']||'—')+' ／ 退勤 '+esc(a['修正_退勤']||'—')+' ／ 休憩 '+esc((a['修正_休憩分']||0)+'分')):esc(a['詳細']||'');
@@ -639,14 +641,16 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
 
 tickClock();setInterval(tickClock,1000);
-document.addEventListener('visibilitychange',function(){if(!document.hidden&&me)reload();});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&me)reload(true);});
 (function init(){
   me=gUser();
   if(!me||!me['作業員ID']){ document.getElementById('needLogin').style.display='block';document.getElementById('homeBody').style.display='none';
     document.getElementById('meName').textContent='未ログイン';return; }
   document.getElementById('meName').textContent=me['氏名']+' さん';
   document.getElementById('setName').textContent=me['氏名'];
-  loadBrk();showBrk();Promise.all([reload(),loadSettings()]).then(loadAlerts);
+  loadBrk();showBrk();
+  var hadTC=false;try{var tc=JSON.parse(localStorage.getItem('genba_tc')||'null');if(tc&&tc.date===ymd(new Date())){workers=tc.workers||[];todayK=tc.kintai||[];renderHome();hadTC=true;}}catch(e){}
+  Promise.all([reload(hadTC),loadSettings()]).then(loadAlerts);
 })();
 </script>
 </body>
