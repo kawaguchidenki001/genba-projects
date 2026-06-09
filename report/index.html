@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- version 35 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -102,6 +103,7 @@
 </style>
 </head>
 <body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v35</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -127,7 +129,7 @@
   <div id="sum" style="display:none;"></div>
 </main>
 
-<button class="fab" onclick="openReport()">＋ 日報</button>
+<button class="fab" onclick="openForm()">＋ 日報</button>
 
 <div class="ov" id="ov">
   <div class="sheet">
@@ -145,7 +147,6 @@
       <div id="wmEmp" class="wgroup"></div>
       <div id="wmPart" class="wgroup" style="margin-top:8px;"></div>
     </div>
-    <div class="fld" id="wsFld" style="display:none;"><label>作業員 *</label><select id="f_worker" onchange="calc()"></select></div>
     <div class="fld"><label>作業内容</label><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea></div>
     <div class="fld" id="moneyRow" style="display:none;"><label>労務費（管理者のみ）</label><div class="calc"><span id="f_laborNote">人工 × 単価（作業員マスタ）</span><b id="f_labor">¥0</b></div></div>
     <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
@@ -153,17 +154,7 @@
       <button class="btn sub" onclick="closeOv()">キャンセル</button>
       <button class="btn primary" id="saveBtn" onclick="saveReport()">保存</button>
     </div>
-    <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="delReport(event)">この日報を削除</a></div>
-  </div>
-</div>
-
-<div class="ov" id="ovGrp">
-  <div class="sheet">
-    <h2 id="grpTitle"></h2>
-    <div class="grp-meta" id="grpMeta"></div>
-    <div id="grpList"></div>
-    <div class="acts"><button class="btn sub" onclick="closeGrp()">閉じる</button></div>
-    <div class="row-del"><a href="#" onclick="delGroup(event)">この日報（現場ごと）を削除</a></div>
+    <div class="row-del" id="grpDelRow" style="display:none;"><a href="#" onclick="delGroupForm(event)">この日報（現場ごと）を削除</a></div>
   </div>
 </div>
 
@@ -184,12 +175,12 @@ function isAdmin(){return ROLE==='admin';}
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
 function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
-function callGAS(params,secretOverride){
+function callGAS(params,secretOverride,silent){
   return new Promise(function(resolve,reject){
-    showLoad();
+    if(!silent) showLoad();
     var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
     var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
-    function cleanup(){hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    function cleanup(){if(!silent) hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
     window[cb]=function(res){cleanup();resolve(res);};
     var q=Object.assign({secret:secretOverride||tok(),callback:cb},params);
     if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
@@ -211,13 +202,13 @@ function updateAdmBtn(){document.getElementById('admBtn').textContent=isAdmin()?
 
 function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];workers=c.workers||[];reports=c.reports||[];}catch(e){}}
 function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,workers:workers,reports:reports}));}catch(e){}}
-function reload(){
+function reload(silent){
   setSync('busy','同期中…');
-  callGAS({action:'checkRole'}).then(function(r){ ROLE=(r&&r.ok)?r.role:'general'; if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin'); updateAdmBtn(); })
-    .then(function(){return callGAS({action:'reportData'});})
+  callGAS({action:'checkRole'},null,silent).then(function(r){ ROLE=(r&&r.ok)?r.role:'general'; if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin'); updateAdmBtn(); })
+    .then(function(){return callGAS({action:'reportData'},null,silent);})
     .then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
       projects=res.projects||[];workers=res.workers||[];reports=res.reports||[];saveCache();buildProjOptions();render();setSync('ok','同期済み'); })
-    .catch(function(err){setSync('off','オフライン');render();toast('読込失敗：'+err.message);});
+    .catch(function(err){setSync('off','オフライン'); if(!silent){render();toast('読込失敗：'+err.message);} });
 }
 
 function buildDateChips(){var defs=[['today','今日'],['month','今月'],['all','すべて']],w=document.getElementById('dateChips');w.innerHTML='';
@@ -258,33 +249,18 @@ function render(){
          '</div>';});
     card.innerHTML=h;
     var dr=card.querySelectorAll('.drow');
-    for(var i=0;i<dr.length;i++){(function(x){x.onclick=function(){openGroup(x.getAttribute('data-pid'),x.getAttribute('data-date'));};})(dr[i]);}
+    for(var i=0;i<dr.length;i++){(function(x){x.onclick=function(){openForm(x.getAttribute('data-pid'),x.getAttribute('data-date'));};})(dr[i]);}
     el.appendChild(card);
   });
 }
-var curGroup=[];
-function openGroup(pid,date){
-  curGroup=reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
-  if(!curGroup.length)return;
-  document.getElementById('grpTitle').textContent=projShort2(pid==='__none__'?'':pid,curGroup[0]['案件名']);
-  var tot=curGroup.reduce(function(s,r){return s+numv(r['人工']);},0);
-  document.getElementById('grpMeta').textContent=date+' ・ '+curGroup.length+'名 ・ 計'+round2(tot)+'人工';
-  var box=document.getElementById('grpList'),h='';
-  curGroup.forEach(function(r){var kyo=isKyo(r['区分']);
-    h+='<div class="grp-item" data-id="'+esc(r['日報ID'])+'">'+
-         '<div class="gi-top"><span class="gi-name'+(kyo?' kyo':'')+'">'+esc(workerShort(r))+'</span><span class="gi-tag">'+(kyo?'協力会社':'社員')+'</span><span class="gi-nk">'+esc(r['人工']||'')+'人工</span></div>'+
-         (r['作業内容']?'<div class="gi-desc">'+esc(r['作業内容'])+'</div>':'')+
-       '</div>';});
-  box.innerHTML=h;
-  var items=box.querySelectorAll('.grp-item');
-  for(var i=0;i<items.length;i++){(function(it){it.onclick=function(){var id=it.getAttribute('data-id');var rep=reports.filter(function(x){return String(x['日報ID'])===String(id);})[0];if(rep){closeGrp();openReport(rep);}};})(items[i]);}
-  document.getElementById('ovGrp').classList.add('show');
-}
-function closeGrp(){document.getElementById('ovGrp').classList.remove('show');}
-function delGroup(ev){ if(ev)ev.preventDefault(); if(!curGroup.length)return;
-  if(!confirm('この現場・この日の日報（'+curGroup.length+'名分）をまとめて削除します。よろしいですか？'))return;
-  var ids=curGroup.map(function(r){return r['日報ID'];});
-  Promise.all(ids.map(function(id){return callGAS({action:'deleteReport',id:id});})).then(function(){closeGrp();toast('削除しました');reload();}).catch(function(err){toast('削除に失敗しました：'+(err&&err.message||''));});
+var editGroup=null;
+function delGroupForm(ev){ if(ev)ev.preventDefault(); if(!editGroup)return;
+  var pid=editGroup.pid,date=editGroup.date;
+  var existing=reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
+  if(!existing.length){closeOv();return;}
+  if(!confirm('この日報（現場ごと・'+existing.length+'名分）を削除します。よろしいですか？'))return;
+  Promise.all(existing.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
+    .then(function(){closeOv();toast('削除しました');reload();}).catch(function(err){toast('削除に失敗しました：'+(err&&err.message||''));});
 }
 function renderSum(list){
   var byProj={},byKyo={};
@@ -318,8 +294,8 @@ function projsForCustomer(c){return projects.filter(function(p){return custKey(p
 function onCustomer(){var c=document.getElementById('f_customer').value;
   buildSelect('f_proj',projsForCustomer(c),'案件ID','案件名',false);onProj();}
 
-function buildWorkerChecks(){var emp=[],part=[];
-  workers.forEach(function(w){(isKyo(w['区分'])?part:emp).push(w);});
+function buildWorkerChecks(){var emp=[],part=[],seen={};
+  workers.forEach(function(w){var k=String(w['作業員ID']);if(!k||seen[k])return;seen[k]=1;(isKyo(w['区分'])?part:emp).push(w);});
   renderWGroup('wmEmp','社員',emp);renderWGroup('wmPart','協力業者',part);}
 function renderWGroup(boxId,title,arr){var box=document.getElementById(boxId);
   var h='<div class="wghd"><span>'+title+'（'+arr.length+'）</span>'+(arr.length?'<span><a onclick="toggleGroup(\''+boxId+'\',true)">全員</a> ／ <a onclick="toggleGroup(\''+boxId+'\',false)">解除</a></span>':'')+'</div>';
@@ -334,29 +310,29 @@ function checkedWorkers(){var cbs=document.querySelectorAll('#wmFld .wcb:checked
   for(var i=0;i<cbs.length;i++){var id=cbs[i].value,w=workers.filter(function(x){return String(x['作業員ID'])===String(id);})[0];if(w)out.push(w);}
   return out;}
 
-function openReport(r){
+function openForm(pid,date){   // pid・date 指定で編集、未指定で新規
   if(!projects.length){toast('先に案件管理で現場を登録してください');return;}
   if(!workers.length){toast('作業員が未登録です。管理画面で登録してください');return;}
-  var editing=!!r,g=function(id){return document.getElementById(id);};
-  g('mTitle').textContent=editing?'日報の編集':'日報の入力（まとめて記入できます）';
-  g('delRow').style.display='none';
+  var g=function(id){return document.getElementById(id);};
+  var editing=!!(pid!=null&&date);
+  var grp=editing?reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;}):[];
+  editGroup=editing?{pid:pid,date:date}:null;
+  g('mTitle').textContent=editing?'この日報を編集（現場ごと）':'日報の入力（まとめて記入できます）';
+  g('grpDelRow').style.display=(editing&&grp.length)?'block':'none';
   g('moneyRow').style.display=isAdmin()?'block':'none';
-  g('wmFld').style.display=editing?'none':'block';
-  g('wsFld').style.display=editing?'block':'none';
-  g('f_id').value=editing?(r['日報ID']||''):'';
-  g('f_date').value=editing?String(r['日付']||'').slice(0,10):new Date().toISOString().slice(0,10);
-  g('f_nk').value=editing?(r['人工']||'1'):'1';
-  // 会社名・自治体名 → 現場名
+  g('f_date').value=editing?date:new Date().toISOString().slice(0,10);
+  g('f_nk').value=(editing&&grp.length)?(grp[0]['人工']||'1'):'1';
   buildCustomerOptions();
-  g('f_customer').value=editing?customerOfProj(r['案件ID']):g('f_customer').value;
+  g('f_customer').value=editing?customerOfProj(pid==='__none__'?'':pid):g('f_customer').value;
   onCustomer();
-  if(editing)g('f_proj').value=r['案件ID']||'';
+  if(editing)g('f_proj').value=(pid==='__none__'?'':pid)||'';
   onProj();
-  // 作業員（新規=複数チェック、編集=1人セレクト）
-  if(editing){buildSelect('f_worker',workers,'作業員ID','氏名',true);g('f_worker').value=r['作業員ID']||'';}
-  else{buildWorkerChecks();}
-  g('f_desc').value=editing?(r['作業内容']||''):'';
-  g('f_note').value=editing?(r['備考']||''):'';
+  buildWorkerChecks();
+  if(editing){var ids={};grp.forEach(function(r){ids[String(r['作業員ID'])]=1;});
+    var cbs=document.querySelectorAll('#wmFld .wcb');for(var i=0;i<cbs.length;i++){if(ids[String(cbs[i].value)])cbs[i].checked=true;}}
+  var desc='',note='';grp.forEach(function(r){if(!desc&&r['作業内容'])desc=r['作業内容'];if(!note&&r['備考'])note=r['備考'];});
+  g('f_desc').value=editing?desc:'';
+  g('f_note').value=editing?note:'';
   calc();g('ov').classList.add('show');
 }
 function buildSelect(id,arr,vk,tk,withBelong){var s=document.getElementById(id);s.innerHTML='';arr.forEach(function(o){var op=document.createElement('option');op.value=o[vk];op.textContent=o[tk]+(withBelong&&o['所属']?'（'+o['所属']+'）':'');s.appendChild(op);});}
@@ -366,13 +342,9 @@ function setNk(v){document.getElementById('f_nk').value=v;calc();}
 function workerRate(id){var w=workers.filter(function(x){return x['作業員ID']===id;})[0];return w?numv(w['標準単価']):0;}
 function calc(){ if(!isAdmin())return;
   var nk=numv(document.getElementById('f_nk').value);
-  var multi=document.getElementById('wmFld').style.display!=='none';
-  if(multi){var ws=checkedWorkers(),total=0;ws.forEach(function(w){total+=nk*numv(w['標準単価']);});
-    document.getElementById('f_labor').textContent=yen(total)||'¥0';
-    document.getElementById('f_laborNote').textContent=ws.length?('選択 '+ws.length+'名分の合計'):'（作業員を選択してください）';
-  }else{var u=workerRate(document.getElementById('f_worker').value);
-    document.getElementById('f_labor').textContent=yen(nk*u)||'¥0';
-    document.getElementById('f_laborNote').textContent='人工 × 単価（作業員マスタ）';}}
+  var ws=checkedWorkers(),total=0;ws.forEach(function(w){total+=nk*numv(w['標準単価']);});
+  document.getElementById('f_labor').textContent=yen(total)||'¥0';
+  document.getElementById('f_laborNote').textContent=ws.length?('選択 '+ws.length+'名分の合計'):'（作業員を選択してください）';}
 function gatherCommon(){var g=function(id){return document.getElementById(id).value;};
   var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
   return {'日付':g('f_date'),'案件ID':pid,'案件名':p['案件名']||'',
@@ -382,33 +354,20 @@ function saveReport(){
   var c=gatherCommon();
   if(!c['日付']){toast('日付を入れてください');return;}
   if(!c['案件ID']){toast('現場名を選んでください');return;}
-  var editing=!!document.getElementById('f_id').value,btn=document.getElementById('saveBtn');
-  if(editing){
-    var id=document.getElementById('f_id').value;
-    var wid=document.getElementById('f_worker').value,w=workers.filter(function(x){return x['作業員ID']===wid;})[0]||{};
-    if(!wid){toast('作業員を選んでください');return;}
-    var d={};for(var k in c)d[k]=c[k];d['日報ID']=id;d['作業員ID']=wid;d['氏名']=w['氏名']||'';d['区分']=w['区分']||'';d['所属']=w['所属']||'';
-    btn.disabled=true;btn.textContent='保存中…';
-    callGAS({action:'updateReport',id:id,data:d}).then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
-      for(var i=0;i<reports.length;i++){if(reports[i]['日報ID']===id){reports[i]=res.report;break;}}
-      saveCache();render();closeOv();toast('更新しました');
+  var ws=checkedWorkers();
+  if(!ws.length){toast('作業員を選んでください（複数可）');return;}
+  var seen={},uniq=[];ws.forEach(function(w){var k=String(w['作業員ID']);if(k&&!seen[k]){seen[k]=1;uniq.push(w);}});ws=uniq;
+  var pid=c['案件ID'],date=c['日付'];
+  var existing=reports.filter(function(r){return String(r['案件ID']||'')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
+  var data={};for(var k in c)data[k]=c[k];
+  data['_workers']=ws.map(function(w){return {'作業員ID':w['作業員ID'],'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||''};});
+  var btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
+  Promise.all(existing.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
+    .then(function(){return callGAS({action:'addReportMulti',data:data});})
+    .then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
+      closeOv();toast(ws.length+'名分を保存しました');reload();
     }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
-  }else{
-    var ws=checkedWorkers();
-    if(!ws.length){toast('作業員を選んでください（複数可）');return;}
-    var data={};for(var k2 in c)data[k2]=c[k2];
-    data['_workers']=ws.map(function(w){return {'作業員ID':w['作業員ID'],'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||''};});
-    btn.disabled=true;btn.textContent='保存中…';
-    callGAS({action:'addReportMulti',data:data}).then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
-      (res.reports||[]).forEach(function(rp){reports.push(rp);});
-      saveCache();render();closeOv();toast(ws.length+'名分を登録しました');
-    }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
-  }}
-function delReport(ev){ev.preventDefault();var id=document.getElementById('f_id').value;if(!id)return;
-  if(!confirm('この日報を削除します。よろしいですか？'))return;
-  callGAS({action:'deleteReport',id:id}).then(function(res){if(!res.ok)throw new Error(res.error||'削除失敗');
-    reports=reports.filter(function(r){return r['日報ID']!==id;});saveCache();render();closeOv();toast('削除しました');
-  }).catch(function(err){toast('失敗：'+err.message);});}
+}
 function closeOv(){document.getElementById('ov').classList.remove('show');}
 
 function numv(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN(n)?0:n;}
@@ -417,10 +376,9 @@ function round2(n){return Math.round(n*100)/100;}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
 document.getElementById('ov').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
-document.getElementById('ovGrp').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
-document.addEventListener('visibilitychange',function(){if(!document.hidden)reload();});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)reload(true);});
 
-loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();reload();
+loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadCache=(projects&&projects.length>0)||(reports&&reports.length>0);reload(hadCache);
 </script>
 </body>
 </html>
