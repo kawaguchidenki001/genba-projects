@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 20 (2026-06-10) -->
+<!-- toolbox version 21 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -183,7 +183,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v20</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v21</div>
 
 <div class="wrap">
 
@@ -429,8 +429,8 @@
       <label>黒板の大きさ</label>
       <input type="range" id="boardSizeRange" min="20" max="55" value="37" oninput="boardSetSize(this.value)">
     </div>
-    <div class="enote" style="margin:0 2px 12px;">黒板はドラッグで好きな位置に動かせます。</div>
-    <div class="board-grid">
+    <div class="enote" style="margin:0 2px 12px;">黒板はドラッグで移動／ダブルタップで入力欄の表示・非表示を切り替えます。</div>
+    <div class="board-grid" id="boardFormWrap">
       <div><label class="slbl">修繕名</label><input class="enum" id="boardProjName" oninput="bov()" placeholder="例 時計修繕"></div>
       <div><label class="slbl">場所</label><input class="enum" id="boardPlace" oninput="bov()" placeholder="例 天王公園"></div>
       <div><label class="slbl">工程区分</label><select class="sel" id="boardPhase" onchange="bov()"><option>施工前</option><option>施工中</option><option>施工後</option><option>調査</option><option>完了</option></select></div>
@@ -1108,6 +1108,7 @@ function openBoardCamera(){
   boardSiteId=curSite.id; boardSiteName_=curSite.name||'';
   document.getElementById('boardSiteBar').innerHTML='現場：<b>'+esc(curSite.cust||'')+(curSite.name?' ／ '+esc(curSite.name):'')+'</b>';
   var bsn=document.getElementById('boardProjName');if(bsn&&!bsn.value)bsn.value=boardSiteName_;
+  var bf=document.getElementById('boardFormWrap');if(bf)bf.style.display='grid';
   go('p-board'); startBoardCamera(); setTimeout(function(){bov();},50);
 }
 function startBoardCamera(){
@@ -1158,6 +1159,13 @@ function boardLayout(){
   var co=ov.querySelector('.bov-co');if(co)co.style.fontSize=Math.max(7,Math.floor(bw/22))+'px';
 }
 function boardSetSize(v){boardRect.w=parseInt(v,10)/100;boardLayout();}
+var boardLastTap=0;
+function toggleBoardForm(){
+  var f=document.getElementById('boardFormWrap');if(!f)return;
+  var hidden=f.style.display==='none';
+  f.style.display=hidden?'grid':'none';
+  if(hidden){var first=f.querySelector('input');if(first)first.focus();}
+}
 (function boardDragInit(){
   document.addEventListener('pointerdown',function(e){
     var ov=document.getElementById('boardOverlay');
@@ -1166,9 +1174,19 @@ function boardSetSize(v){boardRect.w=parseInt(v,10)/100;boardLayout();}
     if(!wrap)return;
     e.preventDefault();
     var W=wrap.clientWidth,H=wrap.clientHeight;
-    var sx=e.clientX,sy=e.clientY,ox=boardRect.x,oy=boardRect.y;
-    function mv(ev){boardRect.x=ox+(ev.clientX-sx)/W;boardRect.y=oy+(ev.clientY-sy)/H;boardLayout();}
-    function up(){document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);}
+    var sx=e.clientX,sy=e.clientY,ox=boardRect.x,oy=boardRect.y,moved=0;
+    function mv(ev){
+      moved=Math.max(moved,Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy));
+      boardRect.x=ox+(ev.clientX-sx)/W;boardRect.y=oy+(ev.clientY-sy)/H;boardLayout();
+    }
+    function up(){
+      document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);
+      if(moved<8){
+        var now=Date.now();
+        if(now-boardLastTap<380){boardLastTap=0;toggleBoardForm();}
+        else boardLastTap=now;
+      }
+    }
     document.addEventListener('pointermove',mv);
     document.addEventListener('pointerup',up);
   });
@@ -1182,14 +1200,19 @@ function shutterSound(){
     var actx=window._shCtx;
     if(actx.state==='suspended')actx.resume();
     var t=actx.currentTime;
-    [[1900,0,0.03],[850,0.045,0.06]].forEach(function(p){
-      var o=actx.createOscillator(),g=actx.createGain();
-      o.type='square';o.frequency.value=p[0];
-      g.gain.setValueAtTime(0.2,t+p[1]);
-      g.gain.exponentialRampToValueAtTime(0.001,t+p[1]+p[2]);
-      o.connect(g);g.connect(actx.destination);
-      o.start(t+p[1]);o.stop(t+p[1]+p[2]+0.01);
-    });
+    function burst(at,dur,freq,q,vol){
+      var n=Math.max(1,Math.floor(actx.sampleRate*dur));
+      var buf=actx.createBuffer(1,n,actx.sampleRate);
+      var d=buf.getChannelData(0);
+      for(var i=0;i<n;i++){d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.5);}
+      var nsrc=actx.createBufferSource();nsrc.buffer=buf;
+      var f=actx.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q;
+      var g=actx.createGain();g.gain.value=vol;
+      nsrc.connect(f);f.connect(g);g.connect(actx.destination);
+      nsrc.start(at);
+    }
+    burst(t,      0.022,4200,0.7,1.0); // 「カ」…ミラー音（高く短く）
+    burst(t+0.05, 0.06, 1500,0.6,0.85); // 「シャッ」…幕の走行音（低く長め）
   }catch(e){}
 }
 function boardShoot(){
