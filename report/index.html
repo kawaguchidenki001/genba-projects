@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 40 (2026-06-10) -->
+<!-- version 41 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -136,7 +136,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v40</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v41</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -234,7 +234,7 @@ function toggleAdmin(){ if(admTok()){ if(confirm('管理者ログアウトしま
     else toast('管理者PINが違います');
   }).catch(function(err){toast('通信エラー：'+err.message);});
 }
-function updateAdmBtn(){document.getElementById('admBtn').textContent=isAdmin()?'管理者':'🔑';}
+function updateAdmBtn(){ /* 管理者ボタンは廃止済み */ }
 
 function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];workers=c.workers||[];reports=c.reports||[];}catch(e){}}
 function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,workers:workers,reports:reports}));}catch(e){}}
