@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- version 35 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -156,6 +157,7 @@
 </style>
 </head>
 <body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v35</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -274,23 +276,23 @@ function tok(){return admTok()||T_GENERAL;}
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
 function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
-function callGAS(params){return new Promise(function(res,rej){
-  showLoad();
+function callGAS(params,silent){return new Promise(function(res,rej){
+  if(!silent) showLoad();
   var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
   var t=setTimeout(function(){cl();rej(new Error('タイムアウト'));},20000);
-  function cl(){hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(t);}
+  function cl(){if(!silent) hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(t);}
   window[cb]=function(r){cl();res(r);};
   var q=Object.assign({secret:tok(),callback:cb},params);if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
   s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
   s.onerror=function(){cl();rej(new Error('通信エラー'));};document.head.appendChild(s);});}
 function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
 
-function reload(){ setSync('busy','同期中…');
-  callGAS({action:'calendarData'}).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
+function reload(silent){ setSync('busy','同期中…');
+  callGAS({action:'calendarData'},silent).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
     projects=res.projects||[];schedules=res.schedules||[];workers=res.workers||[];customers=res.customers||[];
     try{localStorage.setItem('genba_cal',JSON.stringify({projects:projects,schedules:schedules,workers:workers,customers:customers}));}catch(e){}
     render();setSync('ok','同期済み');
-  }).catch(function(err){ try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];workers=c.workers||[];customers=c.customers||[];}catch(e){} render();setSync('off','オフライン');toast('読込失敗：'+err.message); }); }
+  }).catch(function(err){ if(!silent){ try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];workers=c.workers||[];customers=c.customers||[];}catch(e){} render(); } setSync('off','オフライン'); if(!silent)toast('読込失敗：'+err.message); }); }
 
 function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function kindColor(k){return getComputedStyle(document.documentElement).getPropertyValue('--k'+k).trim()||'#6b7280';}
@@ -365,7 +367,7 @@ function ensureHolidays(){ var ys={};
   var need=Object.keys(ys).filter(function(y){return !holLoaded[y];}); if(!need.length)return;
   need.forEach(function(y){holLoaded[y]=1;});
   var from=Math.min.apply(null,need)+'-01-01', to=Math.max.apply(null,need)+'-12-31';
-  callGAS({action:'holidays',from:from,to:to}).then(function(res){ if(res&&res.ok&&res.holidays){ for(var k in res.holidays)holidays[k]=res.holidays[k]; render(); } }).catch(function(){});
+  callGAS({action:'holidays',from:from,to:to},true).then(function(res){ if(res&&res.ok&&res.holidays){ for(var k in res.holidays)holidays[k]=res.holidays[k]; render(); } }).catch(function(){});
 }
 function evLabel(e){ var t=e['開始']?String(e['開始']).slice(0,5):''; var name=projShort(e['案件ID'],e['案件名'])||e['予定内容']||'(予定)'; var who=e['担当']?(' '+e['担当']):''; return (t?t+' ':'')+name+who; }
 function renderMonth(){
@@ -641,8 +643,10 @@ function exportPdf(){ if(typeof html2canvas==='undefined'||!(window.jspdf&&windo
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
 ['ovDay','ovEv','ovEvD'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
-document.addEventListener('visibilitychange',function(){if(!document.hidden)reload();});
-render();reload();
+document.addEventListener('visibilitychange',function(){if(!document.hidden)reload(true);});
+(function(){try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];workers=c.workers||[];customers=c.customers||[];}catch(e){}})();
+var hadCache=(schedules&&schedules.length>0)||(projects&&projects.length>0);
+render();reload(hadCache);
 </script>
 </body>
 </html>
