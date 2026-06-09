@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 35 (2026-06-09) -->
+<!-- version 36 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -97,7 +97,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v35</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v36</div>
 <div class="head">
   <div class="bar"><a href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a><button onclick="reload()">↻</button></div>
   <div class="me" id="meName">―</div>
@@ -259,6 +259,7 @@
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var T_GENERAL='kawaguchi-genba-2026';
 var me=null,workers=[],todayK=[],monthK=[],mCur=new Date(),tab='home',brk={am:30,noon:60,pm:30},manualRows=[];
+var _monthLoaded=false,_mLoaded=false,_appLoaded=false;
 var S={},adminOK=false,myApps=[],pendApps=[];
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
@@ -291,9 +292,9 @@ function setTab(t){tab=t;
   document.getElementById('pApp').className='pane'+(t==='app'?' on':'');
   document.getElementById('pAll').className='pane'+(t==='all'?' on':'');
   document.getElementById('pSet').className='pane'+(t==='set'?' on':'');
-  if(t==='month')loadMonth(); if(t==='all')renderAll();
-  if(t==='app'){ var ad=document.getElementById('ap_date'); if(ad&&!ad.value)ad.value=ymd(new Date()); loadApp(); }
-  if(t==='manual'){ var di=document.getElementById('mDate'); if(di&&!di.value)di.value=ymd(new Date()); manualLoad(); }
+  if(t==='month')loadMonth(_monthLoaded); if(t==='all')renderAll();
+  if(t==='app'){ var ad=document.getElementById('ap_date'); if(ad&&!ad.value)ad.value=ymd(new Date()); loadApp(_appLoaded); }
+  if(t==='manual'){ var di=document.getElementById('mDate'); if(di&&!di.value)di.value=ymd(new Date()); manualLoad(_mLoaded); }
 }
 function cap(s){return s.charAt(0).toUpperCase()+s.slice(1);}
 
@@ -404,14 +405,14 @@ function calcDay(sessions){
   return {firstIn:firstIn,lastOut:lastOut,workMin:workMin,otMin:ot,nightMin:Math.round(nightMin),lateMin:late,earlyMin:early};
 }
 function ksum(lab,val){ return '<div class="ks-c"><div class="ks-v">'+esc(val)+'</div><div class="ks-l">'+esc(lab)+'</div></div>'; }
-function loadMonth(){ if(!me)return;
+function loadMonth(silent){ if(!me)return;
   var pr=periodRange(), from=ymd(pr.start), to=ymd(pr.end);
   document.getElementById('mym').textContent=mCur.getFullYear()+'年'+(mCur.getMonth()+1)+'月度';
-  document.getElementById('mTable').innerHTML='<div class="needlogin">読み込み中…</div>';showLoad();
+  if(!silent)document.getElementById('mTable').innerHTML='<div class="needlogin">読み込み中…</div>';
   callGAS({action:'kintaiRange',from:from,to:to}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
     monthK=(res.kintai||[]).filter(function(k){return String(k['作業員ID'])===String(me['作業員ID']);});
-    window._period={from:from,to:to}; renderMonth();
-  }).catch(function(err){document.getElementById('mTable').innerHTML='<div class="needlogin">読込失敗：'+esc(err.message)+'</div>';}).then(hideLoad);
+    window._period={from:from,to:to}; renderMonth(); _monthLoaded=true;
+  }).catch(function(err){if(!silent)document.getElementById('mTable').innerHTML='<div class="needlogin">読込失敗：'+esc(err.message)+'</div>';});
 }
 function renderMonth(){
   var el=document.getElementById('mTable'); var per=window._period||{};
@@ -449,12 +450,12 @@ function downloadCSV(){
   a.href=url;a.download='勤怠_'+(me?me['氏名']:'')+'_'+mCur.getFullYear()+('0'+(mCur.getMonth()+1)).slice(-2)+'.csv';a.click();URL.revokeObjectURL(url);
 }
 
-function manualLoad(){ if(!me)return; var d=document.getElementById('mDate').value; if(!d){toast('日付を選んでください');return;}
-  showLoad(); callGAS({action:'kintaiByDate',date:d}).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
+function manualLoad(silent){ if(!me)return; var d=document.getElementById('mDate').value; if(!d){toast('日付を選んでください');return;}
+  if(!silent)showLoad(); callGAS({action:'kintaiByDate',date:d}).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
     manualRows=(res.kintai||[]).filter(function(k){return String(k['作業員ID'])===String(me['作業員ID']);})
       .sort(function(a,b){return String(a['出勤']||'').localeCompare(String(b['出勤']||''));});
-    renderManual();
-  }).catch(function(e){toast('読込失敗：'+e.message);}).then(hideLoad); }
+    renderManual(); _mLoaded=true;
+  }).catch(function(e){if(!silent)toast('読込失敗：'+e.message);}).then(function(){if(!silent)hideLoad();}); }
 function renderManual(){
   var el=document.getElementById('manualList');
   if(!manualRows.length){ el.innerHTML='<div class="needlogin" style="margin:6px auto 14px;">この日の記録はありません。下の「追加」で入力できます。</div>'; return; }
@@ -548,7 +549,7 @@ function saveKrule(){ var g=function(id){return document.getElementById(id).valu
 function logout(){localStorage.removeItem('genba_user');location.href='https://kawaguchidenki001.github.io/genba-projects/';}
 
 /* ===== 申請・承認 ===== */
-function loadApp(){ if(!me)return; showLoad();
+function loadApp(silent){ if(!me)return; if(!silent)showLoad();
   var coop=(me['区分']==='協力業者'||me['区分']==='協力会社');
   var sb=document.getElementById('apSubmitBox'); if(sb)sb.style.display=coop?'none':'';
   var lvMine=null, lvSum=[], admin=!!admTok(), calls=[];
@@ -566,7 +567,8 @@ function loadApp(){ if(!me)return; showLoad();
     if(!coop){ renderApMine(); renderLeaveMine(lvMine); }
     renderApAdmin();
     if(admin){ renderLeaveAdmin(lvSum); } else { var b=document.getElementById('apLeaveBox'); if(b)b.style.display='none'; }
-  }).then(hideLoad,hideLoad);
+    _appLoaded=true;
+  }).then(function(){if(!silent)hideLoad();},function(){if(!silent)hideLoad();});
 }
 function renderLeaveMine(lv){ var el=document.getElementById('apLeave'); if(!el)return;
   if(!lv){ el.style.display='none'; return; } el.style.display='block';
