@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- version 35 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -70,6 +71,7 @@
 </style>
 </head>
 <body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v35</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -205,17 +207,20 @@
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var workers=[],customers=[],contacts=[],curTab='worker';
+var ADMCACHE='genba_admin_cache';
+function admLoadCache(){try{var c=JSON.parse(localStorage.getItem(ADMCACHE)||'{}');workers=c.workers||[];customers=c.customers||[];contacts=c.contacts||[];}catch(e){}}
+function admSaveCache(){try{localStorage.setItem(ADMCACHE,JSON.stringify({workers:workers,customers:customers,contacts:contacts}));}catch(e){}}
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
 function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
-function callGAS(params,secretOverride){
+function callGAS(params,secretOverride,silent){
   return new Promise(function(resolve,reject){
-    showLoad();
+    if(!silent) showLoad();
     var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
     var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
-    function cleanup(){hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    function cleanup(){if(!silent) hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
     window[cb]=function(res){cleanup();resolve(res);};
     var q=Object.assign({secret:secretOverride||admTok(),callback:cb},params);
     if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
@@ -229,8 +234,10 @@ function showContent(){document.getElementById('gate').style.display='none';docu
 
 function init(){
   if(!admTok()){showGate();return;}
-  callGAS({action:'checkRole'}).then(function(res){
-    if(res&&res.ok&&res.role==='admin'){showContent();loadAll();}
+  admLoadCache();
+  var hadCache=(workers.length||customers.length||contacts.length);
+  callGAS({action:'checkRole'},null,hadCache).then(function(res){
+    if(res&&res.ok&&res.role==='admin'){showContent(); if(hadCache){render();renderCustomers();renderContacts();} loadAll(hadCache);}
     else{localStorage.removeItem('genba_admin');showGate();}
   }).catch(function(){showGate();});
 }
@@ -243,10 +250,10 @@ function doLogin(){
 }
 function adminLogout(){localStorage.removeItem('genba_admin');showGate();}
 
-function loadWorkers(){
-  callGAS({action:'workers'}).then(function(res){
-    if(!res.ok)throw new Error(res.error||'エラー');workers=res.workers||[];render();
-  }).catch(function(err){toast('読込失敗：'+err.message);});
+function loadWorkers(silent){
+  callGAS({action:'workers'},null,silent).then(function(res){
+    if(!res.ok)throw new Error(res.error||'エラー');workers=res.workers||[];admSaveCache();render();
+  }).catch(function(err){if(!silent)toast('読込失敗：'+err.message);});
 }
 function render(){
   var el=document.getElementById('list');
@@ -307,7 +314,7 @@ function delWorker(ev){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 
-function loadAll(){ loadWorkers(); loadCustomers(); loadContacts(); }
+function loadAll(silent){ loadWorkers(silent); loadCustomers(silent); loadContacts(silent); }
 function openClearModal(){document.getElementById('ovDel').classList.add('show');}
 function closeClearModal(){document.getElementById('ovDel').classList.remove('show');}
 function doClearAll(){
@@ -329,7 +336,7 @@ function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner'
 /* ===== 取引先（区分つき）===== */
 function custKind(c){ return String(c['区分']||'').trim()||'法人'; }   // 空は法人として扱う
 function kindCls(k){ return k==='官公庁'?'kk':(k==='個人'?'kx':'kg'); }
-function loadCustomers(){ callGAS({action:'customers'}).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); customers=res.customers||[]; renderCustomers(); }).catch(function(err){toast('取引先の読込失敗：'+err.message);}); }
+function loadCustomers(silent){ callGAS({action:'customers'},null,silent).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); customers=res.customers||[]; admSaveCache(); renderCustomers(); }).catch(function(err){if(!silent)toast('取引先の読込失敗：'+err.message);}); }
 function renderCustomers(){
   var el=document.getElementById('listP');
   if(!customers.length){el.innerHTML='<div class="empty">取引先がまだありません。<br>右下の「＋取引先」から登録してください。</div>';return;}
@@ -378,7 +385,7 @@ function delPartner(ev){ ev.preventDefault();var id=document.getElementById('p_i
 }
 
 /* ===== 先方担当者 ===== */
-function loadContacts(){ callGAS({action:'contacts'}).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); contacts=res.contacts||[]; renderContacts(); }).catch(function(err){toast('担当者の読込失敗：'+err.message);}); }
+function loadContacts(silent){ callGAS({action:'contacts'},null,silent).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); contacts=res.contacts||[]; admSaveCache(); renderContacts(); }).catch(function(err){if(!silent)toast('担当者の読込失敗：'+err.message);}); }
 function renderContacts(){
   var el=document.getElementById('listK');
   if(!contacts.length){el.innerHTML='<div class="empty">先方担当者がまだいません。<br>右下の「＋担当者」から登録してください。</div>';return;}
