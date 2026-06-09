@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 1 (2026-06-09) -->
+<!-- toolbox version 2 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -87,10 +87,30 @@
   /* toast */
   .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:30px;z-index:200;background:#15233a;color:#fff;padding:11px 18px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,.28);max-width:88%;text-align:center;}
   .toast.show{opacity:1;}
+
+  /* 現場選択・入力 */
+  .lead{color:rgba(255,255,255,.9);font-size:14px;margin:0 2px 16px;line-height:1.7;}
+  .slbl{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;color:rgba(255,255,255,.85);margin:14px 2px 6px;}
+  .sel{width:100%;padding:13px 14px;border:1px solid rgba(255,255,255,.3);border-radius:12px;background:rgba(255,255,255,.96);color:#15233a;font-size:16px;}
+  .sel:disabled{opacity:.5;}
+  .sitebar{background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.25);border-radius:11px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .sitebar b{font-weight:700;}
+  .savebtn{width:100%;padding:14px;border:none;border-radius:13px;background:#1f9d57;color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-top:14px;}
+  .savebtn:active{filter:brightness(1.08);}
+  #noteTitle{width:100%;padding:13px 14px;border:1px solid rgba(255,255,255,.3);border-radius:12px;background:rgba(255,255,255,.96);color:#15233a;font-size:16px;font-weight:700;}
+  #noteBody{width:100%;min-height:40vh;padding:14px;border:1px solid rgba(255,255,255,.3);border-radius:12px;background:rgba(255,255,255,.96);color:#15233a;font-size:16px;line-height:1.7;resize:vertical;font-family:inherit;}
+
+  /* ローディング */
+  .tload{position:fixed;inset:0;z-index:300;background:rgba(20,40,55,.5);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
+  .tload.show{display:flex;}
+  .tlbox{background:#fff;border-radius:16px;padding:22px 30px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,.25);}
+  .tspin{width:36px;height:36px;border:4px solid #e1e5ea;border-top-color:#27a4a0;border-radius:50%;margin:0 auto 12px;animation:tsp .8s linear infinite;}
+  @keyframes tsp{to{transform:rotate(360deg);}}
+  .tltxt{font-size:14px;font-weight:700;color:#15233a;}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v1</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v2</div>
 
 <div class="wrap">
 
@@ -113,30 +133,51 @@
     </div>
   </div>
 
-  <!-- ========== ① 現場メモ（一覧） ========== -->
-  <div class="pane" id="p-memo">
+  <!-- ========== ① 現場メモ：現場を選ぶ ========== -->
+  <div class="pane" id="p-memo-select">
     <div class="thead">
       <span class="back2" onclick="go('p-home')">← ツールボックス</span>
       <h2>現場メモ</h2>
     </div>
-    <button class="addbtn" onclick="newMemo()">＋ 新しいメモ</button>
-    <div id="memoList"></div>
+    <div class="lead">メモを保存する現場を選んでください。</div>
+    <label class="slbl">種別</label>
+    <select id="selKind" class="sel" onchange="onKind()"><option value="">― 選択 ―</option></select>
+    <label class="slbl">会社</label>
+    <select id="selCust" class="sel" onchange="onCust()" disabled><option value="">― 選択 ―</option></select>
+    <label class="slbl">現場名</label>
+    <select id="selSite" class="sel" onchange="onSite()" disabled><option value="">― 選択 ―</option></select>
   </div>
 
-  <!-- 現場メモ（編集） -->
-  <div class="pane" id="p-memoEdit">
+  <!-- 現場メモ：一覧 -->
+  <div class="pane" id="p-memo-list">
     <div class="thead">
-      <span class="back2" onclick="backToMemoList()">← 一覧</span>
-      <h2>メモ</h2>
-      <span class="del" onclick="deleteMemo()">削除</span>
+      <span class="back2" onclick="go('p-memo-select')">← 現場を変える</span>
+      <h2>現場メモ</h2>
     </div>
-    <input id="memoTitle" placeholder="タイトル（任意）" autocapitalize="off" oninput="saveMemoDraft()">
-    <textarea id="memoBody" placeholder="ここにメモ…" oninput="saveMemoDraft()"></textarea>
-    <div class="savehint" id="memoSaved"></div>
+    <div class="sitebar" id="memoSiteBar"></div>
+    <button class="addbtn" onclick="newNote()">＋ 新しいメモ</button>
+    <div id="noteList"></div>
+  </div>
+
+  <!-- 現場メモ：編集 -->
+  <div class="pane" id="p-memo-edit">
+    <div class="thead">
+      <span class="back2" onclick="openSiteMemoList()">← 一覧</span>
+      <h2>メモ</h2>
+      <span class="del" onclick="deleteNote()">削除</span>
+    </div>
+    <div class="sitebar" id="editSiteBar"></div>
+    <label class="slbl">タイトル（何のメモか）</label>
+    <input id="noteTitle" placeholder="例：配線確認のメモ" autocapitalize="off">
+    <label class="slbl">本文</label>
+    <textarea id="noteBody" placeholder="ここにメモ…"></textarea>
+    <button class="savebtn" onclick="saveNote()">保存する</button>
+    <div class="savehint" id="noteSaved"></div>
   </div>
 
 </div>
 
+<div class="tload" id="tload"><div class="tlbox"><div class="tspin"></div><div class="tltxt" id="tltxt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -145,6 +186,24 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return
 var toastT;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
 function go(id){var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');var el=document.getElementById(id);if(el)el.classList.add('on');window.scrollTo(0,0);}
+/* ===== サーバー通信 ===== */
+var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var T_GENERAL='kawaguchi-genba-2026';
+function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
+var loadCnt=0;
+function showLoad(t){loadCnt++;if(t)document.getElementById('tltxt').textContent=t;if(loadCnt===1)document.getElementById('tload').classList.add('show');}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0)document.getElementById('tload').classList.remove('show');}
+function callGAS(params,silent){return new Promise(function(resolve,reject){
+  if(!silent)showLoad();
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),sc=document.createElement('script');
+  var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
+  function cleanup(){if(!silent)hideLoad();try{delete window[cb];}catch(e){}if(sc.parentNode)sc.parentNode.removeChild(sc);clearTimeout(timer);}
+  window[cb]=function(res){cleanup();resolve(res);};
+  var q=Object.assign({secret:T_GENERAL,callback:cb},params);
+  if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
+  sc.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+  sc.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(sc);
+});}
 function tbGet(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v;}catch(e){return d;}}
 function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
@@ -153,80 +212,114 @@ function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};re
 var READY={memo:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
+  if(k==='memo'){ go('p-memo-select'); loadSites(); return; }
   go('p-'+k);
-  if(k==='memo')renderMemoList();
 }
 function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳'}[k]||k;}
 
-/* ===== ① 現場メモ ===== */
-var MEMOS_KEY='tb_memos';
-var curMemo=null;
-function loadMemos(){return tbGet(MEMOS_KEY,[]);}
-function saveMemos(a){tbSet(MEMOS_KEY,a);}
-function renderMemoList(){
-  var a=loadMemos().slice().sort(function(x,y){return y.ts-x.ts;});
-  var el=document.getElementById('memoList');
-  if(!a.length){ el.innerHTML='<div class="empty">まだメモがありません。<br>「＋ 新しいメモ」で作成できます。</div>'; return; }
-  el.innerHTML=a.map(function(m){
-    var ttl=esc(m.title||'(無題)');
-    var prev=esc((m.body||'').replace(/\s+/g,' ').slice(0,80))||'（本文なし）';
-    return '<div class="memo" onclick="openMemo(\''+m.id+'\')"><div class="m-t">'+ttl+'</div><div class="m-p">'+prev+'</div><div class="m-d">'+fmtTs(m.ts)+'</div></div>';
+/* ===== ① 現場メモ（現場ごと・サーバー保存） ===== */
+var PROJ_KEY='tb_projects';
+var tbProjects=[];
+var curSite=null;
+var curNote=null;
+var noteCache={};
+function loadSites(){
+  try{tbProjects=JSON.parse(localStorage.getItem(PROJ_KEY)||'[]');}catch(e){tbProjects=[];}
+  fillKinds();
+  callGAS({action:'list'}, tbProjects.length>0).then(function(res){
+    if(res&&res.ok){ tbProjects=res.projects||[]; try{localStorage.setItem(PROJ_KEY,JSON.stringify(tbProjects));}catch(e){} fillKinds(); }
+  }).catch(function(){});
+}
+function uniqVals(a){var o={},r=[];a.forEach(function(v){v=(v==null||v==='')?'未分類':v;if(!o[v]){o[v]=1;r.push(v);}});return r.sort();}
+function optList(arr){return '<option value="">― 選択 ―</option>'+arr.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+'</option>';}).join('');}
+function fillKinds(){
+  document.getElementById('selKind').innerHTML=optList(uniqVals(tbProjects.map(function(p){return p['種別'];})));
+  var c=document.getElementById('selCust'); c.innerHTML='<option value="">― 選択 ―</option>'; c.disabled=true;
+  var st=document.getElementById('selSite'); st.innerHTML='<option value="">― 選択 ―</option>'; st.disabled=true;
+}
+function onKind(){
+  var k=document.getElementById('selKind').value;
+  var custs=uniqVals(tbProjects.filter(function(p){return (p['種別']||'未分類')===k;}).map(function(p){return p['顧客'];}));
+  var c=document.getElementById('selCust'); c.innerHTML=optList(custs); c.disabled=!k;
+  var st=document.getElementById('selSite'); st.innerHTML='<option value="">― 選択 ―</option>'; st.disabled=true;
+}
+function onCust(){
+  var k=document.getElementById('selKind').value, cu=document.getElementById('selCust').value;
+  var sites=tbProjects.filter(function(p){return (p['種別']||'未分類')===k && (p['顧客']||'未分類')===cu;});
+  var st=document.getElementById('selSite');
+  st.innerHTML='<option value="">― 選択 ―</option>'+sites.map(function(p){return '<option value="'+esc(p['案件ID'])+'">'+esc(p['案件名']||'(無題)')+'</option>';}).join('');
+  st.disabled=!cu;
+}
+function onSite(){
+  var id=document.getElementById('selSite').value; if(!id)return;
+  var p=tbProjects.filter(function(x){return String(x['案件ID'])===String(id);})[0]||{};
+  curSite={id:id,name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
+  openSiteMemoList();
+}
+function siteBarHtml(){ if(!curSite)return ''; return '<b>'+esc(curSite.cust||'—')+'</b> ／ '+esc(curSite.name||'—')+(curSite.kind?'　<span style="opacity:.7;">'+esc(curSite.kind)+'</span>':''); }
+function openSiteMemoList(){
+  if(!curSite){ go('p-memo-select'); return; }
+  go('p-memo-list');
+  document.getElementById('memoSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('noteList').innerHTML='<div class="empty">読み込み中…</div>';
+  callGAS({action:'notesList',id:curSite.id}).then(function(res){
+    var notes=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'memo')==='memo';});
+    renderNoteList(notes);
+  }).catch(function(e){ document.getElementById('noteList').innerHTML='<div class="empty">読み込みに失敗しました。<br>電波を確認して、もう一度お試しください。</div>'; });
+}
+function renderNoteList(notes){
+  var el=document.getElementById('noteList');
+  notes.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
+  noteCache={}; notes.forEach(function(n){noteCache[n['メモID']]=n;});
+  if(!notes.length){ el.innerHTML='<div class="empty">この現場のメモはまだありません。<br>「＋ 新しいメモ」で作成できます。</div>'; return; }
+  el.innerHTML=notes.map(function(n){
+    var ttl=esc(n['タイトル']||'(無題)');
+    var prev=esc(String(n['内容']||'').replace(/\s+/g,' ').slice(0,80))||'（本文なし）';
+    return '<div class="memo" onclick="openNote(\''+esc(n['メモID'])+'\')"><div class="m-t">'+ttl+'</div><div class="m-p">'+prev+'</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
   }).join('');
 }
-function newMemo(){
-  curMemo=null;
-  document.getElementById('memoTitle').value='';
-  document.getElementById('memoBody').value='';
-  document.getElementById('memoSaved').classList.remove('show');
-  go('p-memoEdit');
-  setTimeout(function(){document.getElementById('memoBody').focus();},150);
+function newNote(){
+  curNote=null;
+  document.getElementById('noteTitle').value='';
+  document.getElementById('noteBody').value='';
+  document.getElementById('noteSaved').classList.remove('show');
+  document.getElementById('editSiteBar').innerHTML=siteBarHtml();
+  go('p-memo-edit');
+  setTimeout(function(){document.getElementById('noteTitle').focus();},150);
 }
-function openMemo(id){
-  var m=loadMemos().filter(function(x){return x.id===id;})[0];
-  if(!m)return;
-  curMemo=id;
-  document.getElementById('memoTitle').value=m.title||'';
-  document.getElementById('memoBody').value=m.body||'';
-  document.getElementById('memoSaved').classList.remove('show');
-  go('p-memoEdit');
+function openNote(id){
+  var n=noteCache[id]||{};
+  curNote=id;
+  document.getElementById('noteTitle').value=n['タイトル']||'';
+  document.getElementById('noteBody').value=n['内容']||'';
+  document.getElementById('noteSaved').classList.remove('show');
+  document.getElementById('editSiteBar').innerHTML=siteBarHtml();
+  go('p-memo-edit');
 }
-function saveMemoDraft(){
-  var t=document.getElementById('memoTitle').value;
-  var b=document.getElementById('memoBody').value;
-  if(curMemo===null && !t && !b) return; /* 空の新規はまだ作らない */
-  var a=loadMemos();
-  if(curMemo===null){
-    curMemo='m'+Date.now();
-    a.push({id:curMemo,title:t,body:b,ts:Date.now()});
-  }else{
-    var hit=false;
-    for(var i=0;i<a.length;i++){ if(a[i].id===curMemo){ a[i].title=t; a[i].body=b; a[i].ts=Date.now(); hit=true; break; } }
-    if(!hit){ a.push({id:curMemo,title:t,body:b,ts:Date.now()}); }
-  }
-  saveMemos(a);
-  var s=document.getElementById('memoSaved');
-  s.textContent='保存しました ・ '+fmtTs(Date.now());
-  s.classList.add('show');
+function saveNote(){
+  var t=document.getElementById('noteTitle').value.trim();
+  var b=document.getElementById('noteBody').value;
+  if(!t){ toast('タイトルを入力してください'); document.getElementById('noteTitle').focus(); return; }
+  if(!curSite){ toast('現場が選ばれていません'); go('p-memo-select'); return; }
+  var u=gUser()||{};
+  var data={'案件ID':curSite.id,'種類':'memo','タイトル':t,'内容':b,'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  if(curNote)data['メモID']=curNote;
+  showLoad('保存中…');
+  callGAS({action:'noteSave',data:data}).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'保存に失敗しました');
+    if(res.note&&res.note['メモID']){ curNote=res.note['メモID']; noteCache[curNote]=res.note; }
+    var s=document.getElementById('noteSaved'); s.textContent='保存しました'; s.classList.add('show');
+    toast('保存しました');
+  }).catch(function(e){ toast('失敗：'+e.message); });
 }
-function backToMemoList(){
-  /* タイトルも本文も空のメモは残さない */
-  var t=document.getElementById('memoTitle').value;
-  var b=document.getElementById('memoBody').value;
-  if(curMemo!==null && !t && !b){
-    saveMemos(loadMemos().filter(function(x){return x.id!==curMemo;}));
-  }
-  curMemo=null;
-  go('p-memo');
-  renderMemoList();
-}
-function deleteMemo(){
-  if(curMemo===null){ backToMemoList(); return; }
+function deleteNote(){
+  if(!curNote){ openSiteMemoList(); return; }
   if(!confirm('このメモを削除しますか？'))return;
-  saveMemos(loadMemos().filter(function(x){return x.id!==curMemo;}));
-  curMemo=null;
-  go('p-memo');
-  renderMemoList();
-  toast('削除しました');
+  showLoad('削除中…');
+  callGAS({action:'noteDelete',id:curNote}).then(function(res){
+    if(!res||!res.ok)throw new Error('削除に失敗しました');
+    toast('削除しました'); curNote=null; openSiteMemoList();
+  }).catch(function(e){ toast('失敗：'+e.message); });
 }
 </script>
 </body>
