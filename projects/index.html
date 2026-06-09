@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 37 (2026-06-09) -->
+<!-- version 38 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -122,6 +122,12 @@
   .d-folder:active{background:var(--accent-d);}
   .d-memo{width:100%;background:#1f9d57;font-family:inherit;font-size:14px;cursor:pointer;margin-bottom:12px;}
   .d-memo:active{background:#177a44;}
+  .dnote-ttl{font-size:13px;font-weight:700;color:#15233a;margin:16px 0 8px;}
+  .dnote-load,.dnote-empty{font-size:13px;color:#8a93a0;padding:4px 0 8px;}
+  .dnote{background:#f4f8f5;border:1px solid #d9e6dd;border-radius:11px;padding:11px 13px;margin-bottom:8px;cursor:pointer;}
+  .dnote:active{background:#e8f1eb;}
+  .dnote-t{font-weight:700;font-size:14px;color:#15233a;}
+  .dnote-p{font-size:12px;color:#69727e;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .d-rows .v a{color:var(--accent-d);text-decoration:none;font-weight:600;}
   /* 管理者ヒント（一般ユーザー向け）*/
   .adhint{font-size:12.5px;color:var(--sub);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px;}
@@ -134,7 +140,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v37</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v38</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -245,6 +251,7 @@
       <a id="d_map" class="d-map" target="_blank" rel="noopener" style="display:none;">📍 地図で見る（Googleマップ）</a>
       <a id="d_folder" class="d-folder" target="_blank" rel="noopener">📁 フォルダを開く（Googleドライブ）</a>
       <button id="d_memo" class="d-folder d-memo" onclick="openSiteNote()">📝 現場メモを開く</button>
+      <div id="d_memolist"></div>
       <div id="d_adminbtns" style="display:none;">
         <button class="btn primary" style="width:100%;" onclick="editFromDetail()">✎ この現場を編集</button>
       </div>
@@ -412,9 +419,25 @@ function openDetail(p){
     else { fo.textContent='📁 フォルダ（もう一度タップ）'; fo.style.opacity='1'; fo.onclick=function(e){e.preventDefault();openDetail(curDetail);}; }
   }).catch(function(){ fo.textContent='📁 フォルダ（もう一度タップ）'; fo.style.opacity='1'; fo.onclick=function(e){e.preventDefault();openDetail(curDetail);}; });
   g('d_adminbtns').style.display='block';
+  loadDetailNotes(p['案件ID']);
   document.getElementById('ovd').classList.add('show');
 }
 function openSiteNote(){ if(!curDetail)return; location.href='../toolbox/?memo='+encodeURIComponent(curDetail['案件ID']); }
+function loadDetailNotes(id){
+  var box=document.getElementById('d_memolist'); if(!box)return;
+  box.innerHTML='<div class="dnote-load">現場メモを読み込み中…</div>';
+  callGAS({action:'notesList',id:id},null,true).then(function(res){
+    var notes=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'memo')==='memo';});
+    notes.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
+    if(!notes.length){ box.innerHTML='<div class="dnote-empty">現場メモはまだありません。</div>'; return; }
+    box.innerHTML='<div class="dnote-ttl">現場メモ（'+notes.length+'件）</div>'+notes.map(function(n){
+      var t=esc(n['タイトル']||'(無題)');
+      var pv=esc(String(n['内容']||'').replace(/\s+/g,' ').slice(0,50));
+      return '<div class="dnote" onclick="openNoteInTB(\''+esc(String(id))+'\',\''+esc(n['メモID'])+'\')"><div class="dnote-t">'+t+'</div><div class="dnote-p">'+pv+'</div></div>';
+    }).join('');
+  }).catch(function(){ box.innerHTML=''; });
+}
+function openNoteInTB(caseId,noteId){ location.href='../toolbox/?memo='+encodeURIComponent(caseId)+'&note='+encodeURIComponent(noteId); }
 function editFromDetail(){ closeDetail(); if(curDetail)openProject(curDetail); }
 function closeDetail(ev){ if(ev&&ev.preventDefault)ev.preventDefault(); document.getElementById('ovd').classList.remove('show'); }
 function render(){
