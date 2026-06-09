@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 4 (2026-06-09) -->
+<!-- toolbox version 5 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -112,7 +112,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v4</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v5</div>
 
 <div class="wrap">
 
@@ -157,7 +157,7 @@
       <h2>現場メモ</h2>
     </div>
     <div class="sitebar" id="memoSiteBar"></div>
-    <button class="linkbtn" onclick="openCaseInProjects()">📋 この現場を案件管理で開く</button>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
     <button class="addbtn" onclick="newNote()">＋ 新しいメモ</button>
     <div id="noteList"></div>
   </div>
@@ -170,6 +170,7 @@
       <span class="del" onclick="deleteNote()">削除</span>
     </div>
     <div class="sitebar" id="editSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
     <label class="slbl">タイトル（何のメモか）</label>
     <input id="noteTitle" placeholder="例：配線確認のメモ" autocapitalize="off">
     <label class="slbl">本文</label>
@@ -226,6 +227,7 @@ var tbProjects=[];
 var curSite=null;
 var curNote=null;
 var noteCache={};
+var pendingNote=null;
 function loadSites(){
   try{tbProjects=JSON.parse(localStorage.getItem(PROJ_KEY)||'[]');}catch(e){tbProjects=[];}
   fillKinds();
@@ -268,6 +270,7 @@ function openSiteMemoList(){
   callGAS({action:'notesList',id:curSite.id}).then(function(res){
     var notes=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'memo')==='memo';});
     renderNoteList(notes);
+    if(pendingNote){ var _t=pendingNote; pendingNote=null; if(noteCache[_t]) openNote(_t); }
   }).catch(function(e){ document.getElementById('noteList').innerHTML='<div class="empty">読み込みに失敗しました。<br>電波を確認して、もう一度お試しください。</div>'; });
 }
 function renderNoteList(notes){
@@ -338,7 +341,7 @@ function openMemoForCase(id){
     openSiteMemoList();
   }).catch(function(){ hideLoad(); fillKinds(); go('p-memo-select'); });
 }
-(function(){ var m=location.search.match(/[?&]memo=([^&]+)/); if(m){ openMemoForCase(decodeURIComponent(m[1])); } })();
+(function(){ var m=location.search.match(/[?&]memo=([^&]+)/); if(m){ var nm=location.search.match(/[?&]note=([^&]+)/); if(nm)pendingNote=decodeURIComponent(nm[1]); openMemoForCase(decodeURIComponent(m[1])); } })();
 </script>
 </body>
 </html>
