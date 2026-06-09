@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 39 (2026-06-09) -->
+<!-- version 40 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -130,6 +130,8 @@
   .dnote-p{font-size:12px;color:#69727e;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .dcheck{background:#eef4fb;border-color:#d4e2f2;}
   .dcheck:active{background:#e2ecf7;}
+  .ddraw{background:#fdf8ee;border-color:#e8dcb8;}
+  .ddraw:active{background:#f5eccc;}
   .d-rows .v a{color:var(--accent-d);text-decoration:none;font-weight:600;}
   /* 管理者ヒント（一般ユーザー向け）*/
   .adhint{font-size:12.5px;color:var(--sub);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px;}
@@ -142,7 +144,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v39</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v40</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -443,12 +445,18 @@ function loadDetailNotes(id){
       var done=items.filter(function(it){return it&&it.d;}).length;
       return '<div class="dnote dcheck" onclick="openCheckInTB(\''+esc(String(id))+'\',\''+esc(n['メモID'])+'\')"><div class="dnote-t">☑ '+t+'</div><div class="dnote-p">'+done+' / '+items.length+' 完了</div></div>';
     }).join(''); }
-    if(!h)h='<div class="dnote-empty">現場メモ・チェックリストはまだありません。</div>';
+    var draws=all.filter(function(n){return (n['種類']||'')==='draw';}).sort(byUpd);
+    if(draws.length){ h+='<div class="dnote-ttl">手書きメモ（'+draws.length+'件）</div>'+draws.map(function(n){
+      var t=esc(n['タイトル']||'(無題)');
+      return '<div class="dnote ddraw" onclick="openDrawInTB(\''+esc(String(id))+'\',\''+esc(n['メモID'])+'\')"><div class="dnote-t">✏️ '+t+'</div><div class="dnote-p">手書きメモ</div></div>';
+    }).join(''); }
+    if(!h)h='<div class="dnote-empty">現場メモ・チェックリスト・手書きメモはまだありません。</div>';
     box.innerHTML=h;
   }).catch(function(){ box.innerHTML=''; });
 }
 function openNoteInTB(caseId,noteId){ location.href='../toolbox/?memo='+encodeURIComponent(caseId)+'&note='+encodeURIComponent(noteId); }
 function openCheckInTB(caseId,noteId){ location.href='../toolbox/?check='+encodeURIComponent(caseId)+'&note='+encodeURIComponent(noteId); }
+function openDrawInTB(caseId,noteId){ location.href='../toolbox/?draw='+encodeURIComponent(caseId)+'&note='+encodeURIComponent(noteId); }
 function editFromDetail(){ closeDetail(); if(curDetail)openProject(curDetail); }
 function closeDetail(ev){ if(ev&&ev.preventDefault)ev.preventDefault(); document.getElementById('ovd').classList.remove('show'); }
 function render(){
