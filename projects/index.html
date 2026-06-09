@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 38 (2026-06-09) -->
+<!-- version 39 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -128,6 +128,8 @@
   .dnote:active{background:#e8f1eb;}
   .dnote-t{font-weight:700;font-size:14px;color:#15233a;}
   .dnote-p{font-size:12px;color:#69727e;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dcheck{background:#eef4fb;border-color:#d4e2f2;}
+  .dcheck:active{background:#e2ecf7;}
   .d-rows .v a{color:var(--accent-d);text-decoration:none;font-weight:600;}
   /* 管理者ヒント（一般ユーザー向け）*/
   .adhint{font-size:12.5px;color:var(--sub);background:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 11px;}
@@ -140,7 +142,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v38</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v39</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -425,19 +427,28 @@ function openDetail(p){
 function openSiteNote(){ if(!curDetail)return; location.href='../toolbox/?memo='+encodeURIComponent(curDetail['案件ID']); }
 function loadDetailNotes(id){
   var box=document.getElementById('d_memolist'); if(!box)return;
-  box.innerHTML='<div class="dnote-load">現場メモを読み込み中…</div>';
+  box.innerHTML='<div class="dnote-load">現場メモ・チェックリストを読み込み中…</div>';
   callGAS({action:'notesList',id:id},null,true).then(function(res){
-    var notes=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'memo')==='memo';});
-    notes.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
-    if(!notes.length){ box.innerHTML='<div class="dnote-empty">現場メモはまだありません。</div>'; return; }
-    box.innerHTML='<div class="dnote-ttl">現場メモ（'+notes.length+'件）</div>'+notes.map(function(n){
-      var t=esc(n['タイトル']||'(無題)');
-      var pv=esc(String(n['内容']||'').replace(/\s+/g,' ').slice(0,50));
+    var all=((res&&res.ok&&res.notes)||[]);
+    var byUpd=function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));};
+    var memos=all.filter(function(n){return (n['種類']||'memo')==='memo';}).sort(byUpd);
+    var checks=all.filter(function(n){return (n['種類']||'')==='check';}).sort(byUpd);
+    var h='';
+    if(memos.length){ h+='<div class="dnote-ttl">現場メモ（'+memos.length+'件）</div>'+memos.map(function(n){
+      var t=esc(n['タイトル']||'(無題)'); var pv=esc(String(n['内容']||'').replace(/\s+/g,' ').slice(0,50));
       return '<div class="dnote" onclick="openNoteInTB(\''+esc(String(id))+'\',\''+esc(n['メモID'])+'\')"><div class="dnote-t">'+t+'</div><div class="dnote-p">'+pv+'</div></div>';
-    }).join('');
+    }).join(''); }
+    if(checks.length){ h+='<div class="dnote-ttl">チェックリスト（'+checks.length+'件）</div>'+checks.map(function(n){
+      var t=esc(n['タイトル']||'(無題)'); var items=[]; try{items=JSON.parse(n['内容']||'[]');}catch(e){items=[];} if(!Array.isArray(items))items=[];
+      var done=items.filter(function(it){return it&&it.d;}).length;
+      return '<div class="dnote dcheck" onclick="openCheckInTB(\''+esc(String(id))+'\',\''+esc(n['メモID'])+'\')"><div class="dnote-t">☑ '+t+'</div><div class="dnote-p">'+done+' / '+items.length+' 完了</div></div>';
+    }).join(''); }
+    if(!h)h='<div class="dnote-empty">現場メモ・チェックリストはまだありません。</div>';
+    box.innerHTML=h;
   }).catch(function(){ box.innerHTML=''; });
 }
 function openNoteInTB(caseId,noteId){ location.href='../toolbox/?memo='+encodeURIComponent(caseId)+'&note='+encodeURIComponent(noteId); }
+function openCheckInTB(caseId,noteId){ location.href='../toolbox/?check='+encodeURIComponent(caseId)+'&note='+encodeURIComponent(noteId); }
 function editFromDetail(){ closeDetail(); if(curDetail)openProject(curDetail); }
 function closeDetail(ev){ if(ev&&ev.preventDefault)ev.preventDefault(); document.getElementById('ovd').classList.remove('show'); }
 function render(){
