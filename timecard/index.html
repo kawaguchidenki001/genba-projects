@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 36 (2026-06-09) -->
+<!-- version 37 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -17,8 +17,8 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
   body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:66px;}
   .head{background:linear-gradient(135deg,var(--teal1),var(--teal2));color:#fff;text-align:center;padding:calc(env(safe-area-inset-top) + 14px) 16px 18px;position:relative;}
-  .head .bar{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:14px;right:14px;display:flex;justify-content:space-between;}
-  .head .bar a,.head .bar button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:5px 9px;font-size:13px;cursor:pointer;text-decoration:none;}
+  .head .bar{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:14px;right:14px;display:flex;justify-content:space-between;z-index:5;}
+  .head .bar a,.head .bar button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:5px 9px;font-size:13px;cursor:pointer;text-decoration:none;position:relative;z-index:6;pointer-events:auto;}
   .head .me{font-size:14px;opacity:.95;margin-bottom:4px;font-weight:700;}
   .head .d{font-size:14px;opacity:.92;}
   .head .t{font-size:44px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:.03em;line-height:1.15;}
@@ -97,9 +97,9 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v36</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v37</div>
 <div class="head">
-  <div class="bar"><a href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a><button onclick="reload()">↻</button></div>
+  <div class="bar"><a href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a><button onclick="reload()">↻</button></div>
   <div class="me" id="meName">―</div>
   <div class="d" id="hd">―</div>
   <div class="t" id="ht">--:--:--</div>
