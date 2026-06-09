@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 10 (2026-06-09) -->
+<!-- toolbox version 11 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -162,10 +162,20 @@
   .bcam-overlay{position:absolute;bottom:0;left:0;right:0;padding:10px 14px 12px;background:rgba(15,45,20,.88);border-top:2px solid rgba(255,255,255,.35);display:none;}
   .bov-line{color:#fff;font-size:12px;font-weight:700;line-height:1.9;letter-spacing:.02em;}
   .board-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:2px;}
+  /* 録音機 */
+  .rec-center{text-align:center;padding:24px 0 10px;}
+  .rec-btn{width:88px;height:88px;border-radius:50%;border:none;font-size:40px;cursor:pointer;background:rgba(207,59,59,.88);box-shadow:0 6px 24px rgba(200,60,60,.4);transition:transform .12s;}
+  .rec-btn:active{transform:scale(.94);}
+  .rec-btn.rec-stop{background:rgba(50,50,50,.9);box-shadow:0 6px 20px rgba(0,0,0,.35);}
+  .rec-label{margin-top:10px;font-size:13px;color:rgba(255,255,255,.82);font-weight:700;}
+  .rec-timer{font-size:34px;font-weight:800;font-family:"Manrope",sans-serif;letter-spacing:.08em;margin-bottom:14px;}
+  .rec-hint{color:rgba(255,255,255,.78);font-size:13px;margin-bottom:16px;line-height:1.7;}
+  .rec-pulse{width:22px;height:22px;border-radius:50%;background:#e03030;margin:0 auto 14px;animation:rpulse 1.2s ease-in-out infinite;}
+  @keyframes rpulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.6);opacity:.5;}}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v10</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v11</div>
 
 <div class="wrap">
 
@@ -181,7 +191,7 @@
       <div class="sq t-memo"  onclick="openTool('memo')"><span class="ic">📝</span><span class="txt"><span class="nm">現場メモ</span><span class="ds">サッとテキストでメモ</span></span><span class="cor">→</span></div>
       <div class="sq t-check" onclick="openTool('check')"><span class="ic">✅</span><span class="txt"><span class="nm">チェックリスト</span><span class="ds">確認項目を管理</span></span><span class="cor">→</span></div>
       <div class="sq t-draw"  onclick="openTool('draw')"><span class="ic">✍️</span><span class="txt"><span class="nm">手書きメモ</span><span class="ds">指で書ける</span></span><span class="cor">→</span></div>
-      <div class="sq t-rec soon"   onclick="openTool('rec')"><span class="ic">🎙️</span><span class="txt"><span class="nm">録音機</span><span class="ds">音声を記録</span></span><span class="cor">準備中</span></div>
+      <div class="sq t-rec"   onclick="openTool('rec')"><span class="ic">🎙️</span><span class="txt"><span class="nm">録音機</span><span class="ds">音声を記録</span></span><span class="cor">→</span></div>
       <div class="sq t-board" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">→</span></div>
       <div class="sq t-elec"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">→</span></div>
       <div class="sq t-area"  onclick="openTool('area')"><span class="ic">📐</span><span class="txt"><span class="nm">坪・㎡・畳</span><span class="ds">面積の換算</span></span><span class="cor">→</span></div>
@@ -419,6 +429,49 @@
     <button class="savebtn" style="background:#d97b12;margin-top:14px;" onclick="boardShoot()">📷 撮影してDriveに保存</button>
   </div>
 
+  <!-- ========== ④ 録音機 ========== -->
+  <div class="pane" id="p-rec">
+    <div class="thead">
+      <span class="back2" onclick="recBack()">← ツールボックス</span>
+      <h2>録音機</h2>
+    </div>
+    <div class="sitebar" id="recSiteBar">現場: <b>—</b></div>
+
+    <!-- 録音コントロール -->
+    <div class="rec-center">
+      <div id="recIdle">
+        <div class="rec-hint">ボタンをタップして録音を開始します（最大5分）</div>
+        <button class="rec-btn" onclick="recStart()">🎙️</button>
+        <div class="rec-label">タップして録音開始</div>
+      </div>
+      <div id="recRecording" style="display:none">
+        <div class="rec-pulse"></div>
+        <div class="rec-timer" id="recTimer">0:00</div>
+        <button class="rec-btn rec-stop" onclick="recStop()">⏹</button>
+        <div class="rec-label">タップして停止</div>
+      </div>
+      <div id="recPreview" style="display:none">
+        <div class="rec-hint">録音が完了しました。確認してDriveに保存できます。</div>
+        <audio id="recAudio" controls style="width:100%;margin:10px 0;border-radius:8px;"></audio>
+        <label class="slbl" style="text-align:left;display:block;">メモ（ファイル名に使います・任意）</label>
+        <input class="enum" id="recTitle" placeholder="例 打ち合わせ内容" style="margin-bottom:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button class="back2" style="text-align:center;padding:13px;" onclick="recReset()">やり直し</button>
+          <button class="savebtn" style="margin-top:0;" onclick="recSave()">Driveに保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 保存済み一覧 -->
+    <div style="margin-top:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;">
+        <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);">保存済みの録音</span>
+        <button class="back2" onclick="recLoadList()">↻ 更新</button>
+      </div>
+      <div id="recList"><div class="empty">「↻ 更新」で一覧を読み込みます</div></div>
+    </div>
+  </div>
+
 </div>
 
 <div class="tload" id="tload"><div class="tlbox"><div class="tspin"></div><div class="tltxt" id="tltxt">読み込み中…</div></div></div>
@@ -453,10 +506,10 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
 /* 実装済みツール */
-var READY={memo:1,check:1,draw:1,elec:1,area:1,board:1};
+var READY={memo:1,check:1,draw:1,elec:1,area:1,board:1,rec:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
-  if(k==='memo'||k==='check'||k==='draw'||k==='board'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='check'?'現場チェックリスト':k==='draw'?'手書きメモ':k==='board'?'小黒板カメラ':'現場メモ'); go('p-memo-select'); loadSites(); return; }
+  if(k==='memo'||k==='check'||k==='draw'||k==='board'||k==='rec'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='check'?'現場チェックリスト':k==='draw'?'手書きメモ':k==='board'?'小黒板カメラ':k==='rec'?'録音機':'現場メモ'); go('p-memo-select'); loadSites(); return; }
   go('p-'+k);
 }
 function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳'}[k]||k;}
@@ -500,7 +553,7 @@ function onSite(){
   var id=document.getElementById('selSite').value; if(!id)return;
   var p=tbProjects.filter(function(x){return String(x['案件ID'])===String(id);})[0]||{};
   curSite={id:id,name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
-  if(curTool==='check')openSiteCheckList(); else if(curTool==='draw')openSiteDrawList(); else if(curTool==='board')openBoardCamera(); else openSiteMemoList();
+  if(curTool==='check')openSiteCheckList(); else if(curTool==='draw')openSiteDrawList(); else if(curTool==='board')openBoardCamera(); else if(curTool==='rec')openRecorder(); else openSiteMemoList();
 }
 function siteBarHtml(){ if(!curSite)return ''; return '<b>'+esc(curSite.cust||'—')+'</b> ／ '+esc(curSite.name||'—')+(curSite.kind?'　<span style="opacity:.7;">'+esc(curSite.kind)+'</span>':''); }
 function openSiteMemoList(){
@@ -1050,6 +1103,95 @@ function boardShoot(){
   tbPost({action:'uploadPhoto',id:boardSiteId,dest:'photo',name:fname,mime:'image/jpeg',data:base64})
     .then(function(){setTimeout(function(){toast('✓ 保存しました');},1800);})
     .catch(function(){toast('保存に失敗しました');});
+}
+
+
+/* ===== ④ 録音機 ===== */
+var recStream=null,recRecorder=null,recChunks=[],recBlob=null;
+var recSiteId=null,recTimerInt=null,recSecs=0;
+
+function openRecorder(){
+  if(!curSite){go('p-memo-select');return;}
+  recSiteId=curSite.id;
+  document.getElementById('recSiteBar').innerHTML='現場：<b>'+esc(curSite.cust||'')+(curSite.name?' ／ '+esc(curSite.name):'')+'</b>';
+  recReset(); go('p-rec');
+}
+function recBack(){recStop2(); go('p-home');}
+function recStop2(){
+  if(recRecorder&&recRecorder.state!=='inactive')try{recRecorder.stop();}catch(e){}
+  if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}
+  clearInterval(recTimerInt);
+}
+function recSetState(st){
+  document.getElementById('recIdle').style.display=(st==='idle')?'':'none';
+  document.getElementById('recRecording').style.display=(st==='recording')?'':'none';
+  document.getElementById('recPreview').style.display=(st==='preview')?'':'none';
+}
+function recStart(){
+  if(typeof MediaRecorder==='undefined'){toast('このブラウザは録音に対応していません');return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('マイクに対応していません');return;}
+  navigator.mediaDevices.getUserMedia({audio:true})
+    .then(function(stream){
+      recStream=stream; recChunks=[]; recBlob=null;
+      var types=['audio/webm;codecs=opus','audio/webm','audio/ogg','audio/mp4'];
+      var mt=types.filter(function(t){try{return MediaRecorder.isTypeSupported(t);}catch(e){return false;}})[0]||'';
+      recRecorder=new MediaRecorder(stream,mt?{mimeType:mt}:{});
+      recRecorder.ondataavailable=function(e){if(e.data&&e.data.size>0)recChunks.push(e.data);};
+      recRecorder.onstop=function(){
+        clearInterval(recTimerInt);
+        recBlob=new Blob(recChunks,{type:recRecorder.mimeType||'audio/webm'});
+        document.getElementById('recAudio').src=URL.createObjectURL(recBlob);
+        recSetState('preview');
+      };
+      recRecorder.start(1000);
+      recSecs=0; recSetState('recording');
+      recTimerInt=setInterval(function(){
+        recSecs++;
+        var m=Math.floor(recSecs/60),sc=recSecs%60;
+        document.getElementById('recTimer').textContent=m+':'+(sc<10?'0':'')+sc;
+        if(recSecs>=300){toast('最大5分に達しました');recStop();}
+      },1000);
+    }).catch(function(e){toast('マイクを使用できませんでした（'+e.message+'）');});
+}
+function recStop(){
+  if(recRecorder&&recRecorder.state!=='inactive')recRecorder.stop();
+  if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}
+  clearInterval(recTimerInt);
+}
+function recReset(){
+  recStop2(); recBlob=null; recChunks=[]; recSecs=0;
+  var a=document.getElementById('recAudio');if(a)a.src='';
+  var t=document.getElementById('recTitle');if(t)t.value='';
+  recSetState('idle');
+}
+function recSave(){
+  if(!recBlob){toast('録音データがありません');return;}
+  var ext=(recBlob.type.indexOf('ogg')>=0)?'.ogg':(recBlob.type.indexOf('mp4')>=0?'.m4a':'.webm');
+  var title=(document.getElementById('recTitle').value||'').trim().slice(0,20).replace(/[\\/:*?"<>|]/g,'');
+  var stamp=new Date().toISOString().replace(/[^0-9]/g,'').slice(0,14);
+  var fname='rec_'+(title?title+'_':'')+stamp+ext;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var b64=ev.target.result.split(',')[1];
+    toast('Driveに保存中...');
+    tbPost({action:'uploadPhoto',id:recSiteId,dest:'file',name:fname,mime:recBlob.type||'audio/webm',data:b64})
+      .then(function(){setTimeout(function(){toast('✓ 保存しました');recReset();recLoadList();},1800);})
+      .catch(function(){toast('保存に失敗しました');});
+  };
+  reader.readAsDataURL(recBlob);
+}
+function recLoadList(){
+  if(!recSiteId){toast('現場を選んでください');return;}
+  var el=document.getElementById('recList');
+  el.innerHTML='<div class="empty">読み込み中...</div>';
+  callGAS({action:'listFiles',id:recSiteId}).then(function(res){
+    var files=(res.files||[]).filter(function(f){return /^rec_/.test(f.name);});
+    if(!files.length){el.innerHTML='<div class="empty">この現場の録音ファイルはまだありません。</div>';return;}
+    el.innerHTML=files.map(function(f){
+      return '<div class="memo"><div class="m-t">'+esc(f.name)+'</div>'+
+        '<div class="m-d"><a href="'+esc(f.url)+'" target="_blank" style="color:#a8d8ff;font-size:12px;">Driveで開く／再生 →</a></div></div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='<div class="empty">読み込みに失敗しました。</div>';});
 }
 
 (function(){
