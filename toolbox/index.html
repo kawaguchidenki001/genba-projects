@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 12 (2026-06-09) -->
+<!-- toolbox version 13 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -175,7 +175,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v12</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v13</div>
 
 <div class="wrap">
 
@@ -204,19 +204,15 @@
       <span class="back2" onclick="go('p-home')">← ツールボックス</span>
       <h2 id="selTitle">現場メモ</h2>
     </div>
-    <div class="lead">保存する現場を選んでください。</div>
-    <label class="slbl">種別</label>
-    <select id="selKind" class="sel" onchange="onKind()"><option value="">― 選択 ―</option></select>
-    <label class="slbl">会社</label>
-    <select id="selCust" class="sel" onchange="onCust()" disabled><option value="">― 選択 ―</option></select>
-    <label class="slbl">現場名</label>
-    <select id="selSite" class="sel" onchange="onSite()" disabled><option value="">― 選択 ―</option></select>
+    <div class="lead" id="selLead">種別を選んでください。</div>
+    <div class="sitebar" id="selCrumb" style="display:none;margin-bottom:14px;"></div>
+    <div id="selList"></div>
   </div>
 
   <!-- 現場メモ：一覧 -->
   <div class="pane" id="p-memo-list">
     <div class="thead">
-      <span class="back2" onclick="go('p-memo-select')">← 現場を変える</span>
+      <span class="back2" onclick="resetAndGoSelect()">← 現場を変える</span>
       <h2>現場メモ</h2>
     </div>
     <div class="sitebar" id="memoSiteBar"></div>
@@ -245,7 +241,7 @@
   <!-- ② 現場チェックリスト：一覧 -->
   <div class="pane" id="p-check-list">
     <div class="thead">
-      <span class="back2" onclick="go('p-memo-select')">← 現場を変える</span>
+      <span class="back2" onclick="resetAndGoSelect()">← 現場を変える</span>
       <h2>現場チェックリスト</h2>
     </div>
     <div class="sitebar" id="checkSiteBar"></div>
@@ -275,7 +271,7 @@
   <!-- ③ 手書きメモ：一覧 -->
   <div class="pane" id="p-draw-list">
     <div class="thead">
-      <span class="back2" onclick="go('p-memo-select')">← 現場を変える</span>
+      <span class="back2" onclick="resetAndGoSelect()">← 現場を変える</span>
       <h2>手書きメモ</h2>
     </div>
     <div class="sitebar" id="drawSiteBar"></div>
@@ -519,41 +515,67 @@ var PROJ_KEY='tb_projects';
 var tbProjects=[];
 var curSite=null;
 var curTool='memo';
+var selStep=0,selKindVal='',selCustVal='';
 var curNote=null;
 var noteCache={};
 var pendingNote=null;
 function loadSites(){
   try{tbProjects=JSON.parse(localStorage.getItem(PROJ_KEY)||'[]');}catch(e){tbProjects=[];}
-  fillKinds();
-  callGAS({action:'list'}, tbProjects.length>0).then(function(res){
-    if(res&&res.ok){ tbProjects=res.projects||[]; try{localStorage.setItem(PROJ_KEY,JSON.stringify(tbProjects));}catch(e){} fillKinds(); }
+  selStep=0; selKindVal=''; selCustVal='';
+  renderSelStep();
+  callGAS({action:'list'},tbProjects.length>0).then(function(res){
+    if(res&&res.ok){
+      tbProjects=res.projects||[];
+      try{localStorage.setItem(PROJ_KEY,JSON.stringify(tbProjects));}catch(e){}
+      if(selStep===0) renderSelStep();
+    }
   }).catch(function(){});
 }
 function uniqVals(a){var o={},r=[];a.forEach(function(v){v=(v==null||v==='')?'未分類':v;if(!o[v]){o[v]=1;r.push(v);}});return r.sort();}
 function optList(arr){return '<option value="">― 選択 ―</option>'+arr.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+'</option>';}).join('');}
 function fillKinds(){
-  document.getElementById('selKind').innerHTML=optList(uniqVals(tbProjects.map(function(p){return p['種別'];})));
-  var c=document.getElementById('selCust'); c.innerHTML='<option value="">― 選択 ―</option>'; c.disabled=true;
-  var st=document.getElementById('selSite'); st.innerHTML='<option value="">― 選択 ―</option>'; st.disabled=true;
+  selStep=0; selKindVal=''; selCustVal='';
+  renderSelStep();
 }
-function onKind(){
-  var k=document.getElementById('selKind').value;
-  var custs=uniqVals(tbProjects.filter(function(p){return (p['種別']||'未分類')===k;}).map(function(p){return p['顧客'];}));
-  var c=document.getElementById('selCust'); c.innerHTML=optList(custs); c.disabled=!k;
-  var st=document.getElementById('selSite'); st.innerHTML='<option value="">― 選択 ―</option>'; st.disabled=true;
+function onKind(){}
+function onCust(){}
+function onSite(){}
+function renderSelStep(){
+  var list=document.getElementById('selList');
+  var crumb=document.getElementById('selCrumb');
+  var lead=document.getElementById('selLead');
+  if(!list)return;
+  if(selStep===0){
+    if(lead)lead.textContent='種別を選んでください。';
+    if(crumb)crumb.style.display='none';
+    var kinds=uniqVals(tbProjects.map(function(p){return p['種別'];}));
+    if(!kinds.length){list.innerHTML='<div class="empty">案件データがありません。</div>';return;}
+    list.innerHTML=kinds.map(function(k){return '<button class="linkbtn" data-v="'+esc(k)+'" onclick="selPickKindBtn(this)">'+esc(k)+'</button>';}).join('');
+  } else if(selStep===1){
+    if(lead)lead.textContent='会社を選んでください。';
+    if(crumb){crumb.style.display='';crumb.innerHTML='種別：<b>'+esc(selKindVal)+'</b>';}
+    var custs=uniqVals(tbProjects.filter(function(p){return (p['種別']||'未分類')===selKindVal;}).map(function(p){return p['顧客'];}));
+    list.innerHTML=custs.map(function(c){return '<button class="linkbtn" data-v="'+esc(c)+'" onclick="selPickCustBtn(this)">'+esc(c)+'</button>';}).join('')+'<button class="back2" style="margin-top:8px;width:100%;text-align:center;padding:11px;" onclick="selBack()">← 種別を選び直す</button>';
+  } else {
+    if(lead)lead.textContent='現場名を選んでください。';
+    if(crumb){crumb.style.display='';crumb.innerHTML='種別：<b>'+esc(selKindVal)+'</b>　／　会社：<b>'+esc(selCustVal)+'</b>';}
+    var sites=tbProjects.filter(function(p){return (p['種別']||'未分類')===selKindVal&&(p['顧客']||'未分類')===selCustVal;});
+    list.innerHTML=sites.map(function(p){return '<button class="linkbtn" data-v="'+esc(String(p['案件ID']))+'" onclick="selPickSiteBtn(this)">'+esc(p['案件名']||'(無題)')+'</button>';}).join('')+'<button class="back2" style="margin-top:8px;width:100%;text-align:center;padding:11px;" onclick="selBack()">← 会社を選び直す</button>';
+  }
 }
-function onCust(){
-  var k=document.getElementById('selKind').value, cu=document.getElementById('selCust').value;
-  var sites=tbProjects.filter(function(p){return (p['種別']||'未分類')===k && (p['顧客']||'未分類')===cu;});
-  var st=document.getElementById('selSite');
-  st.innerHTML='<option value="">― 選択 ―</option>'+sites.map(function(p){return '<option value="'+esc(p['案件ID'])+'">'+esc(p['案件名']||'(無題)')+'</option>';}).join('');
-  st.disabled=!cu;
-}
-function onSite(){
-  var id=document.getElementById('selSite').value; if(!id)return;
+function selPickKindBtn(el){selKindVal=el.getAttribute('data-v');selStep=1;renderSelStep();}
+function selPickCustBtn(el){selCustVal=el.getAttribute('data-v');selStep=2;renderSelStep();}
+function selPickSiteBtn(el){
+  var id=el.getAttribute('data-v');
   var p=tbProjects.filter(function(x){return String(x['案件ID'])===String(id);})[0]||{};
   curSite={id:id,name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
   if(curTool==='check')openSiteCheckList(); else if(curTool==='draw')openSiteDrawList(); else if(curTool==='board')openBoardCamera(); else if(curTool==='rec')openRecorder(); else openSiteMemoList();
+}
+function selBack(){if(selStep>0){selStep--;renderSelStep();}}
+function resetAndGoSelect(){
+  selStep=0; selKindVal=''; selCustVal='';
+  go('p-memo-select');
+  renderSelStep();
 }
 function siteBarHtml(){ if(!curSite)return ''; return '<b>'+esc(curSite.cust||'—')+'</b> ／ '+esc(curSite.name||'—')+(curSite.kind?'　<span style="opacity:.7;">'+esc(curSite.kind)+'</span>':''); }
 function openSiteMemoList(){
