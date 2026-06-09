@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 3 (2026-06-09) -->
+<!-- toolbox version 4 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -107,10 +107,12 @@
   .tspin{width:36px;height:36px;border:4px solid #e1e5ea;border-top-color:#27a4a0;border-radius:50%;margin:0 auto 12px;animation:tsp .8s linear infinite;}
   @keyframes tsp{to{transform:rotate(360deg);}}
   .tltxt{font-size:14px;font-weight:700;color:#15233a;}
+  .linkbtn{width:100%;padding:11px;border:1px solid rgba(255,255,255,.4);border-radius:11px;background:rgba(255,255,255,.12);color:#fff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .linkbtn:active{background:rgba(255,255,255,.22);}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v3</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v4</div>
 
 <div class="wrap">
 
@@ -155,6 +157,7 @@
       <h2>現場メモ</h2>
     </div>
     <div class="sitebar" id="memoSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この現場を案件管理で開く</button>
     <button class="addbtn" onclick="newNote()">＋ 新しいメモ</button>
     <div id="noteList"></div>
   </div>
@@ -321,6 +324,21 @@ function deleteNote(){
     toast('削除しました'); curNote=null; openSiteMemoList();
   }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
 }
+
+function openCaseInProjects(){ if(!curSite)return; location.href='../projects/?case='+encodeURIComponent(curSite.id); }
+function openMemoForCase(id){
+  showLoad('読み込み中…');
+  callGAS({action:'list'},true).then(function(res){
+    var ps=(res&&res.ok&&res.projects)||[]; tbProjects=ps;
+    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
+    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
+    hideLoad();
+    if(!p){ toast('現場が見つかりませんでした'); fillKinds(); go('p-memo-select'); return; }
+    curSite={id:String(id),name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
+    openSiteMemoList();
+  }).catch(function(){ hideLoad(); fillKinds(); go('p-memo-select'); });
+}
+(function(){ var m=location.search.match(/[?&]memo=([^&]+)/); if(m){ openMemoForCase(decodeURIComponent(m[1])); } })();
 </script>
 </body>
 </html>
