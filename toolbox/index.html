@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 16 (2026-06-09) -->
+<!-- toolbox version 18 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -51,6 +51,7 @@
   .t-board{background:rgba(214,123,18,.36);border-color:rgba(255,205,130,.5);}.t-board .ic{background:#d97b12;}
   .t-elec{background:rgba(206,165,30,.42);border-color:rgba(255,225,140,.55);}.t-elec .ic{background:#bd941c;}
   .t-area{background:rgba(20,140,150,.40);border-color:rgba(150,215,225,.55);}.t-area .ic{background:#0e8a96;}
+  .t-meas{background:rgba(50,130,200,.38);border-color:rgba(150,200,255,.55);}.t-meas .ic{background:#2a7ac8;}
 
   @media (min-width:680px){
     .grid{grid-template-columns:1fr 1fr;}
@@ -175,7 +176,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v16</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v18</div>
 
 <div class="wrap">
 
@@ -195,6 +196,7 @@
       <div class="sq t-board" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">→</span></div>
       <div class="sq t-elec"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">→</span></div>
       <div class="sq t-area"  onclick="openTool('area')"><span class="ic">📐</span><span class="txt"><span class="nm">坪・㎡・畳</span><span class="ds">面積の換算</span></span><span class="cor">→</span></div>
+      <div class="sq t-meas"  onclick="openTool('meas')"><span class="ic">📏</span><span class="txt"><span class="nm">面積計算機</span><span class="ds">寸法から面積を計算</span></span><span class="cor">→</span></div>
     </div>
   </div>
 
@@ -468,6 +470,29 @@
     </div>
   </div>
 
+  <!-- ========== ⑧ 面積計算機 ========== -->
+  <div class="pane" id="p-meas">
+    <div class="thead">
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
+      <h2>面積計算機</h2>
+    </div>
+
+    <label class="slbl">形状を選択</label>
+    <div class="eseg" id="measShapeSeg">
+      <button class="on" data-v="rect" onclick="measSetShape('rect')">長方形</button>
+      <button data-v="tri"  onclick="measSetShape('tri')">三角形</button>
+      <button data-v="trap" onclick="measSetShape('trap')">台形</button>
+    </div>
+
+    <div id="measInputWrap" style="margin-top:2px;"></div>
+    <button class="savebtn" style="background:#2a7ac8;margin-top:12px;" onclick="measAdd()">＋ 区画を追加</button>
+
+    <div class="asep"></div>
+    <div id="measList"></div>
+    <div class="eres" id="measTotal" style="margin-top:14px;display:none;flex-direction:column;justify-content:center;"></div>
+    <div class="enote" style="margin-top:14px;">区画を追加して合計面積を求めます。削除ボタンで取り消せます。</div>
+  </div>
+
 </div>
 
 <div class="tload" id="tload"><div class="tlbox"><div class="tspin"></div><div class="tltxt" id="tltxt">読み込み中…</div></div></div>
@@ -502,13 +527,13 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
 /* 実装済みツール */
-var READY={memo:1,check:1,draw:1,elec:1,area:1,board:1,rec:1};
+var READY={memo:1,check:1,draw:1,elec:1,area:1,board:1,rec:1,meas:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
   if(k==='memo'||k==='check'||k==='draw'||k==='board'||k==='rec'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='check'?'現場チェックリスト':k==='draw'?'手書きメモ':k==='board'?'小黒板カメラ':k==='rec'?'録音機':'現場メモ'); go('p-memo-select'); loadSites(); return; }
   go('p-'+k);
 }
-function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳'}[k]||k;}
+function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳',meas:'面積計算機'}[k]||k;}
 
 /* ===== ① 現場メモ（現場ごと・サーバー保存） ===== */
 var PROJ_KEY='tb_projects';
@@ -1102,12 +1127,35 @@ function bov(){
 function boardShoot(){
   var vid=document.getElementById('boardVideo');
   if(!vid||!vid.videoWidth){toast('カメラが準備できていません');return;}
-  var cw=vid.videoWidth,ch=vid.videoHeight;
-  var cvs=document.createElement('canvas');cvs.width=cw;cvs.height=ch;
+  if(!boardSiteId){toast('エラー：案件が未選択です。← で戻って選び直してください。');return;}
+  var vw=vid.videoWidth,vh=vid.videoHeight;
+  var isPortrait=vh>vw;
+  // 常に横長4:3で出力（縦持ちの場合は90°回転）
+  var outW,outH,sx,sy,sw,sh;
+  if(!isPortrait){
+    outH=vh; outW=Math.round(vh*4/3);
+    if(outW>vw){outW=vw;outH=Math.round(vw*3/4);}
+    sx=Math.round((vw-outW)/2);sy=Math.round((vh-outH)/2);sw=outW;sh=outH;
+  }else{
+    outH=vw; outW=Math.round(vw*4/3);
+    if(outW>vh){outW=vh;outH=Math.round(vh*3/4);}
+    sy=Math.round((vh-outW)/2);sx=0;sw=vw;sh=outW;
+  }
+  var cvs=document.createElement('canvas');cvs.width=outW;cvs.height=outH;
   var ctx=cvs.getContext('2d');
-  ctx.drawImage(vid,0,0);
-  var bw=Math.floor(cw*0.38),bh=Math.floor(ch*0.42);
-  var bx=Math.floor(cw*0.02),by=ch-bh-Math.floor(ch*0.02);
+  if(!isPortrait){
+    ctx.drawImage(vid,sx,sy,sw,sh,0,0,outW,outH);
+  }else{
+    // 90°反時計回りで縦→横に変換
+    ctx.save();
+    ctx.translate(0,outH);
+    ctx.rotate(-Math.PI/2);
+    ctx.drawImage(vid,0,sy,sw,sh,0,0,sw,sh);
+    ctx.restore();
+  }
+  // 黒板（左下・参考写真に合わせたサイズ 幅33%・高さ46%）
+  var bw=Math.floor(outW*0.33),bh=Math.floor(outH*0.46);
+  var bx=Math.floor(outW*0.02),by=outH-bh-Math.floor(outH*0.02);
   ctx.fillStyle='#1a8c78';ctx.fillRect(bx,by,bw,bh);
   ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.strokeRect(bx+2,by+2,bw-4,bh-4);
   var fs=Math.max(11,Math.floor(bw/18));
@@ -1139,7 +1187,6 @@ function boardShoot(){
   ctx.font=Math.max(9,Math.floor(bw/24))+'px sans-serif';ctx.textAlign='right';
   if(company)ctx.fillText(company,bx+bw-pad,botY+Math.max(botH/2,fs),bw-pad*2);
   var base64=cvs.toDataURL('image/jpeg',0.82).split(',')[1];
-  if(!boardSiteId){toast('エラー：案件が未選択です。← で戻って選び直してください。');return;}
   if(!base64||base64.length<200){toast('エラー：画像データの取得に失敗しました。');return;}
   var fname='board_'+Date.now()+'.jpg';
   toast('Driveに保存中… ('+Math.round(base64.length/1024)+'KB)');
@@ -1236,6 +1283,77 @@ function recLoadList(){
     }).join('');
   }).catch(function(){el.innerHTML='<div class="empty">読み込みに失敗しました。</div>';});
 }
+
+
+/* ===== ⑧ 面積計算機 ===== */
+var measItems=[],measShapeVal='rect';
+function measSetShape(t){
+  measShapeVal=t;
+  elecSeg('measShapeSeg',t);
+  measRenderInputs();
+}
+function measRenderInputs(){
+  var w=document.getElementById('measInputWrap');if(!w)return;
+  if(measShapeVal==='rect'){
+    w.innerHTML='<div class="board-grid"><div><label class="slbl">縦（m）</label><input class="enum" id="mA" inputmode="decimal" placeholder="例 3.6"></div><div><label class="slbl">横（m）</label><input class="enum" id="mB" inputmode="decimal" placeholder="例 4.5"></div></div>';
+  }else if(measShapeVal==='tri'){
+    w.innerHTML='<div class="board-grid"><div><label class="slbl">底辺（m）</label><input class="enum" id="mA" inputmode="decimal" placeholder="例 3.0"></div><div><label class="slbl">高さ（m）</label><input class="enum" id="mB" inputmode="decimal" placeholder="例 2.0"></div></div>';
+  }else{
+    w.innerHTML='<div class="board-grid"><div><label class="slbl">上底（m）</label><input class="enum" id="mA" inputmode="decimal" placeholder="例 2.0"></div><div><label class="slbl">下底（m）</label><input class="enum" id="mB" inputmode="decimal" placeholder="例 3.0"></div></div><div style="margin-top:8px;"><label class="slbl">高さ（m）</label><input class="enum" id="mC" inputmode="decimal" placeholder="例 2.5"></div>';
+  }
+}
+function measCalcArea(type,a,b,c){
+  if(type==='rect')return a*b;
+  if(type==='tri')return a*b/2;
+  if(type==='trap')return(a+b)*c/2;
+  return 0;
+}
+function measAdd(){
+  var a=parseFloat((document.getElementById('mA')||{}).value||'');
+  var b=parseFloat((document.getElementById('mB')||{}).value||'');
+  var cEl=document.getElementById('mC');
+  var c=measShapeVal==='trap'?parseFloat((cEl||{}).value||''):1;
+  if(isNaN(a)||isNaN(b)||a<=0||b<=0){toast('寸法を入力してください');return;}
+  if(measShapeVal==='trap'&&(isNaN(c)||c<=0)){toast('高さを入力してください');return;}
+  var area=measCalcArea(measShapeVal,a,b,c);
+  var lbl=measShapeVal==='rect'?'長方形 '+aFmt(a)+'×'+aFmt(b)+' m':
+          measShapeVal==='tri'?'三角形 底辺'+aFmt(a)+' 高さ'+aFmt(b)+' m':
+          '台形 ('+aFmt(a)+'+'+aFmt(b)+') × 高さ'+aFmt(c)+' m';
+  measItems.push({lbl:lbl,area:area});
+  measRenderList();
+  var ea=document.getElementById('mA');if(ea)ea.value='';
+  var eb=document.getElementById('mB');if(eb)eb.value='';
+  if(cEl)cEl.value='';
+}
+function measRemove(i){measItems.splice(i,1);measRenderList();}
+function measRenderList(){
+  var list=document.getElementById('measList');
+  var tot=document.getElementById('measTotal');
+  if(!list)return;
+  if(!measItems.length){
+    list.innerHTML='<div class="empty">区画を追加すると合計面積を計算します。</div>';
+    if(tot)tot.style.display='none';
+    return;
+  }
+  var sum=0;
+  list.innerHTML=measItems.map(function(item,i){
+    sum+=item.area;
+    return '<div class="memo" style="display:flex;align-items:center;gap:10px;">'+
+      '<div style="flex:1;"><div class="m-t">'+esc(item.lbl)+'</div>'+
+      '<div class="m-d">'+aFmt(item.area)+' m²</div></div>'+
+      '<button onclick="measRemove('+i+')" style="background:rgba(226,87,76,.75);border:none;border-radius:9px;color:#fff;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;">削除</button>'+
+      '</div>';
+  }).join('');
+  if(tot){
+    var tsubo=sum/3.30579,jou=sum/1.65289;
+    tot.style.display='flex';
+    tot.className='eres ok';
+    tot.innerHTML='<div class="big">合計 '+aFmt(sum)+' m²</div>'+
+      '<div class="sub">'+aFmt(tsubo)+' 坪　／　'+aFmt(jou)+' 畳（江戸間）</div>';
+  }
+}
+measRenderInputs();
+measRenderList();
 
 (function(){
   var q=location.search;
