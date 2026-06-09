@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- version 35 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -42,6 +43,7 @@
   .t-admin{background:rgba(74,92,120,.46);border-color:rgba(185,198,220,.5);} .t-admin .ic{background:#3f4d63;}
   .t-sched{background:rgba(106,79,179,.42);border-color:rgba(196,178,236,.55);} .t-sched .ic{background:#6a4fb3;}
   .t-time{background:rgba(14,116,144,.42);border-color:rgba(150,210,225,.55);} .t-time .ic{background:#0e7490;}
+  .t-tool{background:rgba(199,107,58,.40);border-color:rgba(255,188,150,.55);} .t-tool .ic{background:#b9572f;}
 
   /* ===== スマホ：横3列の正方形タイル（初期値）===== */
   .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -99,6 +101,7 @@
 </style>
 </head>
 <body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v35</div>
 <div id="login">
   <div class="box">
     <div class="lg-t">Genba Management</div>
@@ -123,11 +126,11 @@
     <a class="sq t-report" href="./report/"><span class="ic">📝</span><span class="txt"><span class="en">Daily report</span><span class="nm">作業日報</span><span class="ds">現場ごとの作業・人工・時間を記録</span></span><span class="cor">→</span></a>
     <a class="sq t-sched" href="./calendar/"><span class="ic">🗓</span><span class="txt"><span class="en">Schedule</span><span class="nm">スケジュール</span><span class="ds">現場の予定をカレンダーで管理</span></span><span class="cor">→</span></a>
     <a class="sq t-time" href="./timecard/"><span class="ic">⏱</span><span class="txt"><span class="en">Timecard</span><span class="nm">タイムカード</span><span class="ds">出勤・退勤の打刻と勤怠集計</span></span><span class="cor">→</span></a>
+    <a class="sq t-tool" href="./toolbox/"><span class="ic">🧰</span><span class="txt"><span class="en">Toolbox</span><span class="nm">ツールボックス</span><span class="ds">メモ・計算・カメラなどの現場道具</span></span><span class="cor">→</span></a>
   </div>
 
   <div class="grid" style="grid-template-columns:1fr;margin-top:16px;">
     <a class="sq t-proj feat" href="./projects/"><span class="ic">📋</span><span class="txt"><span class="en">Projects</span><span class="nm">案件管理</span><span class="ds">現場の一覧・詳細・写真・ファイルはこちら</span></span><span class="cor">→</span></a>
-    <a class="sq t-files feat" href="./files/"><span class="ic">📷</span><span class="txt"><span class="en">Photos</span><span class="nm">写真・フォルダ</span><span class="ds">写真フォルダを開く・工事写真台帳の作成</span></span><span class="cor">→</span></a>
   </div>
 
   <div class="lbl">管理者用</div>
