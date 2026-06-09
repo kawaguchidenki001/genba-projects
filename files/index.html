@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- version 35 (2026-06-09) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -57,6 +58,7 @@
 </style>
 </head>
 <body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v35</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -124,12 +126,12 @@ function applyInit(){ if(initApplied||!INIT_CASE)return; var s=document.getEleme
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
 function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
-function callGAS(params,timeoutMs){
+function callGAS(params,timeoutMs,silent){
   return new Promise(function(resolve,reject){
-    showLoad();
+    if(!silent) showLoad();
     var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
     var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},timeoutMs||30000);
-    function cleanup(){hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    function cleanup(){if(!silent) hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
     window[cb]=function(res){cleanup();resolve(res);};
     var q=Object.assign({secret:SECRET,callback:cb},params);
     s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
@@ -139,15 +141,15 @@ function callGAS(params,timeoutMs){
 function postNoCors(obj){ obj.secret=SECRET; return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)}); }
 function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
 
-function loadProjects(){
+function loadProjects(silent){
   setSync('busy','同期中…');
-  callGAS({action:'calendarData'}).then(function(res){
+  callGAS({action:'calendarData'},30000,silent).then(function(res){
     if(!res.ok)throw new Error(res.error||'エラー');
     projects=res.projects||[]; customers=res.customers||[]; try{localStorage.setItem(CACHE,JSON.stringify({p:projects,c:customers}));}catch(e){}
     buildSel(); setSync('ok','同期済み');
   }).catch(function(err){
-    try{var cc=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=cc.p||[];customers=cc.c||[];}catch(e){projects=[];customers=[];}
-    buildSel(); setSync('off','オフライン'); toast('読込失敗：'+err.message);
+    if(!silent){ try{var cc=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=cc.p||[];customers=cc.c||[];}catch(e){projects=[];customers=[];} buildSel(); toast('読込失敗：'+err.message); }
+    setSync('off','オフライン');
   });
 }
 function buildSel(){ buildCand(); buildProj(); }
@@ -382,8 +384,9 @@ function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
 
 try{document.getElementById('bdDate').value=bdToday();}catch(e){}
-try{projects=JSON.parse(localStorage.getItem(CACHE)||'[]');buildSel();}catch(e){}
-loadProjects();
+var hadCache=false;
+try{ var _cc=JSON.parse(localStorage.getItem(CACHE)||'{}'); if(_cc&&_cc.p){ projects=_cc.p||[]; customers=_cc.c||[]; buildSel(); hadCache=(projects.length>0); } }catch(e){}
+loadProjects(hadCache);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
