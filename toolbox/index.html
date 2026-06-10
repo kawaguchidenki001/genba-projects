@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 22 (2026-06-10) -->
+<!-- toolbox version 24 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -111,10 +111,15 @@
   .dcard .draw-thumb-cv{flex:0 0 80px;width:80px;height:60px;border-radius:8px;border:1px solid var(--line);background:#fff;}
   .dcard .dcard-info{flex:1;min-width:0;}
   /* 電気計算機 */
-  .etabs{display:flex;gap:6px;margin:0 2px 16px;}
-  .etab{flex:1;padding:11px 5px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--accent-d);font-size:13px;font-weight:700;cursor:pointer;box-shadow:var(--shadow);}
+  .etabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 2px 16px;}
+  .etab{flex:1 1 calc(50% - 3px);min-width:0;padding:11px 5px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--accent-d);font-size:13px;font-weight:700;cursor:pointer;box-shadow:var(--shadow);}
   .etab.on{background:var(--accent);border-color:var(--accent);color:#fff;}
   .epanel{display:none;} .epanel.on{display:block;}
+  .ktbl{width:100%;border-collapse:collapse;font-size:14px;margin-top:2px;}
+  .ktbl th{font-size:12px;font-weight:700;text-align:left;padding:4px 6px;border-bottom:1px solid rgba(0,0,0,.18);opacity:.75;}
+  .ktbl td{padding:7px 6px;border-bottom:1px solid rgba(0,0,0,.10);}
+  .ktbl td.kz{font-weight:800;font-size:16px;}
+  .ktbl tr:last-child td{border-bottom:none;}
   .ehint{color:var(--sub);font-size:12.5px;line-height:1.7;margin:0 2px 12px;}
   .enote{color:var(--sub);font-size:12px;line-height:1.7;margin:14px 2px 0;}
   .eseg{display:flex;gap:6px;margin-bottom:2px;}
@@ -166,7 +171,7 @@
   @keyframes rpulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.6);opacity:.5;}}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v23</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v24</div>
 
 <div class="wrap">
 
@@ -312,6 +317,7 @@
       <button class="etab on" id="etab-ohm" onclick="elecTab('ohm')">オームの法則</button>
       <button class="etab" id="etab-pow" onclick="elecTab('pow')">電力・電流</button>
       <button class="etab" id="etab-vd" onclick="elecTab('vd')">電圧降下</button>
+      <button class="etab" id="etab-kn" onclick="elecTab('kn')">幹線サイズ</button>
     </div>
 
     <!-- オームの法則 -->
@@ -358,6 +364,24 @@
       <div class="ecell"><label class="slbl">基準電圧 V（降下率を出す場合・任意）</label><input class="enum" id="vdBase" inputmode="decimal" oninput="calcVd()" placeholder="例 200"></div>
       <div class="eres" id="vdRes">長さ・電流・太さを入力してください</div>
       <div class="enote">銅線（IV・CV など）の目安です。係数 単相2線＝35.6／三相3線＝30.8／単相3線＝17.8 を使用。</div>
+    </div>
+
+    <!-- 幹線サイズ選定 -->
+    <div class="epanel" id="ep-kn">
+      <div class="ehint">必要な電流を入れると、ケーブル種類ごとに使える最小サイズを表示します。</div>
+      <div class="ecell"><label class="slbl">設計電流 I（アンペア）</label><input class="enum" id="knI" inputmode="decimal" oninput="calcKansen()" placeholder="例 75"></div>
+      <label class="slbl">回路の種類</label>
+      <div class="eseg" id="knPhase">
+        <button class="on" data-v="1" onclick="knSet('knPhase','1')">単相</button>
+        <button data-v="3" onclick="knSet('knPhase','3')">三相</button>
+      </div>
+      <label class="slbl">布設方法</label>
+      <div class="eseg" id="knLay">
+        <button class="on" data-v="air" onclick="knSet('knLay','air')">露出・ラック</button>
+        <button data-v="pipe" onclick="knSet('knLay','pipe')">管内</button>
+      </div>
+      <div class="eres" id="knRes">電流を入力してください</div>
+      <div class="enote">メーカー公表値（IV・VVF＝気中1条・周囲30℃／CV・CVT＝周囲40℃・1条）を基にした目安です。管内はIV＝×0.70（同一管3本以下）、CV・CVT＝×0.78（管路引入れ相当）で低減、VVFは2m以下の管なら同値として扱います。同一管4本以上・周囲温度が高い場合はさらに低減が必要です。最終決定は内線規程・メーカー資料で確認してください。</div>
     </div>
   </div>
 
@@ -937,7 +961,7 @@ function openDrawForCase(id){
 
 /* ===== ⑥ 電気計算機 ===== */
 function elecTab(t){
-  var ks=['ohm','pow','vd'];
+  var ks=['ohm','pow','vd','kn'];
   for(var i=0;i<ks.length;i++){
     var on=(ks[i]===t);
     document.getElementById('etab-'+ks[i]).classList.toggle('on',on);
@@ -1015,6 +1039,39 @@ function calcVd(){
   var e=K*L*I/(1000*A);
   var html='<div class="big">電圧降下 = '+eFmt(e)+' V</div>';
   if(base!==null&&base>0)html+='<div class="sub">降下率 '+eFmt(e/base*100)+' % （基準 '+eFmt(base)+' V）</div>';
+  res.className='eres ok';res.innerHTML=html;
+}
+
+/* 幹線サイズ選定 */
+var knState={knPhase:'1',knLay:'air'};
+function knSet(id,v){knState[id]=v;elecSeg(id,v);calcKansen();}
+var KN_IV  =[['2sq',27],['3.5sq',37],['5.5sq',49],['8sq',61],['14sq',88],['22sq',115],['38sq',162],['60sq',217],['100sq',298],['150sq',395],['200sq',469],['250sq',556],['325sq',650]];
+var KN_CV2 =[['2sq',28],['3.5sq',39],['5.5sq',52],['8sq',65],['14sq',91],['22sq',120],['38sq',170],['60sq',225],['100sq',310],['150sq',400],['200sq',485],['250sq',560],['325sq',660]];
+var KN_CV3 =[['2sq',23],['3.5sq',33],['5.5sq',44],['8sq',54],['14sq',76],['22sq',100],['38sq',140],['60sq',190],['100sq',260],['150sq',340],['200sq',410],['250sq',470],['325sq',555]];
+var KN_CVT =[['8sq',62],['14sq',86],['22sq',110],['38sq',155],['60sq',210],['100sq',290],['150sq',380],['200sq',465],['250sq',535],['325sq',635]];
+var KN_VVF2=[['1.6mm',18],['2.0mm',23],['2.6mm',32]];
+var KN_VVF3=[['1.6mm',16],['2.0mm',20],['2.6mm',28]];
+function knPick(tbl,I,f){
+  for(var i=0;i<tbl.length;i++){var amp=tbl[i][1]*f;if(amp>=I)return {size:tbl[i][0],amp:amp};}
+  return null;
+}
+function calcKansen(){
+  var I=eNum('knI'),res=document.getElementById('knRes');
+  if(I===null||I<=0){res.className='eres';res.textContent='電流を入力してください';return;}
+  var pipe=(knState.knLay==='pipe'),tri=(knState.knPhase==='3');
+  var fIv=pipe?0.70:1,fCv=pipe?0.78:1;
+  var rows=[
+    ['IV（'+(pipe?'管内3本以下':'がいし引き')+'）',knPick(KN_IV,I,fIv)],
+    ['CV '+(tri?'3心':'2心'),knPick(tri?KN_CV3:KN_CV2,I,fCv)],
+    ['CVT',knPick(KN_CVT,I,fCv)],
+    ['VVF '+(tri?'3心':'2心'),knPick(tri?KN_VVF3:KN_VVF2,I,1)]
+  ];
+  var html='<table class="ktbl"><tr><th>ケーブル</th><th>サイズ</th><th>許容電流</th></tr>';
+  for(var i=0;i<rows.length;i++){
+    var p=rows[i][1];
+    html+='<tr><td>'+rows[i][0]+'</td>'+(p?'<td class="kz">'+p.size+'</td><td>'+eFmt(p.amp)+' A</td>':'<td colspan="2">該当サイズなし</td>')+'</tr>';
+  }
+  html+='</table>';
   res.className='eres ok';res.innerHTML=html;
 }
 
