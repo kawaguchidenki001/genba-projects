@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 37 (2026-06-09) -->
+<!-- version 36 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -11,12 +11,14 @@
 <meta name="apple-mobile-web-app-title" content="現場管理">
 <meta name="theme-color" content="#2b7fd6">
 <style>
-  :root{ --bg:#f3f4f6;--card:#fff;--line:#e6e8ec;--ink:#2b323c;--sub:#9aa0a8;
-    --green:#52b86a;--greenbg:#eef9f1;--orange:#eea53a;--orangebg:#fdf4e6;--blue:#5b9bd5;--bluebg:#eaf2fb;--red:#e2574c;
-    --teal1:#43cea2;--teal2:#2bb6a0;}
+  :root{ --bg1:#fdf3e3;--bg2:#fffaf3;--card:#fff;--line:#f0e0c8;--ink:#3a2e1f;--sub:#9a8468;
+    --green:#22a06b;--greenbg:#e2f5ec;--orange:#e8910b;--orangebg:#fdf0db;--blue:#2d7dd2;--bluebg:#e3f0fb;--red:#e2574c;
+    --teal1:#f0a93c;--teal2:#e8910b;
+    --accent:#e8910b;--accent-d:#bd7308;--accent-soft:#fdf0db;
+    --shadow:0 2px 10px rgba(232,145,11,.10);--shadow-lg:0 10px 30px rgba(189,115,8,.16);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
-  body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:66px;}
-  .head{background:linear-gradient(135deg,var(--teal1),var(--teal2));color:#fff;text-align:center;padding:calc(env(safe-area-inset-top) + 14px) 16px 18px;position:relative;}
+  body{background:linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 60%,#ffffff 100%);background-attachment:fixed;min-height:100vh;color:var(--ink);font-family:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:66px;}
+  .head{background:linear-gradient(135deg,#f0a93c,#e8910b);color:#fff;text-align:center;padding:calc(env(safe-area-inset-top) + 14px) 16px 18px;position:relative;box-shadow:0 2px 12px rgba(189,115,8,.2);}
   .head .bar{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:14px;right:14px;display:flex;justify-content:space-between;z-index:5;}
   .head .bar a,.head .bar button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:5px 9px;font-size:13px;cursor:pointer;text-decoration:none;position:relative;z-index:6;pointer-events:auto;}
   .head .me{font-size:14px;opacity:.95;margin-bottom:4px;font-weight:700;}
@@ -30,20 +32,20 @@
   .b-out{background:var(--orangebg);color:var(--orange);border-color:#f6e2c0;}
   .pbtn:disabled{opacity:.4;}
   .stat{display:flex;gap:10px;margin-bottom:14px;}
-  .stat .c{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;text-align:center;padding:11px 4px;}
+  .stat .c{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;text-align:center;padding:11px 4pxbox-shadow:var(--shadow);}
   .stat .v{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;}
   .stat .lab{font-size:11px;color:var(--sub);}
-  .brkcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px;}
+  .brkcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14pxbox-shadow:var(--shadow);}
   .brkcard h3{font-size:14px;margin:0 0 10px;color:var(--teal2);display:flex;justify-content:space-between;}
   .brkcard h3 .tot{color:var(--ink);font-variant-numeric:tabular-nums;}
   .brow{display:flex;align-items:center;gap:12px;padding:8px 0;border-top:1px solid var(--line);}
   .brow:first-of-type{border-top:none;}
   .brow .l{flex:1;font-size:15px;}
   .stp{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
-  .stp button{width:42px;height:42px;border:none;background:#eef5f3;font-size:20px;cursor:pointer;color:var(--teal2);font-weight:700;}
+  .stp button{width:42px;height:42px;border:none;background:var(--accent-soft);font-size:20px;cursor:pointer;color:var(--accent-d);font-weight:700;}
   .stp .val{width:62px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;}
   .logttl{font-size:13px;color:var(--sub);font-weight:700;margin:0 2px 8px;}
-  .log{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .log{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hiddenbox-shadow:var(--shadow);}
   .lrow{display:flex;align-items:center;gap:10px;padding:11px 14px;border-top:1px solid var(--line);font-size:14px;}
   .lrow:first-child{border-top:none;}
   .lrow .dt{color:var(--sub);font-variant-numeric:tabular-nums;}
@@ -52,8 +54,8 @@
   .pin{margin-left:auto;color:var(--teal2);font-size:15px;}
   table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:10px;overflow:hidden;}
   th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:center;}
-  th{background:#eef5f3;font-size:11.5px;color:var(--sub);}
-  .row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:8px;}
+  th{background:var(--accent-soft);font-size:11.5px;color:var(--sub);}
+  .row{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-bottom:8px;box-shadow:var(--shadow);}
   .row .nm{font-weight:700;flex:1;}
   .bdg{font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;}
   .b1{background:#dcfce7;color:#166534;}.b2{background:#e5e7eb;color:#4b5563;}.b3{background:#fef3c7;color:#92400e;}
@@ -61,7 +63,7 @@
   .mnav button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 12px;cursor:pointer;}
   .mnav .ym{font-weight:700;min-width:120px;text-align:center;}
   .csv{width:100%;padding:12px;border:1px solid var(--teal2);color:var(--teal2);background:#fff;border-radius:11px;font-weight:700;cursor:pointer;margin-top:10px;}
-  .setbox{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;}
+  .setbox{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16pxbox-shadow:var(--shadow);}
   .setbox .lo{display:block;width:100%;margin-top:14px;padding:12px;border:1px solid var(--red);color:var(--red);background:#fff;border-radius:11px;font-weight:700;cursor:pointer;}
   .tabbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);display:flex;padding:6px 0 calc(env(safe-area-inset-bottom) + 6px);}
   .tabbar button{flex:1;text-align:center;border:none;background:none;color:var(--sub);font-size:11px;cursor:pointer;}
@@ -84,10 +86,10 @@
   .krrow input{width:128px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;text-align:right;}
   .krrow input[type=text]{text-align:left;}
   /* 月次サマリー */
-  .ksum{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12px;}
+  .ksum{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:12pxbox-shadow:var(--shadow);}
   .ks-hd{font-size:12px;color:var(--sub);font-weight:700;margin-bottom:8px;}
   .ks-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
-  .ks-c{background:#f3faf8;border:1px solid #d9efe9;border-radius:9px;text-align:center;padding:8px 4px;}
+  .ks-c{background:var(--accent-soft);border:1px solid var(--line);border-radius:9px;text-align:center;padding:8px 4px;}
   .ks-v{font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);}
   .ks-l{font-size:10.5px;color:var(--sub);}
   /* アラート */
@@ -97,7 +99,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v37</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v38</div>
 <div class="head">
   <div class="bar"><a href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a><button onclick="reload()">↻</button></div>
   <div class="me" id="meName">―</div>
