@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 25 (2026-06-10) -->
+<!-- toolbox version 26 (2026-06-10) 材料リスト追加・小黒板カメラ/材料のdeep-link対応 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -42,6 +42,7 @@
   .t-memo .ic{background:#22a06b;} .t-memo{border-top:3px solid #22a06b;}
   .t-check .ic{background:#2d7dd2;} .t-check{border-top:3px solid #2d7dd2;}
   .t-draw .ic{background:#7c3ab4;} .t-draw{border-top:3px solid #7c3ab4;}
+  .t-mat .ic{background:#0f766e;} .t-mat{border-top:3px solid #0f766e;}
   .t-rec .ic{background:#d64646;} .t-rec{border-top:3px solid #d64646;}
   .t-board .ic{background:#e8910b;} .t-board{border-top:3px solid #e8910b;}
   .t-elec .ic{background:#bd941c;} .t-elec{border-top:3px solid #bd941c;}
@@ -49,7 +50,7 @@
   @media (min-width:680px){
     .grid{grid-template-columns:1fr 1fr;}
     .sq{flex-direction:row;align-items:center;aspect-ratio:auto;padding:16px 18px;gap:14px;border-top:1px solid var(--line);border-left:4px solid;}
-    .t-memo{border-left-color:#22a06b;} .t-check{border-left-color:#2d7dd2;} .t-draw{border-left-color:#7c3ab4;}
+    .t-memo{border-left-color:#22a06b;} .t-check{border-left-color:#2d7dd2;} .t-draw{border-left-color:#7c3ab4;} .t-mat{border-left-color:#0f766e;}
     .t-rec{border-left-color:#d64646;} .t-board{border-left-color:#e8910b;} .t-elec{border-left-color:#bd941c;} .t-area{border-left-color:#0d9aa0;}
     .sq .ic{width:48px;height:48px;font-size:24px;}
     .sq .txt{margin-top:0;} .sq .nm{font-size:16px;}
@@ -99,6 +100,14 @@
   .citem input[type=text]{flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-size:15px;}
   .citem.done input[type=text]{text-decoration:line-through;opacity:.55;}
   .citem .cdel{flex:0 0 auto;background:none;border:none;color:#d63a3f;font-size:22px;line-height:1;cursor:pointer;padding:2px 6px;}
+  .matrow{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:8px 9px;margin-bottom:8px;box-shadow:var(--shadow);flex-wrap:wrap;}
+  .matrow input[type=checkbox]{width:22px;height:22px;flex:0 0 auto;accent-color:var(--accent);}
+  .matrow .mt-name{flex:1 1 100%;min-width:0;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:15px;font-weight:600;order:2;}
+  .matrow .mt-qty{flex:0 0 72px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:14px;order:3;}
+  .matrow .mt-sup{flex:1 1 0;min-width:90px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:14px;order:4;}
+  .matrow input[type=checkbox]{order:1;}
+  .matrow .mdel{order:5;flex:0 0 auto;background:none;border:none;color:#d63a3f;font-size:21px;cursor:pointer;padding:2px 5px;}
+  .matrow.done .mt-name{text-decoration:line-through;opacity:.55;}
   .additem{width:100%;padding:11px;border:1px dashed var(--accent);border-radius:11px;background:var(--accent-soft);color:var(--accent-d);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px;}
   .additem:active{background:#cdeeef;}
   #drawCanvas{width:100%;height:300px;border-radius:12px;background:#fff;touch-action:none;cursor:crosshair;display:block;border:1px solid var(--line);}
@@ -171,7 +180,7 @@
   @keyframes rpulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.6);opacity:.5;}}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v25</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v26</div>
 
 <div class="wrap">
 
@@ -187,6 +196,7 @@
       <div class="sq t-memo"  onclick="openTool('memo')"><span class="ic">📝</span><span class="txt"><span class="nm">現場メモ</span><span class="ds">サッとテキストでメモ</span></span><span class="cor">→</span></div>
       <div class="sq t-check" onclick="openTool('check')"><span class="ic">✅</span><span class="txt"><span class="nm">チェックリスト</span><span class="ds">確認項目を管理</span></span><span class="cor">→</span></div>
       <div class="sq t-draw"  onclick="openTool('draw')"><span class="ic">✍️</span><span class="txt"><span class="nm">手書きメモ</span><span class="ds">指で書ける</span></span><span class="cor">→</span></div>
+      <div class="sq t-mat"   onclick="openTool('mat')"><span class="ic">📦</span><span class="txt"><span class="nm">材料リスト</span><span class="ds">材料の数量・仕入先を管理</span></span><span class="cor">→</span></div>
       <div class="sq t-rec"   onclick="openTool('rec')"><span class="ic">🎙️</span><span class="txt"><span class="nm">録音機</span><span class="ds">音声を記録</span></span><span class="cor">→</span></div>
       <div class="sq t-board" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">→</span></div>
       <div class="sq t-elec"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">→</span></div>
@@ -263,6 +273,37 @@
     <button class="additem" onclick="addCheckItem()">＋ 項目を追加</button>
     <button class="savebtn" onclick="saveCheck()">保存する</button>
     <div class="savehint" id="checkSaved"></div>
+  </div>
+
+  <!-- ========== 材料リスト：一覧 ========== -->
+  <div class="pane" id="p-mat-list">
+    <div class="thead">
+      <span class="back2" onclick="go('p-menu')">← 道具箱</span>
+      <h2>材料リスト</h2>
+      <span style="width:36px;"></span>
+    </div>
+    <div class="sitebar" id="matSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <button class="additem" onclick="newMat()">＋ 新しい材料リスト</button>
+    <div id="matList"></div>
+  </div>
+
+  <!-- 材料リスト：編集 -->
+  <div class="pane" id="p-mat-edit">
+    <div class="thead">
+      <span class="back2" onclick="openSiteMatList()">← 一覧</span>
+      <h2>材料リスト</h2>
+      <span class="del" onclick="deleteMat()">削除</span>
+    </div>
+    <div class="sitebar" id="matEditSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <label class="slbl">タイトル（何の材料か）</label>
+    <input id="matTitle" placeholder="例：1F配線材料" autocapitalize="off">
+    <label class="slbl">材料（チェックで手配済み）</label>
+    <div id="matItems"></div>
+    <button class="additem" onclick="addMatItem()">＋ 材料を追加</button>
+    <button class="savebtn" onclick="saveMat()">保存する</button>
+    <div class="savehint" id="matSaved"></div>
   </div>
 
   <!-- ③ 手書きメモ：一覧 -->
@@ -554,13 +595,13 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
 /* 実装済みツール */
-var READY={memo:1,check:1,draw:1,elec:1,area:1,board:1,rec:1,meas:1};
+var READY={memo:1,check:1,draw:1,elec:1,area:1,board:1,rec:1,meas:1,mat:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
-  if(k==='memo'||k==='check'||k==='draw'||k==='board'||k==='rec'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='check'?'現場チェックリスト':k==='draw'?'手書きメモ':k==='board'?'小黒板カメラ':k==='rec'?'録音機':'現場メモ'); go('p-memo-select'); loadSites(); return; }
+  if(k==='memo'||k==='check'||k==='draw'||k==='board'||k==='rec'||k==='mat'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='check'?'現場チェックリスト':k==='draw'?'手書きメモ':k==='board'?'小黒板カメラ':k==='rec'?'録音機':k==='mat'?'材料リスト':'現場メモ'); go('p-memo-select'); loadSites(); return; }
   go('p-'+k);
 }
-function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳',meas:'面積計算機'}[k]||k;}
+function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳',meas:'面積計算機',mat:'材料リスト'}[k]||k;}
 
 /* ===== ① 現場メモ（現場ごと・サーバー保存） ===== */
 var PROJ_KEY='tb_projects';
@@ -1155,7 +1196,12 @@ function openBoardCamera(){
   if(!curSite){go('p-memo-select');return;}
   boardSiteId=curSite.id; boardSiteName_=curSite.name||'';
   document.getElementById('boardSiteBar').innerHTML='現場：<b>'+esc(curSite.cust||'')+(curSite.name?' ／ '+esc(curSite.name):'')+'</b>';
-  var bsn=document.getElementById('boardProjName');if(bsn&&!bsn.value)bsn.value=boardSiteName_;
+  var bsn=document.getElementById('boardProjName');
+  if(pendingBoard){
+    if(bsn) bsn.value=pendingBoard.name||boardSiteName_;
+    var bpl=document.getElementById('boardPlace'); if(bpl&&pendingBoard.loc) bpl.value=pendingBoard.loc;
+    pendingBoard=null;
+  } else if(bsn&&!bsn.value){ bsn.value=boardSiteName_; }
   var bf=document.getElementById('boardFormWrap');if(bf)bf.style.display='grid';
   go('p-board'); startBoardCamera(); setTimeout(function(){bov();},50);
 }
@@ -1498,13 +1544,134 @@ function measRenderList(){
 measRenderInputs();
 measRenderList();
 
+/* ===== 材料リスト（種類=mat・現場メモシートに保存） ===== */
+var matItems=[],curMat=null,matCache={},matSuppliers=[];
+function openSiteMatList(){
+  if(!curSite){ go('p-memo-select'); return; }
+  go('p-mat-list');
+  document.getElementById('matSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('matList').innerHTML='<div class="empty">読み込み中…</div>';
+  // 仕入先候補も取得（datalist用）
+  callGAS({action:'suppliers'},true).then(function(r){ matSuppliers=(r&&r.suppliers)||[]; }).catch(function(){});
+  callGAS({action:'notesList',id:curSite.id}).then(function(res){
+    var list=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'')==='mat';});
+    renderMatList(list);
+    if(pendingNote){ var _t=pendingNote; pendingNote=null; if(matCache[_t]) openMat(_t); }
+  }).catch(function(){ document.getElementById('matList').innerHTML='<div class="empty">読み込みに失敗しました。<br>電波を確認して、もう一度お試しください。</div>'; });
+}
+function renderMatList(list){
+  var el=document.getElementById('matList');
+  list.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
+  matCache={}; list.forEach(function(n){matCache[n['メモID']]=n;});
+  if(!list.length){ el.innerHTML='<div class="empty">この現場の材料リストはまだありません。<br>「＋ 新しい材料リスト」で作成できます。</div>'; return; }
+  el.innerHTML=list.map(function(n){
+    var items=parseItems(n['内容']); var done=items.filter(function(it){return it&&it.d;}).length;
+    var ttl=esc(n['タイトル']||'(無題)');
+    return '<div class="memo" onclick="openMat(\''+esc(n['メモID'])+'\')"><div class="m-t">📦 '+ttl+'</div><div class="m-p">'+done+' / '+items.length+' 手配済</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
+  }).join('');
+}
+function newMat(){
+  curMat=null; matItems=[{n:'',q:'',s:'',d:false}];
+  document.getElementById('matTitle').value='';
+  document.getElementById('matSaved').classList.remove('show');
+  document.getElementById('matEditSiteBar').innerHTML=siteBarHtml();
+  renderMatItems();
+  go('p-mat-edit');
+  setTimeout(function(){document.getElementById('matTitle').focus();},150);
+}
+function openMat(id){
+  var n=matCache[id]||{};
+  curMat=id; matItems=parseItems(n['内容']); if(!matItems.length)matItems=[{n:'',q:'',s:'',d:false}];
+  // 旧形式(配列の各要素が{t,d})だった場合のガード
+  matItems=matItems.map(function(it){ return {n:it.n!==undefined?it.n:(it.t||''),q:it.q||'',s:it.s||'',d:!!it.d}; });
+  document.getElementById('matTitle').value=n['タイトル']||'';
+  document.getElementById('matSaved').classList.remove('show');
+  document.getElementById('matEditSiteBar').innerHTML=siteBarHtml();
+  renderMatItems();
+  go('p-mat-edit');
+}
+function matSupOptions(){
+  return (matSuppliers||[]).map(function(x){var nm=x['略称']||x['仕入先名']||'';return nm?'<option value="'+esc(nm)+'"></option>':'';}).join('');
+}
+function renderMatItems(){
+  var el=document.getElementById('matItems');
+  el.innerHTML=matItems.map(function(it,i){
+    return '<div class="matrow'+(it.d?' done':'')+'">'+
+      '<input type="checkbox" '+(it.d?'checked':'')+' onchange="matToggle('+i+',this.checked)">'+
+      '<input class="mt-name" placeholder="材料名" value="'+esc(it.n||'')+'" oninput="matSet('+i+',\'n\',this.value)">'+
+      '<input class="mt-qty" placeholder="数量" value="'+esc(it.q||'')+'" oninput="matSet('+i+',\'q\',this.value)">'+
+      '<input class="mt-sup" list="matSupList" placeholder="仕入先" value="'+esc(it.s||'')+'" oninput="matSet('+i+',\'s\',this.value)">'+
+      '<button class="mdel" onclick="matDel('+i+')">×</button></div>';
+  }).join('')+'<datalist id="matSupList">'+matSupOptions()+'</datalist>';
+}
+function matToggle(i,v){ if(matItems[i]){ matItems[i].d=v; var el=document.getElementById('matItems').children[i]; if(el){ if(v)el.classList.add('done'); else el.classList.remove('done'); } } }
+function matSet(i,k,v){ if(matItems[i])matItems[i][k]=v; }
+function matDel(i){ matItems.splice(i,1); if(!matItems.length)matItems=[{n:'',q:'',s:'',d:false}]; renderMatItems(); }
+function addMatItem(){ matItems.push({n:'',q:'',s:'',d:false}); renderMatItems(); var ins=document.getElementById('matItems').querySelectorAll('.mt-name'); if(ins.length)ins[ins.length-1].focus(); }
+function saveMat(){
+  var t=document.getElementById('matTitle').value.trim();
+  if(!t){ toast('タイトルを入力してください'); document.getElementById('matTitle').focus(); return; }
+  if(!curSite){ toast('現場が選ばれていません'); go('p-memo-select'); return; }
+  var items=matItems.filter(function(it){return String(it.n||'').trim()!=='';});
+  var u=gUser()||{};
+  var data={'案件ID':curSite.id,'種類':'mat','タイトル':t,'内容':JSON.stringify(items),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  if(curMat)data['メモID']=curMat;
+  showLoad('保存中…');
+  callGAS({action:'noteSave',data:data},true).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'保存に失敗しました');
+    if(res.note&&res.note['メモID']){ curMat=res.note['メモID']; matCache[curMat]=res.note; }
+    var sv=document.getElementById('matSaved'); sv.textContent='保存しました'; sv.classList.add('show');
+    toast('保存しました');
+  }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
+}
+function deleteMat(){
+  if(!curMat){ openSiteMatList(); return; }
+  if(!confirm('この材料リストを削除しますか？'))return;
+  showLoad('削除中…');
+  callGAS({action:'noteDelete',id:curMat},true).then(function(res){
+    if(!res||!res.ok)throw new Error('削除に失敗しました');
+    toast('削除しました'); curMat=null; openSiteMatList();
+  }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
+}
+function openMatForCase(id){
+  curTool='mat';
+  showLoad('読み込み中…');
+  callGAS({action:'list'},true).then(function(res){
+    var ps=(res&&res.ok&&res.projects)||[]; tbProjects=ps;
+    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
+    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
+    if(p){ curSite={id:p['案件ID'],name:p['案件名']||'',cust:p['顧客']||''}; openSiteMatList(); }
+    else { toast('案件が見つかりませんでした'); go('p-menu'); }
+  }).catch(function(){ toast('読み込みに失敗しました'); go('p-menu'); }).then(function(){hideLoad();});
+}
+var pendingBoard=null;
+function openBoardForCase(id){
+  curTool='board';
+  showLoad('読み込み中…');
+  callGAS({action:'list'},true).then(function(res){
+    var ps=(res&&res.ok&&res.projects)||[]; tbProjects=ps;
+    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
+    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
+    if(p){ curSite={id:p['案件ID'],name:p['案件名']||'',cust:p['顧客']||''}; openBoardCamera(); }
+    else { toast('案件が見つかりませんでした'); go('p-menu'); }
+  }).catch(function(){ toast('読み込みに失敗しました'); go('p-menu'); }).then(function(){hideLoad();});
+}
+
 (function(){
   var q=location.search;
   var dm=q.match(/[?&]draw=([^&]+)/),cm=q.match(/[?&]check=([^&]+)/),mm=q.match(/[?&]memo=([^&]+)/),nm=q.match(/[?&]note=([^&]+)/);
+  var mat=q.match(/[?&]mat=([^&]+)/),bd=q.match(/[?&]board=([^&]+)/);
+  var bnm=q.match(/[?&]name=([^&]+)/),blc=q.match(/[?&]loc=([^&]+)/);
   if(nm)pendingNote=decodeURIComponent(nm[1]);
   if(dm){ openDrawForCase(decodeURIComponent(dm[1])); }
   else if(cm){ openCheckForCase(decodeURIComponent(cm[1])); }
   else if(mm){ openMemoForCase(decodeURIComponent(mm[1])); }
+  else if(mat){ openMatForCase(decodeURIComponent(mat[1])); }
+  else if(bd){
+    // 小黒板カメラ：工事名・場所を引き継いで起動
+    pendingBoard={name:bnm?decodeURIComponent(bnm[1]):'',loc:blc?decodeURIComponent(blc[1]):''};
+    openBoardForCase(decodeURIComponent(bd[1]));
+  }
 })();
 </script>
 </body>
