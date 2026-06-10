@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 43 (2026-06-10) 検索名統一 -->
+<!-- version 44 (2026-06-10) LINE追加・検索名統一・受注金額入力欄追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -144,7 +144,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v43</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v44</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -207,6 +207,11 @@
       <div class="fld"><label>工期開始</label><input id="f_start" type="date"></div>
       <div class="fld"><label>工期完了</label><input id="f_end" type="date"></div>
     </div>
+    <div class="two">
+      <div class="fld"><label>受注金額（税抜）</label><input id="f_price_ex" type="number" inputmode="numeric" min="0" placeholder="例）1000000"></div>
+      <div class="fld"><label>受注金額（税込）</label><input id="f_price_in" type="number" inputmode="numeric" min="0" placeholder="例）1100000"></div>
+    </div>
+    <div class="fld"><label>実行予算</label><input id="f_budget" type="number" inputmode="numeric" min="0" placeholder="例）800000"></div>
     <div class="fld"><label>先方担当者</label>
       <select id="f_contact" onchange="onContactChange()"></select>
       <input id="f_contact_other" style="display:none;margin-top:6px;" placeholder="一覧にない担当者を直接入力"></div>
@@ -214,6 +219,7 @@
       <div class="fld"><label>電話番号</label><input id="f_tel" inputmode="tel" placeholder="例）090-1234-5678"></div>
       <div class="fld"><label>メールアドレス</label><input id="f_email" inputmode="email" placeholder="例）taro@example.com"></div>
     </div>
+    <div class="fld"><label>LINEグループURL（任意）</label><input id="f_line" type="url" inputmode="url" placeholder="例）https://line.me/R/ti/g/xxxx"></div>
     <div class="fld"><label>備考</label><textarea id="f_note" placeholder="メモ"></textarea></div>
     <div class="acts">
       <button class="btn sub" onclick="closeOv()">キャンセル</button>
@@ -253,6 +259,7 @@
       <div id="d_cust" class="d-sub"></div>
       <div class="d-rows" id="d_rows"></div>
       <a id="d_map" class="d-map" target="_blank" rel="noopener" style="display:none;">📍 地図で見る（Googleマップ）</a>
+      <a id="d_line" class="d-map" target="_blank" rel="noopener" style="display:none;background:#06c755;border-color:#06c755;color:#fff;">💬 LINEグループを開く</a>
       <a id="d_folder" class="d-folder" target="_blank" rel="noopener">📁 フォルダを開く（Googleドライブ）</a>
       <button id="d_memo" class="d-folder d-memo" onclick="openSiteNote()">📝 現場メモを開く</button>
       <div id="d_memolist"></div>
@@ -416,6 +423,8 @@ function openDetail(p){
   var mp=g('d_map');
   if(p['場所']){ mp.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p['場所']); mp.style.display='block'; }
   else { mp.style.display='none'; }
+  var ln=g('d_line');
+  if(ln){ if(p['LINE_URL']){ ln.href=p['LINE_URL']; ln.style.display='block'; } else { ln.style.display='none'; } }
   // フォルダ（Googleドライブ）：1ボタンでその現場のフォルダを開く
   var fo=g('d_folder'); fo.onclick=null; fo.removeAttribute('href'); fo.textContent='📁 フォルダを準備中…'; fo.style.opacity='.6';
   callGAS({action:'ensureFolder',id:p['案件ID']},null,true).then(function(res){
@@ -522,7 +531,11 @@ function openProject(p){
   if(_ct){ _ksel.value=_ct; if(_ksel.value!==_ct){ _ksel.value='__other__'; _kother.value=_ct; _kother.style.display='block'; } }
   else { _ksel.value=''; }
   g('f_tel').value  = p?(p['電話番号']||''):'';
-  g('f_email').value= p?(p['メールアドレス']||''):'';
+  g('f_email').value    = p?(p['メールアドレス']||''):'';
+  g('f_price_ex').value = p?(p['受注金額税抜']||''):'';
+  g('f_price_in').value = p?(p['受注金額税込']||''):'';
+  g('f_budget').value   = p?(p['実行予算']||''):'';
+  g('f_line').value     = p?(p['LINE_URL']||''):'';
   g('f_note').value = p?(p['備考']||''):'';
   document.getElementById('ov').classList.add('show');
 }
@@ -536,6 +549,8 @@ function gatherProject(){
     '場所':g('f_place').trim(),'種別':g('f_type'),'ステータス':g('f_status'),
     '工期開始':g('f_start'),'工期完了':g('f_end'),
     '先方担当者':contact,'電話番号':g('f_tel').trim(),'メールアドレス':g('f_email').trim(),
+    '受注金額税抜':g('f_price_ex').trim(),'受注金額税込':g('f_price_in').trim(),'実行予算':g('f_budget').trim(),
+    'LINE_URL':g('f_line').trim(),
     '備考':g('f_note').trim()
   };
 }
