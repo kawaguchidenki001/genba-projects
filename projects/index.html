@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 44 (2026-06-10) LINE追加・検索名統一・受注金額入力欄追加 -->
+<!-- version 45 (2026-06-10) 案件詳細リニューアル：周辺マップ・連絡・機能アイコン -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -76,6 +76,24 @@
   .d-row .v{flex:1;font-weight:600;word-break:break-word;}
   .d-map{display:block;text-align:center;padding:11px;border:1px solid var(--accent);color:var(--accent-d);border-radius:11px;text-decoration:none;font-weight:700;font-size:14px;margin-bottom:12px;}
   .d-map:active{background:#eef4fb;}
+  /* v45 案件詳細リニューアル */
+  .d-secttl{font-size:12px;font-weight:700;color:var(--sub);letter-spacing:.06em;margin:18px 2px 9px;}
+  .d-badges{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 4px;}
+  .d-bdg{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;}
+  .d-bdg.st{background:#dcf3e7;color:#176a40;} .d-bdg.kk{background:#e3ecfb;color:#1e50a0;} .d-bdg.term{background:#f1f2f4;color:var(--sub);font-weight:600;}
+  .mapchips{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch;}
+  .mchip{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:13px;padding:10px 12px;min-width:72px;box-shadow:var(--shadow);}
+  .mchip .i{font-size:21px;} .mchip .t{font-size:11.5px;font-weight:700;} .mchip:active{transform:scale(.97);}
+  .ctc{display:flex;flex-direction:column;gap:8px;}
+  .cbtn{display:flex;align-items:center;gap:10px;text-decoration:none;border-radius:12px;padding:13px 15px;font-weight:700;font-size:14.5px;border:1px solid var(--line);background:#fff;color:var(--ink);box-shadow:var(--shadow);cursor:pointer;font-family:inherit;}
+  .cbtn .ci{font-size:18px;} .cbtn.lw{background:#00b900;border-color:#00b900;color:#fff;} .cbtn.fol{background:#3b82f6;border-color:#3b82f6;color:#fff;}
+  .fmenu{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .fitem{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:13px;padding:13px 4px 11px;box-shadow:var(--shadow);cursor:pointer;}
+  .fitem .fi{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;}
+  .fitem .ft{font-size:11px;font-weight:700;text-align:center;line-height:1.3;}
+  .fitem:active{transform:scale(.97);}
+  .fc1{background:#5b6b8c;} .fc2{background:#2d7dd2;} .fc3{background:#e8910b;} .fc4{background:#d2566b;}
+  .fc5{background:#22a06b;} .fc6{background:#7c6ce0;} .fc7{background:#0d9aa0;} .fc8{background:#0f766e;}
   .d-btns{display:flex;gap:8px;}
   .d-btns .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;text-align:center;}
   .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;
@@ -144,7 +162,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v44</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v45</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -257,13 +275,23 @@
     <div class="dbody">
       <h2 id="d_name" style="font-size:20px;margin:0 0 5px;">現場名</h2>
       <div id="d_cust" class="d-sub"></div>
+      <div class="d-badges" id="d_badges"></div>
+
+      <div class="d-secttl">現場周辺マップ</div>
+      <div class="mapchips" id="d_mapchips"></div>
+
+      <div class="d-secttl">連絡</div>
+      <div class="ctc">
+        <a id="d_line" class="cbtn lw" target="_blank" rel="noopener" style="display:none;"><span class="ci">💬</span>LINE WORKSを開く</a>
+      </div>
+
+      <div class="d-secttl">案件情報</div>
       <div class="d-rows" id="d_rows"></div>
-      <a id="d_map" class="d-map" target="_blank" rel="noopener" style="display:none;">📍 地図で見る（Googleマップ）</a>
-      <a id="d_line" class="d-map" target="_blank" rel="noopener" style="display:none;background:#06c755;border-color:#06c755;color:#fff;">💬 LINEグループを開く</a>
-      <a id="d_folder" class="d-folder" target="_blank" rel="noopener">📁 フォルダを開く（Googleドライブ）</a>
-      <button id="d_memo" class="d-folder d-memo" onclick="openSiteNote()">📝 現場メモを開く</button>
-      <div id="d_memolist"></div>
-      <div id="d_adminbtns" style="display:none;">
+
+      <div class="d-secttl">この現場の機能</div>
+      <div class="fmenu" id="d_fmenu"></div>
+
+      <div id="d_adminbtns" style="display:none;margin-top:18px;">
         <button class="btn primary" style="width:100%;" onclick="editFromDetail()">✎ この現場を編集</button>
       </div>
     </div>
@@ -406,33 +434,90 @@ function openCaseFromUrl(){ try{ var m=location.search.match(/[?&]case=([^&]+)/)
 var curDetail=null;
 function openDetail(p){
   curDetail=p; var g=function(id){return document.getElementById(id);};
+  var cid=encodeURIComponent(p['案件ID']);
   g('d_name').textContent=p['案件名']||'(無題)';
   g('d_cust').textContent=(p['顧客']||'（顧客未設定）')+(p['種別']?(' ・ '+p['種別']):'');
+
+  // バッジ：ステータス・種別・工期
+  var bd='';
+  if(p['ステータス']) bd+='<span class="d-bdg st">'+esc(p['ステータス'])+'</span>';
+  if(p['種別']) bd+='<span class="d-bdg kk">'+esc(p['種別'])+'</span>';
+  var period=(dateOnly(p['工期開始'])||'')+(dateOnly(p['工期完了'])?(' 〜 '+dateOnly(p['工期完了'])):'');
+  if(period.trim()) bd+='<span class="d-bdg term">工期 '+esc(period.trim())+'</span>';
+  g('d_badges').innerHTML=bd;
+
+  // 周辺マップチップ
+  var addr=String(p['場所']||'').trim();
+  var mc=g('d_mapchips');
+  if(addr){
+    var q=encodeURIComponent(addr);
+    var chips=[
+      {i:'📍',t:'現場地図',u:'https://www.google.com/maps/search/?api=1&query='+q},
+      {i:'🏪',t:'コンビニ',u:'https://www.google.com/maps/search/'+encodeURIComponent('コンビニ '+addr)},
+      {i:'🚻',t:'トイレ',u:'https://www.google.com/maps/search/'+encodeURIComponent('トイレ '+addr)},
+      {i:'🅿️',t:'駐車場',u:'https://www.google.com/maps/search/'+encodeURIComponent('コインパーキング '+addr)},
+      {i:'🛠️',t:'ホームセンター',u:'https://www.google.com/maps/search/'+encodeURIComponent('ホームセンター '+addr)}
+    ];
+    mc.innerHTML=chips.map(function(c){return '<a class="mchip" href="'+c.u+'" target="_blank" rel="noopener"><span class="i">'+c.i+'</span><span class="t">'+c.t+'</span></a>';}).join('');
+    mc.style.display='flex';
+  } else { mc.innerHTML='<div class="dnote-empty">住所が未登録のため周辺マップは表示できません。</div>'; mc.style.display='block'; }
+
+  // LINE WORKS
+  var ln=g('d_line');
+  if(p['LINE_URL']){ ln.href=p['LINE_URL']; ln.style.display='flex'; } else { ln.style.display='none'; }
+
+  // 案件情報
   var rows='';
   function row(k,v){ if(v) rows+='<div class="d-row"><span class="k">'+k+'</span><span class="v">'+esc(v)+'</span></div>'; }
   function linkRow(k,v,scheme){ if(v) rows+='<div class="d-row"><span class="k">'+k+'</span><span class="v"><a href="'+scheme+encodeURIComponent(v)+'">'+esc(v)+'</a></span></div>'; }
-  row('ステータス',p['ステータス']);
-  var period=(dateOnly(p['工期開始'])||'')+(dateOnly(p['工期完了'])?(' 〜 '+dateOnly(p['工期完了'])):'');
-  row('工期',period.trim());
   row('住所',p['場所']);
   row('担当者',p['先方担当者']);
   linkRow('電話',p['電話番号'],'tel:');
   linkRow('メール',p['メールアドレス'],'mailto:');
   row('備考',p['備考']);
-  g('d_rows').innerHTML=rows;
-  var mp=g('d_map');
-  if(p['場所']){ mp.href='https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(p['場所']); mp.style.display='block'; }
-  else { mp.style.display='none'; }
-  var ln=g('d_line');
-  if(ln){ if(p['LINE_URL']){ ln.href=p['LINE_URL']; ln.style.display='block'; } else { ln.style.display='none'; } }
-  // フォルダ（Googleドライブ）：1ボタンでその現場のフォルダを開く
-  var fo=g('d_folder'); fo.onclick=null; fo.removeAttribute('href'); fo.textContent='📁 フォルダを準備中…'; fo.style.opacity='.6';
+  g('d_rows').innerHTML=rows||'<div class="dnote-empty">情報が登録されていません。</div>';
+
+  // 機能アイコン（フォルダ系はURL取得後に有効化）
+  var menu=[
+    {c:'fc1',i:'📐',t:'図面',act:'folder',key:'drawUrl'},
+    {c:'fc2',i:'🗓',t:'工程表',act:'folder',key:'schedUrl'},
+    {c:'fc3',i:'📷',t:'写真',act:'folder',key:'photoUrl'},
+    {c:'fc4',i:'📸',t:'小黒板<br>カメラ',act:'board'},
+    {c:'fc5',i:'📝',t:'現場メモ',act:'memo'},
+    {c:'fc6',i:'✍️',t:'手書き<br>メモ',act:'draw'},
+    {c:'fc7',i:'✅',t:'チェック<br>リスト',act:'check'},
+    {c:'fc8',i:'📦',t:'材料<br>リスト',act:'mat'}
+  ];
+  var fm=g('d_fmenu');
+  fm.innerHTML=menu.map(function(m,idx){
+    return '<div class="fitem" data-idx="'+idx+'"><span class="fi '+m.c+'">'+m.i+'</span><span class="ft">'+m.t+'</span></div>';
+  }).join('');
+  var nm=String(p['案件名']||''), loc=String(p['場所']||'');
+  Array.prototype.forEach.call(fm.querySelectorAll('.fitem'),function(el){
+    var m=menu[+el.dataset.idx];
+    el.onclick=function(){
+      if(m.act==='memo')  location.href='../toolbox/?memo='+cid;
+      else if(m.act==='check') location.href='../toolbox/?check='+cid;
+      else if(m.act==='draw')  location.href='../toolbox/?draw='+cid;
+      else if(m.act==='mat')   location.href='../toolbox/?mat='+cid;
+      else if(m.act==='board') location.href='../toolbox/?board='+cid+'&name='+encodeURIComponent(nm)+'&loc='+encodeURIComponent(loc);
+      else if(m.act==='folder'){
+        if(el._url){ window.open(el._url,'_blank'); }
+        else { toast('フォルダを準備中です。もう一度タップしてください'); }
+      }
+    };
+  });
+  // フォルダURLを取得して図面・工程表・写真に割り当て
   callGAS({action:'ensureFolder',id:p['案件ID']},null,true).then(function(res){
-    if(res&&res.ok&&res.url){ fo.href=res.url; fo.textContent='📁 フォルダを開く（Googleドライブ）'; fo.style.opacity='1'; }
-    else { fo.textContent='📁 フォルダ（もう一度タップ）'; fo.style.opacity='1'; fo.onclick=function(e){e.preventDefault();openDetail(curDetail);}; }
-  }).catch(function(){ fo.textContent='📁 フォルダ（もう一度タップ）'; fo.style.opacity='1'; fo.onclick=function(e){e.preventDefault();openDetail(curDetail);}; });
+    if(res&&res.ok){
+      Array.prototype.forEach.call(fm.querySelectorAll('.fitem'),function(el){
+        var m=menu[+el.dataset.idx];
+        if(m.act==='folder'&&res[m.key]) el._url=res[m.key];
+      });
+    }
+  }).catch(function(){});
+
   g('d_adminbtns').style.display='block';
-  loadDetailNotes(p['案件ID']);
   document.getElementById('ovd').classList.add('show');
 }
 function openSiteNote(){ if(!curDetail)return; location.href='../toolbox/?memo='+encodeURIComponent(curDetail['案件ID']); }
