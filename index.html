@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 37 (2026-06-10) 工事台帳タイル追加 -->
+<!-- version 39 (2026-06-10) 車両管理タイル追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -48,6 +48,7 @@
   .t-time .ic{background:#e8910b;} .t-time{border-top:3px solid #e8910b;}
   .t-tool .ic{background:#0d9aa0;} .t-tool{border-top:3px solid #0d9aa0;}
   .t-cost .ic{background:#0f766e;} .t-cost{border-top:3px solid #0f766e;}
+  .t-veh .ic{background:#b45309;} .t-veh{border-top:3px solid #b45309;}
 
   /* スマホ：横3列の正方形タイル */
   .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -107,7 +108,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v37</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v39</div>
 <div id="login">
   <div class="box">
     <div class="lg-t">Genba Management</div>
@@ -133,6 +134,7 @@
     <a class="sq t-sched" href="./calendar/"><span class="ic">🗓</span><span class="txt"><span class="en">Schedule</span><span class="nm">スケジュール</span><span class="ds">現場の予定をカレンダーで管理</span></span><span class="cor">→</span></a>
     <a class="sq t-time" href="./timecard/"><span class="ic">⏱</span><span class="txt"><span class="en">Timecard</span><span class="nm">タイムカード</span><span class="ds">出勤・退勤の打刻と勤怠集計</span></span><span class="cor">→</span></a>
     <a class="sq t-tool" href="./toolbox/"><span class="ic">🧰</span><span class="txt"><span class="en">Toolbox</span><span class="nm">ツールボックス</span><span class="ds">メモ・計算・カメラなどの現場道具</span></span><span class="cor">→</span></a>
+    <a class="sq t-veh" href="./vehicles/"><span class="ic">🚚</span><span class="txt"><span class="en">Vehicles</span><span class="nm">車両管理</span><span class="ds">車検・保険・オイル交換と走行距離</span></span><span class="cor">→</span></a>
   </div>
 
   <div class="grid" style="grid-template-columns:1fr;margin-top:16px;">
@@ -145,10 +147,7 @@
     <a class="sq t-cost" href="./daicho/"><span class="ic">📊</span><span class="txt"><span class="en">Ledger</span><span class="nm">工事台帳・原価</span></span><span class="cor lock">🔒</span></a>
   </div>
 
-  <div class="lbl">今後追加予定</div>
-  <div class="soons"><span class="soon">👷 出面管理</span></div>
-
-  <div class="foot"><span id="meName"></span> ・ <a href="#" onclick="logout();return false;">ログアウト</a><br>金額は管理者のみ表示 ・ <a href="https://kawaguchidenki001.github.io/checklist/">お仕事メニューへ</a></div>
+  <div class="foot"><span id="meName"></span> ・ <a href="#" onclick="logout();return false;">ログアウト</a></div>
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
