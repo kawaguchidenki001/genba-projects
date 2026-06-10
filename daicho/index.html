@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 3 daicho (2026-06-10) 検索名統一 -->
+<!-- version 4 daicho (2026-06-10) 台帳の取引先候補を仕入先マスタに変更 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -92,7 +92,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v3</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v4</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/" id="backLink">← 現場管理メニュー</a>
@@ -136,7 +136,7 @@
       <div class="fld"><label>区分</label><select id="f_kbn">
         <option>材料費</option><option>外注費</option><option value="機械リース">機械・リース</option><option>経費</option><option>その他</option></select></div>
     </div>
-    <div class="fld"><label>取引先・支払先</label><input id="f_dest" type="text" list="custList" placeholder="例：〇〇電材"></div>
+    <div class="fld"><label>仕入先・支払先</label><input id="f_dest" type="text" list="custList" placeholder="例：愛知電材"></div>
     <datalist id="custList"></datalist>
     <div class="fld"><label>内容</label><input id="f_body" type="text" placeholder="例：照明器具一式"></div>
     <div class="fld"><label>金額（税抜・円）</label><input id="f_amt" type="text" inputmode="numeric" placeholder="例：120000"></div>
@@ -213,14 +213,14 @@ function adminLogout(){localStorage.removeItem('genba_admin');showGate();}
 function loadAll(silent){
   callGAS({action:'costData'},null,silent).then(function(res){
     if(!res.ok)throw new Error(res.error||'エラー');
-    projects=res.projects||[];customers=res.customers||[];costs=res.costs||[];labor=res.labor||{};vehicles=res.vehicles||[];vehicleUsage=res.vehicleUsage||{};
+    projects=res.projects||[];customers=res.customers||[];costs=res.costs||[];labor=res.labor||{};vehicles=res.vehicles||[];vehicleUsage=res.vehicleUsage||{};window.__suppliers=res.suppliers||[];
     saveCache();fillCustList();
     if(curId)renderDetail();else renderList();
   }).catch(function(err){if(!silent)toast('読込失敗：'+err.message);});
 }
 function fillCustList(){
   var dl=document.getElementById('custList');dl.innerHTML='';
-  customers.forEach(function(c){var o=document.createElement('option');o.value=c['顧客名']||'';dl.appendChild(o);});
+  (window.__suppliers||[]).forEach(function(x){var nm=x['略称']||x['仕入先名']||'';if(!nm)return;var o=document.createElement('option');o.value=nm;dl.appendChild(o);});
 }
 
 // ===== 集計 =====
