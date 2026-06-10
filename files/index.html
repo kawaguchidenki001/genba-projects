@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 35 (2026-06-09) -->
+<!-- version 36 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -7,20 +7,20 @@
 <title>写真・ファイル｜河口電機</title>
 <style>
   :root{
-    --bg:#f4f5f7; --card:#fff; --line:#e3e6ea; --ink:#1f2733; --sub:#6b7280;
-    --accent:#b4791a; --accent-d:#8a5c11;
-    --radius:12px; --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);
+    --bg:#e3f7f7; --bg1:#e3f7f7; --bg2:#f3fcfc; --card:#fff; --line:#cce9e9; --ink:#173a3c; --sub:#5a8284;
+    --accent:#0d9aa0; --accent-d:#0a7d82; --accent-soft:#dff5f5;
+    --radius:12px; --shadow:0 2px 10px rgba(0,0,0,.08); --shadow-lg:0 10px 30px rgba(0,0,0,.14);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:24px;}
-  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
+  body{margin:0;background:linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 60%,#ffffff 100%);background-attachment:fixed;min-height:100vh;color:var(--ink);
+    font-family:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:24px;}
+  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink);border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
   .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .hd-row h1{font-size:17px;margin:0;font-weight:700;}
-  .back{color:#fef3c7;text-decoration:none;font-size:13px;}
-  .sync{font-size:12px;display:flex;align-items:center;gap:5px;color:#fef3c7;}
+  .hd-row h1{font-size:17px;margin:0;font-weight:700;;color:var(--accent-d);}
+  .back{color:var(--accent-d);text-decoration:none;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-weight:600;}
+  .sync{font-size:12px;display:flex;align-items:center;gap:5px;color:var(--sub);}
   .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;}
-  .dot.ok{background:#4ade80;} .dot.busy{background:#fde047;} .dot.off{background:#f87171;}
+  .dot.ok{background:#22a06b;} .dot.busy{background:#e8910b;} .dot.off{background:#e5484d;}
   .wrap{padding:12px;}
   .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:600;}
   select.f{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:15px;font-family:inherit;}
@@ -58,7 +58,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v35</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v36</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -111,7 +111,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var GAS_URL = 'https://script.google.com/macros/s/AKfycbxXMRu6EmwddNKb69v0ojDf_iXFDj50v3xf5Z1FBJtm1J51TztReJ934BQxW2M5zaHg/exec';
 var SECRET  = 'kawaguchi-genba-2026';
 var MAXPX = 800, QUALITY = 0.80;
 
