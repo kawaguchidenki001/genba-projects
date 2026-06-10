@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 45 (2026-06-10) -->
+<!-- version 46 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -113,14 +113,14 @@
   .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:rgba(255,255,255,.78);margin-bottom:4px;font-weight:700;}
   .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid rgba(255,255,255,.3);border-radius:11px;font-size:15px;background:rgba(255,255,255,.96);color:#15233a;font-family:inherit;font-weight:600;}
   .fld textarea{resize:vertical;min-height:50px;}
-  .two{display:flex;gap:8px;} .two>.fld{flex:1;}
+  .two{display:flex;gap:8px;} .two>.fld{flex:1;} .two>.fld.narrow{flex:0 0 110px;}
   /* 翌日チェックボックス */
-  .ndchk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.14);cursor:pointer;flex:0 0 auto;}
+  .ndchk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 8px;border:1px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.14);cursor:pointer;flex:0 0 auto;}
   .ndchk.on{background:rgba(232,161,60,.4);border-color:rgba(255,205,130,.8);}
   .ndchk .ndlbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.85);line-height:1;}
   .ndchk input[type=checkbox]{width:16px;height:16px;accent-color:#e8a13c;cursor:pointer;}
   /* 3列グリッド（日付・開始・終了） */
-  .three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .three{display:grid;grid-template-columns:130px 1fr 1fr;gap:8px;}
   /* 詰めたワーカーグループ */
   .wgroup-row{display:flex;gap:8px;}
   .wgroup-row>.wgroup{flex:1;min-width:0;}
@@ -133,7 +133,16 @@
   .wghd{display:flex;align-items:center;justify-content:space-between;padding:7px 11px;background:rgba(255,255,255,.1);font-size:12.5px;font-weight:700;color:#a7f3c9;}
   .wghd a{font-size:12px;color:#a7f3c9;text-decoration:none;cursor:pointer;}
   .wlist{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;}
-  .wchk{display:flex;align-items:center;gap:6px;padding:7px 9px;border:1px solid rgba(255,255,255,.25);border-radius:9px;font-size:13px;cursor:pointer;flex:1 1 30%;min-width:calc(33% - 6px);background:rgba(255,255,255,.08);}
+  .wchk{display:flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid rgba(255,255,255,.25);border-radius:9px;font-size:12.5px;cursor:pointer;background:rgba(255,255,255,.08);white-space:nowrap;}
+  .wchk input{width:15px;height:15px;flex:0 0 auto;accent-color:var(--accent);}
+  /* 社員リスト：横並び1行 */
+  .wlist-emp{display:flex;flex-wrap:nowrap;gap:5px;padding:7px 9px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  /* 協力業者リスト：折り返し、名前＋会社2行 */
+  .wlist-part{display:flex;flex-wrap:wrap;gap:5px;padding:7px 9px;}
+  .wchk-part{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:5px 9px;border:1px solid rgba(255,255,255,.25);border-radius:9px;font-size:12.5px;cursor:pointer;background:rgba(255,255,255,.08);}
+  .wchk-part input{width:15px;height:15px;accent-color:var(--accent);}
+  .wchk-part .pname{display:flex;align-items:center;gap:5px;font-weight:700;}
+  .wchk-part .pbiz{font-size:10.5px;color:rgba(255,255,255,.65);padding-left:20px;line-height:1.2;}
   .wchk input{width:17px;height:17px;flex:0 0 auto;accent-color:var(--accent);}
   .wgroup .wempty{padding:9px 11px;border-top:1px solid rgba(255,255,255,.14);color:var(--sub);font-size:13px;}
   .acts{display:flex;gap:8px;margin-top:6px;} .btn{flex:1;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
@@ -150,7 +159,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v45</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v46</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -197,7 +206,7 @@
     </div>
     <!-- 2行目：休憩・人工 -->
     <div class="two">
-      <div class="fld"><label>休憩時間</label><select id="f_break" onchange="timeCalc()"></select></div>
+      <div class="fld narrow"><label>休憩時間</label><select id="f_break" onchange="timeCalc()"></select></div>
       <div class="fld"><label>人工（自動）</label><div class="calc" id="f_nkDisp" style="padding:8px 10px;font-size:13px;">計算中…</div></div>
     </div>
     <input id="f_nk" type="hidden" value="1"><input id="f_ynk" type="hidden" value="0">
@@ -452,14 +461,21 @@ function buildWorkerChecks(){var emp=[],part=[],seen={};
   workers.forEach(function(w){var k=String(w['作業員ID']);if(!k||seen[k])return;seen[k]=1;(isKyo(w['区分'])?part:emp).push(w);});
   renderWGroup('wmEmp','社員',emp);renderWGroup('wmPart','協力業者',part);}
 function renderWGroup(boxId,title,arr){var box=document.getElementById(boxId);
+  var isEmp=boxId==='wmEmp';
   var h='<div class="wghd"><span>'+title+'（'+arr.length+'）</span>'+(arr.length?'<span><a onclick="toggleGroup(\''+boxId+'\',true)">全員</a> ／ <a onclick="toggleGroup(\''+boxId+'\',false)">解除</a></span>':'')+'</div>';
   if(!arr.length){h+='<div class="wempty">登録なし</div>';box.innerHTML=h;return;}
-  h+='<div class="wlist">';
-  arr.forEach(function(w){var nm=esc(w['氏名']||'')+(w['所属']?'（'+esc(w['所属'])+'）':'');
-    h+='<label class="wchk"><input type="checkbox" class="wcb" value="'+esc(w['作業員ID'])+'" onchange="calc()"> '+nm+'</label>';});
+  if(isEmp){
+    h+='<div class="wlist-emp">';
+    arr.forEach(function(w){
+      h+='<label class="wchk"><input type="checkbox" class="wcb" value="'+esc(w['作業員ID'])+'" onchange="updateNkDisp()"> '+esc(w['氏名']||'')+'</label>';});
+  }else{
+    h+='<div class="wlist-part">';
+    arr.forEach(function(w){
+      h+='<label class="wchk-part"><div class="pname"><input type="checkbox" class="wcb" value="'+esc(w['作業員ID'])+'" onchange="updateNkDisp()">'+esc(w['氏名']||'')+'</div>'+(w['所属']?'<span class="pbiz">'+esc(w['所属'])+'</span>':'')+'</label>';});
+  }
   h+='</div>';
   box.innerHTML=h;}
-function toggleGroup(boxId,on){var cbs=document.querySelectorAll('#'+boxId+' .wcb');for(var i=0;i<cbs.length;i++)cbs[i].checked=on;calc();}
+function toggleGroup(boxId,on){var cbs=document.querySelectorAll('#'+boxId+' .wcb');for(var i=0;i<cbs.length;i++)cbs[i].checked=on;updateNkDisp();}
 function checkedWorkers(){var cbs=document.querySelectorAll('#wmFld .wcb:checked'),out=[];
   for(var i=0;i<cbs.length;i++){var id=cbs[i].value,w=workers.filter(function(x){return String(x['作業員ID'])===String(id);})[0];if(w)out.push(w);}
   return out;}
@@ -530,9 +546,22 @@ function timeCalc(){
   document.getElementById('f_nk').value=nk;
   document.getElementById('f_ynk').value=ynk;
   disp.innerHTML='<span>実働 '+fmtHM(dayW+nightW)+'</span><b>'+nk+' 人工'+(ynk>0?'　＋　深夜 '+ynk+' 人工':'')+'</b>';
+  updateNkDisp();
 }
 function workerRate(id){var w=workers.filter(function(x){return x['作業員ID']===id;})[0];return w?numv(w['標準単価']):0;}
-function calc(){ /* 金額表示は廃止 */ }
+function calc(){ updateNkDisp(); }
+function updateNkDisp(){
+  var nk=parseFloat(document.getElementById('f_nk').value)||0;
+  var ynk=parseFloat(document.getElementById('f_ynk').value)||0;
+  var cnt=document.querySelectorAll('#wmFld .wcb:checked').length;
+  var disp=document.getElementById('f_nkDisp');
+  if(!disp)return;
+  if(!nk&&!ynk){return;} // 時間未入力時はtimeCalcの表示を維持
+  var total=Math.round(nk*cnt*100)/100,ytotal=Math.round(ynk*cnt*100)/100;
+  var base='<b>'+nk+' 人工'+(ynk>0?'＋深夜'+ynk:'')+'</b>';
+  if(cnt>1) base+=' × '+cnt+'名 ＝ <b>計 '+total+'人工'+(ytotal>0?'＋深夜'+ytotal:'')+'</b>';
+  disp.innerHTML=base;
+}
 function gatherCommon(){var g=function(id){return document.getElementById(id).value;};
   var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
   var st=g('f_st'),et=g('f_et'),br=parseInt(g('f_break'),10)||0;
