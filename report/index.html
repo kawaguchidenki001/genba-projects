@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 41 (2026-06-10) -->
+<!-- version 42 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -44,7 +44,7 @@
   .pill.kyo{background:rgba(232,161,60,.35);color:#ffe3b3;}
   .desc{font-size:13.5px;color:rgba(255,255,255,.92);}
   .empty{text-align:center;color:var(--sub);padding:38px 10px;font-size:14px;}
-  .lhead,.lrow{display:grid;grid-template-columns:46px 1.25fr 1fr 1fr 42px;gap:6px;align-items:center;}
+  .lhead,.lrow{display:grid;grid-template-columns:46px 1.1fr .9fr .9fr 1fr 38px 26px;gap:6px;align-items:center;}
   .lhead{font-size:10.5px;color:rgba(255,255,255,.65);font-weight:700;letter-spacing:.04em;padding:2px 11px 6px;}
   .lhead .r{text-align:right;}
   .lrow{background:var(--glass);border:1px solid var(--glass-line);border-radius:11px;padding:10px 11px;margin-bottom:6px;cursor:pointer;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-size:12.5px;box-shadow:var(--shadow);}
@@ -54,6 +54,9 @@
   .lr-emp{color:rgba(255,255,255,.88);}
   .lr-part{color:#ffd9a0;}
   .lr-nk{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;}
+  .lr-desc{color:rgba(255,255,255,.72);font-size:11.5px;}
+  .lr-del{text-align:center;color:#ffb3ab;font-size:15px;font-weight:800;cursor:pointer;border-radius:7px;padding:2px 0;}
+  .lr-del:active{background:rgba(229,72,77,.4);}
   .dvrow{display:flex;gap:10px;padding:8px 2px;border-bottom:1px solid rgba(255,255,255,.14);}
   .dvrow:last-child{border-bottom:none;}
   .dvl{flex:0 0 88px;font-size:12px;color:rgba(255,255,255,.7);font-weight:700;padding-top:2px;}
@@ -136,7 +139,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v41</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v42</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -329,23 +332,36 @@ function render(){
   list.forEach(function(r){
     var d=String(r['日付']||'').slice(0,10),pid=r['案件ID']||'__none__';
     var key=d+'|'+pid;
-    if(!gmap[key]){gmap[key]={date:d,pid:pid,name:projFull(pid==='__none__'?'':pid,r['案件名']),emp:[],part:[],nk:0};order.push(key);}
-    var g=gmap[key];g.nk+=numv(r['人工']);
+    if(!gmap[key]){gmap[key]={date:d,pid:pid,name:projFull(pid==='__none__'?'':pid,r['案件名']),emp:[],part:[],nk:0,desc:''};order.push(key);}
+    var g=gmap[key];g.nk+=numv(r['人工']);if(!g.desc&&r['作業内容'])g.desc=String(r['作業内容']);
     if(isKyo(r['区分']))g.part.push(workerShort(r));else g.emp.push(workerShort(r));
   });
   order.sort(function(a,b){var A=gmap[a],B=gmap[b];return B.date.localeCompare(A.date)||A.name.localeCompare(B.name);});
-  var h='<div class="lhead"><span>日付</span><span>現場名</span><span>社員</span><span>協力業者</span><span class="r">人工</span></div>';
+  var h='<div class="lhead"><span>日付</span><span>現場名</span><span>社員</span><span>協力業者</span><span>作業内容</span><span class="r">人工</span><span></span></div>';
   order.forEach(function(k){var g=gmap[k];
     h+='<div class="lrow" data-pid="'+esc(g.pid)+'" data-date="'+esc(g.date)+'">'+
       '<span class="lr-date">'+esc(g.date.slice(5).replace('-','/'))+'</span>'+
       '<span class="lr-site">'+esc(g.name)+'</span>'+
       '<span class="lr-emp">'+esc(g.emp.join('、')||'－')+'</span>'+
       '<span class="lr-part">'+esc(g.part.join('、')||'－')+'</span>'+
-      '<span class="lr-nk">'+round2(g.nk)+'</span></div>';
+      '<span class="lr-desc">'+esc(g.desc||'－')+'</span>'+
+      '<span class="lr-nk">'+round2(g.nk)+'</span>'+
+      '<span class="lr-del" data-pid="'+esc(g.pid)+'" data-date="'+esc(g.date)+'" title="削除">×</span></div>';
   });
   el.innerHTML=h;
   var rows=el.querySelectorAll('.lrow');
-  for(var i=0;i<rows.length;i++){(function(x){x.onclick=function(){showDetail(x.getAttribute('data-pid'),x.getAttribute('data-date'));};})(rows[i]);}
+  for(var i=0;i<rows.length;i++){(function(x){x.onclick=function(ev){
+    if(ev.target.classList.contains('lr-del')){ev.stopPropagation();delRow(ev.target.getAttribute('data-pid'),ev.target.getAttribute('data-date'));return;}
+    showDetail(x.getAttribute('data-pid'),x.getAttribute('data-date'));};})(rows[i]);}
+}
+function delRow(pid,date){
+  var grp=reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
+  if(!grp.length)return;
+  var nm=projFull(pid==='__none__'?'':pid,grp[0]['案件名']);
+  if(!confirm(date+'\n「'+nm+'」の日報（'+grp.length+'名分）を削除します。\nよろしいですか？'))return;
+  Promise.all(grp.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
+    .then(function(){toast('削除しました');reload();})
+    .catch(function(){toast('削除に失敗しました');});
 }
 var editGroup=null;
 function delGroupForm(ev){ if(ev)ev.preventDefault(); if(!editGroup)return;
@@ -460,7 +476,16 @@ function saveReport(){
   if(!ws.length){toast('作業員を選んでください（複数可）');return;}
   var seen={},uniq=[];ws.forEach(function(w){var k=String(w['作業員ID']);if(k&&!seen[k]){seen[k]=1;uniq.push(w);}});ws=uniq;
   var pid=c['案件ID'],date=c['日付'];
-  var existing=reports.filter(function(r){return String(r['案件ID']||'')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
+  var sameGrp=reports.filter(function(r){return String(r['案件ID']||'')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
+  var isEditing=!!editGroup;
+  if(!isEditing){
+    var dupNames=[];
+    ws.forEach(function(w){
+      if(sameGrp.some(function(r){return String(r['作業員ID'])===String(w['作業員ID']);}))dupNames.push(w['氏名']||'');
+    });
+    if(dupNames.length){toast('⚠ '+dupNames.join('、')+' は同じ日に同じ現場で登録済みです');return;}
+  }
+  var existing=isEditing?sameGrp:[];
   var data={};for(var k in c)data[k]=c[k];
   data['_workers']=ws.map(function(w){return {'作業員ID':w['作業員ID'],'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||''};});
   var btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
