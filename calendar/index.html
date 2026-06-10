@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 40 (2026-06-10) -->
+<!-- version 41 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -52,7 +52,7 @@
   .cell.hol .dnum{color:#e5484d;}
   .holname{font-size:9px;color:#e5484d;font-weight:600;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .ev2{margin-top:2px;line-height:1.15;}
-  .ev-proj{display:block;background:var(--accent);color:#fff;border-radius:4px;padding:1px 4px;font-weight:700;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ev-proj{display:block;color:#1f3a52;border-radius:4px;padding:1px 5px;font-weight:700;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid var(--accent);}
   .ev-sub{font-size:9.5px;color:var(--ink);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .ev-tm{color:var(--sub);}
   @media (max-width:767px){
@@ -138,7 +138,7 @@
   .adate-w{font-size:10px;color:var(--sub);}
   .aevs{flex:1 1 auto;min-width:0;padding:4px 7px;}
   .aev{display:flex;align-items:baseline;gap:5px;flex-wrap:wrap;padding:3px 0;}
-  .aev-proj{background:var(--accent);color:#fff;border-radius:5px;padding:1px 6px;font-weight:700;font-size:11.5px;}
+  .aev-proj{color:#1f3a52;border-radius:5px;padding:1px 7px;font-weight:700;font-size:11.5px;border-left:3px solid var(--accent);}
   .aev-time{font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums;}
   .aev-who{font-size:11.5px;color:var(--ink);font-weight:500;}
   .aev-none{font-size:11px;color:#b3c4d2;padding:4px 0;}
@@ -152,7 +152,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v40</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v41</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -378,7 +378,7 @@ function renderMonth(){
     for(var j=0;j<evs.length;j++){var e=evs[j];
       var pn=projShort(e['案件ID'],e['案件名'])||e['予定内容']||'(予定)';
       var who=ownerShort(e['担当']);
-      html+='<div class="ev2"><div class="ev-proj" style="background:'+projColor(e['案件ID'])+'">'+esc(pn)+'</div>'+
+      html+='<div class="ev2"><div class="ev-proj" style="background:'+projColor(e['案件ID'])+';border-left-color:'+projAccent(e['案件ID'])+';color:'+projAccent(e['案件ID'])+'">'+esc(pn)+'</div>'+
             '<div class="ev-sub"><span class="ev-tm">'+esc(timeLabel(e))+'</span>'+(who?' '+esc(who):'')+'</div></div>';
     }
     cell.innerHTML=html;g.appendChild(cell);
@@ -399,7 +399,7 @@ function renderAgenda(numDays){
       var pn=projShort(e['案件ID'],e['案件名'])||e['予定内容']||'(予定)';
       var who=ownerShort(e['担当']);
       body+='<div class="aev">'+
-        '<span class="aev-proj" style="background:'+projColor(e['案件ID'])+'">'+esc(pn)+'</span>'+
+        '<span class="aev-proj" style="background:'+projColor(e['案件ID'])+';border-left-color:'+projAccent(e['案件ID'])+';color:'+projAccent(e['案件ID'])+'">'+esc(pn)+'</span>'+
         '<span class="aev-time">'+esc(timeLabel(e))+'</span>'+
         (who?'<span class="aev-who">'+esc(who)+'</span>':'')+
       '</div>';
