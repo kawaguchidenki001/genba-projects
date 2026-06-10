@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 51 (2026-06-10) -->
+<!-- version 52 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -113,14 +113,17 @@
   .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:rgba(255,255,255,.78);margin-bottom:4px;font-weight:700;}
   .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid rgba(255,255,255,.3);border-radius:11px;font-size:15px;background:rgba(255,255,255,.96);color:#15233a;font-family:inherit;font-weight:600;}
   .fld textarea{resize:vertical;min-height:50px;}
-  .two{display:flex;gap:8px;} .two>.fld{flex:1;} .two>.fld.narrow{flex:0 0 120px;width:120px;}
-  .two>.fld.narrow input{width:100%;}
+  .two{display:flex;gap:8px;} .two>.fld{flex:1;}
   /* 時間行：日付（狭）＋開始・終了（同幅）＋翌日（独立） */
-  .timerow{display:flex;gap:8px;align-items:flex-end;}
-  .timerow .tdate{flex:0 0 160px;width:160px;}
-  .timerow .tdate input,.timerow .ttime input{width:100%;}
-  .timerow .ttime{flex:1 1 0;min-width:0;}
-  .timerow .fld{margin-bottom:0;}
+  /* 日付・時間2行グリッド（列1が日付と休憩で自動同幅） */
+  .ftgrid{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:8px;margin-bottom:11px;}
+  .ftgrid .fld{margin-bottom:0;}
+  .ftg-date{grid-column:1;grid-row:1;}
+  .ftg-st{grid-column:2;grid-row:1;}
+  .ftg-et{grid-column:3;grid-row:1;}
+  .ftg-nd{grid-column:4;grid-row:1;}
+  .ftg-br{grid-column:1;grid-row:2;}
+  .ftg-nk{grid-column:2/5;grid-row:2;}
   .ndchk{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;flex:0 0 auto;cursor:pointer;padding-bottom:11px;}
   .ndchk .ndlbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.85);line-height:1;}
   .ndchk input[type=checkbox]{width:20px;height:20px;accent-color:#e8a13c;cursor:pointer;margin:0;}
@@ -165,7 +168,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v51</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v52</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -200,17 +203,14 @@
   <div class="sheet">
     <h2 id="mTitle">日報の入力</h2>
     <input type="hidden" id="f_id">
-    <!-- 1行目：日付・開始時間・終了時間・翌日 -->
-    <div class="timerow">
-      <div class="fld tdate"><label>日付 *</label><input id="f_date" type="date"></div>
-      <div class="fld ttime"><label>開始時間</label><input id="f_st" type="time" step="300" value="08:00" oninput="timeCalc()"></div>
-      <div class="fld ttime"><label>終了時間</label><input id="f_et" type="time" step="300" value="17:00" oninput="timeCalc()"></div>
-      <label class="ndchk" id="nextDayBtn"><span class="ndlbl">翌日</span><input type="checkbox" id="ndChk" onchange="toggleNextDay()"></label>
-    </div>
-    <!-- 2行目：休憩・人工 -->
-    <div class="two">
-      <div class="fld narrow"><label>休憩時間</label><input id="f_break" type="time" step="300" value="01:00" oninput="timeCalc()"></div>
-      <div class="fld"><label>人工（自動）</label><div class="calc" id="f_nkDisp" style="padding:8px 10px;font-size:13px;">計算中…</div></div>
+    <!-- 日付・時間グリッド（2行・列1が自動同幅） -->
+    <div class="ftgrid">
+      <div class="fld ftg-date"><label>日付 *</label><input id="f_date" type="date"></div>
+      <div class="fld ftg-st"><label>開始時間</label><input id="f_st" type="time" step="300" value="08:00" oninput="timeCalc()"></div>
+      <div class="fld ftg-et"><label>終了時間</label><input id="f_et" type="time" step="300" value="17:00" oninput="timeCalc()"></div>
+      <label class="ndchk ftg-nd" id="nextDayBtn"><span class="ndlbl">翌日</span><input type="checkbox" id="ndChk" onchange="toggleNextDay()"></label>
+      <div class="fld ftg-br"><label>休憩時間</label><input id="f_break" type="time" step="300" value="01:00" oninput="timeCalc()"></div>
+      <div class="fld ftg-nk"><label>人工（自動）</label><div class="calc" id="f_nkDisp" style="padding:8px 10px;font-size:13px;">計算中…</div></div>
     </div>
     <input id="f_nk" type="hidden" value="1"><input id="f_ynk" type="hidden" value="0">
     <!-- 3行目：発注者区分（狭）・顧客名（広） -->
