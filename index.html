@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 36 (2026-06-10) -->
+<!-- version 37 (2026-06-10) 工事台帳タイル追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -47,6 +47,7 @@
   .t-sched .ic{background:#2d7dd2;} .t-sched{border-top:3px solid #2d7dd2;}
   .t-time .ic{background:#e8910b;} .t-time{border-top:3px solid #e8910b;}
   .t-tool .ic{background:#0d9aa0;} .t-tool{border-top:3px solid #0d9aa0;}
+  .t-cost .ic{background:#0f766e;} .t-cost{border-top:3px solid #0f766e;}
 
   /* スマホ：横3列の正方形タイル */
   .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -106,7 +107,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v36</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v37</div>
 <div id="login">
   <div class="box">
     <div class="lg-t">Genba Management</div>
@@ -141,10 +142,11 @@
   <div class="lbl">管理者用</div>
   <div class="grid">
     <a class="sq t-admin" href="./admin/"><span class="ic">⚙️</span><span class="txt"><span class="en">Admin</span><span class="nm">管理画面</span></span><span class="cor lock">🔒</span></a>
+    <a class="sq t-cost" href="./daicho/"><span class="ic">📊</span><span class="txt"><span class="en">Ledger</span><span class="nm">工事台帳・原価</span></span><span class="cor lock">🔒</span></a>
   </div>
 
   <div class="lbl">今後追加予定</div>
-  <div class="soons"><span class="soon">📊 工事台帳・原価</span><span class="soon">👷 出面管理</span></div>
+  <div class="soons"><span class="soon">👷 出面管理</span></div>
 
   <div class="foot"><span id="meName"></span> ・ <a href="#" onclick="logout();return false;">ログアウト</a><br>金額は管理者のみ表示 ・ <a href="https://kawaguchidenki001.github.io/checklist/">お仕事メニューへ</a></div>
 </div>
