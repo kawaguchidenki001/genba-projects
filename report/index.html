@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 53 (2026-06-10) -->
+<!-- version 54 (2026-06-10) 使用車両チェック追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -169,7 +169,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v53</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v54</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -227,6 +227,9 @@
       <div id="wmEmp" class="wgroup"></div>
       <div id="wmPart" class="wgroup" style="margin-top:8px;"></div>
     </div>
+    <div class="fld" id="vmFld"><label>使用車両（工事台帳に反映されます）</label>
+      <div id="vmList" class="wgroup"></div>
+    </div>
     <div class="fld"><label>作業内容</label><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea></div>
     <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
     <div class="acts">
@@ -244,7 +247,7 @@
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var T_GENERAL='kawaguchi-genba-2026';
 var ROLE='general';
-var projects=[],workers=[],reports=[],dateFilter='month',view='list';
+var projects=[],workers=[],reports=[],vehicles=[],dateFilter='month',view='list';
 var CACHE='genba_reports_cache';
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
@@ -279,14 +282,14 @@ function toggleAdmin(){ if(admTok()){ if(confirm('管理者ログアウトしま
 }
 function updateAdmBtn(){ /* 管理者ボタンは廃止済み */ }
 
-function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];workers=c.workers||[];reports=c.reports||[];}catch(e){}}
-function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,workers:workers,reports:reports}));}catch(e){}}
+function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];workers=c.workers||[];reports=c.reports||[];vehicles=c.vehicles||[];}catch(e){}}
+function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,workers:workers,reports:reports,vehicles:vehicles}));}catch(e){}}
 function reload(silent){
   setSync('busy','同期中…');
   callGAS({action:'checkRole'},null,silent).then(function(r){ ROLE=(r&&r.ok)?r.role:'general'; if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin'); updateAdmBtn(); })
     .then(function(){return callGAS({action:'reportData'},null,silent);})
     .then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
-      projects=res.projects||[];workers=res.workers||[];reports=res.reports||[];saveCache();buildProjOptions();render();setSync('ok','同期済み'); })
+      projects=res.projects||[];workers=res.workers||[];reports=res.reports||[];vehicles=res.vehicles||[];saveCache();buildProjOptions();render();setSync('ok','同期済み'); })
     .catch(function(err){setSync('off','オフライン'); if(!silent){render();toast('読込失敗：'+err.message);} });
 }
 
@@ -325,6 +328,8 @@ function showDetail(pid,date){
   var t0=grp[0]||{};
   if(t0['開始']||t0['終了'])h+=dvRow('時間',String(t0['開始']||'').slice(0,5)+' 〜 '+(String(t0['翌日'])==='1'?'翌':'')+String(t0['終了']||'').slice(0,5)+(t0['休憩分']!==''&&t0['休憩分']!=null?'（休憩 '+t0['休憩分']+'分）':''));
   h+=dvRow('人工（合計）',round2(nk)+' 人工'+(ynkSum>0?'　＋　深夜 '+round2(ynkSum)+' 人工':'')+'（'+grp.length+'名分）');
+  var vh='';grp.forEach(function(r){if(!vh&&r['車両'])vh=r['車両'];});
+  if(vh)h+=dvRow('使用車両','🚚 '+vehNames(vh));
   h+=dvRow('作業内容',desc||'－');
   h+=dvRow('備考',note||'－');
   document.getElementById('dvBody').innerHTML=h;
@@ -511,6 +516,8 @@ function openForm(pid,date){   // pid・date 指定で編集、未指定で新�
   buildWorkerChecks();
   if(editing){var ids={};grp.forEach(function(r){ids[String(r['作業員ID'])]=1;});
     var cbs=document.querySelectorAll('#wmFld .wcb');for(var i=0;i<cbs.length;i++){if(ids[String(cbs[i].value)])cbs[i].checked=true;}}
+  var vstr='';grp.forEach(function(r){if(!vstr&&r['車両'])vstr=r['車両'];});
+  setVehicleChecks(editing?vstr:'');
   var desc='',note='';grp.forEach(function(r){if(!desc&&r['作業内容'])desc=r['作業内容'];if(!note&&r['備考'])note=r['備考'];});
   g('f_desc').value=editing?desc:'';
   g('f_note').value=editing?note:'';
@@ -559,6 +566,21 @@ function updateNkDisp(){
   if(cnt>1) base+=' × '+cnt+'名 ＝ <b>計 '+total+'人工'+(ytotal>0?'＋深夜'+ytotal:'')+'</b>';
   disp.innerHTML=base;
 }
+/* 使用車両（チェックボックス・IDで保存） */
+function buildVehicleChecks(){var box=document.getElementById('vmList');if(!box)return;
+  var h='<div class="wghd"><span>車両（'+vehicles.length+'）</span></div>';
+  if(!vehicles.length){h+='<div class="wempty">登録なし（管理画面の「車両」タブから登録）</div>';box.innerHTML=h;return;}
+  h+='<div class="wlist">';
+  vehicles.forEach(function(v){var nm=esc(v['車両名']||'')+(v['ナンバー']?'（'+esc(v['ナンバー'])+'）':'');
+    h+='<label class="wchk"><input type="checkbox" class="vcb" value="'+esc(v['車両ID'])+'"> 🚚 '+nm+'</label>';});
+  h+='</div>'; box.innerHTML=h;}
+function checkedVehicleStr(){var cbs=document.querySelectorAll('#vmList .vcb:checked'),out=[];for(var i=0;i<cbs.length;i++)out.push(cbs[i].value);return out.join(',');}
+function setVehicleChecks(str){ buildVehicleChecks();
+  var ids=String(str||'').split(',').map(function(x){return x.trim();}).filter(Boolean); if(!ids.length)return;
+  var cbs=document.querySelectorAll('#vmList .vcb');
+  for(var i=0;i<cbs.length;i++){ if(ids.indexOf(cbs[i].value)>=0)cbs[i].checked=true; }}
+function vehName(id){var v=vehicles.filter(function(x){return String(x['車両ID'])===String(id);})[0];return v?(v['車両名']||id):id;}
+function vehNames(str){return String(str||'').split(',').map(function(x){return x.trim();}).filter(Boolean).map(vehName).join('、');}
 function gatherCommon(){var g=function(id){return document.getElementById(id).value;};
   var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
   var st=g('f_st'),et=g('f_et'),br=toMin(g('f_break'))||0;
@@ -567,7 +589,7 @@ function gatherCommon(){var g=function(id){return document.getElementById(id).va
     '作業内容':document.getElementById('f_desc').value.trim(),'人工':g('f_nk'),
     '開始':st,'終了':et,'翌日':nextDay?'1':'','休憩分':String(br),
     '作業時間':String(Math.max(0,etM-stM-br)),'深夜人工':g('f_ynk'),
-    '備考':document.getElementById('f_note').value.trim()};}
+    '備考':document.getElementById('f_note').value.trim(),'車両':checkedVehicleStr()};}
 function saveReport(){
   var c=gatherCommon();
   if(!c['日付']){toast('日付を入れてください');return;}
