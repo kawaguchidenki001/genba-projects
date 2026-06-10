@@ -247,6 +247,26 @@
   </div>
 </div>
 
+<!-- 仕入先モーダル -->
+<div class="ov" id="ovS">
+  <div class="sheet">
+    <h2 id="sTitle">仕入先の追加</h2>
+    <input type="hidden" id="s_id">
+    <div class="fld"><label>仕入先名 *</label><input id="s_name" placeholder="例）愛知電材株式会社"></div>
+    <div class="two">
+      <div class="fld"><label>略称</label><input id="s_short" placeholder="例）愛知電材"></div>
+      <div class="fld"><label>種別</label><select id="s_type"><option>電材店</option><option>外注業者</option><option>機械リース</option><option>その他</option></select></div>
+    </div>
+    <div class="fld"><label>電話番号</label><input id="s_tel" inputmode="tel" placeholder="例）0586-00-0000"></div>
+    <div class="fld"><label>メモ</label><textarea id="s_memo" placeholder="担当者名・支払条件など"></textarea></div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeOvS()">キャンセル</button>
+      <button class="btn primary" id="sBtnSave" onclick="saveSupplier()">保存</button>
+    </div>
+    <div class="row-del" id="sDelRow" style="display:none;"><a href="#" onclick="delSupplier(event)">この仕入先を削除</a></div>
+  </div>
+</div>
+
 <!-- 全データ削除 確認ポップアップ -->
 <div class="ov ov-center" id="ovDel">
   <div class="sheet">
