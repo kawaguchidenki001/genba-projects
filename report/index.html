@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 48 (2026-06-10) -->
+<!-- version 49 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -113,7 +113,7 @@
   .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:rgba(255,255,255,.78);margin-bottom:4px;font-weight:700;}
   .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid rgba(255,255,255,.3);border-radius:11px;font-size:15px;background:rgba(255,255,255,.96);color:#15233a;font-family:inherit;font-weight:600;}
   .fld textarea{resize:vertical;min-height:50px;}
-  .two{display:flex;gap:8px;} .two>.fld{flex:1;} .two>.fld.narrow{flex:0 0 130px;}
+  .two{display:flex;gap:8px;} .two>.fld{flex:1;} .two>.fld.narrow{flex:0 0 120px;}
   /* 時間行：日付（狭）＋開始・終了（同幅）＋翌日（独立） */
   .timerow{display:flex;gap:8px;align-items:flex-end;}
   .timerow .tdate{flex:0 0 120px;}
@@ -138,8 +138,8 @@
   .wlist{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;}
   .wchk{display:flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid rgba(255,255,255,.25);border-radius:9px;font-size:12.5px;cursor:pointer;background:rgba(255,255,255,.08);white-space:nowrap;}
   .wchk input{width:15px;height:15px;flex:0 0 auto;accent-color:var(--accent);}
-  /* 社員リスト：横並び1行（折り返しなし・スクロール） */
-  .wlist-emp{display:flex;flex-wrap:nowrap;gap:5px;padding:7px 9px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  /* 社員リスト：折り返して全員表示 */
+  .wlist-emp{display:flex;flex-wrap:wrap;gap:5px;padding:7px 9px;}
   .wlist-emp .wchk{flex:0 0 auto;}
   /* 協力業者リスト：折り返し、名前＋会社2行 */
   .wlist-part{display:flex;flex-wrap:wrap;gap:5px;padding:7px 9px;}
@@ -163,7 +163,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v48</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v49</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
