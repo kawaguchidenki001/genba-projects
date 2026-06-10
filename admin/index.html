@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 37 (2026-06-10) 車両タブ追加 -->
+<!-- version 38 (2026-06-10) 仕入先マスタタブを追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -71,7 +71,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v37</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v38</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -101,6 +101,7 @@
     <button class="tab" id="tab-partner" onclick="switchTab('partner')">取引先</button>
     <button class="tab" id="tab-contact" onclick="switchTab('contact')">先方担当者</button>
     <button class="tab" id="tab-vehicle" onclick="switchTab('vehicle')">車両</button>
+    <button class="tab" id="tab-supplier" onclick="switchTab('supplier')">仕入先</button>
   </div>
   <div id="sec-worker">
     <div class="sec">作業員マスタ（単価はここで設定）</div>
@@ -117,6 +118,10 @@
   <div id="sec-vehicle" style="display:none;">
     <div class="sec">車両マスタ（車検・保険・オイル交換の管理）</div>
     <div id="listV"><div class="empty">読込中…</div></div>
+  </div>
+  <div id="sec-supplier" style="display:none;">
+    <div class="sec">仕入先マスタ（台帳の材料費・外注費などの候補）</div>
+    <div id="listS"><div class="empty">読込中…</div></div>
   </div>
 </main>
 
@@ -260,7 +265,7 @@
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var workers=[],customers=[],contacts=[],vehicles=[],curTab='worker';
+var workers=[],customers=[],contacts=[],vehicles=[],suppliers=[],curTab='worker',sLoaded=false;
 var ADMCACHE='genba_admin_cache';
 function admLoadCache(){try{var c=JSON.parse(localStorage.getItem(ADMCACHE)||'{}');workers=c.workers||[];customers=c.customers||[];contacts=c.contacts||[];vehicles=c.vehicles||[];}catch(e){}}
 function admSaveCache(){try{localStorage.setItem(ADMCACHE,JSON.stringify({workers:workers,customers:customers,contacts:contacts,vehicles:vehicles}));}catch(e){}}
@@ -379,13 +384,14 @@ function doClearAll(){
   }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='削除する';});
 }
 function switchTab(t){ curTab=t;
-  ['worker','partner','contact','vehicle'].forEach(function(x){
+  ['worker','partner','contact','vehicle','supplier'].forEach(function(x){
     document.getElementById('sec-'+x).style.display=(x===t)?'block':'none';
     document.getElementById('tab-'+x).className='tab'+(x===t?' on':'');
   });
-  document.getElementById('fab').textContent= t==='worker'?'＋ 作業員' : t==='partner'?'＋ 取引先' : t==='contact'?'＋ 担当者' : '＋ 車両';
+  document.getElementById('fab').textContent= t==='worker'?'＋ 作業員' : t==='partner'?'＋ 取引先' : t==='contact'?'＋ 担当者' : t==='vehicle'?'＋ 車両' : '＋ 仕入先';
+  if(t==='supplier'&&!sLoaded){loadSuppliers();sLoaded=true;}
 }
-function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner')openPartner(); else if(curTab==='contact')openContact(); else openVehicle(); }
+function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner')openPartner(); else if(curTab==='contact')openContact(); else if(curTab==='vehicle')openVehicle(); else openSupplier(''); }
 
 /* ===== 取引先（区分つき）===== */
 function custKind(c){ return String(c['区分']||'').trim()||'法人'; }   // 空は法人として扱う
@@ -578,8 +584,63 @@ function delVehicle(ev){ ev.preventDefault();var id=document.getElementById('v_i
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 
-['ov','ovp','ovk','ovv','ovDel'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
+['ov','ovp','ovk','ovv','ovDel','ovS'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
 init();
+
+// ===== 仕入先マスタ（v38）=====
+function loadSuppliers(){
+  callGAS({action:'suppliers'}).then(function(res){
+    suppliers=res.suppliers||[]; renderSuppliers();
+  }).catch(function(){document.getElementById('listS').innerHTML='<div class="empty">読込失敗</div>';});
+}
+function renderSuppliers(){
+  var h='',arr=suppliers.slice().sort(function(a,b){return String(a['仕入先名']||'').localeCompare(String(b['仕入先名']||''),'ja');});
+  if(!arr.length){document.getElementById('listS').innerHTML='<div class="empty">仕入先が登録されていません</div>';return;}
+  arr.forEach(function(x){
+    h+='<div class="card" data-sid="'+esc(x['仕入先ID']||'')+'" onclick="openSupplier(this.dataset.sid)">'+
+       '<div class="cname">'+esc(x['仕入先名']||'')+'</div>'+
+       (x['略称']?'<div class="csub">略称：'+esc(x['略称'])+'</div>':'')+
+       '<div class="csub">'+(x['種別']?esc(x['種別']):'')+(x['電話番号']?' ／ '+esc(x['電話番号']):'')+'</div></div>';
+  });
+  document.getElementById('listS').innerHTML=h;
+}
+function openSupplier(id){
+  var p=id?suppliers.filter(function(x){return x['仕入先ID']===id;})[0]:null;
+  document.getElementById('sTitle').textContent=p?'仕入先の編集':'仕入先の追加';
+  document.getElementById('s_id').value=p?(p['仕入先ID']||''):'';
+  document.getElementById('s_name').value=p?(p['仕入先名']||''):'';
+  document.getElementById('s_short').value=p?(p['略称']||''):'';
+  document.getElementById('s_type').value=p?(p['種別']||'電材店'):'電材店';
+  document.getElementById('s_tel').value=p?(p['電話番号']||''):'';
+  document.getElementById('s_memo').value=p?(p['メモ']||''):'';
+  document.getElementById('sDelRow').style.display=p?'block':'none';
+  document.getElementById('ovS').classList.add('show');
+}
+function closeOvS(){document.getElementById('ovS').classList.remove('show');}
+function saveSupplier(){
+  var d={'仕入先ID':document.getElementById('s_id').value,'仕入先名':document.getElementById('s_name').value.trim(),
+    '略称':document.getElementById('s_short').value.trim(),'種別':document.getElementById('s_type').value,
+    '電話番号':document.getElementById('s_tel').value.trim(),'メモ':document.getElementById('s_memo').value.trim()};
+  if(!d['仕入先名']){toast('仕入先名を入力してください');return;}
+  var btn=document.getElementById('sBtnSave'); btn.disabled=true; btn.textContent='保存中…';
+  callGAS({action:'supplierSave',data:d}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'保存失敗');
+    var rec=res.supplier; var id=d['仕入先ID'];
+    if(id){for(var i=0;i<suppliers.length;i++){if(suppliers[i]['仕入先ID']===id){suppliers[i]=rec;break;}}}
+    else{suppliers.push(rec);}
+    renderSuppliers(); closeOvS(); toast(id?'更新しました':'登録しました');
+  }).catch(function(e){toast('失敗：'+e.message);})
+    .then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+function delSupplier(ev){
+  ev.preventDefault();
+  var id=document.getElementById('s_id').value; if(!id)return;
+  if(!confirm('この仕入先を削除しますか？'))return;
+  callGAS({action:'supplierDelete',id:id},null,true).then(function(){
+    suppliers=suppliers.filter(function(x){return x['仕入先ID']!==id;});
+    renderSuppliers(); closeOvS(); toast('削除しました');
+  }).catch(function(e){toast('削除失敗：'+e.message);});
+}
 </script>
 </body>
 </html>
