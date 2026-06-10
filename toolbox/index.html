@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 24 (2026-06-10) -->
+<!-- toolbox version 25 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -171,7 +171,7 @@
   @keyframes rpulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.6);opacity:.5;}}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v24</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v25</div>
 
 <div class="wrap">
 
@@ -314,14 +314,14 @@
     </div>
 
     <div class="etabs">
-      <button class="etab on" id="etab-ohm" onclick="elecTab('ohm')">オームの法則</button>
-      <button class="etab" id="etab-pow" onclick="elecTab('pow')">電力・電流</button>
+      <button class="etab on" id="etab-kn" onclick="elecTab('kn')">幹線サイズ</button>
       <button class="etab" id="etab-vd" onclick="elecTab('vd')">電圧降下</button>
-      <button class="etab" id="etab-kn" onclick="elecTab('kn')">幹線サイズ</button>
+      <button class="etab" id="etab-pow" onclick="elecTab('pow')">電力・電流</button>
+      <button class="etab" id="etab-ohm" onclick="elecTab('ohm')">オームの法則</button>
     </div>
 
     <!-- オームの法則 -->
-    <div class="epanel on" id="ep-ohm">
+    <div class="epanel" id="ep-ohm">
       <div class="ehint">分かっている2つを入力すると、残り1つを自動で計算します。</div>
       <div class="ecell"><label class="slbl">電圧 V（ボルト）</label><input class="enum" id="ohmV" inputmode="decimal" oninput="calcOhm()" placeholder="例 100"></div>
       <div class="ecell"><label class="slbl">電流 I（アンペア）</label><input class="enum" id="ohmI" inputmode="decimal" oninput="calcOhm()" placeholder="例 5"></div>
@@ -367,7 +367,7 @@
     </div>
 
     <!-- 幹線サイズ選定 -->
-    <div class="epanel" id="ep-kn">
+    <div class="epanel on" id="ep-kn">
       <div class="ehint">必要な電流を入れると、ケーブル種類ごとに使える最小サイズを表示します。</div>
       <div class="ecell"><label class="slbl">設計電流 I（アンペア）</label><input class="enum" id="knI" inputmode="decimal" oninput="calcKansen()" placeholder="例 75"></div>
       <label class="slbl">回路の種類</label>
