@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<!-- version 41 (2026-06-10) メニュー順番変更・管理者用→管理用・featクラス廃止 -->
+<!-- version 42 (2026-06-10) メニュー順番変更・管理者用→管理用・featクラス廃止 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>現場管理｜河口電機</title>
+<title>Gen-Can｜河口電機</title>
 <link rel="apple-touch-icon" href="https://kawaguchidenki001.github.io/genba-projects/icon-180.png">
 <link rel="icon" type="image/png" href="https://kawaguchidenki001.github.io/genba-projects/icon-192.png">
 <link rel="manifest" href="https://kawaguchidenki001.github.io/genba-projects/manifest.json">
-<meta name="apple-mobile-web-app-title" content="現場管理">
+<meta name="apple-mobile-web-app-title" content="Gen-Can">
 <meta name="theme-color" content="#2b7fd6">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,6 +26,10 @@
   .kicker{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.26em;font-size:11px;color:var(--sub);text-transform:uppercase;}
   .head h1{font-weight:700;font-size:31px;letter-spacing:.05em;margin-top:6px;color:#1f5fa8;}
   .head .co{color:var(--sub);font-size:13px;margin-top:3px;}
+  .head-logo{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
+  .head-logo img{width:52px;height:52px;border-radius:12px;box-shadow:0 2px 8px rgba(31,90,168,.22);}
+  .head-logo-text .gc-name{font-family:"Manrope",sans-serif;font-weight:800;font-size:26px;color:#1f5fa8;letter-spacing:.01em;line-height:1.1;}
+  .head-logo-text .gc-sub{font-family:"Manrope",sans-serif;font-weight:600;font-size:9.5px;color:var(--sub);letter-spacing:.22em;text-transform:uppercase;}
   .lbl{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.14em;font-size:11px;color:var(--sub);text-transform:uppercase;margin:20px 4px 11px;}
 
   /* 共通タイル：白カード＋左に色帯 */
@@ -102,11 +106,14 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v41</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v42</div>
 <div id="login">
   <div class="box">
-    <div class="lg-t">Genba Management</div>
-    <h2>現場管理</h2>
+    <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
+      <img src="https://kawaguchidenki001.github.io/genba-projects/icon-192.png" style="width:40px;height:40px;border-radius:10px;box-shadow:0 2px 6px rgba(31,90,168,.25);">
+      <div style="text-align:left;"><div style="font-family:Manrope,sans-serif;font-weight:800;font-size:22px;color:#1f5fa8;line-height:1.1;">Gen-Can</div><div style="font-size:9px;color:#7a9ab5;letter-spacing:.2em;font-family:Manrope,sans-serif;text-transform:uppercase;">Smart Site Management</div></div>
+    </div>
+    <h2>現場管理ログイン</h2>
     <p>IDとパスワードを入力してください</p>
     <input id="lgid" autocapitalize="off" autocomplete="username" placeholder="ID" onkeydown="if(event.key==='Enter')doLogin()">
     <input id="lgpw" type="password" autocomplete="current-password" placeholder="パスワード" onkeydown="if(event.key==='Enter')doLogin()">
@@ -117,8 +124,13 @@
 
 <div class="wrap" style="display:none;">
   <div class="head">
-    <div class="kicker">Genba Management</div>
-    <h1>現場管理</h1>
+    <div class="head-logo">
+      <img src="https://kawaguchidenki001.github.io/genba-projects/icon-192.png" alt="Gen-Can">
+      <div class="head-logo-text">
+        <div class="gc-name">Gen-Can</div>
+        <div class="gc-sub">Smart Site Management</div>
+      </div>
+    </div>
     <div class="co">河口電機株式会社</div>
   </div>
 
