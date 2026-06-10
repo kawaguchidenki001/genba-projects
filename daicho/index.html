@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 1 (2026-06-10) 工事台帳・原価管理 -->
+<!-- version 2 (2026-06-10) 車両費の自動反映 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -92,7 +92,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/" id="backLink">← 現場管理メニュー</a>
@@ -154,14 +154,14 @@
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var projects=[],customers=[],costs=[],labor={};
+var projects=[],customers=[],costs=[],labor={},vehicles=[],vehicleUsage={};
 var curId='',curStatus='進行中',editId='';
 var CACHE='genba_daicho_cache';
 var KBN_ORDER=['材料費','外注費','機械リース','経費','その他'];
 var KBN_LABEL={'機械リース':'機械・リース'};
 
-function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];customers=c.customers||[];costs=c.costs||[];labor=c.labor||{};}catch(e){}}
-function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,customers:customers,costs:costs,labor:labor}));}catch(e){}}
+function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];customers=c.customers||[];costs=c.costs||[];labor=c.labor||{};vehicles=c.vehicles||[];vehicleUsage=c.vehicleUsage||{};}catch(e){}}
+function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,customers:customers,costs:costs,labor:labor,vehicles:vehicles,vehicleUsage:vehicleUsage}));}catch(e){}}
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 
 var loadCnt=0,loadShownAt=0;
@@ -213,7 +213,7 @@ function adminLogout(){localStorage.removeItem('genba_admin');showGate();}
 function loadAll(silent){
   callGAS({action:'costData'},null,silent).then(function(res){
     if(!res.ok)throw new Error(res.error||'エラー');
-    projects=res.projects||[];customers=res.customers||[];costs=res.costs||[];labor=res.labor||{};
+    projects=res.projects||[];customers=res.customers||[];costs=res.costs||[];labor=res.labor||{};vehicles=res.vehicles||[];vehicleUsage=res.vehicleUsage||{};
     saveCache();fillCustList();
     if(curId)renderDetail();else renderList();
   }).catch(function(err){if(!silent)toast('読込失敗：'+err.message);});
@@ -230,10 +230,19 @@ function calc(p){
   costs.forEach(function(c){ if(String(c['案件ID'])!==id)return; var k=String(c['区分']||'その他'); if(by[k]==null)k='その他'; by[k]+=num(c['金額']); });
   var lb=labor[id]||{};
   var laborCost=num(lb.labor), ninku=Number(lb.ninku)||0;
-  var costSum=laborCost;KBN_ORDER.forEach(function(k){costSum+=by[k];});
+  // 車両費（作業日報の使用車両 × 日額単価）
+  var vu=vehicleUsage[id]||{},vehCost=0,vehDetail=[];
+  Object.keys(vu).forEach(function(vid){
+    var days=Number(vu[vid])||0;if(!days)return;
+    var v=null;for(var i=0;i<vehicles.length;i++)if(String(vehicles[i]['車両ID'])===String(vid)){v=vehicles[i];break;}
+    var rate=v?num(v['日額単価']):0,c0=days*rate;
+    vehCost+=c0;vehDetail.push({name:v?(v['車両名']||vid):vid,days:days,rate:rate,cost:c0});
+  });
+  vehDetail.sort(function(a,b){return b.days-a.days;});
+  var costSum=laborCost+vehCost;KBN_ORDER.forEach(function(k){costSum+=by[k];});
   var uke=num(p['受注金額税抜']), budget=num(p['実行予算']);
   var profit=uke-costSum, rate=uke>0?(profit/uke*100):0;
-  return {by:by,laborCost:laborCost,ninku:ninku,costSum:costSum,uke:uke,budget:budget,profit:profit,rate:rate};
+  return {by:by,laborCost:laborCost,ninku:ninku,vehCost:vehCost,vehDetail:vehDetail,costSum:costSum,uke:uke,budget:budget,profit:profit,rate:rate};
 }
 function projById(id){for(var i=0;i<projects.length;i++)if(String(projects[i]['案件ID'])===String(id))return projects[i];return null;}
 
@@ -326,6 +335,9 @@ function renderDetail(){
   h+='</div>';
   h+='<div class="sec">原価内訳</div><div class="brk">';
   h+='<div class="row"><span>労務費<span class="auto">日報から自動</span><span style="font-size:11.5px;color:var(--sub);"> 人工 '+(Math.round(c.ninku*100)/100)+'</span></span><b class="yen">'+yen(c.laborCost)+'</b></div>';
+  var vd=c.vehDetail.map(function(x){return esc(x.name)+' '+x.days+'日'+(x.rate?'':'※');}).join('・');
+  h+='<div class="row"><span>車両費<span class="auto">日報から自動</span>'+(vd?'<span style="font-size:11.5px;color:var(--sub);"> '+vd+'</span>':'')+'</span><b class="yen">'+yen(c.vehCost)+'</b></div>';
+  if(c.vehDetail.some(function(x){return !x.rate;}))h+='<div class="row" style="border-bottom:none;padding-top:0;"><span style="font-size:11px;color:var(--sub);">※印の車両は日額単価が未設定のため0円で計上。管理画面の「車両」タブで設定できます。</span><b></b></div>';
   KBN_ORDER.forEach(function(k){h+='<div class="row"><span>'+esc(KBN_LABEL[k]||k)+'</span><b class="yen">'+yen(c.by[k])+'</b></div>';});
   h+='<div class="row"><span>原価合計</span><b class="yen">'+yen(c.costSum)+'</b></div>';
   h+='</div>';
@@ -342,7 +354,7 @@ function renderDetail(){
         '<div class="r yen">'+yen(num(x['金額']))+'</div></div>';
     }).join('');
   }
-  h+='<div style="font-size:11.5px;color:var(--sub);margin-top:10px;">※労務費は作業日報の労務費（単価×人工）を自動集計しています。金額はすべて税抜で入力してください。</div>';
+  h+='<div style="font-size:11.5px;color:var(--sub);margin-top:10px;">※労務費は作業日報の労務費（単価×人工）、車両費は作業日報の使用車両×日額単価（1日1台＝1日分）を自動集計しています。金額はすべて税抜で入力してください。</div>';
   document.getElementById('detail').innerHTML=h;
 }
 
@@ -405,6 +417,7 @@ function exportCsv(){
   lines.push('');
   lines.push(['内訳','金額'].map(csvCell).join(','));
   lines.push(['労務費（日報から自動・人工'+(Math.round(c.ninku*100)/100)+'）',c.laborCost].map(csvCell).join(','));
+  lines.push(['車両費（日報から自動：'+c.vehDetail.map(function(x){return x.name+' '+x.days+'日';}).join('・')+'）',c.vehCost].map(csvCell).join(','));
   KBN_ORDER.forEach(function(k){lines.push([(KBN_LABEL[k]||k),c.by[k]].map(csvCell).join(','));});
   lines.push('');
   lines.push(['日付','区分','取引先','内容','金額','備考'].map(csvCell).join(','));
