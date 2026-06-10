@@ -614,15 +614,29 @@ function loadSuppliers(){
   }).catch(function(){document.getElementById('listS').innerHTML='<div class="empty">読込失敗</div>';});
 }
 function renderSuppliers(){
-  var h='',arr=suppliers.slice().sort(function(a,b){return String(a['仕入先名']||'').localeCompare(String(b['仕入先名']||''),'ja');});
-  if(!arr.length){document.getElementById('listS').innerHTML='<div class="empty">仕入先が登録されていません</div>';return;}
-  arr.forEach(function(x){
-    h+='<div class="card" data-sid="'+esc(x['仕入先ID']||'')+'" onclick="openSupplier(this.dataset.sid)">'+
-       '<div class="cname">'+esc(x['仕入先名']||'')+'</div>'+
-       (x['略称']?'<div class="csub">略称：'+esc(x['略称'])+'</div>':'')+
-       '<div class="csub">'+(x['種別']?esc(x['種別']):'')+(x['電話番号']?' ／ '+esc(x['電話番号']):'')+'</div></div>';
+  var el=document.getElementById('listS');
+  if(!suppliers.length){el.innerHTML='<div class="empty">仕入先が登録されていません。<br>右下の「＋仕入先」から登録してください。</div>';return;}
+  var order=['電材店','外注業者','機械リース','その他'],groups={};
+  suppliers.forEach(function(x){var k=String(x['種別']||'その他').trim();(groups[k]=groups[k]||[]).push(x);});
+  Object.keys(groups).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
+  el.innerHTML='';
+  order.forEach(function(k){
+    var arr=groups[k]; if(!arr||!arr.length)return;
+    arr.sort(function(a,b){return String(a['仕入先名']||'').localeCompare(String(b['仕入先名']||''),'ja');});
+    var sec=document.createElement('div');
+    sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'（'+arr.length+'）</div>';
+    var grid=document.createElement('div');grid.className='grid-3';
+    arr.forEach(function(x){
+      var div=document.createElement('div');div.className='card';
+      div.onclick=(function(id){return function(){openSupplier(id);};})(x['仕入先ID']||'');
+      div.innerHTML='<div><div class="nm">'+esc(x['仕入先名']||'')+
+        (x['略称']?' <span class="tag">'+esc(x['略称'])+'</span>':'')+
+        ' <span class="tag kg">'+esc(k)+'</span></div>'+
+        '<div class="meta">'+[x['電話番号'],x['メモ']].filter(Boolean).map(esc).join(' ・ ')+'</div></div>';
+      grid.appendChild(div);
+    });
+    sec.appendChild(grid);el.appendChild(sec);
   });
-  document.getElementById('listS').innerHTML=h;
 }
 function openSupplier(id){
   var p=id?suppliers.filter(function(x){return x['仕入先ID']===id;})[0]:null;
