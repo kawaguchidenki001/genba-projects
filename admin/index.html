@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 36 (2026-06-10) -->
+<!-- version 37 (2026-06-10) 車両タブ追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -71,7 +71,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v36</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v37</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -100,6 +100,7 @@
     <button class="tab on" id="tab-worker" onclick="switchTab('worker')">作業員</button>
     <button class="tab" id="tab-partner" onclick="switchTab('partner')">取引先</button>
     <button class="tab" id="tab-contact" onclick="switchTab('contact')">先方担当者</button>
+    <button class="tab" id="tab-vehicle" onclick="switchTab('vehicle')">車両</button>
   </div>
   <div id="sec-worker">
     <div class="sec">作業員マスタ（単価はここで設定）</div>
@@ -112,6 +113,10 @@
   <div id="sec-contact" style="display:none;">
     <div class="sec">先方担当者マスタ（取引先ごとの担当者）</div>
     <div id="listK"><div class="empty">読込中…</div></div>
+  </div>
+  <div id="sec-vehicle" style="display:none;">
+    <div class="sec">車両マスタ（車検・保険・オイル交換の管理）</div>
+    <div id="listV"><div class="empty">読込中…</div></div>
   </div>
 </main>
 
@@ -188,6 +193,55 @@
   </div>
 </div>
 
+<!-- 車両モーダル -->
+<div class="ov" id="ovv">
+  <div class="sheet" style="max-height:88vh;overflow-y:auto;">
+    <h2 id="vTitle">車両の追加</h2>
+    <input type="hidden" id="v_id">
+    <div class="two">
+      <div class="fld"><label>車両名 *</label><input id="v_name" placeholder="例）ハイエース1号"></div>
+      <div class="fld"><label>ナンバー</label><input id="v_no" placeholder="例）岐阜 400 あ 12-34"></div>
+    </div>
+    <div class="fld"><label>車種・型式</label><input id="v_model" placeholder="例）トヨタ ハイエースバン"></div>
+    <div style="border-top:1px solid var(--line);margin:6px 0 12px;padding-top:10px;font-size:12px;color:var(--sub);font-weight:700;">車検</div>
+    <div class="two">
+      <div class="fld"><label>車検満了日</label><input id="v_shaken" type="date"></div>
+      <div class="fld"><label>車検番号</label><input id="v_shakenNo" placeholder="車検証の番号"></div>
+    </div>
+    <div style="border-top:1px solid var(--line);margin:6px 0 12px;padding-top:10px;font-size:12px;color:var(--sub);font-weight:700;">任意保険</div>
+    <div class="two">
+      <div class="fld"><label>保険会社</label><input id="v_hokenCo" placeholder="例）〇〇損保"></div>
+      <div class="fld"><label>証券番号</label><input id="v_hokenNo"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>保険開始日</label><input id="v_hokenFrom" type="date"></div>
+      <div class="fld"><label>保険満了日</label><input id="v_hokenTo" type="date"></div>
+    </div>
+    <div style="border-top:1px solid var(--line);margin:6px 0 12px;padding-top:10px;font-size:12px;color:var(--sub);font-weight:700;">オイル交換・走行距離</div>
+    <div class="two">
+      <div class="fld"><label>交換サイクル（km）</label><input id="v_oilKm" type="number" inputmode="numeric" placeholder="例）5000"></div>
+      <div class="fld"><label>交換サイクル（ヶ月）</label><input id="v_oilMon" type="number" inputmode="numeric" placeholder="例）6"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>前回オイル交換日</label><input id="v_oilDate" type="date"></div>
+      <div class="fld"><label>前回交換時の距離（km）</label><input id="v_oilOdo" type="number" inputmode="numeric"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>現在距離（km）</label><input id="v_odo" type="number" inputmode="numeric"></div>
+      <div class="fld"><label>日額単価（円/日・台帳用）</label><input id="v_rate" type="number" inputmode="numeric" placeholder="例）3000"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>表示順</label><input id="v_order" type="number" inputmode="numeric" placeholder="例）1"></div>
+      <div class="fld"><label>備考</label><input id="v_note"></div>
+    </div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeV()">キャンセル</button>
+      <button class="btn primary" id="vSaveBtn" onclick="saveVehicle()">保存</button>
+    </div>
+    <div class="row-del" id="vDelRow" style="display:none;"><a href="#" onclick="delVehicle(event)">この車両を削除</a></div>
+  </div>
+</div>
+
 <!-- 全データ削除 確認ポップアップ -->
 <div class="ov ov-center" id="ovDel">
   <div class="sheet">
@@ -206,10 +260,10 @@
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var workers=[],customers=[],contacts=[],curTab='worker';
+var workers=[],customers=[],contacts=[],vehicles=[],curTab='worker';
 var ADMCACHE='genba_admin_cache';
-function admLoadCache(){try{var c=JSON.parse(localStorage.getItem(ADMCACHE)||'{}');workers=c.workers||[];customers=c.customers||[];contacts=c.contacts||[];}catch(e){}}
-function admSaveCache(){try{localStorage.setItem(ADMCACHE,JSON.stringify({workers:workers,customers:customers,contacts:contacts}));}catch(e){}}
+function admLoadCache(){try{var c=JSON.parse(localStorage.getItem(ADMCACHE)||'{}');workers=c.workers||[];customers=c.customers||[];contacts=c.contacts||[];vehicles=c.vehicles||[];}catch(e){}}
+function admSaveCache(){try{localStorage.setItem(ADMCACHE,JSON.stringify({workers:workers,customers:customers,contacts:contacts,vehicles:vehicles}));}catch(e){}}
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 
 var loadCnt=0,loadShownAt=0;
@@ -237,7 +291,7 @@ function init(){
   admLoadCache();
   var hadCache=(workers.length||customers.length||contacts.length);
   callGAS({action:'checkRole'},null,hadCache).then(function(res){
-    if(res&&res.ok&&res.role==='admin'){showContent(); if(hadCache){render();renderCustomers();renderContacts();} loadAll(hadCache);}
+    if(res&&res.ok&&res.role==='admin'){showContent(); if(hadCache){render();renderCustomers();renderContacts();renderVehicles();} loadAll(hadCache);}
     else{localStorage.removeItem('genba_admin');showGate();}
   }).catch(function(){showGate();});
 }
@@ -314,7 +368,7 @@ function delWorker(ev){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 
-function loadAll(silent){ loadWorkers(silent); loadCustomers(silent); loadContacts(silent); }
+function loadAll(silent){ loadWorkers(silent); loadCustomers(silent); loadContacts(silent); loadVehicles(silent); }
 function openClearModal(){document.getElementById('ovDel').classList.add('show');}
 function closeClearModal(){document.getElementById('ovDel').classList.remove('show');}
 function doClearAll(){
@@ -325,13 +379,13 @@ function doClearAll(){
   }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='削除する';});
 }
 function switchTab(t){ curTab=t;
-  ['worker','partner','contact'].forEach(function(x){
+  ['worker','partner','contact','vehicle'].forEach(function(x){
     document.getElementById('sec-'+x).style.display=(x===t)?'block':'none';
     document.getElementById('tab-'+x).className='tab'+(x===t?' on':'');
   });
-  document.getElementById('fab').textContent= t==='worker'?'＋ 作業員' : t==='partner'?'＋ 取引先' : '＋ 担当者';
+  document.getElementById('fab').textContent= t==='worker'?'＋ 作業員' : t==='partner'?'＋ 取引先' : t==='contact'?'＋ 担当者' : '＋ 車両';
 }
-function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner')openPartner(); else openContact(); }
+function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner')openPartner(); else if(curTab==='contact')openContact(); else openVehicle(); }
 
 /* ===== 取引先（区分つき）===== */
 function custKind(c){ return String(c['区分']||'').trim()||'法人'; }   // 空は法人として扱う
@@ -449,7 +503,82 @@ function numv(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN
 function yen(v){var n=numv(v);return n?('¥'+Math.round(n).toLocaleString('ja-JP')):'';}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
-['ov','ovp','ovk','ovDel'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
+
+/* ===== 車両マスタ ===== */
+function vDateVal(v){if(!v)return'';var m=String(v).match(/^(\d{4}-\d{2}-\d{2})/);return m?m[1]:'';}
+function vDateDisp(v){var s=vDateVal(v);return s?s.replace(/-/g,'/'):'';}
+function vDaysLeft(v){var s=vDateVal(v);if(!s)return null;var d=new Date(s+'T00:00:00'),t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
+function vAlertTag(label,days){
+  if(days==null)return'';
+  if(days<0)return' <span class="tag" style="background:#fee2e2;color:#b91c1c;">'+label+'切れ</span>';
+  if(days<=30)return' <span class="tag" style="background:#fee2e2;color:#b91c1c;">'+label+'まで'+days+'日</span>';
+  if(days<=60)return' <span class="tag" style="background:#fef3c7;color:#92400e;">'+label+'まで'+days+'日</span>';
+  return'';
+}
+function loadVehicles(silent){ callGAS({action:'vehicles'},null,silent).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); vehicles=res.vehicles||[]; admSaveCache(); renderVehicles(); }).catch(function(err){if(!silent)toast('車両の読込失敗：'+err.message);}); }
+function renderVehicles(){
+  var el=document.getElementById('listV');
+  if(!vehicles.length){el.innerHTML='<div class="empty">車両がまだ登録されていません。<br>右下の「＋車両」から登録してください。</div>';return;}
+  var grid=document.createElement('div');grid.className='grid-3';
+  vehicles.forEach(function(v){
+    var div=document.createElement('div');div.className='card';div.style.borderLeftColor='#0f766e';
+    div.onclick=(function(x){return function(){openVehicle(x);};})(v);
+    var alerts=vAlertTag('車検',vDaysLeft(v['車検満了日']))+vAlertTag('保険',vDaysLeft(v['保険満了日']));
+    var oil='';
+    var okm=numv(v['オイル交換距離']),last=numv(v['前回オイル交換距離']),cur=numv(v['現在距離']);
+    if(okm>0&&cur>0&&cur-last>=okm)oil=' <span class="tag" style="background:#fee2e2;color:#b91c1c;">オイル交換</span>';
+    var meta=[];
+    if(vDateVal(v['車検満了日']))meta.push('車検 '+vDateDisp(v['車検満了日']));
+    if(vDateVal(v['保険満了日']))meta.push('保険 '+vDateDisp(v['保険満了日']));
+    if(cur>0)meta.push(Math.round(cur).toLocaleString('ja-JP')+' km');
+    div.innerHTML='<div><div class="nm">'+esc(v['車両名']||'')+(v['ナンバー']?' <span class="tag">'+esc(v['ナンバー'])+'</span>':'')+alerts+oil+'</div>'+
+      '<div class="meta">'+meta.map(esc).join(' ・ ')+'</div></div>';
+    grid.appendChild(div);
+  });
+  el.innerHTML='';el.appendChild(grid);
+}
+function openVehicle(v){
+  document.getElementById('vTitle').textContent=v?'車両の編集':'車両の追加';
+  document.getElementById('vDelRow').style.display=v?'block':'none';
+  var g=function(id){return document.getElementById(id);};
+  g('v_id').value=v?(v['車両ID']||''):'';
+  g('v_name').value=v?(v['車両名']||''):''; g('v_no').value=v?(v['ナンバー']||''):'';
+  g('v_model').value=v?(v['車種']||''):'';
+  g('v_shaken').value=v?vDateVal(v['車検満了日']):''; g('v_shakenNo').value=v?(v['車検番号']||''):'';
+  g('v_hokenCo').value=v?(v['保険会社']||''):''; g('v_hokenNo').value=v?(v['保険証券番号']||''):'';
+  g('v_hokenFrom').value=v?vDateVal(v['保険開始日']):''; g('v_hokenTo').value=v?vDateVal(v['保険満了日']):'';
+  g('v_oilKm').value=v?(v['オイル交換距離']||''):'5000'; g('v_oilMon').value=v?(v['オイル交換月数']||''):'6';
+  g('v_oilDate').value=v?vDateVal(v['前回オイル交換日']):''; g('v_oilOdo').value=v?(v['前回オイル交換距離']||''):'';
+  g('v_odo').value=v?(v['現在距離']||''):''; g('v_rate').value=v?(v['日額単価']||''):'';
+  g('v_order').value=v?(v['表示順']||''):''; g('v_note').value=v?(v['備考']||''):'';
+  document.getElementById('ovv').classList.add('show');
+}
+function closeV(){document.getElementById('ovv').classList.remove('show');}
+function saveVehicle(){
+  var g=function(id){return document.getElementById(id).value;},name=g('v_name').trim();
+  if(!name){toast('車両名を入れてください');return;}
+  var id=g('v_id'),isNew=!id;
+  var d={'車両名':name,'ナンバー':g('v_no').trim(),'車種':g('v_model').trim(),
+    '車検満了日':g('v_shaken'),'車検番号':g('v_shakenNo').trim(),
+    '保険会社':g('v_hokenCo').trim(),'保険証券番号':g('v_hokenNo').trim(),'保険開始日':g('v_hokenFrom'),'保険満了日':g('v_hokenTo'),
+    'オイル交換距離':g('v_oilKm'),'オイル交換月数':g('v_oilMon'),'前回オイル交換日':g('v_oilDate'),'前回オイル交換距離':g('v_oilOdo'),
+    '現在距離':g('v_odo'),'日額単価':g('v_rate'),'表示順':g('v_order'),'備考':g('v_note').trim()};
+  if(g('v_odo')!=='')d['距離更新日']=new Date().toISOString().slice(0,10);
+  if(!isNew)d['車両ID']=id;
+  var btn=document.getElementById('vSaveBtn');btn.disabled=true;btn.textContent='保存中…';
+  callGAS({action:'vehicleSave',data:d}).then(function(res){ if(!res.ok)throw new Error(res.error||'保存失敗');
+    if(isNew)vehicles.push(res.vehicle);else for(var i=0;i<vehicles.length;i++){if(vehicles[i]['車両ID']===id){vehicles[i]=res.vehicle;break;}}
+    admSaveCache();renderVehicles();closeV();toast(isNew?'登録しました':'更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+function delVehicle(ev){ ev.preventDefault();var id=document.getElementById('v_id').value;if(!id)return;
+  if(!confirm('この車両を削除します。よろしいですか？'))return;
+  callGAS({action:'vehicleDelete',id:id}).then(function(res){ if(!res.ok)throw new Error(res.error||'削除失敗');
+    closeV();toast('削除しました');loadVehicles();
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+
+['ov','ovp','ovk','ovv','ovDel'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
 init();
 </script>
 </body>
