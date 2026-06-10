@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 46 (2026-06-10) -->
+<!-- version 47 (2026-06-10) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -113,17 +113,20 @@
   .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:rgba(255,255,255,.78);margin-bottom:4px;font-weight:700;}
   .fld input,.fld select,.fld textarea{width:100%;padding:10px 12px;border:1px solid rgba(255,255,255,.3);border-radius:11px;font-size:15px;background:rgba(255,255,255,.96);color:#15233a;font-family:inherit;font-weight:600;}
   .fld textarea{resize:vertical;min-height:50px;}
-  .two{display:flex;gap:8px;} .two>.fld{flex:1;} .two>.fld.narrow{flex:0 0 110px;}
-  /* 翌日チェックボックス */
-  .ndchk{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 8px;border:1px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.14);cursor:pointer;flex:0 0 auto;}
-  .ndchk.on{background:rgba(232,161,60,.4);border-color:rgba(255,205,130,.8);}
-  .ndchk .ndlbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.85);line-height:1;}
-  .ndchk input[type=checkbox]{width:16px;height:16px;accent-color:#e8a13c;cursor:pointer;}
-  /* 3列グリッド（日付・開始・終了） */
-  .three{display:grid;grid-template-columns:130px 1fr 1fr;gap:8px;}
+  .two{display:flex;gap:8px;} .two>.fld{flex:1;} .two>.fld.narrow{flex:0 0 130px;}
+  /* 時間行：日付（狭）＋開始・終了（同幅）＋翌日（独立） */
+  .timerow{display:flex;gap:8px;align-items:flex-end;}
+  .timerow .tdate{flex:0 0 120px;}
+  .timerow .ttime{flex:1 1 0;min-width:0;}
+  .timerow .fld{margin-bottom:0;}
+  .ndchk{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;flex:0 0 auto;cursor:pointer;padding-bottom:11px;}
+  .ndchk .ndlbl{font-size:11px;font-weight:700;color:rgba(255,255,255,.85);line-height:1;}
+  .ndchk input[type=checkbox]{width:20px;height:20px;accent-color:#e8a13c;cursor:pointer;margin:0;}
+  .ndchk.on .ndlbl{color:#ffd9a0;}
+  .custrow{display:flex;gap:8px;}
+  .custrow .fkind{flex:0 0 130px;}
+  .custrow .fcust{flex:1 1 0;min-width:0;}
   /* 詰めたワーカーグループ */
-  .wgroup-row{display:flex;gap:8px;}
-  .wgroup-row>.wgroup{flex:1;min-width:0;}
   .lr-ynk{font-size:10px;color:#ffd9a0;font-weight:700;display:block;line-height:1.2;}
   .nks{display:flex;gap:6px;margin-top:6px;} .nks button{flex:1;padding:8px;border:1px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.14);color:#fff;font-size:14px;cursor:pointer;font-family:inherit;}
   .calc{background:rgba(31,157,87,.22);border:1px solid rgba(150,240,185,.45);border-radius:11px;padding:9px 12px;font-size:14px;display:flex;justify-content:space-between;color:#d9ffe9;}
@@ -135,8 +138,9 @@
   .wlist{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;}
   .wchk{display:flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid rgba(255,255,255,.25);border-radius:9px;font-size:12.5px;cursor:pointer;background:rgba(255,255,255,.08);white-space:nowrap;}
   .wchk input{width:15px;height:15px;flex:0 0 auto;accent-color:var(--accent);}
-  /* 社員リスト：横並び1行 */
+  /* 社員リスト：横並び1行（折り返しなし・スクロール） */
   .wlist-emp{display:flex;flex-wrap:nowrap;gap:5px;padding:7px 9px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .wlist-emp .wchk{flex:0 0 auto;}
   /* 協力業者リスト：折り返し、名前＋会社2行 */
   .wlist-part{display:flex;flex-wrap:wrap;gap:5px;padding:7px 9px;}
   .wchk-part{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:5px 9px;border:1px solid rgba(255,255,255,.25);border-radius:9px;font-size:12.5px;cursor:pointer;background:rgba(255,255,255,.08);}
@@ -159,7 +163,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v46</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v47</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -194,36 +198,31 @@
   <div class="sheet">
     <h2 id="mTitle">日報の入力</h2>
     <input type="hidden" id="f_id">
-    <!-- 1行目：日付・開始・終了 -->
-    <div class="three">
-      <div class="fld"><label>日付 *</label><input id="f_date" type="date"></div>
-      <div class="fld"><label>開始</label><input id="f_st" type="time" step="300" value="08:00" oninput="timeCalc()"></div>
-      <div class="fld"><label>終了</label>
-        <div style="display:flex;gap:5px;align-items:center;">
-          <input id="f_et" type="time" step="300" value="17:00" oninput="timeCalc()" style="flex:1;min-width:0;">
-          <label class="ndchk" id="nextDayBtn"><span class="ndlbl">翌日</span><input type="checkbox" id="ndChk" onchange="toggleNextDay()"></label>
-        </div></div>
+    <!-- 1行目：日付・開始時間・終了時間・翌日 -->
+    <div class="timerow">
+      <div class="fld tdate"><label>日付 *</label><input id="f_date" type="date"></div>
+      <div class="fld ttime"><label>開始時間</label><input id="f_st" type="time" step="300" value="08:00" oninput="timeCalc()"></div>
+      <div class="fld ttime"><label>終了時間</label><input id="f_et" type="time" step="300" value="17:00" oninput="timeCalc()"></div>
+      <label class="ndchk" id="nextDayBtn"><span class="ndlbl">翌日</span><input type="checkbox" id="ndChk" onchange="toggleNextDay()"></label>
     </div>
     <!-- 2行目：休憩・人工 -->
     <div class="two">
-      <div class="fld narrow"><label>休憩時間</label><select id="f_break" onchange="timeCalc()"></select></div>
+      <div class="fld narrow"><label>休憩時間</label><input id="f_break" type="time" step="300" value="01:00" oninput="timeCalc()"></div>
       <div class="fld"><label>人工（自動）</label><div class="calc" id="f_nkDisp" style="padding:8px 10px;font-size:13px;">計算中…</div></div>
     </div>
     <input id="f_nk" type="hidden" value="1"><input id="f_ynk" type="hidden" value="0">
-    <!-- 3行目：発注者区分・顧客名 -->
-    <div class="two">
-      <div class="fld"><label>発注者区分</label><select id="f_kind" onchange="onKind()"></select></div>
-      <div class="fld"><label>顧客名 *</label><select id="f_customer" onchange="onCustomer()"></select></div>
+    <!-- 3行目：発注者区分（狭）・顧客名（広） -->
+    <div class="custrow">
+      <div class="fld fkind"><label>発注者区分</label><select id="f_kind" onchange="onKind()"></select></div>
+      <div class="fld fcust"><label>顧客名 *</label><select id="f_customer" onchange="onCustomer()"></select></div>
     </div>
     <!-- 4行目：現場名 -->
     <div class="fld"><label>現場名 *</label><select id="f_proj" onchange="onProj()"></select>
       <a id="f_drive" class="drvlink" target="_blank" style="display:none;">📁 この現場のフォルダを開く</a></div>
     <!-- 社員・協力業者を横並び -->
     <div class="fld" id="wmFld"><label>作業員 *</label>
-      <div class="wgroup-row">
-        <div id="wmEmp" class="wgroup"></div>
-        <div id="wmPart" class="wgroup"></div>
-      </div>
+      <div id="wmEmp" class="wgroup"></div>
+      <div id="wmPart" class="wgroup" style="margin-top:8px;"></div>
     </div>
     <div class="fld"><label>作業内容</label><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea></div>
     <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
