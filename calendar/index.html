@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 42 (2026-06-10) 車両選択・重複チェック追加 -->
+<!-- version 43 (2026-06-10) 検索名統一 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -152,7 +152,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v42</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v43</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -232,9 +232,9 @@
     </div>
     <!-- 3. 種別 ／ 候補（取引先）-->
     <div class="two">
-      <div class="fld"><label>種別</label><select id="f_ctype" onchange="onCType()">
+      <div class="fld"><label>発注者区分</label><select id="f_ctype" onchange="onCType()">
         <option value="">（すべて）</option><option>官公庁</option><option>法人</option><option>個人</option></select></div>
-      <div class="fld"><label>候補（取引先）</label><select id="f_cand" onchange="onCand()"><option value="">（取引先を選択）</option></select></div>
+      <div class="fld"><label>顧客名</label><select id="f_cand" onchange="onCand()"><option value="">（顧客名を選択）</option></select></div>
     </div>
     <!-- 4. 現場名（1行）-->
     <div class="fld"><label>現場名 *</label><select id="f_proj"><option value="">（現場を選択）</option></select></div>
