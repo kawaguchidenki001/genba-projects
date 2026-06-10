@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 37 (2026-06-10) GAS URLをメインデプロイに統合 -->
+<!-- version 38 (2026-06-10) 読み込み高速化（filesData・スピナー短縮・フォルダ準備の非同期化） -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -58,7 +58,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v37</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v38</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -125,7 +125,7 @@ function applyInit(){ if(initApplied||!INIT_CASE)return; var s=document.getEleme
 
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
-function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,200-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
 function callGAS(params,timeoutMs,silent){
   return new Promise(function(resolve,reject){
     if(!silent) showLoad();
@@ -143,7 +143,7 @@ function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st
 
 function loadProjects(silent){
   setSync('busy','同期中…');
-  callGAS({action:'calendarData'},30000,silent).then(function(res){
+  callGAS({action:'filesData'},30000,silent).then(function(res){
     if(!res.ok)throw new Error(res.error||'エラー');
     projects=res.projects||[]; customers=res.customers||[]; try{localStorage.setItem(CACHE,JSON.stringify({p:projects,c:customers}));}catch(e){}
     buildSel(); setSync('ok','同期済み');
