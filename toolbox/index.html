@@ -206,8 +206,7 @@
       <div class="sq t-rec"   onclick="openTool('rec')"><span class="ic">🎙️</span><span class="txt"><span class="nm">録音機</span><span class="ds">音声を記録</span></span><span class="cor">→</span></div>
       <div class="sq t-board" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">→</span></div>
       <div class="sq t-elec"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">→</span></div>
-      <div class="sq t-area"  onclick="openTool('area')"><span class="ic">📐</span><span class="txt"><span class="nm">坪・㎡・畳</span><span class="ds">面積の換算</span></span><span class="cor">→</span></div>
-      <div class="sq t-meas"  onclick="openTool('meas')"><span class="ic">📏</span><span class="txt"><span class="nm">面積計算機</span><span class="ds">寸法から面積を計算</span></span><span class="cor">→</span></div>
+      <div class="sq t-meas"  onclick="openTool('meas')"><span class="ic">📐</span><span class="txt"><span class="nm">面積計算</span><span class="ds">面積の計算と坪・㎡・畳換算</span></span><span class="cor">→</span></div>
     </div>
   </div>
 
@@ -413,41 +412,6 @@
   </div>
 
   <!-- ========== ⑦ 坪・㎡・畳 換算 ========== -->
-  <div class="pane" id="p-area">
-    <div class="thead">
-      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
-      <h2>坪・㎡・畳の換算</h2>
-    </div>
-
-    <!-- 入力欄（3行：坪→、㎡→、畳→） -->
-    <div id="areaBlock">
-      <!-- 坪 入力 -->
-      <div class="aconv">
-        <div><div class="aunit">坪</div><input class="afrom" id="aFrom_tsubo" inputmode="decimal" oninput="aConv('tsubo')" placeholder="例 30"></div>
-        <div class="aconv-eq">=</div>
-        <div id="aTo_tsubo_right"></div>
-      </div>
-      <!-- ㎡ 入力 -->
-      <div class="aconv">
-        <div><div class="aunit">㎡（平米）</div><input class="afrom" id="aFrom_m2" inputmode="decimal" oninput="aConv('m2')" placeholder="例 100"></div>
-        <div class="aconv-eq">=</div>
-        <div id="aTo_m2_right"></div>
-      </div>
-      <!-- 畳 入力 -->
-      <div class="aconv">
-        <div><div class="aunit">畳（江戸間）</div><input class="afrom" id="aFrom_jou" inputmode="decimal" oninput="aConv('jou')" placeholder="例 6"></div>
-        <div class="aconv-eq">=</div>
-        <div id="aTo_jou_right"></div>
-      </div>
-    </div>
-
-    <div class="asep"></div>
-
-    <!-- 一覧表示エリア -->
-    <div id="areaTable"></div>
-    <div class="enote" style="margin-top:10px;">1坪 ≒ 3.30579 ㎡ ／ 1畳（江戸間）≒ 1.65289 ㎡。建物の規格により畳サイズは異なります。</div>
-  </div>
-
   <!-- ========== ⑤ 小黒板カメラ ========== -->
   <div class="pane" id="p-board">
     <div class="thead">
@@ -524,27 +488,57 @@
     </div>
   </div>
 
-  <!-- ========== ⑧ 面積計算機 ========== -->
+  <!-- ========== ⑧ 面積計算（寸法計算＋坪・㎡・畳換算） ========== -->
   <div class="pane" id="p-meas">
     <div class="thead">
       <span class="back2" onclick="go('p-home')">← ツールボックス</span>
-      <h2>面積計算機</h2>
+      <h2>面積計算</h2>
     </div>
 
-    <label class="slbl">形状を選択</label>
-    <div class="eseg" id="measShapeSeg">
-      <button class="on" data-v="rect" onclick="measSetShape('rect')">長方形</button>
-      <button data-v="tri"  onclick="measSetShape('tri')">三角形</button>
-      <button data-v="trap" onclick="measSetShape('trap')">台形</button>
+    <div class="modeseg">
+      <button id="amodeCalc" class="on" onclick="setAreaMode('calc')">📐 寸法から計算</button>
+      <button id="amodeConv" onclick="setAreaMode('conv')">🔄 単位を換算</button>
     </div>
 
-    <div id="measInputWrap" style="margin-top:2px;"></div>
-    <button class="savebtn" style="background:#2a7ac8;margin-top:12px;" onclick="measAdd()">＋ 区画を追加</button>
+    <!-- 寸法から計算 -->
+    <div id="areaCalcMode">
+      <label class="slbl">形状を選択</label>
+      <div class="eseg" id="measShapeSeg">
+        <button class="on" data-v="rect" onclick="measSetShape('rect')">長方形</button>
+        <button data-v="tri"  onclick="measSetShape('tri')">三角形</button>
+        <button data-v="trap" onclick="measSetShape('trap')">台形</button>
+      </div>
+      <div id="measInputWrap" style="margin-top:2px;"></div>
+      <button class="savebtn" style="background:#2a7ac8;margin-top:12px;" onclick="measAdd()">＋ 区画を追加</button>
+      <div class="asep"></div>
+      <div id="measList"></div>
+      <div class="eres" id="measTotal" style="margin-top:14px;display:none;flex-direction:column;justify-content:center;"></div>
+      <div class="enote" style="margin-top:14px;">区画を追加すると合計面積を求めます。合計は坪・畳にも自動換算します。</div>
+    </div>
 
-    <div class="asep"></div>
-    <div id="measList"></div>
-    <div class="eres" id="measTotal" style="margin-top:14px;display:none;flex-direction:column;justify-content:center;"></div>
-    <div class="enote" style="margin-top:14px;">区画を追加して合計面積を求めます。削除ボタンで取り消せます。</div>
+    <!-- 単位を換算 -->
+    <div id="areaConvMode" style="display:none;">
+      <div id="areaBlock">
+        <div class="aconv">
+          <div><div class="aunit">坪</div><input class="afrom" id="aFrom_tsubo" inputmode="decimal" oninput="aConv('tsubo')" placeholder="例 30"></div>
+          <div class="aconv-eq">=</div>
+          <div id="aTo_tsubo_right"></div>
+        </div>
+        <div class="aconv">
+          <div><div class="aunit">㎡（平米）</div><input class="afrom" id="aFrom_m2" inputmode="decimal" oninput="aConv('m2')" placeholder="例 100"></div>
+          <div class="aconv-eq">=</div>
+          <div id="aTo_m2_right"></div>
+        </div>
+        <div class="aconv">
+          <div><div class="aunit">畳（江戸間）</div><input class="afrom" id="aFrom_jou" inputmode="decimal" oninput="aConv('jou')" placeholder="例 6"></div>
+          <div class="aconv-eq">=</div>
+          <div id="aTo_jou_right"></div>
+        </div>
+      </div>
+      <div class="asep"></div>
+      <div id="areaTable"></div>
+      <div class="enote" style="margin-top:10px;">1坪 ≒ 3.30579 ㎡ ／ 1畳（江戸間）≒ 1.65289 ㎡。建物の規格により畳サイズは異なります。</div>
+    </div>
   </div>
 
 </div>
@@ -605,15 +599,15 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
 /* 実装済みツール */
-var READY={memo:1,check:1,elec:1,area:1,board:1,rec:1,meas:1,mat:1};
+var READY={memo:1,check:1,elec:1,board:1,rec:1,meas:1,mat:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
-  if(k==='draw')k='memo';
+  if(k==='draw')k='memo'; if(k==='area')k='meas';
   if(k==='memo'||k==='check'||k==='mat'){ curTool=k; siteFilter=''; refreshProjects(); refreshCurList(); return; }
   if(k==='board'||k==='rec'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='board'?'小黒板カメラ':'録音機'); go('p-memo-select'); loadSites(); return; }
   go('p-'+k);
 }
-function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳',meas:'面積計算機',mat:'材料リスト'}[k]||k;}
+function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'面積計算',meas:'面積計算',mat:'材料リスト'}[k]||k;}
 
 /* ===== ① 現場メモ（現場ごと・サーバー保存） ===== */
 var PROJ_KEY='tb_projects';
@@ -1197,6 +1191,13 @@ function aRenderTable(m2){
     '<tr><td>畳（江戸間）</td><td class="av">'+aFmt(jou)+'<div class="au">畳</div></td></tr>'+
     '</tbody></table>';
 }
+function setAreaMode(m){
+  var calc=document.getElementById('areaCalcMode'),conv=document.getElementById('areaConvMode');
+  document.getElementById('amodeCalc').classList.toggle('on',m==='calc');
+  document.getElementById('amodeConv').classList.toggle('on',m==='conv');
+  if(calc)calc.style.display=(m==='calc')?'block':'none';
+  if(conv)conv.style.display=(m==='conv')?'block':'none';
+}
 function aClearAll(){
   ['tsubo','m2','jou'].forEach(function(k){
     var el=document.getElementById('aFrom_'+k); if(el)el.value='';
@@ -1526,7 +1527,7 @@ function recLoadList(){
 }
 
 
-/* ===== ⑧ 面積計算機 ===== */
+/* ===== ⑧ 面積計算（寸法計算＋単位換算） ===== */
 var measItems=[],measShapeVal='rect';
 function measSetShape(t){
   measShapeVal=t;
