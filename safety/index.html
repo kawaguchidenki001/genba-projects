@@ -320,9 +320,19 @@ function saveWorker(){
 
 (function(){
   var pin=admTok();
-  if(pin){callGAS({action:'checkRole'},pin,true).then(function(res){
-    if(res&&res.ok&&res.role==='admin')boot();
-  }).catch(function(e){});}
+  if(pin){
+    // PIN保持済み：ゲートのちらつきを防ぐため、先にゲートを隠してコンテンツを表示
+    document.getElementById('gate').style.display='none';
+    tab('roster');
+    callGAS({action:'checkRole'},pin,true).then(function(res){
+      if(res&&res.ok&&res.role==='admin'){ boot(); }
+      else {
+        document.getElementById('gate').style.display='block';
+        var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');
+        localStorage.removeItem('genba_admin');
+      }
+    }).catch(function(e){});
+  }
 })();
 </script>
 </body>
