@@ -152,7 +152,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v43</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v44</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -453,10 +453,21 @@ function openDay(ds){ window._selDate=ds; hideRangeBar();
       '<div class="evd-side"><button class="btn dc-copy">📋 コピー</button>'+
       '<button class="btn dc-edit">編集</button>'+
       (e['案件ID']?'<button class="btn dc-link">📁 案件情報</button>':'')+
+      (e['案件ID']?'<button class="btn dc-rep" style="color:#1a7a4a;border-color:#9fd4b8;">📝 日報作成</button>':'')+
       '<button class="btn dc-del">予定削除</button></div>';
     card.querySelector('.dc-copy').onclick=(function(ev){return function(){copyEvent(ev);};})(e);
     card.querySelector('.dc-edit').onclick=(function(ev){return function(){closeDay();openEvent(ev);};})(e);
     var lk=card.querySelector('.dc-link');if(lk)lk.onclick=(function(ev){return function(){location.href='../projects/?case='+encodeURIComponent(ev['案件ID']);};})(e);
+    var rp=card.querySelector('.dc-rep');if(rp)rp.onclick=(function(ev,dd){return function(){
+      location.href='../report/?from_sched=1'
+        +'&pid='+encodeURIComponent(ev['案件ID']||'')
+        +'&date='+encodeURIComponent(dd)
+        +'&st='+encodeURIComponent(hm(ev['開始'])||'')
+        +'&et='+encodeURIComponent(hm(ev['終了'])||'')
+        +'&names='+encodeURIComponent(ev['担当']||'')
+        +'&veh='+encodeURIComponent(ev['車両']||'')
+        +'&desc='+encodeURIComponent(ev['予定内容']||'');
+    };})(e,ds);
     card.querySelector('.dc-del').onclick=(function(ev){return function(){delSchedule(ev['予定ID']);};})(e);
     el.appendChild(card);
   });
