@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<!-- version 1 safety (2026-06-11) 安全書類・作業員名簿 新規作成 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>安全書類｜河口電機</title>
+<style>
+  :root{ --bg:#f4f5f7;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#15803d;--accent-d:#166534;
+    --radius:12px;--shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:90px;}
+  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
+  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .hd-row h1{font-size:17px;margin:0;font-weight:700;}
+  .back{color:#d7f5e0;text-decoration:none;font-size:13px;flex:0 0 auto;}
+  main{padding:12px;max-width:760px;margin:0 auto;}
+  .gate{max-width:380px;margin:60px auto;text-align:center;padding:0 16px;}
+  .gate .lk{font-size:46px;}
+  .gate h2{font-size:18px;margin:10px 0 6px;}
+  .gate p{color:var(--sub);font-size:14px;margin:0 0 18px;}
+  .gate input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;text-align:center;margin-bottom:10px;}
+  .gate button{width:100%;padding:13px;border:none;border-radius:11px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+  .pane{display:none;} .pane.on{display:block;}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;}
+  .tabs button{flex:1;padding:11px 5px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;}
+  .tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .lead{font-size:13px;color:var(--sub);margin:0 2px 12px;line-height:1.7;}
+  .lbl{display:block;font-size:12.5px;font-weight:700;color:var(--sub);margin:12px 2px 5px;}
+  .inp,select.inp,textarea.inp{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;color:var(--ink);font-family:inherit;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  /* 名簿作成：作業員選択 */
+  .wchk{display:flex;align-items:center;gap:10px;padding:11px 13px;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;box-shadow:var(--shadow);cursor:pointer;}
+  .wchk input{width:20px;height:20px;flex:0 0 auto;}
+  .wchk .wn{font-weight:700;}
+  .wchk .ws{font-size:12px;color:var(--sub);}
+  .wchk.miss{border-color:#f0c674;background:#fffbeb;}
+  .wchk .warn{margin-left:auto;font-size:11px;color:#b45309;font-weight:700;flex:0 0 auto;}
+  .selall{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .selall button{padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--accent-d);font-size:12.5px;font-weight:700;cursor:pointer;}
+  .pdfbtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:12px;}
+  .pdflink{display:block;text-align:center;margin-top:10px;font-size:13.5px;color:var(--accent-d);}
+  /* 作業員情報編集：一覧 */
+  .wcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-left:5px solid var(--accent);}
+  .wcard.miss{border-left-color:#f0c674;}
+  .wcard .nm{font-weight:700;font-size:15.5px;}
+  .wcard .meta{font-size:12.5px;color:var(--sub);margin-top:1px;}
+  .wcard .badge{flex:0 0 auto;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;}
+  .wcard .badge.ok{background:#dcfce7;color:#166534;} .wcard .badge.ng{background:#fef3c7;color:#92400e;}
+  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14px;}
+  .savebtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:14px;}
+  .fhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+  .fhd .bk{color:var(--accent-d);font-size:14px;font-weight:700;cursor:pointer;}
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:#1f2733;color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:88vw;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .loading{position:fixed;inset:0;background:rgba(244,245,247,.7);display:none;align-items:center;justify-content:center;z-index:80;}
+  .loading.show{display:flex;}
+  .lbox{background:#fff;border-radius:14px;padding:22px 30px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.12);}
+  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .lbox .txt{font-size:13.5px;color:var(--sub);}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd-row">
+    <a class="back" href="../">← 現場管理メニュー</a>
+    <h1>📗 安全書類</h1>
+    <span style="width:30px;"></span>
+  </div>
+</header>
+
+<main>
+  <div class="gate" id="gate">
+    <div class="lk">🔒</div>
+    <h2>管理者専用</h2>
+    <p>安全書類は管理者のみ利用できます。管理者PINを入力してください。</p>
+    <input id="pin" type="password" placeholder="管理者PIN" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">開く</button>
+  </div>
+
+  <!-- 名簿作成 -->
+  <div class="pane" id="p-roster">
+    <div class="tabs">
+      <button class="on" onclick="tab('roster')">作業員名簿を作る</button>
+      <button onclick="tab('edit')">作業員情報を編集</button>
+    </div>
+    <p class="lead">名簿に載せる作業員にチェックを入れ、PDFを作成します。⚠ マークは安全書類用の情報が未入力です（「作業員情報を編集」で登録できます）。</p>
+    <label class="lbl">工事名（任意）</label>
+    <select class="inp" id="rCase" onchange="caseChanged()"></select>
+    <div class="grid2">
+      <div>
+        <label class="lbl">工事名（手入力で上書き可）</label>
+        <input class="inp" id="rProj" placeholder="例：○○邸 改修工事">
+      </div>
+      <div>
+        <label class="lbl">元請会社名（任意）</label>
+        <input class="inp" id="rPrime" placeholder="例：○○建設株式会社">
+      </div>
+    </div>
+    <div class="selall" style="margin-top:14px;">
+      <span class="lbl" style="margin:0;">対象の作業員</span>
+      <button onclick="toggleAll()">全選択／解除</button>
+    </div>
+    <div id="wlist"></div>
+    <button class="pdfbtn" onclick="makeRoster()">📄 作業員名簿 PDF を作成</button>
+    <a class="pdflink" id="pdfLink" style="display:none" target="_blank" rel="noopener">📎 作成済みPDFを開く</a>
+  </div>
+
+  <!-- 作業員情報：一覧 -->
+  <div class="pane" id="p-list">
+    <div class="tabs">
+      <button onclick="tab('roster')">作業員名簿を作る</button>
+      <button class="on" onclick="tab('edit')">作業員情報を編集</button>
+    </div>
+    <p class="lead">各作業員の安全書類用情報を登録します。✓ は入力済み、⚠ は未入力です。作業員の追加・削除は「管理画面」で行ってください。</p>
+    <div id="elist"></div>
+  </div>
+
+  <!-- 作業員情報：編集 -->
+  <div class="pane" id="p-edit">
+    <div class="fhd">
+      <span class="bk" onclick="tab('edit')">← 一覧へ</span>
+      <span style="font-weight:700;font-size:15px;" id="edName">編集</span>
+      <span style="width:30px;"></span>
+    </div>
+    <div class="grid2">
+      <div><label class="lbl">ふりがな</label><input class="inp" id="eFuri"></div>
+      <div><label class="lbl">職種</label><input class="inp" id="eJob" placeholder="例：電工"></div>
+    </div>
+    <div class="grid2">
+      <div><label class="lbl">生年月日</label><input class="inp" id="eBirth" type="date"></div>
+      <div><label class="lbl">血液型</label>
+        <select class="inp" id="eBlood"><option value=""></option><option>A</option><option>B</option><option>O</option><option>AB</option></select>
+      </div>
+    </div>
+    <div class="grid2">
+      <div><label class="lbl">雇入年月日</label><input class="inp" id="eHire" type="date"></div>
+      <div><label class="lbl">経験年数</label><input class="inp" id="eExp" placeholder="例：10年"></div>
+    </div>
+    <label class="lbl">現住所</label>
+    <input class="inp" id="eAddr" placeholder="例：○○県○○市○○ 1-2-3">
+    <label class="lbl">緊急連絡先</label>
+    <div class="grid2">
+      <div><input class="inp" id="eEmgName" placeholder="氏名"></div>
+      <div><input class="inp" id="eEmgRel" placeholder="続柄（例：妻）"></div>
+    </div>
+    <input class="inp" id="eEmgTel" placeholder="電話番号" style="margin-top:8px;">
+    <label class="lbl">保有資格・技能講習（任意）</label>
+    <textarea class="inp" id="eCert" placeholder="例：第二種電気工事士、高所作業車運転技能講習"></textarea>
+    <label class="lbl">最近の健康診断日（任意）</label>
+    <input class="inp" id="eHealth" type="date">
+    <button class="savebtn" onclick="saveWorker()">保存する</button>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt" id="ltxt">読み込み中…</div></div></div>
+
+<script>
+var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastT;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
+var loadCnt=0;
+function showLoad(t){loadCnt++;if(t)document.getElementById('ltxt').textContent=t;if(loadCnt===1)document.getElementById('loading').classList.add('show');}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){document.getElementById('loading').classList.remove('show');document.getElementById('ltxt').textContent='読み込み中…';}}
+function callGAS(params,secretOverride,silent){return new Promise(function(resolve,reject){
+  if(!silent)showLoad();
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),sc=document.createElement('script');
+  var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},60000);
+  function cleanup(){if(!silent)hideLoad();try{delete window[cb];}catch(e){}if(sc.parentNode)sc.parentNode.removeChild(sc);clearTimeout(timer);}
+  window[cb]=function(res){cleanup();resolve(res);};
+  var q=Object.assign({secret:secretOverride||admTok(),callback:cb},params);
+  if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
+  sc.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+  sc.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(sc);
+});}
+
+var DB={workers:[],projects:[],customers:[],settings:{}};
+var CACHE_KEY='safety_cache_v1';
+var sel={};
+function applyData(d){
+  DB.workers=(d.workers||[]).filter(function(w){return String(w['区分']||'').indexOf('協力')<0;}).concat((d.workers||[]).filter(function(w){return String(w['区分']||'').indexOf('協力')>=0;}));
+  DB.projects=d.projects||[];DB.customers=d.customers||[];DB.settings=d.settings||{};
+  fillCase();renderWlist();renderElist();
+}
+function loadAll(silent){
+  return callGAS({action:'safetyData'},null,silent).then(function(res){
+    if(res&&res.ok){try{localStorage.setItem(CACHE_KEY,JSON.stringify(res));}catch(e){}applyData(res);}
+    else if(res&&res.error)toast(res.error);
+  }).catch(function(e){toast(e.message);});
+}
+function boot(){
+  document.getElementById('gate').style.display='none';
+  tab('roster');
+  var c=null;try{c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');}catch(e){}
+  if(c){applyData(c);loadAll(true);}else loadAll(false);
+}
+function doLogin(){
+  var pin=document.getElementById('pin').value;if(!pin){toast('PINを入力してください');return;}
+  callGAS({action:'checkRole'},pin).then(function(res){
+    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',pin);document.getElementById('pin').value='';boot();}
+    else toast('管理者PINが違います');
+  }).catch(function(e){toast(e.message);});
+}
+function tab(t){
+  var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');
+  if(t==='roster')document.getElementById('p-roster').classList.add('on');
+  else document.getElementById('p-list').classList.add('on');
+  window.scrollTo(0,0);
+}
+
+/* ===== 名簿作成 ===== */
+function isMiss(w){ return !(w['生年月日']&&w['緊急連絡先電話']); }
+function fillCase(){
+  var sel2=document.getElementById('rCase');
+  sel2.innerHTML='<option value="">（現場を選ばない）</option>'+DB.projects.map(function(p){
+    return '<option value="'+esc(p['案件ID'])+'" data-name="'+esc(p['案件名'])+'" data-cust="'+esc(p['顧客']||'')+'">'+esc(p['案件名'])+'</option>';}).join('');
+}
+function caseChanged(){
+  var op=document.getElementById('rCase').selectedOptions[0];
+  if(op&&op.value){document.getElementById('rProj').value=op.getAttribute('data-name')||'';
+    var cust=op.getAttribute('data-cust')||'';if(cust&&!document.getElementById('rPrime').value)document.getElementById('rPrime').value=cust;}
+}
+function renderWlist(){
+  var el=document.getElementById('wlist');
+  if(!DB.workers.length){el.innerHTML='<div class="empty">作業員が登録されていません。<br>「管理画面」で登録してください。</div>';return;}
+  el.innerHTML=DB.workers.map(function(w){
+    var id=esc(w['作業員ID']),miss=isMiss(w);
+    var checked=sel[w['作業員ID']]?'checked':'';
+    return '<label class="wchk'+(miss?' miss':'')+'"><input type="checkbox" '+checked+' onchange="toggleSel(\''+id+'\',this.checked)">'
+      +'<span><span class="wn">'+esc(w['氏名']||'')+'</span>'
+      +(w['職種']?' <span class="ws">'+esc(w['職種'])+'</span>':'')
+      +'<br><span class="ws">'+esc(w['区分']||'')+(w['所属']?'・'+esc(w['所属']):'')+'</span></span>'
+      +(miss?'<span class="warn">⚠ 情報未入力</span>':'')+'</label>';
+  }).join('');
+}
+function toggleSel(id,v){if(v)sel[id]=1;else delete sel[id];}
+function toggleAll(){
+  var allSel=DB.workers.every(function(w){return sel[w['作業員ID']];});
+  sel={};if(!allSel)DB.workers.forEach(function(w){sel[w['作業員ID']]=1;});
+  renderWlist();
+}
+function makeRoster(){
+  var wids=Object.keys(sel);
+  if(!wids.length){toast('作業員を1人以上選んでください');return;}
+  var caseId=document.getElementById('rCase').value;
+  var p={action:'rosterPdf',wids:wids.join(','),
+    projName:document.getElementById('rProj').value.trim(),
+    prime:document.getElementById('rPrime').value.trim()};
+  if(caseId)p.caseId=caseId;
+  showLoad('名簿PDFを作成中…（10秒ほどかかります）');
+  callGAS(p,null,true).then(function(res){
+    hideLoad();
+    if(res&&res.ok&&res.pdfUrl){
+      var pl=document.getElementById('pdfLink');pl.href=res.pdfUrl;pl.style.display='block';
+      toast(res.n+'名の名簿を作成しました');window.open(res.pdfUrl,'_blank');
+    }else toast((res&&res.error)||'作成に失敗しました');
+  }).catch(function(e){hideLoad();toast(e.message);});
+}
+
+/* ===== 作業員情報編集 ===== */
+function renderElist(){
+  var el=document.getElementById('elist');
+  if(!DB.workers.length){el.innerHTML='<div class="empty">作業員が登録されていません。</div>';return;}
+  el.innerHTML=DB.workers.map(function(w){
+    var miss=isMiss(w);
+    return '<div class="wcard'+(miss?' miss':'')+'" onclick="openWorker(\''+esc(w['作業員ID'])+'\')">'
+      +'<div><div class="nm">'+esc(w['氏名']||'')+'</div><div class="meta">'+esc(w['職種']||'職種未設定')+'　'+esc(w['区分']||'')+'</div></div>'
+      +'<span class="badge '+(miss?'ng':'ok')+'">'+(miss?'⚠ 未入力':'✓ 入力済')+'</span></div>';
+  }).join('');
+}
+var curW=null;
+function openWorker(id){
+  var w=DB.workers.filter(function(x){return String(x['作業員ID'])===id;})[0];if(!w){toast('見つかりません');return;}
+  curW=id;
+  document.getElementById('edName').textContent=w['氏名']||'編集';
+  document.getElementById('eFuri').value=w['ふりがな']||'';
+  document.getElementById('eJob').value=w['職種']||'';
+  document.getElementById('eBirth').value=String(w['生年月日']||'').slice(0,10);
+  document.getElementById('eBlood').value=w['血液型']||'';
+  document.getElementById('eHire').value=String(w['雇入年月日']||'').slice(0,10);
+  document.getElementById('eExp').value=w['経験年数']||'';
+  document.getElementById('eAddr').value=w['住所']||'';
+  document.getElementById('eEmgName').value=w['緊急連絡先名']||'';
+  document.getElementById('eEmgRel').value=w['緊急連絡先続柄']||'';
+  document.getElementById('eEmgTel').value=w['緊急連絡先電話']||'';
+  document.getElementById('eCert').value=w['保有資格']||'';
+  document.getElementById('eHealth').value=String(w['最近の健康診断日']||'').slice(0,10);
+  var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');
+  document.getElementById('p-edit').classList.add('on');window.scrollTo(0,0);
+}
+function saveWorker(){
+  if(!curW)return;
+  var data={
+    'ふりがな':document.getElementById('eFuri').value.trim(),
+    '職種':document.getElementById('eJob').value.trim(),
+    '生年月日':document.getElementById('eBirth').value,
+    '血液型':document.getElementById('eBlood').value,
+    '雇入年月日':document.getElementById('eHire').value,
+    '経験年数':document.getElementById('eExp').value.trim(),
+    '住所':document.getElementById('eAddr').value.trim(),
+    '緊急連絡先名':document.getElementById('eEmgName').value.trim(),
+    '緊急連絡先続柄':document.getElementById('eEmgRel').value.trim(),
+    '緊急連絡先電話':document.getElementById('eEmgTel').value.trim(),
+    '保有資格':document.getElementById('eCert').value.trim(),
+    '最近の健康診断日':document.getElementById('eHealth').value
+  };
+  callGAS({action:'updateWorker',id:curW,data:data}).then(function(res){
+    if(res&&res.ok&&res.worker){
+      var idx=-1;DB.workers.forEach(function(w,i){if(String(w['作業員ID'])===String(curW))idx=i;});
+      if(idx>=0)DB.workers[idx]=res.worker;
+      try{localStorage.setItem(CACHE_KEY,JSON.stringify({ok:true,workers:DB.workers,projects:DB.projects,customers:DB.customers,settings:DB.settings}));}catch(e){}
+      toast('保存しました');renderElist();renderWlist();tab('edit');
+    }else toast((res&&res.error)||'保存に失敗しました');
+  }).catch(function(e){toast(e.message);});
+}
+
+(function(){
+  var pin=admTok();
+  if(pin){callGAS({action:'checkRole'},pin,true).then(function(res){
+    if(res&&res.ok&&res.role==='admin')boot();
+  }).catch(function(e){});}
+})();
+</script>
+</body>
+</html>
