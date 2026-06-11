@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 2 tools (2026-06-11) 起動・認証処理を修正 -->
+<!-- version 3 tools (2026-06-12) 貸出先の現場選択から完了・請求済を除外 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -264,7 +264,7 @@ function fillSelects(){
   var u=gUser();
   document.getElementById('lWorker').innerHTML=ws.map(function(w){
     return '<option value="'+esc(w['作業員ID'])+'"'+(u&&String(u['作業員ID'])===String(w['作業員ID'])?' selected':'')+'>'+esc(w['氏名']||'')+'</option>';}).join('');
-  document.getElementById('lCase').innerHTML='<option value="">（現場なし）</option>'+DB.projects.filter(function(p){return String(p['ステータス'])!=='完了';}).map(function(p){
+  document.getElementById('lCase').innerHTML='<option value="">（現場なし）</option>'+DB.projects.filter(function(p){var st=String(p['ステータス']||'').trim();return st!=='完了'&&st!=='請求済';}).map(function(p){
     return '<option value="'+esc(p['案件ID'])+'" data-name="'+esc(p['案件名'])+'">'+esc(p['案件名'])+'</option>';}).join('');
 }
 var lendToolId=null;
