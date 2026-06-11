@@ -603,8 +603,18 @@ function saveSettings(){
 (function(){
   var pin=admTok();
   if(pin){
+    // PIN保持済み：ゲートのちらつきを防ぐため、先にゲートを隠してコンテンツを表示
+    document.getElementById('gate').style.display='none';
+    document.getElementById('setBtn').style.visibility='visible';
+    go('p-list');
     callGAS({action:'checkRole'},pin,true).then(function(res){
-      if(res&&res.ok&&res.role==='admin')boot();
+      if(res&&res.ok&&res.role==='admin'){ boot(); }
+      else { // PINが無効になっていた場合のみゲートに戻す
+        document.getElementById('gate').style.display='block';
+        document.getElementById('setBtn').style.visibility='hidden';
+        var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');
+        localStorage.removeItem('genba_admin');
+      }
     }).catch(function(e){});
   }
 })();
