@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 45 (2026-06-10) 案件詳細リニューアル：周辺マップ・連絡・機能アイコン -->
+<!-- version 46 projects (2026-06-11) ステータス6種＋お客様向け進捗共有 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -92,7 +92,7 @@
   .mchip .i{font-size:21px;} .mchip .t{font-size:11.5px;font-weight:700;} .mchip:active{transform:scale(.97);}
   .ctc{display:flex;flex-direction:column;gap:8px;}
   .cbtn{display:flex;align-items:center;gap:10px;text-decoration:none;border-radius:12px;padding:13px 15px;font-weight:700;font-size:14.5px;border:1px solid var(--line);background:#fff;color:var(--ink);box-shadow:var(--shadow);cursor:pointer;font-family:inherit;}
-  .cbtn .ci{font-size:18px;} .cbtn.lw{background:#00b900;border-color:#00b900;color:#fff;} .cbtn.fol{background:#3b82f6;border-color:#3b82f6;color:#fff;}
+  .cbtn .ci{font-size:18px;} .cbtn.lw{background:#00b900;border-color:#00b900;color:#fff;} .cbtn.fol{background:#3b82f6;border-color:#3b82f6;color:#fff;} .cbtn.share{background:#2563eb;border-color:#2563eb;color:#fff;}
   .fmenu{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
   .fitem{display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:13px;padding:13px 4px 11px;box-shadow:var(--shadow);cursor:pointer;}
   .fitem .fi{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;}
@@ -225,7 +225,7 @@
       <div class="fld"><label>種別</label><select id="f_type">
         <option>官公庁</option><option>法人</option><option>個人</option></select></div>
       <div class="fld"><label>ステータス</label><select id="f_status">
-        <option>受注</option><option>段取済</option><option>施工中</option><option>完了</option></select></div>
+        <option>見積中</option><option>受注</option><option>段取済</option><option>施工中</option><option>完了</option><option>請求済</option></select></div>
     </div>
     <div class="two">
       <div class="fld"><label>工期開始</label><input id="f_start" type="date"></div>
@@ -289,6 +289,21 @@
       <div class="d-secttl">連絡</div>
       <div class="ctc">
         <a id="d_line" class="cbtn lw" target="_blank" rel="noopener" style="display:none;"><span class="ci">💬</span>LINE WORKSを開く</a>
+        <button id="d_share" class="cbtn share" style="display:none;" onclick="openSharePanel()"><span class="ci">🔗</span>お客様向け進捗共有</button>
+      </div>
+      <div id="sharePanel" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:13px 15px;margin-top:8px;">
+        <div style="font-size:12.5px;color:#1d4ed8;font-weight:700;margin-bottom:8px;">この案件の進捗（案件名・工期・予定・写真）を、ログイン不要の閲覧専用ページで施主・元請に共有できます。金額や連絡先は表示されません。</div>
+        <div id="shareOff">
+          <button class="cbtn fol" style="width:100%;justify-content:center;" onclick="shareEnable()"><span class="ci">▶</span>共有URLを発行する</button>
+        </div>
+        <div id="shareOn" style="display:none;">
+          <input id="shareUrl" readonly style="width:100%;padding:10px 12px;border:1px solid #bfdbfe;border-radius:9px;font-size:12.5px;background:#fff;margin-bottom:8px;">
+          <div style="display:flex;gap:7px;flex-wrap:wrap;">
+            <button class="cbtn" style="flex:1;justify-content:center;min-width:110px;" onclick="shareCopy()"><span class="ci">📋</span>コピー</button>
+            <button class="cbtn" style="flex:1;justify-content:center;min-width:110px;" onclick="shareOpen()"><span class="ci">👁</span>開く</button>
+            <button class="cbtn" style="flex:1;justify-content:center;min-width:110px;color:#c0392b;border-color:#e3b7b0;" onclick="shareDisable()"><span class="ci">⛔</span>停止</button>
+          </div>
+        </div>
       </div>
 
       <div class="d-secttl">案件情報</div>
@@ -315,7 +330,7 @@ var ROLE = '';
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||T_GENERAL;}
 
-var STATUSES = ['受注','段取済','施工中','完了'];
+var STATUSES = ['見積中','受注','段取済','施工中','完了','請求済'];
 var projects = [], customers = [], contacts = [], filterStatus = 'すべて';
 var CACHE_P = 'genba_projects', CACHE_C = 'genba_customers', CACHE_K = 'genba_contacts';
 
@@ -471,6 +486,15 @@ function openDetail(p){
   // LINE WORKS
   var ln=g('d_line');
   if(p['LINE_URL']){ ln.href=p['LINE_URL']; ln.style.display='flex'; } else { ln.style.display='none'; }
+
+  // お客様向け進捗共有（管理者のみ）
+  var shBtn=g('d_share'), shPanel=g('sharePanel');
+  shPanel.style.display='none';
+  if(isAdmin()){
+    shBtn.style.display='flex';
+    var tok=String(p['共有トークン']||'').trim();
+    setShareUI(tok);
+  } else { shBtn.style.display='none'; }
 
   // 案件情報
   var rows='';
@@ -717,7 +741,45 @@ function saveCustomer(){
 }
 
 /* ===== ヘルパー ===== */
-function statusColor(s){var m={'受注':'var(--s-受注)','段取済':'#7c3aed','施工中':'var(--s-施工中)','完了':'var(--s-完了)'};return m[s]||'var(--sub)';}
+/* ===== お客様向け進捗共有 ===== */
+function shareViewUrl(tok){return BASE+'share/?t='+encodeURIComponent(tok);}
+function setShareUI(tok){
+  var off=document.getElementById('shareOff'),on=document.getElementById('shareOn');
+  if(tok){ off.style.display='none'; on.style.display='block'; document.getElementById('shareUrl').value=shareViewUrl(tok); }
+  else { off.style.display='block'; on.style.display='none'; }
+}
+function openSharePanel(){
+  var pn=document.getElementById('sharePanel');
+  pn.style.display=(pn.style.display==='none')?'block':'none';
+}
+function shareEnable(){
+  if(!curDetail){return;}
+  callGAS({action:'shareEnable',id:curDetail['案件ID']}).then(function(res){
+    if(res&&res.ok&&res.token){ curDetail['共有トークン']=res.token;
+      var idx=-1;projects.forEach(function(p,i){if(String(p['案件ID'])===String(curDetail['案件ID']))idx=i;});
+      if(idx>=0)projects[idx]['共有トークン']=res.token; saveCache();
+      setShareUI(res.token); toast('共有URLを発行しました'); }
+    else toast((res&&res.error)||'発行に失敗しました');
+  }).catch(function(e){toast(e.message);});
+}
+function shareDisable(){
+  if(!curDetail)return;
+  if(!confirm('共有を停止します。発行済みのURLは無効になります。よろしいですか？'))return;
+  callGAS({action:'shareDisable',id:curDetail['案件ID']}).then(function(res){
+    if(res&&res.ok){ curDetail['共有トークン']='';
+      var idx=-1;projects.forEach(function(p,i){if(String(p['案件ID'])===String(curDetail['案件ID']))idx=i;});
+      if(idx>=0)projects[idx]['共有トークン']=''; saveCache();
+      setShareUI(''); toast('共有を停止しました'); }
+    else toast((res&&res.error)||'停止に失敗しました');
+  }).catch(function(e){toast(e.message);});
+}
+function shareCopy(){
+  var inp=document.getElementById('shareUrl');inp.select();
+  try{ if(navigator.clipboard){navigator.clipboard.writeText(inp.value);}else{document.execCommand('copy');} toast('URLをコピーしました'); }catch(e){ toast('コピーできませんでした。長押しでコピーしてください'); }
+}
+function shareOpen(){ var u=document.getElementById('shareUrl').value; if(u)window.open(u,'_blank'); }
+
+function statusColor(s){var m={'見積中':'var(--s-見積中)','受注':'var(--s-受注)','段取済':'#9333ea','施工中':'var(--s-施工中)','完了':'var(--s-完了)','請求済':'var(--s-請求)'};return m[s]||'var(--sub)';}
 function num(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN(n)?0:n;}
 function yen(v){var n=num(v);return n?('¥'+n.toLocaleString('ja-JP')):'';}
 function dateOnly(v){return v?String(v).slice(0,10):'';}
