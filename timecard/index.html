@@ -99,7 +99,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v38</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v39</div>
 <div class="head">
   <div class="bar"><a href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a><button onclick="reload()">↻</button></div>
   <div class="me" id="meName">―</div>
@@ -130,6 +130,9 @@
       </div>
       <div class="logttl">今日の打刻</div>
       <div class="log" id="log"></div>
+      <div id="undoRow" style="display:none;text-align:right;margin-top:8px;">
+        <button id="undoBtn" onclick="undoLast()" style="border:1px solid #e0b4b4;background:#fff;color:#c0392b;border-radius:10px;padding:8px 14px;font-size:12.5px;font-weight:700;cursor:pointer;">↩ 直前の打刻を取り消す</button>
+      </div>
     </div>
   </div>
 
@@ -343,6 +346,33 @@ function renderHome(){
     h+='<div class="lrow"><span class="dt">'+esc(inT||'—')+' → '+(outT?nd+esc(outT):'—')+'</span><span class="pin" style="margin-left:auto;font-size:12px;'+(outT?'color:var(--sub);':'color:var(--green);font-weight:700;')+'">'+esc(right)+'</span></div>';
   });
   log.innerHTML=h;
+  updateUndoRow();
+}
+function lastSession(){ var t=ymd(new Date());
+  var rows=mySessions().filter(function(k){ var d=String(k['日付']).slice(0,10); return d===t || (k['出勤']&&!k['退勤']); });
+  return rows.length?rows[rows.length-1]:null; }
+function updateUndoRow(){ var row=document.getElementById('undoRow'); if(!row)return;
+  row.style.display=lastSession()?'block':'none'; }
+function undoLast(){
+  if(!me){toast('ログインしてください');return;}
+  var k=lastSession(); if(!k){toast('取り消せる打刻がありません');return;}
+  var id=k['勤怠ID'];
+  if(k['退勤']){
+    if(!confirm('退勤 '+k['退勤']+' を取り消して「勤務中」に戻します。よろしいですか？'))return;
+    showLoad();
+    callGAS({action:'updateKintai',id:id,data:{'出勤':k['出勤']||'','退勤':'','休憩分':Number(k['休憩分']||0)}})
+      .then(function(res){ if(!res.ok)throw new Error(res.error||'取消失敗');
+        upTodayK(res.kintai); renderHome(); toast('退勤を取り消しました（勤務中に戻りました）'); })
+      .catch(function(err){toast('失敗：'+err.message);}).then(hideLoad);
+  }else{
+    if(!confirm('出勤 '+(k['出勤']||'')+' の記録を削除します。よろしいですか？'))return;
+    showLoad();
+    callGAS({action:'kintaiDeleteOwn',id:id,wid:me['作業員ID']})
+      .then(function(res){ if(!res.ok)throw new Error(res.error||'取消失敗');
+        todayK=todayK.filter(function(x){return String(x['勤怠ID'])!==String(id);});
+        renderHome(); toast('出勤を取り消しました'); })
+      .catch(function(err){toast('失敗：'+err.message);}).then(hideLoad);
+  }
 }
 
 function getPos(){return new Promise(function(res){ if(!navigator.geolocation){res('');return;}
