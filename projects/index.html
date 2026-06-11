@@ -47,6 +47,12 @@
   .card .name{font-weight:700;font-size:15.5px;}
   .card .id{font-size:11px;color:var(--sub);font-variant-numeric:tabular-nums;}
   .badge{font-size:11px;font-weight:700;color:#fff;padding:3px 9px;border-radius:999px;white-space:nowrap;}
+  .rfbtn{border:1px solid var(--line);background:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:14px;color:var(--sub);line-height:1;}
+  .tile.hl{animation:hlpulse 2.5s ease;}
+  @keyframes hlpulse{0%{box-shadow:0 0 0 4px #f5a623;}70%{box-shadow:0 0 0 4px rgba(245,166,35,.35);}100%{box-shadow:none;}}
+  .tbar{height:4px;background:#e8eaf2;border-radius:2px;margin-top:6px;overflow:hidden;width:100%;}
+  .tbarin{height:100%;border-radius:2px;}
+  .tbartx{font-size:10px;font-weight:700;margin-top:2px;}
   .meta{font-size:13px;color:var(--sub);display:flex;flex-wrap:wrap;gap:4px 12px;}
   .meta b{color:var(--ink);font-weight:600;}
   .yen{font-variant-numeric:tabular-nums;}
@@ -162,11 +168,11 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v45</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v46</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
-    <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
+    <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span><button class="rfbtn" onclick="reload(false)" title="最新の状態に更新">↻</button></span>
   </div>
   <div class="hd-row" style="margin-top:6px;"><h1>案件管理</h1>
     <div style="display:flex;gap:6px;">
@@ -553,6 +559,29 @@ function openCheckInTB(caseId,noteId){ location.href='../toolbox/?check='+encode
 function openDrawInTB(caseId,noteId){ location.href='../toolbox/?draw='+encodeURIComponent(caseId)+'&note='+encodeURIComponent(noteId); }
 function editFromDetail(){ closeDetail(); if(curDetail)openProject(curDetail); }
 function closeDetail(ev){ if(ev&&ev.preventDefault)ev.preventDefault(); document.getElementById('ovd').classList.remove('show'); }
+function parseYmd(v){if(!v)return null;var t=String(v).slice(0,10).replace(/\//g,'-');var d=new Date(t+'T00:00:00');return isNaN(d.getTime())?null:d;}
+function termBar(p){
+  if(p['ステータス']!=='施工中')return '';
+  var st=parseYmd(p['工期開始']),en=parseYmd(p['工期完了']);
+  if(!st||!en||en<=st)return '';
+  var now=new Date();now.setHours(0,0,0,0);
+  var total=Math.round((en-st)/86400000);
+  var done=Math.round((now-st)/86400000);
+  var pct=Math.max(0,Math.min(100,Math.round(done/total*100)));
+  var rem=Math.round((en-now)/86400000);
+  var col=rem<0?'#c0392b':(rem<=7?'#e67e22':'#2e86de');
+  var txt=rem<0?('工期超過 '+(-rem)+'日'):('工期 残'+rem+'日');
+  return '<div class="tbar"><div class="tbarin" style="width:'+pct+'%;background:'+col+'"></div></div><div class="tbartx" style="color:'+col+'">'+txt+'</div>';
+}
+function highlightCard(pid){
+  if(!pid)return;
+  var el=document.querySelector('.tile[data-pid="'+pid+'"]');
+  if(!el&&filterStatus!=='すべて'){filterStatus='すべて';buildChips();render();el=document.querySelector('.tile[data-pid="'+pid+'"]');}
+  if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'center'});
+  el.classList.add('hl');
+  setTimeout(function(){el.classList.remove('hl');},2600);
+}
 function render(){
   var q=(document.getElementById('q').value||'').trim();
   var list=projects.slice();
@@ -580,9 +609,11 @@ function render(){
     arr.forEach(function(p){
       var col=statusColor(p['ステータス']);
       var t=document.createElement('div');t.className='tile';t.style.borderTopColor=col;
+      t.dataset.pid=p['案件ID']||'';
       t.onclick=function(){openDetail(p);};
       var h='<div class="ic">📷</div><div class="tn">'+esc(p['案件名']||'(無題)')+'</div>';
       if(p['ステータス'])h+='<div class="ts" style="background:'+col+'">'+esc(p['ステータス'])+'</div>';
+      h+=termBar(p);
       t.innerHTML=h;
       tiles.appendChild(t);
     });
@@ -652,6 +683,7 @@ function saveProject(){
     if(isNew){projects.push(rec);}
     else{for(var i=0;i<projects.length;i++){if(projects[i]['案件ID']===id){projects[i]=rec;break;}}}
     saveCache(); buildChips(); render(); closeOv(); toast(isNew?'登録しました':'更新しました');
+    setTimeout(function(){highlightCard(rec['案件ID']);},150);
   }).catch(function(err){toast('失敗：'+err.message);})
     .then(function(){btn.disabled=false;btn.textContent='保存';});
 }
