@@ -1,372 +1,1677 @@
 <!DOCTYPE html>
-<!-- version 2 tools (2026-06-11) 起動・認証処理を修正 -->
+<!-- toolbox version 26 (2026-06-10) 材料リスト追加・小黒板カメラ/材料のdeep-link対応 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>道具・工具管理｜河口電機</title>
+<title>ツールボックス｜現場管理</title>
+<link rel="apple-touch-icon" href="https://kawaguchidenki001.github.io/genba-projects/icon-180.png">
+<meta name="apple-mobile-web-app-title" content="ツールボックス">
+<meta name="theme-color" content="#1f5f8b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#f4f5f7;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#b45309;--accent-d:#92400e;
-    --radius:12px;--shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:90px;}
-  header{position:sticky;top:0;z-index:20;background:var(--accent);color:#fff;padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
-  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .hd-row h1{font-size:17px;margin:0;font-weight:700;}
-  .back{color:#ffe4c7;text-decoration:none;font-size:13px;flex:0 0 auto;}
-  main{padding:12px;max-width:760px;margin:0 auto;}
+  :root{
+    --bg1:#e3f7f7;--bg2:#f3fcfc;--ink:#173a3c;--sub:#5a8284;
+    --accent:#0d9aa0;--accent-d:#0a7d82;--accent-soft:#dff5f5;
+    --line:#cce9e9;--card:#ffffff;--shadow:0 2px 10px rgba(13,154,160,.10);--shadow-lg:0 10px 30px rgba(10,125,130,.16);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{min-height:100vh;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.6;
+    background:linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 60%,#ffffff 100%);background-attachment:fixed;}
+  .wrap{max-width:680px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 20px) 16px 44px;}
+  .head{margin:0 2px 18px;}
+  .head .back{display:inline-block;font-size:13px;color:var(--accent-d);background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;text-decoration:none;margin-bottom:14px;font-weight:600;box-shadow:var(--shadow);}
+  .head .back:active{background:var(--accent-soft);}
+  .kicker{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.26em;font-size:11px;color:var(--sub);text-transform:uppercase;}
+  .head h1{font-weight:700;font-size:28px;letter-spacing:.05em;margin-top:6px;color:var(--accent-d);}
+  .head .co{color:var(--sub);font-size:13px;margin-top:3px;}
   .pane{display:none;} .pane.on{display:block;}
-  .tabs{display:flex;gap:6px;margin-bottom:12px;}
-  .tabs button{flex:1;padding:11px 5px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;}
-  .tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
-  .lead{font-size:13px;color:var(--sub);margin:0 2px 12px;line-height:1.7;}
-  .lbl{display:block;font-size:12.5px;font-weight:700;color:var(--sub);margin:12px 2px 5px;}
-  .inp,select.inp,textarea.inp{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;color:var(--ink);font-family:inherit;}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14px;}
-  .addbtn{width:100%;padding:13px;border:1.5px dashed var(--accent);border-radius:12px;background:#fff7ed;color:var(--accent-d);font-size:14.5px;font-weight:700;cursor:pointer;margin-bottom:10px;}
-  .search{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;margin-bottom:10px;background:#fff;}
-  /* 道具カード */
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:9px;border-left:5px solid var(--accent);}
-  .card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-  .nm{font-weight:700;font-size:15.5px;}
-  .meta{font-size:12.5px;color:var(--sub);margin-top:1px;}
-  .stat{flex:0 0 auto;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;}
-  .stat.通常{background:#dcfce7;color:#166534;}
-  .stat.修理中{background:#fef3c7;color:#92400e;}
-  .stat.廃棄{background:#f3f4f6;color:#9ca3af;}
-  .lendinfo{margin-top:8px;border-top:1px dashed var(--line);padding-top:7px;font-size:12.5px;}
-  .lendrow{display:flex;justify-content:space-between;align-items:center;padding:3px 0;}
-  .lendrow .who{color:var(--accent-d);font-weight:700;}
-  .lendrow .rtn{flex:0 0 auto;padding:4px 10px;border:1px solid var(--accent);border-radius:8px;background:#fff;color:var(--accent-d);font-size:11.5px;font-weight:700;cursor:pointer;}
-  .cardbtns{display:flex;gap:6px;margin-top:9px;}
-  .cardbtns button{flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--accent-d);}
-  .cardbtns .lend{background:var(--accent);border-color:var(--accent);color:#fff;}
-  /* モーダル */
-  .ov{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:60;}
-  .ov.on{display:flex;}
-  .sheet{background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 20px);box-shadow:0 -4px 24px rgba(0,0,0,.18);max-height:88vh;overflow:auto;}
-  .sheet h3{margin:0 0 4px;font-size:16px;}
-  .sheet .sub2{font-size:12.5px;color:var(--sub);margin-bottom:10px;}
-  .savebtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:14px;}
-  .delbtn{width:100%;padding:11px;border:1px solid #f3c0c0;border-radius:11px;background:#fff;color:#dc2626;font-size:13.5px;font-weight:700;cursor:pointer;margin-top:8px;}
-  .closebtn{width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--sub);font-size:13.5px;font-weight:700;cursor:pointer;margin-top:8px;}
-  /* 貸出中一覧 */
-  .lcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:11px 14px;margin-bottom:8px;border-left:5px solid var(--accent);}
-  .lcard.over{border-left-color:#dc2626;}
-  .lcard .lt{display:flex;justify-content:space-between;align-items:center;}
-  .lcard .od{font-size:11.5px;color:#dc2626;font-weight:700;}
-  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:#1f2733;color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:88vw;text-align:center;}
-  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-  .loading{position:fixed;inset:0;background:rgba(244,245,247,.7);display:none;align-items:center;justify-content:center;z-index:80;}
-  .loading.show{display:flex;}
-  .lbox{background:#fff;border-radius:14px;padding:22px 30px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.12);}
-  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
-  @keyframes sp{to{transform:rotate(360deg)}}
-  .lbox .txt{font-size:13.5px;color:var(--sub);}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+  .sq{position:relative;display:flex;flex-direction:column;aspect-ratio:1/1;border-radius:16px;padding:13px;color:var(--ink);
+    background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;}
+  .sq:active{transform:scale(.97);box-shadow:var(--shadow-lg);}
+  .sq .ic{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;color:#fff;}
+  .sq .txt{margin-top:auto;min-width:0;}
+  .sq .nm{font-weight:700;font-size:13px;letter-spacing:.01em;color:var(--ink);}
+  .sq .ds{display:none;}
+  .sq .cor{position:absolute;top:10px;right:11px;font-size:14px;color:var(--sub);}
+  .sq.soon{opacity:.7;}
+  .sq.soon .cor{font-size:10px;letter-spacing:.08em;background:var(--accent-soft);border:1px solid var(--line);border-radius:999px;padding:2px 7px;font-family:"Manrope",sans-serif;color:var(--sub);}
+  .t-memo .ic{background:#22a06b;} .t-memo{border-top:3px solid #22a06b;}
+  .t-check .ic{background:#2d7dd2;} .t-check{border-top:3px solid #2d7dd2;}
+  .t-draw .ic{background:#7c3ab4;} .t-draw{border-top:3px solid #7c3ab4;}
+  .t-mat .ic{background:#0f766e;} .t-mat{border-top:3px solid #0f766e;}
+  .t-rec .ic{background:#d64646;} .t-rec{border-top:3px solid #d64646;}
+  .t-board .ic{background:#e8910b;} .t-board{border-top:3px solid #e8910b;}
+  .t-elec .ic{background:#bd941c;} .t-elec{border-top:3px solid #bd941c;}
+  .t-area .ic{background:#0d9aa0;} .t-area{border-top:3px solid #0d9aa0;}
+  @media (min-width:680px){
+    .grid{grid-template-columns:1fr 1fr;}
+    .sq{flex-direction:row;align-items:center;aspect-ratio:auto;padding:16px 18px;gap:14px;border-top:1px solid var(--line);border-left:4px solid;}
+    .t-memo{border-left-color:#22a06b;} .t-check{border-left-color:#2d7dd2;} .t-draw{border-left-color:#7c3ab4;} .t-mat{border-left-color:#0f766e;}
+    .t-rec{border-left-color:#d64646;} .t-board{border-left-color:#e8910b;} .t-elec{border-left-color:#bd941c;} .t-area{border-left-color:#0d9aa0;}
+    .sq .ic{width:48px;height:48px;font-size:24px;}
+    .sq .txt{margin-top:0;} .sq .nm{font-size:16px;}
+    .sq .ds{display:block;font-size:12.5px;color:var(--sub);margin-top:2px;}
+    .sq .cor{position:static;margin-left:auto;font-size:18px;}
+    .sq.soon .cor{font-size:11px;}
+  }
+  .thead{display:flex;align-items:center;gap:10px;margin:0 2px 16px;}
+  .thead h2{font-size:20px;font-weight:700;letter-spacing:.04em;flex:1;min-width:0;color:var(--accent-d);}
+  .back2{font-size:13px;color:var(--accent-d);background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 12px;cursor:pointer;white-space:nowrap;font-weight:600;box-shadow:var(--shadow);}
+  .back2:active{background:var(--accent-soft);}
+  .thead .del{font-size:13px;color:#d63a3f;background:#fff;border:1px solid #f3c4c6;border-radius:10px;padding:7px 12px;cursor:pointer;white-space:nowrap;}
+  .addbtn{width:100%;padding:14px;border:1px dashed var(--accent);border-radius:14px;background:var(--accent-soft);color:var(--accent-d);font-size:15px;font-weight:700;cursor:pointer;margin-bottom:14px;}
+  .addbtn:active{background:#cdeeef;}
+  .memo{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;box-shadow:var(--shadow);}
+  .memo:active{background:var(--accent-soft);}
+  .memo .m-t{font-weight:700;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink);}
+  .memo .m-p{color:var(--sub);font-size:13px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .memo .m-d{color:var(--sub);font-size:11px;margin-top:7px;font-family:"Manrope",sans-serif;letter-spacing:.03em;}
+  .empty{text-align:center;color:var(--sub);padding:44px 16px;font-size:14px;line-height:1.8;}
+  #memoTitle{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:16px;font-weight:700;margin-bottom:10px;}
+  #memoBody{width:100%;min-height:48vh;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:16px;line-height:1.7;resize:vertical;font-family:inherit;}
+  .savehint{font-size:12px;color:var(--sub);margin-top:10px;text-align:center;min-height:16px;opacity:0;transition:opacity .2s;font-family:"Manrope",sans-serif;}
+  .savehint.show{opacity:1;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:30px;z-index:200;background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:var(--shadow-lg);max-width:88%;text-align:center;}
+  .toast.show{opacity:1;}
+  .lead{color:var(--ink);font-size:14px;margin:0 2px 16px;line-height:1.7;}
+  .slbl{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--sub);margin:14px 2px 6px;}
+  .sel{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:16px;}
+  .sel:disabled{opacity:.5;}
+  .sitebar{background:var(--accent-soft);border:1px solid var(--line);border-radius:11px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:var(--ink);}
+  .sitebar b{font-weight:700;}
+  .savebtn{width:100%;padding:14px;border:none;border-radius:13px;background:var(--accent);color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-top:14px;box-shadow:var(--shadow);}
+  .savebtn:active{filter:brightness(1.08);}
+  #noteTitle{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:16px;font-weight:700;}
+  #noteBody{width:100%;min-height:40vh;padding:14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:16px;line-height:1.7;resize:vertical;font-family:inherit;}
+  .tload{position:fixed;inset:0;z-index:300;background:rgba(23,58,60,.45);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
+  .tload.show{display:flex;}
+  .tlbox{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 30px;text-align:center;box-shadow:var(--shadow-lg);}
+  .tspin{width:36px;height:36px;border:4px solid var(--accent-soft);border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:tsp .8s linear infinite;}
+  @keyframes tsp{to{transform:rotate(360deg);}}
+  .tltxt{font-size:14px;font-weight:700;color:var(--ink);}
+  .linkbtn{width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--accent-d);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;box-shadow:var(--shadow);}
+  .linkbtn:active{background:var(--accent-soft);}
+  .citem{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:9px 11px;margin-bottom:8px;box-shadow:var(--shadow);}
+  .citem input[type=checkbox]{width:24px;height:24px;flex:0 0 auto;accent-color:var(--accent);}
+  .citem input[type=text]{flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-size:15px;}
+  .citem.done input[type=text]{text-decoration:line-through;opacity:.55;}
+  .citem .cdel{flex:0 0 auto;background:none;border:none;color:#d63a3f;font-size:22px;line-height:1;cursor:pointer;padding:2px 6px;}
+  .matrow{display:flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--line);border-radius:11px;padding:8px 9px;margin-bottom:8px;box-shadow:var(--shadow);flex-wrap:wrap;}
+  .matrow input[type=checkbox]{width:22px;height:22px;flex:0 0 auto;accent-color:var(--accent);}
+  .matrow .mt-name{flex:1 1 100%;min-width:0;padding:8px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:15px;font-weight:600;order:2;}
+  .matrow .mt-qty{flex:0 0 72px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:14px;order:3;}
+  .matrow .mt-sup{flex:1 1 0;min-width:90px;padding:8px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:14px;order:4;}
+  .matrow input[type=checkbox]{order:1;}
+  .matrow .mdel{order:5;flex:0 0 auto;background:none;border:none;color:#d63a3f;font-size:21px;cursor:pointer;padding:2px 5px;}
+  .matrow.done .mt-name{text-decoration:line-through;opacity:.55;}
+  .additem{width:100%;padding:11px;border:1px dashed var(--accent);border-radius:11px;background:var(--accent-soft);color:var(--accent-d);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px;}
+  .additem:active{background:#cdeeef;}
+  #drawCanvas{width:100%;height:300px;border-radius:12px;background:#fff;touch-action:none;cursor:crosshair;display:block;border:1px solid var(--line);}
+  .dtoolbar{display:flex;gap:7px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
+  .dtoolbar button{padding:7px 11px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--accent-d);font-size:13px;font-weight:700;cursor:pointer;}
+  .dtoolbar button.on{border-color:var(--accent);background:var(--accent-soft);}
+  .cswatch{width:28px;height:28px;border-radius:50%;border:2.5px solid var(--line);cursor:pointer;flex:0 0 auto;display:inline-block;}
+  .cswatch.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft);}
+  .dcard{display:flex;gap:12px;align-items:center;}
+  .dcard .draw-thumb-cv{flex:0 0 80px;width:80px;height:60px;border-radius:8px;border:1px solid var(--line);background:#fff;}
+  .dcard .dcard-info{flex:1;min-width:0;}
+  /* 電気計算機 */
+  .etabs{display:flex;flex-wrap:wrap;gap:6px;margin:0 2px 16px;}
+  .etab{flex:1 1 calc(50% - 3px);min-width:0;padding:11px 5px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--accent-d);font-size:13px;font-weight:700;cursor:pointer;box-shadow:var(--shadow);}
+  .etab.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .epanel{display:none;} .epanel.on{display:block;}
+  .ktbl{width:100%;border-collapse:collapse;font-size:14px;margin-top:2px;}
+  .ktbl th{font-size:12px;font-weight:700;text-align:left;padding:4px 6px;border-bottom:1px solid rgba(0,0,0,.18);opacity:.75;}
+  .ktbl td{padding:7px 6px;border-bottom:1px solid rgba(0,0,0,.10);}
+  .ktbl td.kz{font-weight:800;font-size:16px;}
+  .ktbl tr:last-child td{border-bottom:none;}
+  .ehint{color:var(--sub);font-size:12.5px;line-height:1.7;margin:0 2px 12px;}
+  .enote{color:var(--sub);font-size:12px;line-height:1.7;margin:14px 2px 0;}
+  .eseg{display:flex;gap:6px;margin-bottom:2px;}
+  .eseg button{flex:1;padding:12px 5px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--accent-d);font-size:14px;font-weight:700;cursor:pointer;}
+  .eseg button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .ecell{margin-bottom:2px;}
+  .enum{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:17px;font-weight:700;}
+  .eres{margin-top:18px;padding:18px 16px;border-radius:14px;background:#fff;border:1px solid var(--line);text-align:center;color:var(--sub);font-size:14px;box-shadow:var(--shadow);min-height:60px;display:flex;flex-direction:column;justify-content:center;}
+  .eres.ok{background:var(--accent-soft);border-color:var(--accent);color:var(--ink);}
+  .eres.err{background:#fdeaea;border-color:#f3c2bd;color:#b3271e;}
+  .eres .big{font-size:25px;font-weight:800;letter-spacing:.02em;color:var(--accent-d);}
+  .eres .sub{font-size:13px;color:var(--sub);margin-top:7px;line-height:1.6;}
+  /* 坪・㎡・畳 換算 */
+  .aconv{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:end;margin-bottom:14px;}
+  .aconv-eq{padding-bottom:14px;text-align:center;font-size:22px;color:var(--sub);font-family:"Manrope",sans-serif;}
+  .afrom{padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:17px;font-weight:700;width:100%;}
+  .ato{padding:13px 14px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--line);color:var(--accent-d);font-size:17px;font-weight:700;text-align:center;min-height:51px;display:flex;align-items:center;justify-content:center;}
+  .aunit{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--sub);margin-bottom:5px;margin-left:2px;}
+  .asep{height:1px;background:var(--line);margin:20px 2px 18px;}
+  .atbl{width:100%;border-collapse:collapse;font-size:14px;}
+  .atbl th{text-align:left;padding:9px 10px;color:var(--sub);font-size:12px;font-weight:700;letter-spacing:.05em;border-bottom:1px solid var(--line);}
+  .atbl td{padding:11px 10px;border-bottom:1px solid var(--line);vertical-align:top;}
+  .atbl tr:last-child td{border-bottom:none;}
+  .atbl .av{font-size:18px;font-weight:800;color:var(--accent-d);}
+  .atbl .au{font-size:12px;color:var(--sub);margin-top:2px;}
+  /* 小黒板カメラ（プレビュー黒板は黒背景維持） */
+  .bcam-wrap{position:relative;border-radius:12px;overflow:hidden;background:#111;margin-bottom:10px;line-height:0;aspect-ratio:4/3;}
+  #boardVideo{width:100%;height:100%;object-fit:cover;display:block;}
+  .bov-bd{position:absolute;background:#1a8c78;border:2px solid #fff;box-sizing:border-box;cursor:move;touch-action:none;user-select:none;-webkit-user-select:none;font-size:10px;line-height:1;overflow:hidden;}
+  .bov-row{display:flex;border-bottom:1px solid rgba(255,255,255,.5);height:14%;}
+  .bov-lb{width:22%;border-right:1px solid rgba(255,255,255,.5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .bov-vl{flex:1;color:#fff;display:flex;align-items:center;padding-left:5%;font-weight:700;white-space:nowrap;overflow:hidden;}
+  .bov-ph{height:58%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}
+  .bov-co{height:14%;color:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:flex-end;padding-right:5%;font-weight:700;}
+  .bsize-row{display:flex;align-items:center;gap:10px;margin:0 2px 12px;}
+  .bsize-row label{font-size:12px;font-weight:700;color:var(--sub);white-space:nowrap;}
+  .bsize-row input[type=range]{flex:1;accent-color:var(--accent);}
+  .bsize-val{font-size:12px;font-weight:800;color:var(--accent-d);min-width:44px;text-align:right;font-family:"Manrope",sans-serif;}
+  .board-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:2px;}
+  /* 録音機 */
+  .rec-center{text-align:center;padding:24px 0 10px;}
+  .rec-btn{width:88px;height:88px;border-radius:50%;border:none;font-size:40px;cursor:pointer;background:#d64646;box-shadow:0 6px 24px rgba(214,70,70,.4);transition:transform .12s;color:#fff;}
+  .rec-btn:active{transform:scale(.94);}
+  .rec-btn.rec-stop{background:#444;box-shadow:0 6px 20px rgba(0,0,0,.25);}
+  .rec-label{margin-top:10px;font-size:13px;color:var(--sub);font-weight:700;}
+  .rec-timer{font-size:34px;font-weight:800;font-family:"Manrope",sans-serif;letter-spacing:.08em;margin-bottom:14px;color:var(--ink);}
+  .rec-hint{color:var(--sub);font-size:13px;margin-bottom:16px;line-height:1.7;}
+  .rec-pulse{width:22px;height:22px;border-radius:50%;background:#d64646;margin:0 auto 14px;animation:rpulse 1.2s ease-in-out infinite;}
+  @keyframes rpulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.6);opacity:.5;}}
 </style>
-</head>
 <body>
-<header>
-  <div class="hd-row">
-    <a class="back" href="../">← 現場管理メニュー</a>
-    <h1>🧰 道具・工具管理</h1>
-    <span style="width:30px;"></span>
-  </div>
-</header>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v26</div>
 
-<main>
-  <div class="tabs">
-    <button class="on" id="tabTools" onclick="tab('tools')">道具一覧</button>
-    <button id="tabLends" onclick="tab('lends')">貸出中</button>
+<div class="wrap">
+
+  <!-- ========== トップ ========== -->
+  <div class="pane on" id="p-home">
+    <div class="head">
+      <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
+      <div class="kicker">Toolbox</div>
+      <h1>ツールボックス</h1>
+      <div class="co">現場で使う道具をまとめて</div>
+    </div>
+    <div class="grid">
+      <div class="sq t-memo"  onclick="openTool('memo')"><span class="ic">📝</span><span class="txt"><span class="nm">現場メモ</span><span class="ds">サッとテキストでメモ</span></span><span class="cor">→</span></div>
+      <div class="sq t-check" onclick="openTool('check')"><span class="ic">✅</span><span class="txt"><span class="nm">チェックリスト</span><span class="ds">確認項目を管理</span></span><span class="cor">→</span></div>
+      <div class="sq t-draw"  onclick="openTool('draw')"><span class="ic">✍️</span><span class="txt"><span class="nm">手書きメモ</span><span class="ds">指で書ける</span></span><span class="cor">→</span></div>
+      <div class="sq t-mat"   onclick="openTool('mat')"><span class="ic">📦</span><span class="txt"><span class="nm">材料リスト</span><span class="ds">材料の数量・仕入先を管理</span></span><span class="cor">→</span></div>
+      <div class="sq t-rec"   onclick="openTool('rec')"><span class="ic">🎙️</span><span class="txt"><span class="nm">録音機</span><span class="ds">音声を記録</span></span><span class="cor">→</span></div>
+      <div class="sq t-board" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">→</span></div>
+      <div class="sq t-elec"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">→</span></div>
+      <div class="sq t-area"  onclick="openTool('area')"><span class="ic">📐</span><span class="txt"><span class="nm">坪・㎡・畳</span><span class="ds">面積の換算</span></span><span class="cor">→</span></div>
+      <div class="sq t-meas"  onclick="openTool('meas')"><span class="ic">📏</span><span class="txt"><span class="nm">面積計算機</span><span class="ds">寸法から面積を計算</span></span><span class="cor">→</span></div>
+    </div>
   </div>
 
-  <!-- 道具一覧 -->
-  <div class="pane on" id="p-tools">
-    <button class="addbtn" id="addTool" style="display:none" onclick="openEdit(null)">＋ 道具を登録（管理者）</button>
-    <input class="search" id="q" placeholder="道具名・区分で検索" oninput="renderTools()">
-    <div id="toolList"></div>
+  <!-- ========== ① 現場メモ：現場を選ぶ ========== -->
+  <div class="pane" id="p-memo-select">
+    <div class="thead">
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
+      <h2 id="selTitle">現場メモ</h2>
+    </div>
+    <div class="lead" id="selLead">種別を選んでください。</div>
+    <div class="sitebar" id="selCrumb" style="display:none;margin-bottom:14px;"></div>
+    <div id="selList"></div>
   </div>
 
-  <!-- 貸出中 -->
-  <div class="pane" id="p-lends">
-    <p class="lead">現在貸出中の道具です。返却予定日を過ぎたものは赤く表示されます。</p>
-    <div id="lendList"></div>
+  <!-- 現場メモ：一覧 -->
+  <div class="pane" id="p-memo-list">
+    <div class="thead">
+      <span class="back2" onclick="resetAndGoSelect()">← 現場を変える</span>
+      <h2>現場メモ</h2>
+    </div>
+    <div class="sitebar" id="memoSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <button class="addbtn" onclick="newNote()">＋ 新しいメモ</button>
+    <div id="noteList"></div>
   </div>
-</main>
 
-<!-- 貸出モーダル -->
-<div class="ov" id="ovLend">
-  <div class="sheet">
-    <h3 id="lendTtl">道具を持ち出す</h3>
-    <div class="sub2" id="lendSub"></div>
-    <div class="grid2">
-      <div>
-        <label class="lbl">数量</label>
-        <input class="inp" id="lQty" type="number" inputmode="numeric" value="1" min="1">
+  <!-- 現場メモ：編集 -->
+  <div class="pane" id="p-memo-edit">
+    <div class="thead">
+      <span class="back2" onclick="openSiteMemoList()">← 一覧</span>
+      <h2>メモ</h2>
+      <span class="del" onclick="deleteNote()">削除</span>
+    </div>
+    <div class="sitebar" id="editSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <label class="slbl">タイトル（何のメモか）</label>
+    <input id="noteTitle" placeholder="例：配線確認のメモ" autocapitalize="off">
+    <label class="slbl">本文</label>
+    <textarea id="noteBody" placeholder="ここにメモ…"></textarea>
+    <button class="savebtn" onclick="saveNote()">保存する</button>
+    <div class="savehint" id="noteSaved"></div>
+  </div>
+
+  <!-- ② 現場チェックリスト：一覧 -->
+  <div class="pane" id="p-check-list">
+    <div class="thead">
+      <span class="back2" onclick="resetAndGoSelect()">← 現場を変える</span>
+      <h2>現場チェックリスト</h2>
+    </div>
+    <div class="sitebar" id="checkSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <button class="addbtn" onclick="newCheck()">＋ 新しいチェックリスト</button>
+    <div id="checkList"></div>
+  </div>
+
+  <!-- 現場チェックリスト：編集 -->
+  <div class="pane" id="p-check-edit">
+    <div class="thead">
+      <span class="back2" onclick="openSiteCheckList()">← 一覧</span>
+      <h2>チェックリスト</h2>
+      <span class="del" onclick="deleteCheck()">削除</span>
+    </div>
+    <div class="sitebar" id="checkEditSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <label class="slbl">タイトル（何のチェックか）</label>
+    <input id="checkTitle" placeholder="例：着工前チェック" autocapitalize="off">
+    <label class="slbl">項目（チェックを入れると完了）</label>
+    <div id="checkItems"></div>
+    <button class="additem" onclick="addCheckItem()">＋ 項目を追加</button>
+    <button class="savebtn" onclick="saveCheck()">保存する</button>
+    <div class="savehint" id="checkSaved"></div>
+  </div>
+
+  <!-- ========== 材料リスト：一覧 ========== -->
+  <div class="pane" id="p-mat-list">
+    <div class="thead">
+      <span class="back2" onclick="go('p-menu')">← 道具箱</span>
+      <h2>材料リスト</h2>
+      <span style="width:36px;"></span>
+    </div>
+    <div class="sitebar" id="matSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <button class="additem" onclick="newMat()">＋ 新しい材料リスト</button>
+    <div id="matList"></div>
+  </div>
+
+  <!-- 材料リスト：編集 -->
+  <div class="pane" id="p-mat-edit">
+    <div class="thead">
+      <span class="back2" onclick="openSiteMatList()">← 一覧</span>
+      <h2>材料リスト</h2>
+      <span class="del" onclick="deleteMat()">削除</span>
+    </div>
+    <div class="sitebar" id="matEditSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <label class="slbl">タイトル（何の材料か）</label>
+    <input id="matTitle" placeholder="例：1F配線材料" autocapitalize="off">
+    <label class="slbl">材料（チェックで手配済み）</label>
+    <div id="matItems"></div>
+    <button class="additem" onclick="addMatItem()">＋ 材料を追加</button>
+    <button class="savebtn" onclick="saveMat()">保存する</button>
+    <div class="savehint" id="matSaved"></div>
+  </div>
+
+  <!-- ③ 手書きメモ：一覧 -->
+  <div class="pane" id="p-draw-list">
+    <div class="thead">
+      <span class="back2" onclick="resetAndGoSelect()">← 現場を変える</span>
+      <h2>手書きメモ</h2>
+    </div>
+    <div class="sitebar" id="drawSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <button class="addbtn" onclick="newDraw()">＋ 新しい手書きメモ</button>
+    <div id="drawList"></div>
+  </div>
+
+  <!-- 手書きメモ：編集 -->
+  <div class="pane" id="p-draw-edit">
+    <div class="thead">
+      <span class="back2" onclick="openSiteDrawList()">← 一覧</span>
+      <h2>手書きメモ</h2>
+      <span class="del" onclick="deleteDraw()">削除</span>
+    </div>
+    <div class="sitebar" id="drawEditSiteBar"></div>
+    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
+    <label class="slbl">タイトル（何の手書きか）</label>
+    <input id="drawTitle" placeholder="例：配線図スケッチ" autocapitalize="off">
+    <label class="slbl" style="margin-top:14px;margin-bottom:8px;">手書きエリア</label>
+    <div class="dtoolbar">
+      <span class="cswatch on" id="cswB" style="background:#222;" onclick="setDrawColor('#222','cswB')"></span>
+      <span class="cswatch" id="cswR" style="background:#e03030;" onclick="setDrawColor('#e03030','cswR')"></span>
+      <span class="cswatch" id="cswU" style="background:#1a6fd8;" onclick="setDrawColor('#1a6fd8','cswU')"></span>
+      <span class="cswatch" id="cswG" style="background:#1a9a50;" onclick="setDrawColor('#1a9a50','cswG')"></span>
+      <button id="dBtnS" class="on" onclick="setDrawWidth(2,'dBtnS')">細</button>
+      <button id="dBtnM" onclick="setDrawWidth(5,'dBtnM')">中</button>
+      <button id="dBtnL" onclick="setDrawWidth(10,'dBtnL')">太</button>
+      <button id="dBtnE" onclick="toggleEraser()">消しゴム</button>
+      <button onclick="undoDraw()">↩ 戻す</button>
+      <button onclick="clearDraw()">クリア</button>
+    </div>
+    <canvas id="drawCanvas"></canvas>
+    <button class="savebtn" onclick="saveDraw()">保存する</button>
+    <div class="savehint" id="drawSaved"></div>
+  </div>
+
+  <!-- ========== ⑥ 電気計算機 ========== -->
+  <div class="pane" id="p-elec">
+    <div class="thead">
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
+      <h2>電気計算機</h2>
+    </div>
+
+    <div class="etabs">
+      <button class="etab on" id="etab-kn" onclick="elecTab('kn')">幹線サイズ</button>
+      <button class="etab" id="etab-vd" onclick="elecTab('vd')">電圧降下</button>
+      <button class="etab" id="etab-pow" onclick="elecTab('pow')">電力・電流</button>
+      <button class="etab" id="etab-ohm" onclick="elecTab('ohm')">オームの法則</button>
+    </div>
+
+    <!-- オームの法則 -->
+    <div class="epanel" id="ep-ohm">
+      <div class="ehint">分かっている2つを入力すると、残り1つを自動で計算します。</div>
+      <div class="ecell"><label class="slbl">電圧 V（ボルト）</label><input class="enum" id="ohmV" inputmode="decimal" oninput="calcOhm()" placeholder="例 100"></div>
+      <div class="ecell"><label class="slbl">電流 I（アンペア）</label><input class="enum" id="ohmI" inputmode="decimal" oninput="calcOhm()" placeholder="例 5"></div>
+      <div class="ecell"><label class="slbl">抵抗 R（オーム）</label><input class="enum" id="ohmR" inputmode="decimal" oninput="calcOhm()" placeholder="例 20"></div>
+      <div class="eres" id="ohmRes">分かっている2つを入力してください</div>
+      <div class="enote">計算式：電圧 ＝ 電流 × 抵抗。電力（W）も合わせて表示します。</div>
+    </div>
+
+    <!-- 電力・電流 -->
+    <div class="epanel" id="ep-pow">
+      <label class="slbl">求めるもの</label>
+      <div class="eseg" id="powMode">
+        <button class="on" data-v="kw" onclick="powSetMode('kw')">電力（kW）</button>
+        <button data-v="a" onclick="powSetMode('a')">電流（A）</button>
       </div>
-      <div>
-        <label class="lbl">返却予定日（任意）</label>
-        <input class="inp" id="lDue" type="date">
+      <label class="slbl">回路の種類</label>
+      <div class="eseg" id="powPhase">
+        <button class="on" data-v="1" onclick="powSetPhase('1')">単相</button>
+        <button data-v="3" onclick="powSetPhase('3')">三相</button>
+      </div>
+      <div class="ecell" id="powCellP" style="display:none"><label class="slbl">電力 P（kW）</label><input class="enum" id="powP" inputmode="decimal" oninput="calcPow()" placeholder="例 2"></div>
+      <div class="ecell"><label class="slbl">電圧 V（ボルト）</label><input class="enum" id="powV" inputmode="decimal" oninput="calcPow()" placeholder="例 200"></div>
+      <div class="ecell" id="powCellI"><label class="slbl">電流 I（アンペア）</label><input class="enum" id="powI" inputmode="decimal" oninput="calcPow()" placeholder="例 10"></div>
+      <div class="ecell"><label class="slbl">力率（cosφ・不明なら 1）</label><input class="enum" id="powPf" inputmode="decimal" oninput="calcPow()" value="1"></div>
+      <div class="eres" id="powRes">数値を入力してください</div>
+      <div class="enote">単相：電力 ＝ 電圧 × 電流 × 力率／三相：電力 ＝ √3 × 電圧 × 電流 × 力率。皮相電力（kVA）も表示します。</div>
+    </div>
+
+    <!-- 電圧降下 -->
+    <div class="epanel" id="ep-vd">
+      <label class="slbl">配線方式</label>
+      <div class="eseg" id="vdMethod">
+        <button class="on" data-v="1p2" onclick="vdSetMethod('1p2')">単相2線</button>
+        <button data-v="3p3" onclick="vdSetMethod('3p3')">三相3線</button>
+        <button data-v="1p3" onclick="vdSetMethod('1p3')">単相3線</button>
+      </div>
+      <div class="ecell"><label class="slbl">電線の長さ L（m・片道）</label><input class="enum" id="vdL" inputmode="decimal" oninput="calcVd()" placeholder="例 30"></div>
+      <div class="ecell"><label class="slbl">電流 I（アンペア）</label><input class="enum" id="vdI" inputmode="decimal" oninput="calcVd()" placeholder="例 20"></div>
+      <div class="ecell"><label class="slbl">電線の太さ（mm²）</label><input class="enum" id="vdA" inputmode="decimal" oninput="calcVd()" placeholder="例 5.5"></div>
+      <div class="ecell"><label class="slbl">基準電圧 V（降下率を出す場合・任意）</label><input class="enum" id="vdBase" inputmode="decimal" oninput="calcVd()" placeholder="例 200"></div>
+      <div class="eres" id="vdRes">長さ・電流・太さを入力してください</div>
+      <div class="enote">銅線（IV・CV など）の目安です。係数 単相2線＝35.6／三相3線＝30.8／単相3線＝17.8 を使用。</div>
+    </div>
+
+    <!-- 幹線サイズ選定 -->
+    <div class="epanel on" id="ep-kn">
+      <div class="ehint">必要な電流を入れると、ケーブル種類ごとに使える最小サイズを表示します。</div>
+      <div class="ecell"><label class="slbl">設計電流 I（アンペア）</label><input class="enum" id="knI" inputmode="decimal" oninput="calcKansen()" placeholder="例 75"></div>
+      <label class="slbl">回路の種類</label>
+      <div class="eseg" id="knPhase">
+        <button class="on" data-v="1" onclick="knSet('knPhase','1')">単相</button>
+        <button data-v="3" onclick="knSet('knPhase','3')">三相</button>
+      </div>
+      <label class="slbl">布設方法</label>
+      <div class="eseg" id="knLay">
+        <button class="on" data-v="air" onclick="knSet('knLay','air')">露出・ラック</button>
+        <button data-v="pipe" onclick="knSet('knLay','pipe')">管内</button>
+      </div>
+      <div class="eres" id="knRes">電流を入力してください</div>
+      <div class="enote">メーカー公表値（IV・VVF＝気中1条・周囲30℃／CV・CVT＝周囲40℃・1条）を基にした目安です。管内はIV＝×0.70（同一管3本以下）、CV・CVT＝×0.78（管路引入れ相当）で低減、VVFは2m以下の管なら同値として扱います。同一管4本以上・周囲温度が高い場合はさらに低減が必要です。最終決定は内線規程・メーカー資料で確認してください。</div>
+    </div>
+  </div>
+
+  <!-- ========== ⑦ 坪・㎡・畳 換算 ========== -->
+  <div class="pane" id="p-area">
+    <div class="thead">
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
+      <h2>坪・㎡・畳の換算</h2>
+    </div>
+
+    <!-- 入力欄（3行：坪→、㎡→、畳→） -->
+    <div id="areaBlock">
+      <!-- 坪 入力 -->
+      <div class="aconv">
+        <div><div class="aunit">坪</div><input class="afrom" id="aFrom_tsubo" inputmode="decimal" oninput="aConv('tsubo')" placeholder="例 30"></div>
+        <div class="aconv-eq">=</div>
+        <div id="aTo_tsubo_right"></div>
+      </div>
+      <!-- ㎡ 入力 -->
+      <div class="aconv">
+        <div><div class="aunit">㎡（平米）</div><input class="afrom" id="aFrom_m2" inputmode="decimal" oninput="aConv('m2')" placeholder="例 100"></div>
+        <div class="aconv-eq">=</div>
+        <div id="aTo_m2_right"></div>
+      </div>
+      <!-- 畳 入力 -->
+      <div class="aconv">
+        <div><div class="aunit">畳（江戸間）</div><input class="afrom" id="aFrom_jou" inputmode="decimal" oninput="aConv('jou')" placeholder="例 6"></div>
+        <div class="aconv-eq">=</div>
+        <div id="aTo_jou_right"></div>
       </div>
     </div>
-    <label class="lbl">持ち出す人</label>
-    <select class="inp" id="lWorker"></select>
-    <label class="lbl">現場（任意）</label>
-    <select class="inp" id="lCase"></select>
-    <label class="lbl">備考（任意）</label>
-    <input class="inp" id="lNote" placeholder="例：充電器も一緒に持出">
-    <button class="savebtn" onclick="doLend()">持ち出しを記録する</button>
-    <button class="closebtn" onclick="closeOv('ovLend')">キャンセル</button>
+
+    <div class="asep"></div>
+
+    <!-- 一覧表示エリア -->
+    <div id="areaTable"></div>
+    <div class="enote" style="margin-top:10px;">1坪 ≒ 3.30579 ㎡ ／ 1畳（江戸間）≒ 1.65289 ㎡。建物の規格により畳サイズは異なります。</div>
   </div>
+
+  <!-- ========== ⑤ 小黒板カメラ ========== -->
+  <div class="pane" id="p-board">
+    <div class="thead">
+      <span class="back2" onclick="boardBack()">← ツールボックス</span>
+      <h2>小黒板カメラ</h2>
+    </div>
+    <div class="sitebar" id="boardSiteBar">現場: <b>—</b></div>
+    <div class="bcam-wrap" id="bcamWrap">
+      <video id="boardVideo" autoplay playsinline muted></video>
+      <div class="bov-bd" id="boardOverlay" style="display:none;"></div>
+    </div>
+    <div class="bsize-row">
+      <label>黒板の大きさ</label>
+      <input type="range" id="boardSizeRange" min="20" max="55" value="37" oninput="boardSetSize(this.value)">
+      <span class="bsize-val" id="boardSizeVal">37%</span>
+    </div>
+    <div class="bsize-row">
+      <label>文字の大きさ</label>
+      <input type="range" id="boardFontRange" min="60" max="160" value="100" oninput="boardSetFont(this.value)">
+      <span class="bsize-val" id="boardFontVal">100%</span>
+    </div>
+    <div class="enote" style="margin:0 2px 12px;">黒板はドラッグで移動／ダブルタップで入力欄の表示・非表示を切り替えます。</div>
+    <div class="board-grid" id="boardFormWrap">
+      <div><label class="slbl" id="boardLblForm1">修繕名</label><input class="enum" id="boardProjName" oninput="bov()" placeholder="例 時計修繕"></div>
+      <div><label class="slbl" id="boardLblForm2">場所</label><input class="enum" id="boardPlace" oninput="bov()" placeholder="例 天王公園"></div>
+      <div><label class="slbl">工程区分</label><select class="sel" id="boardPhase" onchange="bov()"><option>施工前</option><option>施工中</option><option>施工後</option><option>調査</option><option>完了</option></select></div>
+      <div><label class="slbl">会社名</label><input class="enum" id="boardCompany" oninput="bov()" value="河口電機株式会社"></div>
+      <div><label class="slbl">項目名①（左上の欄）</label><input class="enum" id="boardLbl1" value="修繕名" oninput="boardLblSync()"></div>
+      <div><label class="slbl">項目名②（その下の欄）</label><input class="enum" id="boardLbl2" value="場所" oninput="boardLblSync()"></div>
+    </div>
+    <button class="savebtn" style="background:#d97b12;margin-top:14px;" onclick="boardShoot()">📷 撮影してDriveに保存</button>
+  </div>
+
+  <!-- ========== ④ 録音機 ========== -->
+  <div class="pane" id="p-rec">
+    <div class="thead">
+      <span class="back2" onclick="recBack()">← ツールボックス</span>
+      <h2>録音機</h2>
+    </div>
+    <div class="sitebar" id="recSiteBar">現場: <b>—</b></div>
+
+    <!-- 録音コントロール -->
+    <div class="rec-center">
+      <div id="recIdle">
+        <div class="rec-hint">ボタンをタップして録音を開始します（最大5分）</div>
+        <button class="rec-btn" onclick="recStart()">🎙️</button>
+        <div class="rec-label">タップして録音開始</div>
+      </div>
+      <div id="recRecording" style="display:none">
+        <div class="rec-pulse"></div>
+        <div class="rec-timer" id="recTimer">0:00</div>
+        <button class="rec-btn rec-stop" onclick="recStop()">⏹</button>
+        <div class="rec-label">タップして停止</div>
+      </div>
+      <div id="recPreview" style="display:none">
+        <div class="rec-hint">録音が完了しました。確認してDriveに保存できます。</div>
+        <audio id="recAudio" controls style="width:100%;margin:10px 0;border-radius:8px;"></audio>
+        <label class="slbl" style="text-align:left;display:block;">メモ（ファイル名に使います・任意）</label>
+        <input class="enum" id="recTitle" placeholder="例 打ち合わせ内容" style="margin-bottom:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button class="back2" style="text-align:center;padding:13px;" onclick="recReset()">やり直し</button>
+          <button class="savebtn" style="margin-top:0;" onclick="recSave()">Driveに保存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 保存済み一覧 -->
+    <div style="margin-top:20px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;">
+        <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);">保存済みの録音</span>
+        <button class="back2" onclick="recLoadList()">↻ 更新</button>
+      </div>
+      <div id="recList"><div class="empty">「↻ 更新」で一覧を読み込みます</div></div>
+    </div>
+  </div>
+
+  <!-- ========== ⑧ 面積計算機 ========== -->
+  <div class="pane" id="p-meas">
+    <div class="thead">
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
+      <h2>面積計算機</h2>
+    </div>
+
+    <label class="slbl">形状を選択</label>
+    <div class="eseg" id="measShapeSeg">
+      <button class="on" data-v="rect" onclick="measSetShape('rect')">長方形</button>
+      <button data-v="tri"  onclick="measSetShape('tri')">三角形</button>
+      <button data-v="trap" onclick="measSetShape('trap')">台形</button>
+    </div>
+
+    <div id="measInputWrap" style="margin-top:2px;"></div>
+    <button class="savebtn" style="background:#2a7ac8;margin-top:12px;" onclick="measAdd()">＋ 区画を追加</button>
+
+    <div class="asep"></div>
+    <div id="measList"></div>
+    <div class="eres" id="measTotal" style="margin-top:14px;display:none;flex-direction:column;justify-content:center;"></div>
+    <div class="enote" style="margin-top:14px;">区画を追加して合計面積を求めます。削除ボタンで取り消せます。</div>
+  </div>
+
 </div>
 
-<!-- 編集モーダル -->
-<div class="ov" id="ovEdit">
-  <div class="sheet">
-    <h3 id="editTtl">道具を登録</h3>
-    <label class="lbl">道具名</label>
-    <input class="inp" id="eName" placeholder="例：インパクトドライバー">
-    <div class="grid2">
-      <div>
-        <label class="lbl">区分（任意）</label>
-        <input class="inp" id="eKind" placeholder="例：電動工具">
-      </div>
-      <div>
-        <label class="lbl">保有数</label>
-        <input class="inp" id="eQty" type="number" inputmode="numeric" value="1" min="1">
-      </div>
-    </div>
-    <div class="grid2">
-      <div>
-        <label class="lbl">管理番号（任意）</label>
-        <input class="inp" id="eNo" placeholder="例：T-001">
-      </div>
-      <div>
-        <label class="lbl">状態</label>
-        <select class="inp" id="eState"><option>通常</option><option>修理中</option><option>廃棄</option></select>
-      </div>
-    </div>
-    <label class="lbl">保管場所（任意）</label>
-    <input class="inp" id="ePlace" placeholder="例：倉庫A棚">
-    <label class="lbl">備考（任意）</label>
-    <input class="inp" id="eNote">
-    <button class="savebtn" onclick="saveTool()">保存する</button>
-    <button class="delbtn" id="delTool" style="display:none" onclick="deleteTool()">この道具を削除</button>
-    <button class="closebtn" onclick="closeOv('ovEdit')">キャンセル</button>
-  </div>
-</div>
-
+<div class="tload" id="tload"><div class="tlbox"><div class="tspin"></div><div class="tltxt" id="tltxt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt" id="ltxt">読み込み中…</div></div></div>
 
 <script>
+/* ===== 共通 ===== */
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastT;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
+function go(id){var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');var el=document.getElementById(id);if(el)el.classList.add('on');window.scrollTo(0,0);}
+/* ===== サーバー通信 ===== */
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var T_GENERAL='kawaguchi-genba-2026';
-function admTok(){return localStorage.getItem('genba_admin')||'';}
 function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
-function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-var toastT;
-function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
 var loadCnt=0;
-function showLoad(t){loadCnt++;if(t)document.getElementById('ltxt').textContent=t;if(loadCnt===1)document.getElementById('loading').classList.add('show');}
-function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){document.getElementById('loading').classList.remove('show');document.getElementById('ltxt').textContent='読み込み中…';}}
+function showLoad(t){loadCnt++;if(t)document.getElementById('tltxt').textContent=t;if(loadCnt===1)document.getElementById('tload').classList.add('show');}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0)document.getElementById('tload').classList.remove('show');}
 function callGAS(params,silent){return new Promise(function(resolve,reject){
   if(!silent)showLoad();
   var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),sc=document.createElement('script');
-  var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},30000);
+  var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
   function cleanup(){if(!silent)hideLoad();try{delete window[cb];}catch(e){}if(sc.parentNode)sc.parentNode.removeChild(sc);clearTimeout(timer);}
   window[cb]=function(res){cleanup();resolve(res);};
-  // 編集系は管理者トークン（params._adm=1）、それ以外は一般トークン
-  var p=Object.assign({},params);
-  var secret=(p._adm?admTok():T_GENERAL); delete p._adm;
-  var q=Object.assign({},p,{secret:secret,callback:cb});
+  var q=Object.assign({secret:T_GENERAL,callback:cb},params);
   if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
   sc.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
   sc.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(sc);
 });}
-function closeOv(id){document.getElementById(id).classList.remove('on');}
-function todayS(){var d=new Date(),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function tbGet(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v;}catch(e){return d;}}
+function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
-var DB={tools:[],lends:[],workers:[],projects:[]};
-var isAdmin=false;
-var CACHE_KEY='tool_cache_v1';
-function applyData(d){
-  DB.tools=d.tools||[];DB.lends=d.lends||[];DB.workers=d.workers||[];DB.projects=d.projects||[];
-  fillSelects();renderTools();renderLends();
+/* 実装済みツール */
+var READY={memo:1,check:1,draw:1,elec:1,area:1,board:1,rec:1,meas:1,mat:1};
+function openTool(k){
+  if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
+  if(k==='memo'||k==='check'||k==='draw'||k==='board'||k==='rec'||k==='mat'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='check'?'現場チェックリスト':k==='draw'?'手書きメモ':k==='board'?'小黒板カメラ':k==='rec'?'録音機':k==='mat'?'材料リスト':'現場メモ'); go('p-memo-select'); loadSites(); return; }
+  go('p-'+k);
 }
-function loadAll(silent){
-  return callGAS({action:'toolData'},silent).then(function(res){
-    if(res&&res.ok){try{localStorage.setItem(CACHE_KEY,JSON.stringify(res));}catch(e){}applyData(res);}
-    else if(res&&res.error)toast(res.error);
-  }).catch(function(e){toast(e.message);});
-}
-function tab(t){
-  document.getElementById('tabTools').classList.toggle('on',t==='tools');
-  document.getElementById('tabLends').classList.toggle('on',t==='lends');
-  document.getElementById('p-tools').classList.toggle('on',t==='tools');
-  document.getElementById('p-lends').classList.toggle('on',t==='lends');
-  window.scrollTo(0,0);
-}
+function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳',meas:'面積計算機',mat:'材料リスト'}[k]||k;}
 
-/* ===== 一覧 ===== */
-function lendsOf(toolId){return DB.lends.filter(function(l){return String(l['道具ID'])===String(toolId)&&String(l['状態'])==='貸出中';});}
-function renderTools(){
-  var q=(document.getElementById('q').value||'').trim();
-  var list=DB.tools.slice();
-  if(q)list=list.filter(function(t){return (String(t['道具名'])+String(t['区分'])+String(t['管理番号'])).indexOf(q)>=0;});
-  var el=document.getElementById('toolList');
-  if(!list.length){el.innerHTML='<div class="empty">道具が登録されていません。'+(isAdmin?'<br>「＋ 道具を登録」から追加できます。':'')+'</div>';return;}
-  el.innerHTML=list.map(function(t){
-    var id=esc(t['道具ID']);
-    var act=lendsOf(t['道具ID']);
-    var lentQty=0;act.forEach(function(l){lentQty+=Number(l['数量'])||1;});
-    var have=Number(t['保有数'])||1;
-    var st=String(t['状態']||'通常');
-    var h='<div class="card"><div class="top"><div><div class="nm">'+esc(t['道具名']||'')+'</div>'
-      +'<div class="meta">'+esc(t['区分']||'')+(t['管理番号']?'　'+esc(t['管理番号']):'')+'　保有'+have+(t['保管場所']?'　／ '+esc(t['保管場所']):'')+'</div></div>'
-      +'<span class="stat '+esc(st)+'">'+esc(st)+'</span></div>';
-    if(act.length){
-      h+='<div class="lendinfo">';
-      act.forEach(function(l){
-        h+='<div class="lendrow"><span><span class="who">'+esc(l['作業員名']||'?')+'</span>'+(Number(l['数量'])>1?' ×'+l['数量']:'')+(l['現場名']?'　@'+esc(l['現場名']):'')+'　'+esc(l['貸出日'])+'</span>'
-          +'<button class="rtn" onclick="returnLend(\''+esc(l['貸出ID'])+'\')">返却</button></div>';
-      });
-      h+='</div>';
+/* ===== ① 現場メモ（現場ごと・サーバー保存） ===== */
+var PROJ_KEY='tb_projects';
+var tbProjects=[];
+var curSite=null;
+var curTool='memo';
+var selStep=0,selKindVal='',selCustVal='';
+var curNote=null;
+var noteCache={};
+var pendingNote=null;
+function loadSites(){
+  try{tbProjects=JSON.parse(localStorage.getItem(PROJ_KEY)||'[]');}catch(e){tbProjects=[];}
+  selStep=0; selKindVal=''; selCustVal='';
+  renderSelStep();
+  callGAS({action:'list'},tbProjects.length>0).then(function(res){
+    if(res&&res.ok){
+      tbProjects=res.projects||[];
+      try{localStorage.setItem(PROJ_KEY,JSON.stringify(tbProjects));}catch(e){}
+      if(selStep===0) renderSelStep();
     }
-    h+='<div class="cardbtns">';
-    if(st==='通常'&&lentQty<have)h+='<button class="lend" onclick="openLend(\''+id+'\')">持ち出す</button>';
-    if(isAdmin)h+='<button onclick="openEdit(\''+id+'\')">編集</button>';
-    h+='</div></div>';
-    return h;
+  }).catch(function(){});
+}
+function uniqVals(a){var o={},r=[];a.forEach(function(v){v=(v==null||v==='')?'未分類':v;if(!o[v]){o[v]=1;r.push(v);}});return r.sort();}
+function optList(arr){return '<option value="">― 選択 ―</option>'+arr.map(function(v){return '<option value="'+esc(v)+'">'+esc(v)+'</option>';}).join('');}
+function fillKinds(){
+  selStep=0; selKindVal=''; selCustVal='';
+  renderSelStep();
+}
+function onKind(){}
+function onCust(){}
+function onSite(){}
+function renderSelStep(){
+  var list=document.getElementById('selList');
+  var crumb=document.getElementById('selCrumb');
+  var lead=document.getElementById('selLead');
+  if(!list)return;
+  if(selStep===0){
+    if(lead)lead.textContent='種別を選んでください。';
+    if(crumb)crumb.style.display='none';
+    var kinds=uniqVals(tbProjects.map(function(p){return p['種別'];}));
+    if(!kinds.length){list.innerHTML='<div class="empty">案件データがありません。</div>';return;}
+    list.innerHTML=kinds.map(function(k){return '<button class="linkbtn" data-v="'+esc(k)+'" onclick="selPickKindBtn(this)">'+esc(k)+'</button>';}).join('');
+  } else if(selStep===1){
+    if(lead)lead.textContent='会社を選んでください。';
+    if(crumb){crumb.style.display='';crumb.innerHTML='種別：<b>'+esc(selKindVal)+'</b>';}
+    var custs=uniqVals(tbProjects.filter(function(p){return (p['種別']||'未分類')===selKindVal;}).map(function(p){return p['顧客'];}));
+    list.innerHTML=custs.map(function(c){return '<button class="linkbtn" data-v="'+esc(c)+'" onclick="selPickCustBtn(this)">'+esc(c)+'</button>';}).join('')+'<button class="back2" style="margin-top:8px;width:100%;text-align:center;padding:11px;" onclick="selBack()">← 種別を選び直す</button>';
+  } else {
+    if(lead)lead.textContent='現場名を選んでください。';
+    if(crumb){crumb.style.display='';crumb.innerHTML='種別：<b>'+esc(selKindVal)+'</b>　／　会社：<b>'+esc(selCustVal)+'</b>';}
+    var sites=tbProjects.filter(function(p){return (p['種別']||'未分類')===selKindVal&&(p['顧客']||'未分類')===selCustVal;});
+    list.innerHTML=sites.map(function(p){return '<button class="linkbtn" data-v="'+esc(String(p['案件ID']))+'" onclick="selPickSiteBtn(this)">'+esc(p['案件名']||'(無題)')+'</button>';}).join('')+'<button class="back2" style="margin-top:8px;width:100%;text-align:center;padding:11px;" onclick="selBack()">← 会社を選び直す</button>';
+  }
+}
+function selPickKindBtn(el){selKindVal=el.getAttribute('data-v');selStep=1;renderSelStep();}
+function selPickCustBtn(el){selCustVal=el.getAttribute('data-v');selStep=2;renderSelStep();}
+function selPickSiteBtn(el){
+  var id=el.getAttribute('data-v');
+  var p=tbProjects.filter(function(x){return String(x['案件ID'])===String(id);})[0]||{};
+  curSite={id:id,name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
+  if(curTool==='check')openSiteCheckList(); else if(curTool==='draw')openSiteDrawList(); else if(curTool==='board')openBoardCamera(); else if(curTool==='rec')openRecorder(); else openSiteMemoList();
+}
+function selBack(){if(selStep>0){selStep--;renderSelStep();}}
+function resetAndGoSelect(){
+  selStep=0; selKindVal=''; selCustVal='';
+  go('p-memo-select');
+  renderSelStep();
+}
+function siteBarHtml(){ if(!curSite)return ''; return '<b>'+esc(curSite.cust||'—')+'</b> ／ '+esc(curSite.name||'—')+(curSite.kind?'　<span style="opacity:.7;">'+esc(curSite.kind)+'</span>':''); }
+function openSiteMemoList(){
+  if(!curSite){ go('p-memo-select'); return; }
+  go('p-memo-list');
+  document.getElementById('memoSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('noteList').innerHTML='<div class="empty">読み込み中…</div>';
+  callGAS({action:'notesList',id:curSite.id}).then(function(res){
+    var notes=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'memo')==='memo';});
+    renderNoteList(notes);
+    if(pendingNote){ var _t=pendingNote; pendingNote=null; if(noteCache[_t]) openNote(_t); }
+  }).catch(function(e){ document.getElementById('noteList').innerHTML='<div class="empty">読み込みに失敗しました。<br>電波を確認して、もう一度お試しください。</div>'; });
+}
+function renderNoteList(notes){
+  var el=document.getElementById('noteList');
+  notes.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
+  noteCache={}; notes.forEach(function(n){noteCache[n['メモID']]=n;});
+  if(!notes.length){ el.innerHTML='<div class="empty">この現場のメモはまだありません。<br>「＋ 新しいメモ」で作成できます。</div>'; return; }
+  el.innerHTML=notes.map(function(n){
+    var ttl=esc(n['タイトル']||'(無題)');
+    var prev=esc(String(n['内容']||'').replace(/\s+/g,' ').slice(0,80))||'（本文なし）';
+    return '<div class="memo" onclick="openNote(\''+esc(n['メモID'])+'\')"><div class="m-t">'+ttl+'</div><div class="m-p">'+prev+'</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
   }).join('');
 }
-function renderLends(){
-  var list=DB.lends.filter(function(l){return String(l['状態'])==='貸出中';});
-  list.sort(function(a,b){return String(a['返却予定日']||'9999').localeCompare(String(b['返却予定日']||'9999'));});
-  var el=document.getElementById('lendList');
-  if(!list.length){el.innerHTML='<div class="empty">貸出中の道具はありません。</div>';return;}
-  var tdy=todayS();
-  el.innerHTML=list.map(function(l){
-    var due=String(l['返却予定日']||'').slice(0,10);
-    var over=due&&due<tdy;
-    return '<div class="lcard'+(over?' over':'')+'"><div class="lt"><div>'
-      +'<div class="nm">'+esc(l['道具名']||'')+(Number(l['数量'])>1?' ×'+l['数量']:'')+'</div>'
-      +'<div class="meta">'+esc(l['作業員名']||'?')+(l['現場名']?'　@'+esc(l['現場名']):'')+'　貸出 '+esc(l['貸出日'])+'</div>'
-      +(due?'<div class="'+(over?'od':'meta')+'">'+(over?'⚠ 返却予定 '+esc(due)+' を超過':'返却予定 '+esc(due))+'</div>':'')
-      +'</div><button class="rtn" onclick="returnLend(\''+esc(l['貸出ID'])+'\')">返却</button></div></div>';
+function newNote(){
+  curNote=null;
+  document.getElementById('noteTitle').value='';
+  document.getElementById('noteBody').value='';
+  document.getElementById('noteSaved').classList.remove('show');
+  document.getElementById('editSiteBar').innerHTML=siteBarHtml();
+  go('p-memo-edit');
+  setTimeout(function(){document.getElementById('noteTitle').focus();},150);
+}
+function openNote(id){
+  var n=noteCache[id]||{};
+  curNote=id;
+  document.getElementById('noteTitle').value=n['タイトル']||'';
+  document.getElementById('noteBody').value=n['内容']||'';
+  document.getElementById('noteSaved').classList.remove('show');
+  document.getElementById('editSiteBar').innerHTML=siteBarHtml();
+  go('p-memo-edit');
+}
+function saveNote(){
+  var t=document.getElementById('noteTitle').value.trim();
+  var b=document.getElementById('noteBody').value;
+  if(!t){ toast('タイトルを入力してください'); document.getElementById('noteTitle').focus(); return; }
+  if(!curSite){ toast('現場が選ばれていません'); go('p-memo-select'); return; }
+  var u=gUser()||{};
+  var data={'案件ID':curSite.id,'種類':'memo','タイトル':t,'内容':b,'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  if(curNote)data['メモID']=curNote;
+  showLoad('保存中…');
+  callGAS({action:'noteSave',data:data},true).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'保存に失敗しました');
+    if(res.note&&res.note['メモID']){ curNote=res.note['メモID']; noteCache[curNote]=res.note; }
+    var s=document.getElementById('noteSaved'); s.textContent='保存しました'; s.classList.add('show');
+    toast('保存しました');
+  }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
+}
+function deleteNote(){
+  if(!curNote){ openSiteMemoList(); return; }
+  if(!confirm('このメモを削除しますか？'))return;
+  showLoad('削除中…');
+  callGAS({action:'noteDelete',id:curNote},true).then(function(res){
+    if(!res||!res.ok)throw new Error('削除に失敗しました');
+    toast('削除しました'); curNote=null; openSiteMemoList();
+  }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
+}
+
+function openCaseInProjects(){ if(!curSite)return; location.href='../projects/?case='+encodeURIComponent(curSite.id); }
+function openMemoForCase(id){
+  showLoad('読み込み中…');
+  callGAS({action:'list'},true).then(function(res){
+    var ps=(res&&res.ok&&res.projects)||[]; tbProjects=ps;
+    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
+    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
+    hideLoad();
+    if(!p){ toast('現場が見つかりませんでした'); fillKinds(); go('p-memo-select'); return; }
+    curSite={id:String(id),name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
+    openSiteMemoList();
+  }).catch(function(){ hideLoad(); fillKinds(); go('p-memo-select'); });
+}
+
+/* ===== ② 現場チェックリスト（現場ごと・サーバー保存） ===== */
+var curCheck=null;
+var checkItems=[];
+var checkCache={};
+var curDraw=null,drawStrokes=[],drawHistory=[],drawCache={};
+var drawColor='#222',drawWidth=2,drawEraser=false,drawPainting=false,drawInited=false,drawCtx=null,drawCvs=null;
+function parseItems(t){ try{var a=JSON.parse(t||'[]');return Array.isArray(a)?a:[];}catch(e){return [];} }
+function openSiteCheckList(){
+  if(!curSite){ go('p-memo-select'); return; }
+  go('p-check-list');
+  document.getElementById('checkSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('checkList').innerHTML='<div class="empty">読み込み中…</div>';
+  callGAS({action:'notesList',id:curSite.id}).then(function(res){
+    var list=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'')==='check';});
+    renderCheckList(list);
+    if(pendingNote){ var _t=pendingNote; pendingNote=null; if(checkCache[_t]) openCheck(_t); }
+  }).catch(function(e){ document.getElementById('checkList').innerHTML='<div class="empty">読み込みに失敗しました。<br>電波を確認して、もう一度お試しください。</div>'; });
+}
+function renderCheckList(list){
+  var el=document.getElementById('checkList');
+  list.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
+  checkCache={}; list.forEach(function(n){checkCache[n['メモID']]=n;});
+  if(!list.length){ el.innerHTML='<div class="empty">この現場のチェックリストはまだありません。<br>「＋ 新しいチェックリスト」で作成できます。</div>'; return; }
+  el.innerHTML=list.map(function(n){
+    var items=parseItems(n['内容']); var done=items.filter(function(it){return it&&it.d;}).length;
+    var ttl=esc(n['タイトル']||'(無題)');
+    return '<div class="memo" onclick="openCheck(\''+esc(n['メモID'])+'\')"><div class="m-t">'+ttl+'</div><div class="m-p">'+done+' / '+items.length+' 完了</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
   }).join('');
 }
+function newCheck(){
+  curCheck=null; checkItems=[{t:'',d:false}];
+  document.getElementById('checkTitle').value='';
+  document.getElementById('checkSaved').classList.remove('show');
+  document.getElementById('checkEditSiteBar').innerHTML=siteBarHtml();
+  renderCheckItems();
+  go('p-check-edit');
+  setTimeout(function(){document.getElementById('checkTitle').focus();},150);
+}
+function openCheck(id){
+  var n=checkCache[id]||{};
+  curCheck=id; checkItems=parseItems(n['内容']); if(!checkItems.length)checkItems=[{t:'',d:false}];
+  document.getElementById('checkTitle').value=n['タイトル']||'';
+  document.getElementById('checkSaved').classList.remove('show');
+  document.getElementById('checkEditSiteBar').innerHTML=siteBarHtml();
+  renderCheckItems();
+  go('p-check-edit');
+}
+function renderCheckItems(){
+  var el=document.getElementById('checkItems');
+  el.innerHTML=checkItems.map(function(it,i){
+    return '<div class="citem'+(it.d?' done':'')+'"><input type="checkbox" '+(it.d?'checked':'')+' onchange="toggleItem('+i+',this.checked)"><input type="text" value="'+esc(it.t||'')+'" placeholder="項目" oninput="setItem('+i+',this.value)"><button class="cdel" onclick="delItem('+i+')">×</button></div>';
+  }).join('');
+}
+function toggleItem(i,v){ if(checkItems[i]){ checkItems[i].d=v; var el=document.getElementById('checkItems').children[i]; if(el){ if(v)el.classList.add('done'); else el.classList.remove('done'); } } }
+function setItem(i,v){ if(checkItems[i])checkItems[i].t=v; }
+function delItem(i){ checkItems.splice(i,1); if(!checkItems.length)checkItems=[{t:'',d:false}]; renderCheckItems(); }
+function addCheckItem(){ checkItems.push({t:'',d:false}); renderCheckItems(); var ins=document.getElementById('checkItems').querySelectorAll('input[type=text]'); if(ins.length)ins[ins.length-1].focus(); }
+function saveCheck(){
+  var t=document.getElementById('checkTitle').value.trim();
+  if(!t){ toast('タイトルを入力してください'); document.getElementById('checkTitle').focus(); return; }
+  if(!curSite){ toast('現場が選ばれていません'); go('p-memo-select'); return; }
+  var items=checkItems.filter(function(it){return String(it.t||'').trim()!=='';});
+  var u=gUser()||{};
+  var data={'案件ID':curSite.id,'種類':'check','タイトル':t,'内容':JSON.stringify(items),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  if(curCheck)data['メモID']=curCheck;
+  showLoad('保存中…');
+  callGAS({action:'noteSave',data:data},true).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'保存に失敗しました');
+    if(res.note&&res.note['メモID']){ curCheck=res.note['メモID']; checkCache[curCheck]=res.note; }
+    var sv=document.getElementById('checkSaved'); sv.textContent='保存しました'; sv.classList.add('show');
+    toast('保存しました');
+  }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
+}
+function deleteCheck(){
+  if(!curCheck){ openSiteCheckList(); return; }
+  if(!confirm('このチェックリストを削除しますか？'))return;
+  showLoad('削除中…');
+  callGAS({action:'noteDelete',id:curCheck},true).then(function(res){
+    if(!res||!res.ok)throw new Error('削除に失敗しました');
+    toast('削除しました'); curCheck=null; openSiteCheckList();
+  }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
+}
+function openCheckForCase(id){
+  curTool='check';
+  showLoad('読み込み中…');
+  callGAS({action:'list'},true).then(function(res){
+    var ps=(res&&res.ok&&res.projects)||[]; tbProjects=ps;
+    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
+    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
+    hideLoad();
+    var st=document.getElementById('selTitle'); if(st)st.textContent='現場チェックリスト';
+    if(!p){ toast('現場が見つかりませんでした'); fillKinds(); go('p-memo-select'); return; }
+    curSite={id:String(id),name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
+    openSiteCheckList();
+  }).catch(function(){ hideLoad(); fillKinds(); go('p-memo-select'); });
+}
 
-/* ===== 貸出 ===== */
-function fillSelects(){
-  var ws=DB.workers.filter(function(w){return String(w['区分']||'').indexOf('協力')<0;});
-  var u=gUser();
-  document.getElementById('lWorker').innerHTML=ws.map(function(w){
-    return '<option value="'+esc(w['作業員ID'])+'"'+(u&&String(u['作業員ID'])===String(w['作業員ID'])?' selected':'')+'>'+esc(w['氏名']||'')+'</option>';}).join('');
-  document.getElementById('lCase').innerHTML='<option value="">（現場なし）</option>'+DB.projects.filter(function(p){return String(p['ステータス'])!=='完了';}).map(function(p){
-    return '<option value="'+esc(p['案件ID'])+'" data-name="'+esc(p['案件名'])+'">'+esc(p['案件名'])+'</option>';}).join('');
+/* ===== ③ 手書きメモ（現場ごと・サーバー保存） ===== */
+function initDrawCanvas(){
+  if(drawInited)return;
+  drawCvs=document.getElementById('drawCanvas');
+  drawCtx=drawCvs.getContext('2d');
+  drawCvs.addEventListener('pointerdown',function(e){
+    e.preventDefault(); drawPainting=true;
+    drawHistory.push(JSON.stringify(drawStrokes));
+    if(drawHistory.length>30)drawHistory.shift();
+    var pos=getDrawPos(e);
+    drawCurStroke={color:drawEraser?'#fff':drawColor,width:drawEraser?20:drawWidth,eraser:drawEraser,pts:[pos]};
+  },{passive:false});
+  drawCvs.addEventListener('pointermove',function(e){
+    e.preventDefault(); if(!drawPainting||!drawCurStroke)return;
+    var pos=getDrawPos(e);
+    var last=drawCurStroke.pts[drawCurStroke.pts.length-1];
+    var dx=pos[0]-last[0],dy=pos[1]-last[1];
+    if(dx*dx+dy*dy<9)return;
+    drawCurStroke.pts.push(pos);
+    if(drawCurStroke.pts.length>=2){
+      var n=drawCurStroke.pts.length;
+      drawSegment(drawCurStroke.pts[n-2],drawCurStroke.pts[n-1],drawCurStroke.color,drawCurStroke.width,drawCurStroke.eraser);
+    }
+  },{passive:false});
+  var endFn=function(){
+    if(!drawPainting)return; drawPainting=false;
+    if(drawCurStroke&&drawCurStroke.pts.length>0)drawStrokes.push(drawCurStroke);
+    drawCurStroke=null;
+  };
+  drawCvs.addEventListener('pointerup',endFn); drawCvs.addEventListener('pointercancel',endFn);
+  drawInited=true;
 }
-var lendToolId=null;
-function openLend(id){
-  var t=DB.tools.filter(function(x){return String(x['道具ID'])===id;})[0];if(!t)return;
-  lendToolId=id;
-  document.getElementById('lendTtl').textContent=t['道具名']+' を持ち出す';
-  var act=lendsOf(id);var lent=0;act.forEach(function(l){lent+=Number(l['数量'])||1;});
-  var rest=(Number(t['保有数'])||1)-lent;
-  document.getElementById('lendSub').textContent='貸出可能：'+rest+' / 保有 '+(Number(t['保有数'])||1);
-  document.getElementById('lQty').value=1;document.getElementById('lQty').max=rest;
-  document.getElementById('lDue').value='';document.getElementById('lNote').value='';
-  document.getElementById('ovLend').classList.add('on');
+var drawCurStroke=null;
+function getDrawPos(e){ var r=drawCvs.getBoundingClientRect(); return [Math.round((e.clientX-r.left)*680/(r.width||680)),Math.round((e.clientY-r.top)*300/(r.height||300))]; }
+function drawSegment(a,b,color,width,eraser){
+  if(!drawCtx)return; drawCtx.save();
+  drawCtx.globalCompositeOperation=eraser?'destination-out':'source-over';
+  drawCtx.strokeStyle=eraser?'rgba(0,0,0,1)':color;
+  drawCtx.lineWidth=width; drawCtx.lineCap='round'; drawCtx.lineJoin='round';
+  drawCtx.beginPath(); drawCtx.moveTo(a[0],a[1]); drawCtx.lineTo(b[0],b[1]); drawCtx.stroke(); drawCtx.restore();
 }
-function doLend(){
-  if(!lendToolId)return;
-  var t=DB.tools.filter(function(x){return String(x['道具ID'])===lendToolId;})[0];
-  var wsel=document.getElementById('lWorker'),wid=wsel.value,wname=wsel.selectedOptions[0]?wsel.selectedOptions[0].textContent:'';
-  if(!wid){toast('持ち出す人を選んでください');return;}
-  var csel=document.getElementById('lCase'),cid=csel.value,cname=csel.selectedOptions[0]?(csel.selectedOptions[0].getAttribute('data-name')||''):'';
-  var data={'道具ID':lendToolId,'道具名':t['道具名'],'数量':Number(document.getElementById('lQty').value)||1,
-    '作業員ID':wid,'作業員名':wname,'現場ID':cid,'現場名':cname,
-    '貸出日':todayS(),'返却予定日':document.getElementById('lDue').value,'備考':document.getElementById('lNote').value.trim()};
-  callGAS({action:'toolLend',data:data}).then(function(res){
-    if(res&&res.ok){DB.lends.push(res.lend);saveCache();closeOv('ovLend');toast('持ち出しを記録しました');renderTools();renderLends();}
-    else toast((res&&res.error)||'失敗しました');
-  }).catch(function(e){toast(e.message);});
+function renderDrawCanvas(strokes){
+  if(!drawCtx||!drawCvs)return;
+  drawCtx.clearRect(0,0,680,300); drawCtx.fillStyle='#fff'; drawCtx.fillRect(0,0,680,300);
+  strokes.forEach(function(st){ for(var i=1;i<st.pts.length;i++) drawSegment(st.pts[i-1],st.pts[i],st.color||'#222',st.width||2,st.eraser||false); });
 }
-function returnLend(id){
-  if(!confirm('この道具を返却済みにしますか？'))return;
-  callGAS({action:'toolReturn',id:id,date:todayS()}).then(function(res){
-    if(res&&res.ok){
-      var idx=-1;DB.lends.forEach(function(l,i){if(String(l['貸出ID'])===String(id))idx=i;});
-      if(idx>=0)DB.lends[idx]=res.lend;saveCache();toast('返却しました');renderTools();renderLends();
-    }else toast((res&&res.error)||'失敗しました');
-  }).catch(function(e){toast(e.message);});
+function initDrawPane(){
+  var c=document.getElementById('drawCanvas');
+  var dpr=window.devicePixelRatio||1; c.width=680*dpr; c.height=300*dpr;
+  drawCtx=drawCvs=c; drawCtx=c.getContext('2d'); drawCtx.scale(dpr,dpr);
+  drawCtx.fillStyle='#fff'; drawCtx.fillRect(0,0,680,300);
+  if(!drawInited){ drawCvs=c; initDrawCanvas(); }
+  drawCvs=c; drawCtx=c.getContext('2d');
+}
+function setDrawColor(c,btnId){ drawColor=c; drawEraser=false; ['cswB','cswR','cswU','cswG'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('on');}); var el=document.getElementById(btnId); if(el)el.classList.add('on'); document.getElementById('dBtnE').classList.remove('on'); }
+function setDrawWidth(w,btnId){ drawWidth=w; drawEraser=false; ['dBtnS','dBtnM','dBtnL'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('on');}); var el=document.getElementById(btnId); if(el)el.classList.add('on'); document.getElementById('dBtnE').classList.remove('on'); }
+function toggleEraser(){ drawEraser=!drawEraser; document.getElementById('dBtnE').classList.toggle('on',drawEraser); }
+function undoDraw(){ if(!drawHistory.length)return; drawStrokes=JSON.parse(drawHistory.pop()); renderDrawCanvas(drawStrokes); }
+function clearDraw(){ if(!confirm('手書きを全部消しますか？'))return; drawHistory.push(JSON.stringify(drawStrokes)); drawStrokes=[]; renderDrawCanvas(drawStrokes); }
+function openSiteDrawList(){
+  if(!curSite){go('p-memo-select');return;}
+  go('p-draw-list');
+  document.getElementById('drawSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('drawList').innerHTML='<div class="empty">読み込み中…</div>';
+  callGAS({action:'notesList',id:curSite.id}).then(function(res){
+    var list=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'')==='draw';});
+    renderDrawList(list);
+    if(pendingNote){ var _t=pendingNote; pendingNote=null; if(drawCache[_t])openDraw(_t); }
+  }).catch(function(){ document.getElementById('drawList').innerHTML='<div class="empty">読み込みに失敗しました。</div>'; });
+}
+function renderDrawList(list){
+  var el=document.getElementById('drawList');
+  list.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
+  drawCache={}; list.forEach(function(n){drawCache[n['メモID']]=n;});
+  if(!list.length){ el.innerHTML='<div class="empty">この現場の手書きメモはまだありません。<br>「＋ 新しい手書きメモ」で作成できます。</div>'; return; }
+  el.innerHTML=list.map(function(n){
+    var ttl=esc(n['タイトル']||'(無題)');
+    return '<div class="memo dcard" onclick="openDraw(\''+esc(n['メモID'])+'\')"><canvas class="draw-thumb-cv" data-id="'+esc(n['メモID'])+'"></canvas><div class="dcard-info"><div class="m-t">'+ttl+'</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div></div>';
+  }).join('');
+  setTimeout(function(){
+    document.querySelectorAll('.draw-thumb-cv').forEach(function(cv){
+      var id=cv.getAttribute('data-id'); var n=drawCache[id]; if(!n)return;
+      var sts=[]; try{sts=JSON.parse(n['内容']||'[]');}catch(e){} if(!Array.isArray(sts))sts=[];
+      cv.width=80; cv.height=60;
+      var ctx=cv.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,80,60);
+      var sx=80/680, sy=60/300; ctx.save(); ctx.scale(sx,sy);
+      sts.forEach(function(st){ if(!st.pts||st.pts.length<2)return;
+        ctx.strokeStyle=st.eraser?'#fff':(st.color||'#222'); ctx.lineWidth=(st.width||2);
+        ctx.lineCap='round'; ctx.lineJoin='round';
+        ctx.beginPath(); ctx.moveTo(st.pts[0][0],st.pts[0][1]);
+        for(var i=1;i<st.pts.length;i++)ctx.lineTo(st.pts[i][0],st.pts[i][1]); ctx.stroke();
+      }); ctx.restore();
+    });
+  },50);
+}
+function newDraw(){
+  curDraw=null; drawStrokes=[]; drawHistory=[]; drawInited=false;
+  document.getElementById('drawTitle').value='';
+  document.getElementById('drawSaved').classList.remove('show');
+  document.getElementById('drawEditSiteBar').innerHTML=siteBarHtml();
+  go('p-draw-edit');
+  setTimeout(function(){ initDrawPane(); renderDrawCanvas([]); document.getElementById('drawTitle').focus(); },120);
+}
+function openDraw(id){
+  var n=drawCache[id]||{}; curDraw=id; drawStrokes=[];
+  try{drawStrokes=JSON.parse(n['内容']||'[]');}catch(e){drawStrokes=[];} if(!Array.isArray(drawStrokes))drawStrokes=[];
+  drawHistory=[]; drawInited=false;
+  document.getElementById('drawTitle').value=n['タイトル']||'';
+  document.getElementById('drawSaved').classList.remove('show');
+  document.getElementById('drawEditSiteBar').innerHTML=siteBarHtml();
+  go('p-draw-edit');
+  setTimeout(function(){ initDrawPane(); renderDrawCanvas(drawStrokes); },120);
+}
+function saveDraw(){
+  var t=document.getElementById('drawTitle').value.trim();
+  if(!t){toast('タイトルを入力してください');document.getElementById('drawTitle').focus();return;}
+  if(!curSite){toast('現場が選ばれていません');go('p-memo-select');return;}
+  var u=gUser()||{};
+  var data={'案件ID':curSite.id,'種類':'draw','タイトル':t,'内容':JSON.stringify(drawStrokes),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  if(curDraw)data['メモID']=curDraw;
+  showLoad('保存中…');
+  callGAS({action:'noteSave',data:data},true).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'保存に失敗しました');
+    if(res.note&&res.note['メモID']){curDraw=res.note['メモID'];drawCache[curDraw]=res.note;}
+    var sv=document.getElementById('drawSaved');sv.textContent='保存しました';sv.classList.add('show');
+    toast('保存しました');
+  }).catch(function(e){toast('失敗：'+e.message);}).then(function(){hideLoad();});
+}
+function deleteDraw(){
+  if(!curDraw){openSiteDrawList();return;}
+  if(!confirm('この手書きメモを削除しますか？'))return;
+  showLoad('削除中…');
+  callGAS({action:'noteDelete',id:curDraw},true).then(function(res){
+    if(!res||!res.ok)throw new Error('削除に失敗しました');
+    toast('削除しました');curDraw=null;openSiteDrawList();
+  }).catch(function(e){toast('失敗：'+e.message);}).then(function(){hideLoad();});
+}
+function openDrawForCase(id){
+  curTool='draw';
+  showLoad('読み込み中…');
+  callGAS({action:'list'},true).then(function(res){
+    var ps=(res&&res.ok&&res.projects)||[];tbProjects=ps;
+    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
+    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
+    hideLoad();
+    var st=document.getElementById('selTitle');if(st)st.textContent='手書きメモ';
+    if(!p){toast('現場が見つかりませんでした');fillKinds();go('p-memo-select');return;}
+    curSite={id:String(id),name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
+    openSiteDrawList();
+  }).catch(function(){hideLoad();fillKinds();go('p-memo-select');});
 }
 
-/* ===== 道具の登録・編集（管理者） ===== */
-var editId=null;
-function openEdit(id){
-  editId=id;
-  if(id){
-    var t=DB.tools.filter(function(x){return String(x['道具ID'])===id;})[0];if(!t)return;
-    document.getElementById('editTtl').textContent='道具を編集';
-    document.getElementById('eName').value=t['道具名']||'';
-    document.getElementById('eKind').value=t['区分']||'';
-    document.getElementById('eQty').value=t['保有数']||1;
-    document.getElementById('eNo').value=t['管理番号']||'';
-    document.getElementById('eState').value=t['状態']||'通常';
-    document.getElementById('ePlace').value=t['保管場所']||'';
-    document.getElementById('eNote').value=t['備考']||'';
-    document.getElementById('delTool').style.display='block';
+/* ===== ⑥ 電気計算機 ===== */
+function elecTab(t){
+  var ks=['ohm','pow','vd','kn'];
+  for(var i=0;i<ks.length;i++){
+    var on=(ks[i]===t);
+    document.getElementById('etab-'+ks[i]).classList.toggle('on',on);
+    document.getElementById('ep-'+ks[i]).classList.toggle('on',on);
+  }
+}
+function eNum(id){var el=document.getElementById(id);if(!el)return null;var v=parseFloat(el.value);return isNaN(v)?null:v;}
+function eFmt(n){
+  if(!isFinite(n))return '—';
+  var a=Math.abs(n),dp=a>=100?1:(a>=1?2:3);
+  var x=n.toFixed(dp);
+  if(x.indexOf('.')>=0)x=x.replace(/0+$/,'').replace(/\.$/,'');
+  return x;
+}
+function elecSeg(cid,val){
+  var bs=document.getElementById(cid).getElementsByTagName('button');
+  for(var i=0;i<bs.length;i++)bs[i].classList.toggle('on',bs[i].getAttribute('data-v')===val);
+}
+function elecErr(res,msg){res.className='eres err';res.textContent=msg;}
+
+/* オームの法則 */
+function calcOhm(){
+  var V=eNum('ohmV'),I=eNum('ohmI'),R=eNum('ohmR');
+  var res=document.getElementById('ohmRes');
+  if([V,I,R].filter(function(x){return x!==null;}).length<2){res.className='eres';res.textContent='分かっている2つを入力してください';return;}
+  var ans=null;
+  if(V===null){V=I*R;ans={l:'電圧 V',v:V,u:'V'};}
+  else if(I===null){if(R===0){return elecErr(res,'抵抗が0だと計算できません');}I=V/R;ans={l:'電流 I',v:I,u:'A'};}
+  else if(R===null){if(I===0){return elecErr(res,'電流が0だと計算できません');}R=V/I;ans={l:'抵抗 R',v:R,u:'Ω'};}
+  var P=V*I,html='';
+  if(ans)html+='<div class="big">'+ans.l+' = '+eFmt(ans.v)+' '+ans.u+'</div>';
+  html+='<div class="sub">電力 P = '+eFmt(P)+' W （'+eFmt(P/1000)+' kW）</div>';
+  res.className='eres ok';res.innerHTML=html;
+}
+
+/* 電力・電流 */
+var elPowMode='kw',elPowPhase='1';
+function powSetMode(m){
+  elPowMode=m;elecSeg('powMode',m);
+  document.getElementById('powCellP').style.display=(m==='kw')?'none':'block';
+  document.getElementById('powCellI').style.display=(m==='a')?'none':'block';
+  calcPow();
+}
+function powSetPhase(p){elPowPhase=p;elecSeg('powPhase',p);calcPow();}
+function calcPow(){
+  var V=eNum('powV'),pf=eNum('powPf');if(pf===null)pf=1;
+  var res=document.getElementById('powRes'),k=(elPowPhase==='3')?Math.sqrt(3):1;
+  if(elPowMode==='kw'){
+    var I=eNum('powI');
+    if(V===null||I===null){res.className='eres';res.textContent='電圧と電流を入力してください';return;}
+    var S=k*V*I,P=S*pf;
+    res.className='eres ok';
+    res.innerHTML='<div class="big">電力 = '+eFmt(P/1000)+' kW</div>'+
+      '<div class="sub">'+eFmt(P)+' W ／ 皮相電力 '+eFmt(S/1000)+' kVA</div>';
   }else{
-    document.getElementById('editTtl').textContent='道具を登録';
-    document.getElementById('eName').value='';document.getElementById('eKind').value='';
-    document.getElementById('eQty').value=1;document.getElementById('eNo').value='';
-    document.getElementById('eState').value='通常';document.getElementById('ePlace').value='';document.getElementById('eNote').value='';
-    document.getElementById('delTool').style.display='none';
+    var Pin=eNum('powP');
+    if(V===null||Pin===null){res.className='eres';res.textContent='電力と電圧を入力してください';return;}
+    if(V===0||pf===0){return elecErr(res,'電圧・力率を確認してください');}
+    var Ia=(Pin*1000)/(k*V*pf);
+    res.className='eres ok';
+    res.innerHTML='<div class="big">電流 = '+eFmt(Ia)+' A</div>'+
+      '<div class="sub">'+(elPowPhase==='3'?'三相':'単相')+'・力率 '+eFmt(pf)+'</div>';
   }
-  document.getElementById('ovEdit').classList.add('on');
 }
-function saveTool(){
-  var name=document.getElementById('eName').value.trim();
-  if(!name){toast('道具名を入力してください');return;}
-  var data={'道具名':name,'区分':document.getElementById('eKind').value.trim(),
-    '保有数':Number(document.getElementById('eQty').value)||1,'管理番号':document.getElementById('eNo').value.trim(),
-    '状態':document.getElementById('eState').value,'保管場所':document.getElementById('ePlace').value.trim(),
-    '備考':document.getElementById('eNote').value.trim()};
-  if(editId)data['道具ID']=editId;
-  callGAS({action:'toolSave',data:data,_adm:1}).then(function(res){
-    if(res&&res.ok){
-      var saved=res.tool;var idx=-1;DB.tools.forEach(function(t,i){if(String(t['道具ID'])===String(saved['道具ID']))idx=i;});
-      if(idx>=0)DB.tools[idx]=saved;else DB.tools.push(saved);
-      saveCache();closeOv('ovEdit');toast('保存しました');renderTools();
-    }else toast((res&&res.error)||'保存に失敗しました');
-  }).catch(function(e){toast(e.message);});
-}
-function deleteTool(){
-  if(!editId)return;
-  if(lendsOf(editId).length){toast('貸出中の道具は削除できません');return;}
-  if(!confirm('この道具を削除しますか？'))return;
-  callGAS({action:'toolDelete',id:editId,_adm:1}).then(function(res){
-    if(res&&res.ok){DB.tools=DB.tools.filter(function(t){return String(t['道具ID'])!==String(editId);});
-      saveCache();closeOv('ovEdit');toast('削除しました');renderTools();}
-    else toast((res&&res.error)||'削除に失敗しました');
-  }).catch(function(e){toast(e.message);});
-}
-function saveCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify({ok:true,tools:DB.tools,lends:DB.lends,workers:DB.workers,projects:DB.projects}));}catch(e){}}
 
-/* ===== 起動 ===== */
-(function(){
-  // 管理者PINがあれば管理者判定（編集ボタンを出す）
-  var pin=admTok();
-  if(pin){
-    callGAS({action:'checkRole',_adm:1},true).then(function(res){
-      if(res&&res.ok&&res.role==='admin'){isAdmin=true;document.getElementById('addTool').style.display='block';renderTools();}
-    }).catch(function(){});
+/* 電圧降下 */
+var elVdMethod='1p2';
+function vdSetMethod(m){elVdMethod=m;elecSeg('vdMethod',m);calcVd();}
+function calcVd(){
+  var L=eNum('vdL'),I=eNum('vdI'),A=eNum('vdA'),base=eNum('vdBase');
+  var res=document.getElementById('vdRes');
+  if(L===null||I===null||A===null){res.className='eres';res.textContent='長さ・電流・太さを入力してください';return;}
+  if(A===0){return elecErr(res,'電線の太さを確認してください');}
+  var K={'1p2':35.6,'3p3':30.8,'1p3':17.8}[elVdMethod];
+  var e=K*L*I/(1000*A);
+  var html='<div class="big">電圧降下 = '+eFmt(e)+' V</div>';
+  if(base!==null&&base>0)html+='<div class="sub">降下率 '+eFmt(e/base*100)+' % （基準 '+eFmt(base)+' V）</div>';
+  res.className='eres ok';res.innerHTML=html;
+}
+
+/* 幹線サイズ選定 */
+var knState={knPhase:'1',knLay:'air'};
+function knSet(id,v){knState[id]=v;elecSeg(id,v);calcKansen();}
+var KN_IV  =[['2sq',27],['3.5sq',37],['5.5sq',49],['8sq',61],['14sq',88],['22sq',115],['38sq',162],['60sq',217],['100sq',298],['150sq',395],['200sq',469],['250sq',556],['325sq',650]];
+var KN_CV2 =[['2sq',28],['3.5sq',39],['5.5sq',52],['8sq',65],['14sq',91],['22sq',120],['38sq',170],['60sq',225],['100sq',310],['150sq',400],['200sq',485],['250sq',560],['325sq',660]];
+var KN_CV3 =[['2sq',23],['3.5sq',33],['5.5sq',44],['8sq',54],['14sq',76],['22sq',100],['38sq',140],['60sq',190],['100sq',260],['150sq',340],['200sq',410],['250sq',470],['325sq',555]];
+var KN_CVT =[['8sq',62],['14sq',86],['22sq',110],['38sq',155],['60sq',210],['100sq',290],['150sq',380],['200sq',465],['250sq',535],['325sq',635]];
+var KN_VVF2=[['1.6mm',18],['2.0mm',23],['2.6mm',32]];
+var KN_VVF3=[['1.6mm',16],['2.0mm',20],['2.6mm',28]];
+function knPick(tbl,I,f){
+  for(var i=0;i<tbl.length;i++){var amp=tbl[i][1]*f;if(amp>=I)return {size:tbl[i][0],amp:amp};}
+  return null;
+}
+function calcKansen(){
+  var I=eNum('knI'),res=document.getElementById('knRes');
+  if(I===null||I<=0){res.className='eres';res.textContent='電流を入力してください';return;}
+  var pipe=(knState.knLay==='pipe'),tri=(knState.knPhase==='3');
+  var fIv=pipe?0.70:1,fCv=pipe?0.78:1;
+  var rows=[
+    ['IV（'+(pipe?'管内3本以下':'がいし引き')+'）',knPick(KN_IV,I,fIv)],
+    ['CV '+(tri?'3心':'2心'),knPick(tri?KN_CV3:KN_CV2,I,fCv)],
+    ['CVT',knPick(KN_CVT,I,fCv)],
+    ['VVF '+(tri?'3心':'2心'),knPick(tri?KN_VVF3:KN_VVF2,I,1)]
+  ];
+  var html='<table class="ktbl"><tr><th>ケーブル</th><th>サイズ</th><th>許容電流</th></tr>';
+  for(var i=0;i<rows.length;i++){
+    var p=rows[i][1];
+    html+='<tr><td>'+rows[i][0]+'</td>'+(p?'<td class="kz">'+p.size+'</td><td>'+eFmt(p.amp)+' A</td>':'<td colspan="2">該当サイズなし</td>')+'</tr>';
   }
-  // データ読み込み（一覧・貸出は一般トークンで誰でも閲覧可）
-  var c=null;try{c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');}catch(e){}
-  if(c){applyData(c);loadAll(true);}else loadAll(false);
+  html+='</table>';
+  res.className='eres ok';res.innerHTML=html;
+}
+
+
+/* ===== ⑦ 坪・㎡・畳 換算 ===== */
+var A_TSUBO=3.30579;   // 1坪 = 3.30579 m2
+var A_JOU  =1.65289;   // 1畳(江戸間) = 1.65289 m2
+
+function aFmt(n){
+  if(!isFinite(n))return '—';
+  var a=Math.abs(n);
+  var dp=a>=1000?0:(a>=100?1:(a>=10?2:3));
+  var x=n.toFixed(dp);
+  if(x.indexOf('.')>=0)x=x.replace(/0+$/,'').replace(/\.$/,'');
+  return x;
+}
+function aRow(label,val,unit2){
+  return '<tr><td class="av">'+aFmt(val)+'<div class="au">'+unit2+'</div></td></tr>';
+}
+function aRenderRight(id,html){ var el=document.getElementById(id); if(el){ el.className='ato'; el.innerHTML=html; } }
+function aRenderTable(m2){
+  var tsubo=m2/A_TSUBO, jou=m2/A_JOU;
+  var el=document.getElementById('areaTable');
+  if(!el||!isFinite(m2)){if(el)el.innerHTML='';return;}
+  el.innerHTML='<table class="atbl">'+
+    '<thead><tr><th>単位</th><th>換算値</th></tr></thead>'+
+    '<tbody>'+
+    '<tr><td>坪</td><td class="av">'+aFmt(tsubo)+'<div class="au">坪</div></td></tr>'+
+    '<tr><td>㎡（平米）</td><td class="av">'+aFmt(m2)+'<div class="au">㎡</div></td></tr>'+
+    '<tr><td>畳（江戸間）</td><td class="av">'+aFmt(jou)+'<div class="au">畳</div></td></tr>'+
+    '</tbody></table>';
+}
+function aClearAll(){
+  ['tsubo','m2','jou'].forEach(function(k){
+    var el=document.getElementById('aFrom_'+k); if(el)el.value='';
+    var rt=document.getElementById('aTo_'+k+'_right');
+    if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(255,255,255,.45);font-size:13px;">―</span>';}
+  });
+  var t=document.getElementById('areaTable'); if(t)t.innerHTML='';
+}
+function aConv(from){
+  // 他の入力をクリア（1つのみアクティブ）
+  ['tsubo','m2','jou'].forEach(function(k){
+    if(k!==from){
+      var el=document.getElementById('aFrom_'+k); if(el)el.value='';
+      var rt=document.getElementById('aTo_'+k+'_right');
+      if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(255,255,255,.45);font-size:13px;">―</span>';}
+    }
+  });
+  var input=document.getElementById('aFrom_'+from);
+  var v=input?parseFloat(input.value):NaN;
+  if(isNaN(v)||v<0){
+    var rt=document.getElementById('aTo_'+from+'_right');
+    if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(255,255,255,.45);font-size:13px;">―</span>';}
+    document.getElementById('areaTable').innerHTML=''; return;
+  }
+  var m2 = from==='tsubo'?v*A_TSUBO:(from==='jou'?v*A_JOU:v);
+  var tsubo=m2/A_TSUBO, jou=m2/A_JOU;
+  // 右側に答えを表示
+  var others={tsubo:aFmt(tsubo)+' 坪', m2:aFmt(m2)+' ㎡', jou:aFmt(jou)+' 畳'};
+  var rt=document.getElementById('aTo_'+from+'_right');
+  if(rt){
+    var ans=(from==='tsubo')?aFmt(m2)+' ㎡':(from==='m2')?aFmt(tsubo)+' 坪':aFmt(m2)+' ㎡';
+    rt.className='ato'; rt.textContent=ans;
+  }
+  aRenderTable(m2);
+}
+// 初期状態で右側を「―」にセット
+(function aInit(){
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',aInit);return;}
+  aClearAll();
+})();
+
+
+/* ===== 共通 POST（アップロード用） ===== */
+function tbPost(obj){obj.secret=T_GENERAL;return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)});}
+
+/* ===== ⑤ 小黒板カメラ ===== */
+var boardStream=null,boardSiteId=null,boardSiteName_='';
+function openBoardCamera(){
+  if(!curSite){go('p-memo-select');return;}
+  boardSiteId=curSite.id; boardSiteName_=curSite.name||'';
+  document.getElementById('boardSiteBar').innerHTML='現場：<b>'+esc(curSite.cust||'')+(curSite.name?' ／ '+esc(curSite.name):'')+'</b>';
+  var bsn=document.getElementById('boardProjName');
+  if(pendingBoard){
+    if(bsn) bsn.value=pendingBoard.name||boardSiteName_;
+    var bpl=document.getElementById('boardPlace'); if(bpl&&pendingBoard.loc) bpl.value=pendingBoard.loc;
+    pendingBoard=null;
+  } else if(bsn&&!bsn.value){ bsn.value=boardSiteName_; }
+  var bf=document.getElementById('boardFormWrap');if(bf)bf.style.display='grid';
+  go('p-board'); startBoardCamera(); setTimeout(function(){bov();},50);
+}
+function startBoardCamera(){
+  if(!navigator||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('カメラに対応していません');return;}
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false})
+    .then(function(stream){boardStream=stream;var v=document.getElementById('boardVideo');v.srcObject=stream;v.play();})
+    .catch(function(e){toast('カメラを起動できませんでした（'+e.message+'）');});
+}
+function stopBoardCamera(){
+  if(boardStream){boardStream.getTracks().forEach(function(t){t.stop();});boardStream=null;}
+  var v=document.getElementById('boardVideo');if(v)v.srcObject=null;
+}
+function boardBack(){stopBoardCamera();go('p-home');}
+function bov(){
+  var name=document.getElementById('boardProjName').value;
+  var place=document.getElementById('boardPlace').value;
+  var psel=document.getElementById('boardPhase');
+  var phase=psel?psel.value:'';
+  var comp=document.getElementById('boardCompany').value;
+  var ov=document.getElementById('boardOverlay');if(!ov)return;
+  var l1=(document.getElementById('boardLbl1')||{}).value||'修繕名';
+  var l2=(document.getElementById('boardLbl2')||{}).value||'場所';
+  ov.innerHTML=
+    '<div class="bov-row"><div class="bov-lb">'+esc(l1)+'</div><div class="bov-vl">'+esc(name)+'</div></div>'+
+    '<div class="bov-row"><div class="bov-lb">'+esc(l2)+'</div><div class="bov-vl">'+esc(place)+'</div></div>'+
+    '<div class="bov-ph">'+esc(phase)+'</div>'+
+    '<div class="bov-co">'+esc(comp)+'</div>';
+  ov.style.display='block';
+  boardLayout();
+}
+
+/* 黒板の位置・サイズ（フレームに対する比率） */
+var boardRect={x:0,y:1,w:0.37}; // 左下に密着（yはレイアウト時に下端へクランプ）
+var boardFontScale=1;
+function boardSetFont(v){boardFontScale=parseInt(v,10)/100;var e=document.getElementById('boardFontVal');if(e)e.textContent=v+'%';boardLayout();}
+function boardLblSync(){
+  var l1=(document.getElementById('boardLbl1')||{}).value||'修繕名';
+  var l2=(document.getElementById('boardLbl2')||{}).value||'場所';
+  var f1=document.getElementById('boardLblForm1');if(f1)f1.textContent=l1;
+  var f2=document.getElementById('boardLblForm2');if(f2)f2.textContent=l2;
+  bov();
+}
+var BOARD_HR=0.73; // 黒板の縦横比（参考写真準拠 h/w）
+function boardLayout(){
+  var wrap=document.getElementById('bcamWrap'),ov=document.getElementById('boardOverlay');
+  if(!wrap||!ov)return;
+  var W=wrap.clientWidth,H=wrap.clientHeight;
+  if(!W||!H)return;
+  var bw=W*boardRect.w, bh=bw*BOARD_HR;
+  if(bh>H*0.9){bh=H*0.9;bw=bh/BOARD_HR;boardRect.w=bw/W;}
+  var x=Math.min(Math.max(boardRect.x,0),1-bw/W);
+  var y=Math.min(Math.max(boardRect.y,0),1-bh/H);
+  boardRect.x=x;boardRect.y=y;
+  ov.style.left=(x*W)+'px';ov.style.top=(y*H)+'px';
+  ov.style.width=bw+'px';ov.style.height=bh+'px';
+  // フォントサイズ（写真焼き込みと同一の計算式・枠からはみ出さない上限付き）
+  var fsR=Math.min(bw*0.055*boardFontScale, bh*0.14*0.75);
+  var fsP=Math.min(bw*0.14 *boardFontScale, bh*0.58*0.62);
+  var fsC=Math.min(bw*0.045*boardFontScale, bh*0.14*0.7);
+  ov.style.fontSize=Math.max(7,Math.floor(fsR))+'px';
+  var ph=ov.querySelector('.bov-ph');if(ph)ph.style.fontSize=Math.max(10,Math.floor(fsP))+'px';
+  var co=ov.querySelector('.bov-co');if(co)co.style.fontSize=Math.max(6,Math.floor(fsC))+'px';
+}
+function boardSetSize(v){boardRect.w=parseInt(v,10)/100;var e=document.getElementById('boardSizeVal');if(e)e.textContent=v+'%';boardLayout();}
+var boardLastTap=0;
+function toggleBoardForm(){
+  var f=document.getElementById('boardFormWrap');if(!f)return;
+  var hidden=f.style.display==='none';
+  f.style.display=hidden?'grid':'none';
+  if(hidden){var first=f.querySelector('input');if(first)first.focus();}
+}
+(function boardDragInit(){
+  document.addEventListener('pointerdown',function(e){
+    var ov=document.getElementById('boardOverlay');
+    if(!ov||e.target!==ov&&!ov.contains(e.target))return;
+    var wrap=document.getElementById('bcamWrap');
+    if(!wrap)return;
+    e.preventDefault();
+    var W=wrap.clientWidth,H=wrap.clientHeight;
+    var sx=e.clientX,sy=e.clientY,ox=boardRect.x,oy=boardRect.y,moved=0;
+    function mv(ev){
+      moved=Math.max(moved,Math.abs(ev.clientX-sx)+Math.abs(ev.clientY-sy));
+      boardRect.x=ox+(ev.clientX-sx)/W;boardRect.y=oy+(ev.clientY-sy)/H;boardLayout();
+    }
+    function up(){
+      document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);
+      if(moved<8){
+        var now=Date.now();
+        if(now-boardLastTap<380){boardLastTap=0;toggleBoardForm();}
+        else boardLastTap=now;
+      }
+    }
+    document.addEventListener('pointermove',mv);
+    document.addEventListener('pointerup',up);
+  });
+})();
+
+/* シャッター音（Web Audio・端末のマナーモードに従う） */
+function shutterSound(){
+  try{
+    var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
+    if(!window._shCtx)window._shCtx=new AC();
+    var actx=window._shCtx;
+    if(actx.state==='suspended')actx.resume();
+    var t=actx.currentTime;
+    function burst(at,dur,freq,q,vol){
+      var n=Math.max(1,Math.floor(actx.sampleRate*dur));
+      var buf=actx.createBuffer(1,n,actx.sampleRate);
+      var d=buf.getChannelData(0);
+      for(var i=0;i<n;i++){d[i]=(Math.random()*2-1)*Math.pow(1-i/n,2.5);}
+      var nsrc=actx.createBufferSource();nsrc.buffer=buf;
+      var f=actx.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q;
+      var g=actx.createGain();g.gain.value=vol;
+      nsrc.connect(f);f.connect(g);g.connect(actx.destination);
+      nsrc.start(at);
+    }
+    burst(t,      0.022,4200,0.7,1.0); // 「カ」…ミラー音（高く短く）
+    burst(t+0.05, 0.06, 1500,0.6,0.85); // 「シャッ」…幕の走行音（低く長め）
+  }catch(e){}
+}
+function boardShoot(){
+  var vid=document.getElementById('boardVideo');
+  if(!vid||!vid.videoWidth){toast('カメラが準備できていません');return;}
+  if(!boardSiteId){toast('エラー：案件が未選択です。← で戻って選び直してください。');return;}
+  var vw=vid.videoWidth,vh=vid.videoHeight;
+  // プレビューに表示されている中央4:3領域をそのまま切り出し（回転なし）
+  var sw,sh,sx,sy;
+  if(vw/vh>=4/3){ sh=vh; sw=Math.round(vh*4/3); }
+  else{ sw=vw; sh=Math.round(vw*3/4); }
+  sx=Math.round((vw-sw)/2); sy=Math.round((vh-sh)/2);
+  var outW=sw,outH=sh;
+  var cvs=document.createElement('canvas');cvs.width=outW;cvs.height=outH;
+  var ctx=cvs.getContext('2d');
+  ctx.drawImage(vid,sx,sy,sw,sh,0,0,outW,outH);
+  shutterSound();
+  // 黒板（プレビューで調整した位置・サイズを反映）
+  var bw=Math.floor(outW*boardRect.w),bh=Math.floor(bw*BOARD_HR);
+  if(bh>outH*0.9){bh=Math.floor(outH*0.9);bw=Math.floor(bh/BOARD_HR);}
+  var bx=Math.floor(outW*boardRect.x),by=Math.floor(outH*boardRect.y);
+  if(bx+bw>outW)bx=outW-bw; if(by+bh>outH)by=outH-bh; if(bx<0)bx=0; if(by<0)by=0;
+  ctx.fillStyle='#1a8c78';ctx.fillRect(bx,by,bw,bh);
+  ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.strokeRect(bx+2,by+2,bw-4,bh-4);
+  var fs=Math.max(8,Math.floor(Math.min(bw*0.055*boardFontScale, bh*0.14*0.75)));
+  var pad=Math.floor(Math.max(fs*0.7,bw*0.02));
+  var projName=document.getElementById('boardProjName').value||'';
+  var place=document.getElementById('boardPlace').value||'';
+  var psel=document.getElementById('boardPhase');
+  var phase=psel?psel.value:'施工前';
+  var company=document.getElementById('boardCompany').value||'河口電機株式会社';
+  var labelW=Math.floor(bw*0.22),rowH=Math.floor(bh*0.14);
+  var lbl1=(document.getElementById('boardLbl1')||{}).value||'修繕名';
+  var lbl2=(document.getElementById('boardLbl2')||{}).value||'場所';
+  var rows=[{l:lbl1,v:projName},{l:lbl2,v:place}];
+  ctx.textBaseline='middle';
+  for(var i=0;i<rows.length;i++){
+    var ry=by+i*rowH;
+    ctx.strokeStyle='rgba(255,255,255,0.5)';ctx.lineWidth=1;
+    ctx.beginPath();ctx.moveTo(bx+4,ry+rowH);ctx.lineTo(bx+bw-4,ry+rowH);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(bx+labelW,ry+2);ctx.lineTo(bx+labelW,ry+rowH);ctx.stroke();
+    ctx.fillStyle='#ffffff';ctx.font=fs+'px sans-serif';ctx.textAlign='center';
+    ctx.fillText(rows[i].l,bx+labelW/2,ry+rowH/2,labelW-4);
+    ctx.font='bold '+fs+'px sans-serif';ctx.textAlign='left';
+    ctx.fillText(rows[i].v,bx+labelW+pad,ry+rowH/2,bw-labelW-pad*2);
+  }
+  var midY=by+rowH*rows.length,midH=Math.floor(bh*0.58);
+  var bigFs=Math.max(12,Math.floor(Math.min(bw*0.14*boardFontScale, midH*0.62)));
+  ctx.fillStyle='#ffffff';ctx.font='bold '+bigFs+'px sans-serif';ctx.textAlign='center';
+  if(phase)ctx.fillText(phase,bx+bw/2,midY+midH/2,bw-pad*2);
+  var botY=midY+midH,botH=bh-rowH*rows.length-midH;
+  ctx.fillStyle='rgba(255,255,255,0.85)';
+  ctx.font=Math.max(7,Math.floor(Math.min(bw*0.045*boardFontScale, botH*0.7)))+'px sans-serif';ctx.textAlign='right';
+  if(company)ctx.fillText(company,bx+bw-pad,botY+Math.max(botH/2,fs),bw-pad*2);
+  var base64=cvs.toDataURL('image/jpeg',0.82).split(',')[1];
+  if(!base64||base64.length<200){toast('エラー：画像データの取得に失敗しました。');return;}
+  var fname='board_'+Date.now()+'.jpg';
+  toast('Driveに保存中… ('+Math.round(base64.length/1024)+'KB)');
+  tbPost({action:'uploadPhoto',id:boardSiteId,dest:'photo',name:fname,mime:'image/jpeg',data:base64})
+    .then(function(){setTimeout(function(){toast('✓ Driveに保存しました');},2000);})
+    .catch(function(){toast('保存に失敗しました');});
+}
+
+
+/* ===== ④ 録音機 ===== */
+var recStream=null,recRecorder=null,recChunks=[],recBlob=null;
+var recSiteId=null,recTimerInt=null,recSecs=0;
+
+function openRecorder(){
+  if(!curSite){go('p-memo-select');return;}
+  recSiteId=curSite.id;
+  document.getElementById('recSiteBar').innerHTML='現場：<b>'+esc(curSite.cust||'')+(curSite.name?' ／ '+esc(curSite.name):'')+'</b>';
+  recReset(); go('p-rec');
+}
+function recBack(){recStop2(); go('p-home');}
+function recStop2(){
+  if(recRecorder&&recRecorder.state!=='inactive')try{recRecorder.stop();}catch(e){}
+  if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}
+  clearInterval(recTimerInt);
+}
+function recSetState(st){
+  document.getElementById('recIdle').style.display=(st==='idle')?'':'none';
+  document.getElementById('recRecording').style.display=(st==='recording')?'':'none';
+  document.getElementById('recPreview').style.display=(st==='preview')?'':'none';
+}
+function recStart(){
+  if(typeof MediaRecorder==='undefined'){toast('このブラウザは録音に対応していません');return;}
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('マイクに対応していません');return;}
+  navigator.mediaDevices.getUserMedia({audio:true})
+    .then(function(stream){
+      recStream=stream; recChunks=[]; recBlob=null;
+      var types=['audio/webm;codecs=opus','audio/webm','audio/ogg','audio/mp4'];
+      var mt=types.filter(function(t){try{return MediaRecorder.isTypeSupported(t);}catch(e){return false;}})[0]||'';
+      recRecorder=new MediaRecorder(stream,mt?{mimeType:mt}:{});
+      recRecorder.ondataavailable=function(e){if(e.data&&e.data.size>0)recChunks.push(e.data);};
+      recRecorder.onstop=function(){
+        clearInterval(recTimerInt);
+        recBlob=new Blob(recChunks,{type:recRecorder.mimeType||'audio/webm'});
+        document.getElementById('recAudio').src=URL.createObjectURL(recBlob);
+        recSetState('preview');
+      };
+      recRecorder.start(1000);
+      recSecs=0; recSetState('recording');
+      recTimerInt=setInterval(function(){
+        recSecs++;
+        var m=Math.floor(recSecs/60),sc=recSecs%60;
+        document.getElementById('recTimer').textContent=m+':'+(sc<10?'0':'')+sc;
+        if(recSecs>=300){toast('最大5分に達しました');recStop();}
+      },1000);
+    }).catch(function(e){toast('マイクを使用できませんでした（'+e.message+'）');});
+}
+function recStop(){
+  if(recRecorder&&recRecorder.state!=='inactive')recRecorder.stop();
+  if(recStream){recStream.getTracks().forEach(function(t){t.stop();});recStream=null;}
+  clearInterval(recTimerInt);
+}
+function recReset(){
+  recStop2(); recBlob=null; recChunks=[]; recSecs=0;
+  var a=document.getElementById('recAudio');if(a)a.src='';
+  var t=document.getElementById('recTitle');if(t)t.value='';
+  recSetState('idle');
+}
+function recSave(){
+  if(!recBlob){toast('録音データがありません');return;}
+  var ext=(recBlob.type.indexOf('ogg')>=0)?'.ogg':(recBlob.type.indexOf('mp4')>=0?'.m4a':'.webm');
+  var title=(document.getElementById('recTitle').value||'').trim().slice(0,20).replace(/[\\/:*?"<>|]/g,'');
+  var stamp=new Date().toISOString().replace(/[^0-9]/g,'').slice(0,14);
+  var fname='rec_'+(title?title+'_':'')+stamp+ext;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    var b64=ev.target.result.split(',')[1];
+    toast('Driveに保存中...');
+    tbPost({action:'uploadPhoto',id:recSiteId,dest:'file',name:fname,mime:recBlob.type||'audio/webm',data:b64})
+      .then(function(){setTimeout(function(){toast('✓ 保存しました');recReset();recLoadList();},1800);})
+      .catch(function(){toast('保存に失敗しました');});
+  };
+  reader.readAsDataURL(recBlob);
+}
+function recLoadList(){
+  if(!recSiteId){toast('現場を選んでください');return;}
+  var el=document.getElementById('recList');
+  el.innerHTML='<div class="empty">読み込み中...</div>';
+  callGAS({action:'listFiles',id:recSiteId}).then(function(res){
+    var files=(res.files||[]).filter(function(f){return /^rec_/.test(f.name);});
+    if(!files.length){el.innerHTML='<div class="empty">この現場の録音ファイルはまだありません。</div>';return;}
+    el.innerHTML=files.map(function(f){
+      return '<div class="memo"><div class="m-t">'+esc(f.name)+'</div>'+
+        '<div class="m-d"><a href="'+esc(f.url)+'" target="_blank" style="color:#a8d8ff;font-size:12px;">Driveで開く／再生 →</a></div></div>';
+    }).join('');
+  }).catch(function(){el.innerHTML='<div class="empty">読み込みに失敗しました。</div>';});
+}
+
+
+/* ===== ⑧ 面積計算機 ===== */
+var measItems=[],measShapeVal='rect';
+function measSetShape(t){
+  measShapeVal=t;
+  elecSeg('measShapeSeg',t);
+  measRenderInputs();
+}
+function measRenderInputs(){
+  var w=document.getElementById('measInputWrap');if(!w)return;
+  if(measShapeVal==='rect'){
+    w.innerHTML='<div class="board-grid"><div><label class="slbl">縦（m）</label><input class="enum" id="mA" inputmode="decimal" placeholder="例 3.6"></div><div><label class="slbl">横（m）</label><input class="enum" id="mB" inputmode="decimal" placeholder="例 4.5"></div></div>';
+  }else if(measShapeVal==='tri'){
+    w.innerHTML='<div class="board-grid"><div><label class="slbl">底辺（m）</label><input class="enum" id="mA" inputmode="decimal" placeholder="例 3.0"></div><div><label class="slbl">高さ（m）</label><input class="enum" id="mB" inputmode="decimal" placeholder="例 2.0"></div></div>';
+  }else{
+    w.innerHTML='<div class="board-grid"><div><label class="slbl">上底（m）</label><input class="enum" id="mA" inputmode="decimal" placeholder="例 2.0"></div><div><label class="slbl">下底（m）</label><input class="enum" id="mB" inputmode="decimal" placeholder="例 3.0"></div></div><div style="margin-top:8px;"><label class="slbl">高さ（m）</label><input class="enum" id="mC" inputmode="decimal" placeholder="例 2.5"></div>';
+  }
+}
+function measCalcArea(type,a,b,c){
+  if(type==='rect')return a*b;
+  if(type==='tri')return a*b/2;
+  if(type==='trap')return(a+b)*c/2;
+  return 0;
+}
+function measAdd(){
+  var a=parseFloat((document.getElementById('mA')||{}).value||'');
+  var b=parseFloat((document.getElementById('mB')||{}).value||'');
+  var cEl=document.getElementById('mC');
+  var c=measShapeVal==='trap'?parseFloat((cEl||{}).value||''):1;
+  if(isNaN(a)||isNaN(b)||a<=0||b<=0){toast('寸法を入力してください');return;}
+  if(measShapeVal==='trap'&&(isNaN(c)||c<=0)){toast('高さを入力してください');return;}
+  var area=measCalcArea(measShapeVal,a,b,c);
+  var lbl=measShapeVal==='rect'?'長方形 '+aFmt(a)+'×'+aFmt(b)+' m':
+          measShapeVal==='tri'?'三角形 底辺'+aFmt(a)+' 高さ'+aFmt(b)+' m':
+          '台形 ('+aFmt(a)+'+'+aFmt(b)+') × 高さ'+aFmt(c)+' m';
+  measItems.push({lbl:lbl,area:area});
+  measRenderList();
+  var ea=document.getElementById('mA');if(ea)ea.value='';
+  var eb=document.getElementById('mB');if(eb)eb.value='';
+  if(cEl)cEl.value='';
+}
+function measRemove(i){measItems.splice(i,1);measRenderList();}
+function measRenderList(){
+  var list=document.getElementById('measList');
+  var tot=document.getElementById('measTotal');
+  if(!list)return;
+  if(!measItems.length){
+    list.innerHTML='<div class="empty">区画を追加すると合計面積を計算します。</div>';
+    if(tot)tot.style.display='none';
+    return;
+  }
+  var sum=0;
+  list.innerHTML=measItems.map(function(item,i){
+    sum+=item.area;
+    return '<div class="memo" style="display:flex;align-items:center;gap:10px;">'+
+      '<div style="flex:1;"><div class="m-t">'+esc(item.lbl)+'</div>'+
+      '<div class="m-d">'+aFmt(item.area)+' m²</div></div>'+
+      '<button onclick="measRemove('+i+')" style="background:rgba(226,87,76,.75);border:none;border-radius:9px;color:#fff;padding:7px 13px;font-size:13px;font-weight:700;cursor:pointer;">削除</button>'+
+      '</div>';
+  }).join('');
+  if(tot){
+    var tsubo=sum/3.30579,jou=sum/1.65289;
+    tot.style.display='flex';
+    tot.className='eres ok';
+    tot.innerHTML='<div class="big">合計 '+aFmt(sum)+' m²</div>'+
+      '<div class="sub">'+aFmt(tsubo)+' 坪　／　'+aFmt(jou)+' 畳（江戸間）</div>';
+  }
+}
+measRenderInputs();
+measRenderList();
+
+/* ===== 材料リスト（種類=mat・現場メモシートに保存） ===== */
+var matItems=[],curMat=null,matCache={},matSuppliers=[];
+function openSiteMatList(){
+  if(!curSite){ go('p-memo-select'); return; }
+  go('p-mat-list');
+  document.getElementById('matSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('matList').innerHTML='<div class="empty">読み込み中…</div>';
+  // 仕入先候補も取得（datalist用）
+  callGAS({action:'suppliers'},true).then(function(r){ matSuppliers=(r&&r.suppliers)||[]; }).catch(function(){});
+  callGAS({action:'notesList',id:curSite.id}).then(function(res){
+    var list=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'')==='mat';});
+    renderMatList(list);
+    if(pendingNote){ var _t=pendingNote; pendingNote=null; if(matCache[_t]) openMat(_t); }
+  }).catch(function(){ document.getElementById('matList').innerHTML='<div class="empty">読み込みに失敗しました。<br>電波を確認して、もう一度お試しください。</div>'; });
+}
+function renderMatList(list){
+  var el=document.getElementById('matList');
+  list.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
+  matCache={}; list.forEach(function(n){matCache[n['メモID']]=n;});
+  if(!list.length){ el.innerHTML='<div class="empty">この現場の材料リストはまだありません。<br>「＋ 新しい材料リスト」で作成できます。</div>'; return; }
+  el.innerHTML=list.map(function(n){
+    var items=parseItems(n['内容']); var done=items.filter(function(it){return it&&it.d;}).length;
+    var ttl=esc(n['タイトル']||'(無題)');
+    return '<div class="memo" onclick="openMat(\''+esc(n['メモID'])+'\')"><div class="m-t">📦 '+ttl+'</div><div class="m-p">'+done+' / '+items.length+' 手配済</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
+  }).join('');
+}
+function newMat(){
+  curMat=null; matItems=[{n:'',q:'',s:'',d:false}];
+  document.getElementById('matTitle').value='';
+  document.getElementById('matSaved').classList.remove('show');
+  document.getElementById('matEditSiteBar').innerHTML=siteBarHtml();
+  renderMatItems();
+  go('p-mat-edit');
+  setTimeout(function(){document.getElementById('matTitle').focus();},150);
+}
+function openMat(id){
+  var n=matCache[id]||{};
+  curMat=id; matItems=parseItems(n['内容']); if(!matItems.length)matItems=[{n:'',q:'',s:'',d:false}];
+  // 旧形式(配列の各要素が{t,d})だった場合のガード
+  matItems=matItems.map(function(it){ return {n:it.n!==undefined?it.n:(it.t||''),q:it.q||'',s:it.s||'',d:!!it.d}; });
+  document.getElementById('matTitle').value=n['タイトル']||'';
+  document.getElementById('matSaved').classList.remove('show');
+  document.getElementById('matEditSiteBar').innerHTML=siteBarHtml();
+  renderMatItems();
+  go('p-mat-edit');
+}
+function matSupOptions(){
+  return (matSuppliers||[]).map(function(x){var nm=x['略称']||x['仕入先名']||'';return nm?'<option value="'+esc(nm)+'"></option>':'';}).join('');
+}
+function renderMatItems(){
+  var el=document.getElementById('matItems');
+  el.innerHTML=matItems.map(function(it,i){
+    return '<div class="matrow'+(it.d?' done':'')+'">'+
+      '<input type="checkbox" '+(it.d?'checked':'')+' onchange="matToggle('+i+',this.checked)">'+
+      '<input class="mt-name" placeholder="材料名" value="'+esc(it.n||'')+'" oninput="matSet('+i+',\'n\',this.value)">'+
+      '<input class="mt-qty" placeholder="数量" value="'+esc(it.q||'')+'" oninput="matSet('+i+',\'q\',this.value)">'+
+      '<input class="mt-sup" list="matSupList" placeholder="仕入先" value="'+esc(it.s||'')+'" oninput="matSet('+i+',\'s\',this.value)">'+
+      '<button class="mdel" onclick="matDel('+i+')">×</button></div>';
+  }).join('')+'<datalist id="matSupList">'+matSupOptions()+'</datalist>';
+}
+function matToggle(i,v){ if(matItems[i]){ matItems[i].d=v; var el=document.getElementById('matItems').children[i]; if(el){ if(v)el.classList.add('done'); else el.classList.remove('done'); } } }
+function matSet(i,k,v){ if(matItems[i])matItems[i][k]=v; }
+function matDel(i){ matItems.splice(i,1); if(!matItems.length)matItems=[{n:'',q:'',s:'',d:false}]; renderMatItems(); }
+function addMatItem(){ matItems.push({n:'',q:'',s:'',d:false}); renderMatItems(); var ins=document.getElementById('matItems').querySelectorAll('.mt-name'); if(ins.length)ins[ins.length-1].focus(); }
+function saveMat(){
+  var t=document.getElementById('matTitle').value.trim();
+  if(!t){ toast('タイトルを入力してください'); document.getElementById('matTitle').focus(); return; }
+  if(!curSite){ toast('現場が選ばれていません'); go('p-memo-select'); return; }
+  var items=matItems.filter(function(it){return String(it.n||'').trim()!=='';});
+  var u=gUser()||{};
+  var data={'案件ID':curSite.id,'種類':'mat','タイトル':t,'内容':JSON.stringify(items),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  if(curMat)data['メモID']=curMat;
+  showLoad('保存中…');
+  callGAS({action:'noteSave',data:data},true).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'保存に失敗しました');
+    if(res.note&&res.note['メモID']){ curMat=res.note['メモID']; matCache[curMat]=res.note; }
+    var sv=document.getElementById('matSaved'); sv.textContent='保存しました'; sv.classList.add('show');
+    toast('保存しました');
+  }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
+}
+function deleteMat(){
+  if(!curMat){ openSiteMatList(); return; }
+  if(!confirm('この材料リストを削除しますか？'))return;
+  showLoad('削除中…');
+  callGAS({action:'noteDelete',id:curMat},true).then(function(res){
+    if(!res||!res.ok)throw new Error('削除に失敗しました');
+    toast('削除しました'); curMat=null; openSiteMatList();
+  }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
+}
+function openMatForCase(id){
+  curTool='mat';
+  showLoad('読み込み中…');
+  callGAS({action:'list'},true).then(function(res){
+    var ps=(res&&res.ok&&res.projects)||[]; tbProjects=ps;
+    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
+    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
+    if(p){ curSite={id:p['案件ID'],name:p['案件名']||'',cust:p['顧客']||''}; openSiteMatList(); }
+    else { toast('案件が見つかりませんでした'); go('p-menu'); }
+  }).catch(function(){ toast('読み込みに失敗しました'); go('p-menu'); }).then(function(){hideLoad();});
+}
+var pendingBoard=null;
+function openBoardForCase(id){
+  curTool='board';
+  showLoad('読み込み中…');
+  callGAS({action:'list'},true).then(function(res){
+    var ps=(res&&res.ok&&res.projects)||[]; tbProjects=ps;
+    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
+    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
+    if(p){ curSite={id:p['案件ID'],name:p['案件名']||'',cust:p['顧客']||''}; openBoardCamera(); }
+    else { toast('案件が見つかりませんでした'); go('p-menu'); }
+  }).catch(function(){ toast('読み込みに失敗しました'); go('p-menu'); }).then(function(){hideLoad();});
+}
+
+(function(){
+  var q=location.search;
+  var dm=q.match(/[?&]draw=([^&]+)/),cm=q.match(/[?&]check=([^&]+)/),mm=q.match(/[?&]memo=([^&]+)/),nm=q.match(/[?&]note=([^&]+)/);
+  var mat=q.match(/[?&]mat=([^&]+)/),bd=q.match(/[?&]board=([^&]+)/);
+  var bnm=q.match(/[?&]name=([^&]+)/),blc=q.match(/[?&]loc=([^&]+)/);
+  if(nm)pendingNote=decodeURIComponent(nm[1]);
+  if(dm){ openDrawForCase(decodeURIComponent(dm[1])); }
+  else if(cm){ openCheckForCase(decodeURIComponent(cm[1])); }
+  else if(mm){ openMemoForCase(decodeURIComponent(mm[1])); }
+  else if(mat){ openMatForCase(decodeURIComponent(mat[1])); }
+  else if(bd){
+    // 小黒板カメラ：工事名・場所を引き継いで起動
+    pendingBoard={name:bnm?decodeURIComponent(bnm[1]):'',loc:blc?decodeURIComponent(blc[1]):''};
+    openBoardForCase(decodeURIComponent(bd[1]));
+  }
 })();
 </script>
 </body>
