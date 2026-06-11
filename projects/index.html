@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 46 projects (2026-06-11) ステータス6種＋お客様向け進捗共有 -->
+<!-- version 48 projects (2026-06-12) 「保管と削除い」を「案件の保管と削除」に表記変更 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -11,10 +11,10 @@
     --accent:#5b5bd6; --accent-d:#4444b8; --accent-soft:#ecebfb;
     --s-見積中:#6b7280; --s-受注:#2563eb; --s-施工中:#ea580c;
     --s-完了:#16a34a; --s-請求:#7c3aed; --s-入金:#0d9488;
-    --radius:13px; --shadow:0 2px 10px rgba(91,91,214,.10); --shadow-lg:0 10px 30px rgba(68,68,184,.16);
+    --radius:13px; --shadow:0 2px 10px rgba(40,60,100,.10); --shadow-lg:0 8px 24px rgba(40,60,100,.16);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{margin:0;background:linear-gradient(165deg,var(--bg1) 0%,var(--bg2) 60%,#ffffff 100%);background-attachment:fixed;min-height:100vh;color:var(--ink);
+  body{margin:0;background:#e8ecf2;min-height:100vh;color:var(--ink);
     font-family:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;
     font-size:15px;line-height:1.5;padding-bottom:80px;}
   header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink);
@@ -305,6 +305,15 @@
           </div>
         </div>
       </div>
+      <div class="d-secttl" id="arcTtl" style="display:none;">案件の保管と削除</div>
+      <div id="arcPanel" style="display:none;background:#fff7ed;border:1px solid #f0c674;border-radius:12px;padding:13px 15px;">
+        <div style="font-size:12.5px;color:#92400e;font-weight:700;line-height:1.7;margin-bottom:10px;">完了した現場のデータをNASなどへ保管してから、システムから削除する手順です。<br>① 保管用Excelを作成 → ② Driveフォルダをダウンロードして保管 → ③ システムから削除</div>
+        <button class="cbtn" style="width:100%;justify-content:center;margin-bottom:7px;" onclick="arcExport()"><span class="ci">📦</span>① 保管用Excelを作成</button>
+        <a id="arcFolder" class="cbtn" target="_blank" rel="noopener" style="width:100%;justify-content:center;margin-bottom:7px;display:none;"><span class="ci">📁</span>② Driveフォルダを開く（右上⋮→ダウンロード）</a>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 2px 10px;"><input type="checkbox" id="arcTrash" checked style="width:18px;height:18px;">削除時にDriveのフォルダもゴミ箱に入れる</label>
+        <button class="cbtn" style="width:100%;justify-content:center;color:#c0392b;border-color:#e3b7b0;" onclick="arcPurge()"><span class="ci">🗑</span>③ この案件をシステムから削除</button>
+        <div style="font-size:11.5px;color:#92400e;margin-top:7px;">※③は元に戻せません。必ず②の保管が終わってから実行してください。</div>
+      </div>
 
       <div class="d-secttl">案件情報</div>
       <div class="d-rows" id="d_rows"></div>
@@ -495,6 +504,13 @@ function openDetail(p){
     var tok=String(p['共有トークン']||'').trim();
     setShareUI(tok);
   } else { shBtn.style.display='none'; }
+
+  // 案件の保管と削除（完了・請求済 × 管理者のみ）
+  var arcT=g('arcTtl'),arcP=g('arcPanel'),stv=String(p['ステータス']||'').trim();
+  if(isAdmin()&&(stv==='完了'||stv==='請求済')){
+    arcT.style.display='block'; arcP.style.display='block';
+    g('arcFolder').style.display='none';
+  } else { arcT.style.display='none'; arcP.style.display='none'; }
 
   // 案件情報
   var rows='';
@@ -778,6 +794,39 @@ function shareCopy(){
   try{ if(navigator.clipboard){navigator.clipboard.writeText(inp.value);}else{document.execCommand('copy');} toast('URLをコピーしました'); }catch(e){ toast('コピーできませんでした。長押しでコピーしてください'); }
 }
 function shareOpen(){ var u=document.getElementById('shareUrl').value; if(u)window.open(u,'_blank'); }
+
+/* ===== 案件の保管と削除 ===== */
+function arcExport(){
+  if(!curDetail)return;
+  showLoad('アーカイブExcelを作成中…（10〜20秒かかります）');
+  callGAS({action:'archiveExport',id:curDetail['案件ID']},true).then(function(res){
+    hideLoad();
+    if(res&&res.ok){
+      var fl=document.getElementById('arcFolder');
+      fl.href=res.folderUrl; fl.style.display='flex';
+      var c=res.counts||{};
+      toast('作成しました（日報'+(c['作業日報']||0)+'件・予定'+(c['スケジュール']||0)+'件・見積請求'+(c['見積請求']||0)+'件など）');
+      window.open(res.fileUrl,'_blank');
+    } else toast((res&&res.error)||'作成に失敗しました');
+  }).catch(function(e){hideLoad();toast(e.message);});
+}
+function arcPurge(){
+  if(!curDetail)return;
+  var nm=String(curDetail['案件名']||'');
+  if(!confirm('「'+nm+'」をシステムから削除します。\n日報・スケジュール・原価・メモ・見積請求・道具貸出の記録もすべて消えます。\n\nNASなどへの保管は終わっていますか？'))return;
+  if(!confirm('最終確認：この操作は元に戻せません。\n「'+nm+'」を本当に削除しますか？'))return;
+  var trash=document.getElementById('arcTrash').checked?'1':'0';
+  showLoad('削除中…');
+  callGAS({action:'archivePurge',id:curDetail['案件ID'],trash:trash},true).then(function(res){
+    hideLoad();
+    if(res&&res.ok){
+      projects=projects.filter(function(x){return String(x['案件ID'])!==String(curDetail['案件ID']);});
+      saveCache(); closeDetail(); render();
+      var c=res.counts||{};
+      toast('保管と削除が完了：日報'+(c['作業日報']||0)+'件・予定'+(c['スケジュール']||0)+'件などを削除しました'+(res.folderTrashed?'（フォルダもゴミ箱へ）':''));
+    } else toast((res&&res.error)||'削除に失敗しました');
+  }).catch(function(e){hideLoad();toast(e.message);});
+}
 
 function statusColor(s){var m={'見積中':'var(--s-見積中)','受注':'var(--s-受注)','段取済':'#9333ea','施工中':'var(--s-施工中)','完了':'var(--s-完了)','請求済':'var(--s-請求)'};return m[s]||'var(--sub)';}
 function num(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN(n)?0:n;}
