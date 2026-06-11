@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 43 (2026-06-10) 検索名統一 -->
+<!-- version 45 calendar (2026-06-11) 週間天気予報を表示 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -48,6 +48,16 @@
   .cell.dim{background:#f3f7fb;border-color:#e8eff5;}
   .cell.today{border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent),0 2px 8px rgba(45,125,210,.2);}
   .dnum{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1;color:var(--ink);}
+  .dhead{display:flex;align-items:center;justify-content:space-between;gap:2px;}
+  .wx{display:flex;align-items:center;gap:1px;font-size:9.5px;line-height:1;white-space:nowrap;}
+  .wx .wi{font-size:12px;}
+  .wx .wt{font-variant-numeric:tabular-nums;font-weight:700;}
+  .wx .whi{color:#e5743b;} .wx .wlo{color:#2d7dd2;}
+  .wx .wpop{color:#2d7dd2;font-size:8.5px;margin-left:1px;}
+  /* アジェンダ（週）用 */
+  .awx{display:flex;align-items:center;gap:3px;font-size:10px;margin-top:2px;justify-content:center;}
+  .awx .wi{font-size:13px;}
+  .awx .wt{font-variant-numeric:tabular-nums;font-weight:700;}
   .cell.sun .dnum{color:#e5484d;} .cell.sat .dnum{color:#2d7dd2;} .cell.dim .dnum{color:#b3c4d2;}
   .cell.hol .dnum{color:#e5484d;}
   .holname{font-size:9px;color:#e5484d;font-weight:600;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -152,7 +162,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v44</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v45 天気</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -373,7 +383,58 @@ function render(){
   document.getElementById('capPeriod').textContent=lbl;
   if(viewMode==='month')renderMonth(); else renderAgenda(viewMode==='week2'?14:7);
   ensureHolidays();
+  ensureWeather();
 }
+// ===== 天気予報（Open-Meteo・APIキー不要）岐阜市中心。今日〜最大16日先まで =====
+var WX={};            // {yyyy-mm-dd: {c:weathercode, hi:max, lo:min, pop:降水確率}}
+var wxFetched=0;      // 直近取得時刻（30分キャッシュ）
+function wxIcon(code){
+  // WMO weather code → 絵文字
+  if(code===0)return '☀️';
+  if(code===1||code===2)return '🌤';
+  if(code===3)return '☁️';
+  if(code===45||code===48)return '🌫';
+  if(code>=51&&code<=57)return '🌦';
+  if(code>=61&&code<=67)return '🌧';
+  if(code>=71&&code<=77)return '🌨';
+  if(code>=80&&code<=82)return '🌧';
+  if(code>=85&&code<=86)return '🌨';
+  if(code>=95)return '⛈';
+  return '';
+}
+function wxBadge(ds){
+  var w=WX[ds]; if(!w)return '';
+  var pop=(w.pop>=30)?'<span class="wpop">'+w.pop+'%</span>':'';
+  return '<span class="wx"><span class="wi">'+wxIcon(w.c)+'</span><span class="wt"><span class="whi">'+w.hi+'</span>/<span class="wlo">'+w.lo+'</span></span>'+pop+'</span>';
+}
+function awxBadge(ds){
+  var w=WX[ds]; if(!w)return '';
+  return '<div class="awx"><span class="wi">'+wxIcon(w.c)+'</span><span class="wt"><span class="whi" style="color:#e5743b">'+w.hi+'</span>/<span class="wlo" style="color:#2d7dd2">'+w.lo+'</span></span></div>';
+}
+function ensureWeather(){
+  // 表示範囲が今日〜16日先と重なるときのみ取得（過去や遠い未来は予報対象外）
+  if(Date.now()-wxFetched < 30*60*1000 && Object.keys(WX).length) return;
+  if(Date.now()-wxFetched < 5*60*1000) return; // 連打防止
+  wxFetched=Date.now();
+  // 岐阜市の緯度経度
+  var lat=35.39,lon=136.72;
+  var url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon
+    +'&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max'
+    +'&timezone=Asia%2FTokyo&forecast_days=16';
+  fetch(url).then(function(r){return r.json();}).then(function(j){
+    if(!j||!j.daily||!j.daily.time)return;
+    var t=j.daily.time,c=j.daily.weathercode,hi=j.daily.temperature_2m_max,lo=j.daily.temperature_2m_min,pp=j.daily.precipitation_probability_max||[];
+    for(var i=0;i<t.length;i++){
+      WX[t[i]]={c:c[i],hi:Math.round(hi[i]),lo:Math.round(lo[i]),pop:(pp[i]==null?0:pp[i])};
+    }
+    try{localStorage.setItem('genba_wx',JSON.stringify({at:Date.now(),wx:WX}));}catch(e){}
+    if(viewMode==='month')renderMonth(); else renderAgenda(viewMode==='week2'?14:7);
+  }).catch(function(){});
+}
+// 起動時にキャッシュ復元（30分以内なら即表示）
+(function(){try{var c=JSON.parse(localStorage.getItem('genba_wx')||'null');
+  if(c&&c.wx&&(Date.now()-c.at)<30*60*1000){WX=c.wx;wxFetched=c.at;}}catch(e){}})();
+
 // 表示範囲に含まれる年の祝日を取得（年単位でキャッシュ）。取得後に再描画
 function ensureHolidays(){ var ys={};
   if(viewMode==='month'){ var f=new Date(cur.getFullYear(),cur.getMonth(),1); f.setDate(1-f.getDay());
@@ -394,7 +455,7 @@ function renderMonth(){
     var cell=document.createElement('div');cell.className='cell'+(inM?'':' dim')+(ds===today?' today':'')+(dow===0?' sun':'')+(dow===6?' sat':'')+(holN?' hol':'');
     cell.setAttribute('data-idx',i);cell.setAttribute('data-ds',ds);
     cell.onclick=(function(x){return function(){openDay(x);};})(ds);
-    var html='<div class="dnum">'+d.getDate()+'</div>'+(holN?'<div class="holname">'+esc(holN)+'</div>':''),evs=eventsOn(ds);
+    var html='<div class="dhead"><span class="dnum">'+d.getDate()+'</span>'+wxBadge(ds)+'</div>'+(holN?'<div class="holname">'+esc(holN)+'</div>':''),evs=eventsOn(ds);
     for(var j=0;j<evs.length;j++){var e=evs[j];
       var pn=projShort(e['案件ID'],e['案件名'])||e['予定内容']||'(予定)';
       var who=ownerShort(e['担当']);
@@ -424,7 +485,7 @@ function renderAgenda(numDays){
         (who?'<span class="aev-who">'+esc(who)+'</span>':'')+
       '</div>';
     });}
-    row.innerHTML='<div class="adate"><div class="adate-d">'+(d.getMonth()+1)+'/'+d.getDate()+'</div><div class="adate-w">'+wd(d)+'</div>'+(holN?'<div class="adate-hol">'+esc(holN)+'</div>':'')+'</div>'+
+    row.innerHTML='<div class="adate"><div class="adate-d">'+(d.getMonth()+1)+'/'+d.getDate()+'</div><div class="adate-w">'+wd(d)+'</div>'+(holN?'<div class="adate-hol">'+esc(holN)+'</div>':'')+awxBadge(ds)+'</div>'+
                   '<div class="aevs">'+body+'</div>';
     host.appendChild(row);
   }
