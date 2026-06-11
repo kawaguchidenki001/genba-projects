@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 26 (2026-06-10) 材料リスト追加・小黒板カメラ/材料のdeep-link対応 -->
+<!-- toolbox version 30 (2026-06-12) 手書きメモを現場メモに統合（編集画面でテキスト⇄手書き切替）／材料リストの遷移整理 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -178,6 +178,13 @@
   .rec-hint{color:var(--sub);font-size:13px;margin-bottom:16px;line-height:1.7;}
   .rec-pulse{width:22px;height:22px;border-radius:50%;background:#d64646;margin:0 auto 14px;animation:rpulse 1.2s ease-in-out infinite;}
   @keyframes rpulse{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.6);opacity:.5;}}
+  .ssel{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:15px;color:var(--ink);font-family:inherit;}
+  .slbl2{font-size:12px;font-weight:700;color:var(--sub);margin:0 2px 5px;}
+  .m-s{font-size:11px;font-weight:700;color:var(--accent-d);margin-bottom:2px;}
+  .modeseg{display:flex;gap:8px;margin:4px 0 12px;}
+  .modeseg button{flex:1;padding:10px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;
+    background:#e8ecf2;color:#6b7280;box-shadow:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;}
+  .modeseg button.on{color:#1f5fa8;box-shadow:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
 </style>
 <body>
 <div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v26</div>
@@ -193,9 +200,8 @@
       <div class="co">現場で使う道具をまとめて</div>
     </div>
     <div class="grid">
-      <div class="sq t-memo"  onclick="openTool('memo')"><span class="ic">📝</span><span class="txt"><span class="nm">現場メモ</span><span class="ds">サッとテキストでメモ</span></span><span class="cor">→</span></div>
+      <div class="sq t-memo"  onclick="openTool('memo')"><span class="ic">📝</span><span class="txt"><span class="nm">現場メモ</span><span class="ds">テキスト・手書きでメモ</span></span><span class="cor">→</span></div>
       <div class="sq t-check" onclick="openTool('check')"><span class="ic">✅</span><span class="txt"><span class="nm">チェックリスト</span><span class="ds">確認項目を管理</span></span><span class="cor">→</span></div>
-      <div class="sq t-draw"  onclick="openTool('draw')"><span class="ic">✍️</span><span class="txt"><span class="nm">手書きメモ</span><span class="ds">指で書ける</span></span><span class="cor">→</span></div>
       <div class="sq t-mat"   onclick="openTool('mat')"><span class="ic">📦</span><span class="txt"><span class="nm">材料リスト</span><span class="ds">材料の数量・仕入先を管理</span></span><span class="cor">→</span></div>
       <div class="sq t-rec"   onclick="openTool('rec')"><span class="ic">🎙️</span><span class="txt"><span class="nm">録音機</span><span class="ds">音声を記録</span></span><span class="cor">→</span></div>
       <div class="sq t-board" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">→</span></div>
@@ -219,7 +225,7 @@
   <!-- 現場メモ：一覧 -->
   <div class="pane" id="p-memo-list">
     <div class="thead">
-      <span class="back2" onclick="resetAndGoSelect()">← 現場を変える</span>
+      <span class="back2" onclick="go('p-home')">← 道具箱</span>
       <h2>現場メモ</h2>
     </div>
     <div class="sitebar" id="memoSiteBar"></div>
@@ -239,8 +245,28 @@
     <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
     <label class="slbl">タイトル（何のメモか）</label>
     <input id="noteTitle" placeholder="例：配線確認のメモ" autocapitalize="off">
-    <label class="slbl">本文</label>
-    <textarea id="noteBody" placeholder="ここにメモ…"></textarea>
+    <div class="modeseg">
+      <button id="modeText" class="on" onclick="setNoteMode('text')">📝 テキスト</button>
+      <button id="modeDraw" onclick="setNoteMode('draw')">✍️ 手書き</button>
+    </div>
+    <div id="noteTextArea">
+      <textarea id="noteBody" placeholder="ここにメモ…"></textarea>
+    </div>
+    <div id="noteDrawArea" style="display:none;">
+      <div class="dtoolbar">
+        <span class="cswatch on" id="cswB" style="background:#222;" onclick="setDrawColor('#222','cswB')"></span>
+        <span class="cswatch" id="cswR" style="background:#e03030;" onclick="setDrawColor('#e03030','cswR')"></span>
+        <span class="cswatch" id="cswU" style="background:#1a6fd8;" onclick="setDrawColor('#1a6fd8','cswU')"></span>
+        <span class="cswatch" id="cswG" style="background:#1a9a50;" onclick="setDrawColor('#1a9a50','cswG')"></span>
+        <button id="dBtnS" class="on" onclick="setDrawWidth(2,'dBtnS')">細</button>
+        <button id="dBtnM" onclick="setDrawWidth(5,'dBtnM')">中</button>
+        <button id="dBtnL" onclick="setDrawWidth(10,'dBtnL')">太</button>
+        <button id="dBtnE" onclick="toggleEraser()">消しゴム</button>
+        <button onclick="undoDraw()">↩ 戻す</button>
+        <button onclick="clearDraw()">クリア</button>
+      </div>
+      <canvas id="drawCanvas"></canvas>
+    </div>
     <button class="savebtn" onclick="saveNote()">保存する</button>
     <div class="savehint" id="noteSaved"></div>
   </div>
@@ -248,7 +274,7 @@
   <!-- ② 現場チェックリスト：一覧 -->
   <div class="pane" id="p-check-list">
     <div class="thead">
-      <span class="back2" onclick="resetAndGoSelect()">← 現場を変える</span>
+      <span class="back2" onclick="go('p-home')">← 道具箱</span>
       <h2>現場チェックリスト</h2>
     </div>
     <div class="sitebar" id="checkSiteBar"></div>
@@ -278,7 +304,7 @@
   <!-- ========== 材料リスト：一覧 ========== -->
   <div class="pane" id="p-mat-list">
     <div class="thead">
-      <span class="back2" onclick="go('p-menu')">← 道具箱</span>
+      <span class="back2" onclick="go('p-home')">← 道具箱</span>
       <h2>材料リスト</h2>
       <span style="width:36px;"></span>
     </div>
@@ -306,46 +332,6 @@
     <div class="savehint" id="matSaved"></div>
   </div>
 
-  <!-- ③ 手書きメモ：一覧 -->
-  <div class="pane" id="p-draw-list">
-    <div class="thead">
-      <span class="back2" onclick="resetAndGoSelect()">← 現場を変える</span>
-      <h2>手書きメモ</h2>
-    </div>
-    <div class="sitebar" id="drawSiteBar"></div>
-    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
-    <button class="addbtn" onclick="newDraw()">＋ 新しい手書きメモ</button>
-    <div id="drawList"></div>
-  </div>
-
-  <!-- 手書きメモ：編集 -->
-  <div class="pane" id="p-draw-edit">
-    <div class="thead">
-      <span class="back2" onclick="openSiteDrawList()">← 一覧</span>
-      <h2>手書きメモ</h2>
-      <span class="del" onclick="deleteDraw()">削除</span>
-    </div>
-    <div class="sitebar" id="drawEditSiteBar"></div>
-    <button class="linkbtn" onclick="openCaseInProjects()">📋 この案件情報を開く</button>
-    <label class="slbl">タイトル（何の手書きか）</label>
-    <input id="drawTitle" placeholder="例：配線図スケッチ" autocapitalize="off">
-    <label class="slbl" style="margin-top:14px;margin-bottom:8px;">手書きエリア</label>
-    <div class="dtoolbar">
-      <span class="cswatch on" id="cswB" style="background:#222;" onclick="setDrawColor('#222','cswB')"></span>
-      <span class="cswatch" id="cswR" style="background:#e03030;" onclick="setDrawColor('#e03030','cswR')"></span>
-      <span class="cswatch" id="cswU" style="background:#1a6fd8;" onclick="setDrawColor('#1a6fd8','cswU')"></span>
-      <span class="cswatch" id="cswG" style="background:#1a9a50;" onclick="setDrawColor('#1a9a50','cswG')"></span>
-      <button id="dBtnS" class="on" onclick="setDrawWidth(2,'dBtnS')">細</button>
-      <button id="dBtnM" onclick="setDrawWidth(5,'dBtnM')">中</button>
-      <button id="dBtnL" onclick="setDrawWidth(10,'dBtnL')">太</button>
-      <button id="dBtnE" onclick="toggleEraser()">消しゴム</button>
-      <button onclick="undoDraw()">↩ 戻す</button>
-      <button onclick="clearDraw()">クリア</button>
-    </div>
-    <canvas id="drawCanvas"></canvas>
-    <button class="savebtn" onclick="saveDraw()">保存する</button>
-    <div class="savehint" id="drawSaved"></div>
-  </div>
 
   <!-- ========== ⑥ 電気計算機 ========== -->
   <div class="pane" id="p-elec">
@@ -571,7 +557,31 @@
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
-function go(id){var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');var el=document.getElementById(id);if(el)el.classList.add('on');window.scrollTo(0,0);}
+function go(id){
+  var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');
+  var el=document.getElementById(id);if(el)el.classList.add('on');window.scrollTo(0,0);
+  // p-home以外に遷移するときは履歴を積む（ブラウザ戻るでp-homeに戻れるように）
+  if(id!=='p-home'){ history.pushState({tb:id},''); }
+}
+// ブラウザ/端末の戻るボタンを押したらp-homeへ（ページ外には出ない）
+window.addEventListener('popstate',function(e){
+  var cur=document.querySelector('.pane.on');
+  var curId=cur?cur.id:'';
+  if(curId==='p-home'){
+    // すでにp-homeならページ外へ出る（ルートメニューへ）
+    // → 何もしない（デフォルトのhistory.back()で前ページへ）
+    return;
+  }
+  // それ以外のペインならp-homeに戻る（ページ遷移はキャンセル）
+  // go()はpushStateするのでここでは直接DOMだけ操作
+  var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');
+  var h=document.getElementById('p-home');if(h)h.classList.add('on');
+  window.scrollTo(0,0);
+  // 戻られたのでstackを再度積んでおく（p-homeでの次の遷移に備える）
+  history.pushState({tb:'p-home'},'');
+});
+// 初期stateを設定（ページ読み込み直後）
+history.replaceState({tb:'p-home'},'');
 /* ===== サーバー通信 ===== */
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var T_GENERAL='kawaguchi-genba-2026';
@@ -595,10 +605,12 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
 /* 実装済みツール */
-var READY={memo:1,check:1,draw:1,elec:1,area:1,board:1,rec:1,meas:1,mat:1};
+var READY={memo:1,check:1,elec:1,area:1,board:1,rec:1,meas:1,mat:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
-  if(k==='memo'||k==='check'||k==='draw'||k==='board'||k==='rec'||k==='mat'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='check'?'現場チェックリスト':k==='draw'?'手書きメモ':k==='board'?'小黒板カメラ':k==='rec'?'録音機':k==='mat'?'材料リスト':'現場メモ'); go('p-memo-select'); loadSites(); return; }
+  if(k==='draw')k='memo';
+  if(k==='memo'||k==='check'||k==='mat'){ curTool=k; siteFilter=''; refreshProjects(); refreshCurList(); return; }
+  if(k==='board'||k==='rec'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='board'?'小黒板カメラ':'録音機'); go('p-memo-select'); loadSites(); return; }
   go('p-'+k);
 }
 function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'坪・㎡・畳',meas:'面積計算機',mat:'材料リスト'}[k]||k;}
@@ -641,18 +653,18 @@ function renderSelStep(){
   if(selStep===0){
     if(lead)lead.textContent='種別を選んでください。';
     if(crumb)crumb.style.display='none';
-    var kinds=uniqVals(tbProjects.map(function(p){return p['種別'];}));
+    var kinds=uniqVals(tbProjects.filter(isActiveProj).map(function(p){return p['種別'];}));
     if(!kinds.length){list.innerHTML='<div class="empty">案件データがありません。</div>';return;}
     list.innerHTML=kinds.map(function(k){return '<button class="linkbtn" data-v="'+esc(k)+'" onclick="selPickKindBtn(this)">'+esc(k)+'</button>';}).join('');
   } else if(selStep===1){
     if(lead)lead.textContent='会社を選んでください。';
     if(crumb){crumb.style.display='';crumb.innerHTML='種別：<b>'+esc(selKindVal)+'</b>';}
-    var custs=uniqVals(tbProjects.filter(function(p){return (p['種別']||'未分類')===selKindVal;}).map(function(p){return p['顧客'];}));
+    var custs=uniqVals(tbProjects.filter(function(p){return isActiveProj(p)&&(p['種別']||'未分類')===selKindVal;}).map(function(p){return p['顧客'];}));
     list.innerHTML=custs.map(function(c){return '<button class="linkbtn" data-v="'+esc(c)+'" onclick="selPickCustBtn(this)">'+esc(c)+'</button>';}).join('')+'<button class="back2" style="margin-top:8px;width:100%;text-align:center;padding:11px;" onclick="selBack()">← 種別を選び直す</button>';
   } else {
     if(lead)lead.textContent='現場名を選んでください。';
     if(crumb){crumb.style.display='';crumb.innerHTML='種別：<b>'+esc(selKindVal)+'</b>　／　会社：<b>'+esc(selCustVal)+'</b>';}
-    var sites=tbProjects.filter(function(p){return (p['種別']||'未分類')===selKindVal&&(p['顧客']||'未分類')===selCustVal;});
+    var sites=tbProjects.filter(function(p){return isActiveProj(p)&&(p['種別']||'未分類')===selKindVal&&(p['顧客']||'未分類')===selCustVal;});
     list.innerHTML=sites.map(function(p){return '<button class="linkbtn" data-v="'+esc(String(p['案件ID']))+'" onclick="selPickSiteBtn(this)">'+esc(p['案件名']||'(無題)')+'</button>';}).join('')+'<button class="back2" style="margin-top:8px;width:100%;text-align:center;padding:11px;" onclick="selBack()">← 会社を選び直す</button>';
   }
 }
@@ -662,7 +674,7 @@ function selPickSiteBtn(el){
   var id=el.getAttribute('data-v');
   var p=tbProjects.filter(function(x){return String(x['案件ID'])===String(id);})[0]||{};
   curSite={id:id,name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
-  if(curTool==='check')openSiteCheckList(); else if(curTool==='draw')openSiteDrawList(); else if(curTool==='board')openBoardCamera(); else if(curTool==='rec')openRecorder(); else openSiteMemoList();
+  if(curTool==='check')openSiteCheckList(); else if(curTool==='board')openBoardCamera(); else if(curTool==='rec')openRecorder(); else openSiteMemoList();
 }
 function selBack(){if(selStep>0){selStep--;renderSelStep();}}
 function resetAndGoSelect(){
@@ -671,13 +683,43 @@ function resetAndGoSelect(){
   renderSelStep();
 }
 function siteBarHtml(){ if(!curSite)return ''; return '<b>'+esc(curSite.cust||'—')+'</b> ／ '+esc(curSite.name||'—')+(curSite.kind?'　<span style="opacity:.7;">'+esc(curSite.kind)+'</span>':''); }
+
+/* ===== 〔v27〕保存時に現場を選択する方式（メモ・チェック・手書き・材料） ===== */
+var siteFilter='';
+(function(){ try{tbProjects=JSON.parse(localStorage.getItem(PROJ_KEY)||'[]');}catch(e){} })();
+function siteLabel(id){ if(!id)return ''; var p=tbProjects.filter(function(x){return String(x['案件ID'])===String(id);})[0]; if(!p)return ''; return (p['顧客']?p['顧客']+'／':'')+(p['案件名']||''); }
+function isActiveProj(p){var st=String(p['ステータス']||'').trim();return st!=='完了'&&st!=='請求済';}
+function siteOptions(withAll,sel){
+  var ps=tbProjects.filter(isActiveProj).sort(function(a,b){return ((a['顧客']||'')+(a['案件名']||'')).localeCompare(((b['顧客']||'')+(b['案件名']||'')),'ja');});
+  var h=withAll?'<option value="">すべての現場</option>':'<option value="">― 現場を選択 ―</option>';
+  var hit=false;
+  ps.forEach(function(p){ var id=String(p['案件ID']); if(String(sel)===id)hit=true; h+='<option value="'+esc(id)+'"'+(String(sel)===id?' selected':'')+'>'+esc((p['顧客']?p['顧客']+'／':'')+(p['案件名']||'(無題)'))+'</option>'; });
+  if(sel&&!hit){ var kp=tbProjects.filter(function(x){return String(x['案件ID'])===String(sel);})[0];
+    if(kp)h+='<option value="'+esc(String(sel))+'" selected>'+esc((kp['顧客']?kp['顧客']+'／':'')+(kp['案件名']||''))+'（完了）</option>'; }
+  return h;
+}
+function lastSiteId(){ try{return localStorage.getItem('tb_last_site')||'';}catch(e){return '';} }
+function setLastSite(id){ try{localStorage.setItem('tb_last_site',String(id||''));}catch(e){} }
+function filterBarHtml(fid){ return '<select class="ssel" id="'+fid+'" onchange="siteFilter=this.value;refreshCurList();">'+siteOptions(true,siteFilter)+'</select>'; }
+function editSiteHtml(sid,val){ return '<div class="slbl2">現場（どの現場のメモか）</div><select class="ssel" id="'+sid+'">'+siteOptions(false,val)+'</select>'; }
+function editSiteVal(sid){ var el=document.getElementById(sid); return el?String(el.value||''):''; }
+function refreshCurList(){ if(curTool==='check')openSiteCheckList(); else if(curTool==='mat')openSiteMatList(); else openSiteMemoList(); }
+function updateSiteSelects(){
+  [['memoFilter',1],['checkFilter',1],['drawFilter',1],['matFilter',1]].forEach(function(c){
+    var el=document.getElementById(c[0]); if(el)el.innerHTML=siteOptions(true,siteFilter); });
+  [['noteSiteSel',0],['checkSiteSel',0],['drawSiteSel',0],['matSiteSel',0]].forEach(function(c){
+    var el=document.getElementById(c[0]); if(el){ var v=el.value; el.innerHTML=siteOptions(false,v); } });
+}
+function refreshProjects(){
+  callGAS({action:'list'},true).then(function(res){ if(res&&res.ok){ tbProjects=res.projects||[]; try{localStorage.setItem(PROJ_KEY,JSON.stringify(tbProjects));}catch(e){} updateSiteSelects(); } }).catch(function(){});
+}
 function openSiteMemoList(){
-  if(!curSite){ go('p-memo-select'); return; }
   go('p-memo-list');
-  document.getElementById('memoSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('memoSiteBar').innerHTML=filterBarHtml('memoFilter');
   document.getElementById('noteList').innerHTML='<div class="empty">読み込み中…</div>';
-  callGAS({action:'notesList',id:curSite.id}).then(function(res){
-    var notes=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'memo')==='memo';});
+  callGAS({action:'notesList'}).then(function(res){
+    var notes=((res&&res.ok&&res.notes)||[]).filter(function(n){var k=(n['種類']||'memo');return k==='memo'||k==='draw';});
+    if(siteFilter)notes=notes.filter(function(n){return String(n['案件ID'])===String(siteFilter);});
     renderNoteList(notes);
     if(pendingNote){ var _t=pendingNote; pendingNote=null; if(noteCache[_t]) openNote(_t); }
   }).catch(function(e){ document.getElementById('noteList').innerHTML='<div class="empty">読み込みに失敗しました。<br>電波を確認して、もう一度お試しください。</div>'; });
@@ -686,38 +728,62 @@ function renderNoteList(notes){
   var el=document.getElementById('noteList');
   notes.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
   noteCache={}; notes.forEach(function(n){noteCache[n['メモID']]=n;});
-  if(!notes.length){ el.innerHTML='<div class="empty">この現場のメモはまだありません。<br>「＋ 新しいメモ」で作成できます。</div>'; return; }
+  if(!notes.length){ el.innerHTML='<div class="empty">メモはまだありません。<br>「＋ 新しいメモ」で作成できます。</div>'; return; }
   el.innerHTML=notes.map(function(n){
+    var isDraw=(n['種類']||'memo')==='draw';
     var ttl=esc(n['タイトル']||'(無題)');
-    var prev=esc(String(n['内容']||'').replace(/\s+/g,' ').slice(0,80))||'（本文なし）';
-    return '<div class="memo" onclick="openNote(\''+esc(n['メモID'])+'\')"><div class="m-t">'+ttl+'</div><div class="m-p">'+prev+'</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
+    var icon=isDraw?'✍️ ':'📝 ';
+    var prev=isDraw?'手書きメモ':(esc(String(n['内容']||'').replace(/\s+/g,' ').slice(0,80))||'（本文なし）');
+    return '<div class="memo" onclick="openNote(\''+esc(n['メモID'])+'\')"><div class="m-s">'+esc(siteLabel(n['案件ID']))+'</div><div class="m-t">'+icon+ttl+'</div><div class="m-p">'+prev+'</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
   }).join('');
 }
+var noteMode='text';
+function setNoteMode(m){
+  noteMode=m;
+  document.getElementById('modeText').classList.toggle('on',m==='text');
+  document.getElementById('modeDraw').classList.toggle('on',m==='draw');
+  document.getElementById('noteTextArea').style.display=(m==='text')?'block':'none';
+  document.getElementById('noteDrawArea').style.display=(m==='draw')?'block':'none';
+  if(m==='draw'){ setTimeout(function(){ initDrawPane(); renderDrawCanvas(drawStrokes); },60); }
+}
 function newNote(){
-  curNote=null;
+  curNote=null; drawStrokes=[]; drawHistory=[]; drawInited=false;
   document.getElementById('noteTitle').value='';
   document.getElementById('noteBody').value='';
   document.getElementById('noteSaved').classList.remove('show');
-  document.getElementById('editSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('editSiteBar').innerHTML=editSiteHtml('noteSiteSel',siteFilter||lastSiteId());
+  setNoteMode('text');
   go('p-memo-edit');
   setTimeout(function(){document.getElementById('noteTitle').focus();},150);
 }
 function openNote(id){
   var n=noteCache[id]||{};
   curNote=id;
+  var isDraw=(n['種類']||'memo')==='draw';
   document.getElementById('noteTitle').value=n['タイトル']||'';
-  document.getElementById('noteBody').value=n['内容']||'';
+  // 手書きデータと本文を両方準備（途中でモードを切り替えても保持）
+  drawStrokes=[]; drawHistory=[]; drawInited=false;
+  if(isDraw){
+    try{drawStrokes=JSON.parse(n['内容']||'[]');}catch(e){drawStrokes=[];} if(!Array.isArray(drawStrokes))drawStrokes=[];
+    document.getElementById('noteBody').value='';
+  } else {
+    document.getElementById('noteBody').value=n['内容']||'';
+  }
   document.getElementById('noteSaved').classList.remove('show');
-  document.getElementById('editSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('editSiteBar').innerHTML=editSiteHtml('noteSiteSel',n['案件ID']||'');
+  setNoteMode(isDraw?'draw':'text');
   go('p-memo-edit');
 }
 function saveNote(){
   var t=document.getElementById('noteTitle').value.trim();
-  var b=document.getElementById('noteBody').value;
   if(!t){ toast('タイトルを入力してください'); document.getElementById('noteTitle').focus(); return; }
-  if(!curSite){ toast('現場が選ばれていません'); go('p-memo-select'); return; }
+  var sid=editSiteVal('noteSiteSel');
+  if(!sid){ toast('現場を選んでください'); return; }
+  setLastSite(sid);
   var u=gUser()||{};
-  var data={'案件ID':curSite.id,'種類':'memo','タイトル':t,'内容':b,'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  var kind=(noteMode==='draw')?'draw':'memo';
+  var content=(noteMode==='draw')?JSON.stringify(drawStrokes):document.getElementById('noteBody').value;
+  var data={'案件ID':sid,'種類':kind,'タイトル':t,'内容':content,'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
   if(curNote)data['メモID']=curNote;
   showLoad('保存中…');
   callGAS({action:'noteSave',data:data},true).then(function(res){
@@ -737,18 +803,19 @@ function deleteNote(){
   }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
 }
 
-function openCaseInProjects(){ if(!curSite)return; location.href='../projects/?case='+encodeURIComponent(curSite.id); }
+function openCaseInProjects(){
+  var pane=document.querySelector('.pane.on'); var pid=pane?pane.id:'';
+  var map={'p-memo-edit':'noteSiteSel','p-check-edit':'checkSiteSel','p-draw-edit':'drawSiteSel','p-mat-edit':'matSiteSel'};
+  var id='';
+  if(map[pid])id=editSiteVal(map[pid]);
+  if(!id)id=siteFilter;
+  if(!id&&curSite)id=curSite.id;
+  if(!id){ toast('現場を選んでください'); return; }
+  location.href='../projects/?case='+encodeURIComponent(id);
+}
 function openMemoForCase(id){
-  showLoad('読み込み中…');
-  callGAS({action:'list'},true).then(function(res){
-    var ps=(res&&res.ok&&res.projects)||[]; tbProjects=ps;
-    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
-    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
-    hideLoad();
-    if(!p){ toast('現場が見つかりませんでした'); fillKinds(); go('p-memo-select'); return; }
-    curSite={id:String(id),name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
-    openSiteMemoList();
-  }).catch(function(){ hideLoad(); fillKinds(); go('p-memo-select'); });
+  curTool='memo'; siteFilter=String(id||'');
+  refreshProjects(); openSiteMemoList();
 }
 
 /* ===== ② 現場チェックリスト（現場ごと・サーバー保存） ===== */
@@ -759,12 +826,12 @@ var curDraw=null,drawStrokes=[],drawHistory=[],drawCache={};
 var drawColor='#222',drawWidth=2,drawEraser=false,drawPainting=false,drawInited=false,drawCtx=null,drawCvs=null;
 function parseItems(t){ try{var a=JSON.parse(t||'[]');return Array.isArray(a)?a:[];}catch(e){return [];} }
 function openSiteCheckList(){
-  if(!curSite){ go('p-memo-select'); return; }
   go('p-check-list');
-  document.getElementById('checkSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('checkSiteBar').innerHTML=filterBarHtml('checkFilter');
   document.getElementById('checkList').innerHTML='<div class="empty">読み込み中…</div>';
-  callGAS({action:'notesList',id:curSite.id}).then(function(res){
+  callGAS({action:'notesList',type:'check'}).then(function(res){
     var list=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'')==='check';});
+    if(siteFilter)list=list.filter(function(n){return String(n['案件ID'])===String(siteFilter);});
     renderCheckList(list);
     if(pendingNote){ var _t=pendingNote; pendingNote=null; if(checkCache[_t]) openCheck(_t); }
   }).catch(function(e){ document.getElementById('checkList').innerHTML='<div class="empty">読み込みに失敗しました。<br>電波を確認して、もう一度お試しください。</div>'; });
@@ -773,18 +840,18 @@ function renderCheckList(list){
   var el=document.getElementById('checkList');
   list.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
   checkCache={}; list.forEach(function(n){checkCache[n['メモID']]=n;});
-  if(!list.length){ el.innerHTML='<div class="empty">この現場のチェックリストはまだありません。<br>「＋ 新しいチェックリスト」で作成できます。</div>'; return; }
+  if(!list.length){ el.innerHTML='<div class="empty">チェックリストはまだありません。<br>「＋ 新しいチェックリスト」で作成できます。</div>'; return; }
   el.innerHTML=list.map(function(n){
     var items=parseItems(n['内容']); var done=items.filter(function(it){return it&&it.d;}).length;
     var ttl=esc(n['タイトル']||'(無題)');
-    return '<div class="memo" onclick="openCheck(\''+esc(n['メモID'])+'\')"><div class="m-t">'+ttl+'</div><div class="m-p">'+done+' / '+items.length+' 完了</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
+    return '<div class="memo" onclick="openCheck(\''+esc(n['メモID'])+'\')"><div class="m-s">'+esc(siteLabel(n['案件ID']))+'</div><div class="m-t">'+ttl+'</div><div class="m-p">'+done+' / '+items.length+' 完了</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
   }).join('');
 }
 function newCheck(){
   curCheck=null; checkItems=[{t:'',d:false}];
   document.getElementById('checkTitle').value='';
   document.getElementById('checkSaved').classList.remove('show');
-  document.getElementById('checkEditSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('checkEditSiteBar').innerHTML=editSiteHtml('checkSiteSel',siteFilter||lastSiteId());
   renderCheckItems();
   go('p-check-edit');
   setTimeout(function(){document.getElementById('checkTitle').focus();},150);
@@ -794,7 +861,7 @@ function openCheck(id){
   curCheck=id; checkItems=parseItems(n['内容']); if(!checkItems.length)checkItems=[{t:'',d:false}];
   document.getElementById('checkTitle').value=n['タイトル']||'';
   document.getElementById('checkSaved').classList.remove('show');
-  document.getElementById('checkEditSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('checkEditSiteBar').innerHTML=editSiteHtml('checkSiteSel',n['案件ID']||'');
   renderCheckItems();
   go('p-check-edit');
 }
@@ -811,10 +878,12 @@ function addCheckItem(){ checkItems.push({t:'',d:false}); renderCheckItems(); va
 function saveCheck(){
   var t=document.getElementById('checkTitle').value.trim();
   if(!t){ toast('タイトルを入力してください'); document.getElementById('checkTitle').focus(); return; }
-  if(!curSite){ toast('現場が選ばれていません'); go('p-memo-select'); return; }
+  var sid=editSiteVal('checkSiteSel');
+  if(!sid){ toast('現場を選んでください'); return; }
+  setLastSite(sid);
   var items=checkItems.filter(function(it){return String(it.t||'').trim()!=='';});
   var u=gUser()||{};
-  var data={'案件ID':curSite.id,'種類':'check','タイトル':t,'内容':JSON.stringify(items),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  var data={'案件ID':sid,'種類':'check','タイトル':t,'内容':JSON.stringify(items),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
   if(curCheck)data['メモID']=curCheck;
   showLoad('保存中…');
   callGAS({action:'noteSave',data:data},true).then(function(res){
@@ -834,18 +903,8 @@ function deleteCheck(){
   }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
 }
 function openCheckForCase(id){
-  curTool='check';
-  showLoad('読み込み中…');
-  callGAS({action:'list'},true).then(function(res){
-    var ps=(res&&res.ok&&res.projects)||[]; tbProjects=ps;
-    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
-    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
-    hideLoad();
-    var st=document.getElementById('selTitle'); if(st)st.textContent='現場チェックリスト';
-    if(!p){ toast('現場が見つかりませんでした'); fillKinds(); go('p-memo-select'); return; }
-    curSite={id:String(id),name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
-    openSiteCheckList();
-  }).catch(function(){ hideLoad(); fillKinds(); go('p-memo-select'); });
+  curTool='check'; siteFilter=String(id||'');
+  refreshProjects(); openSiteCheckList();
 }
 
 /* ===== ③ 手書きメモ（現場ごと・サーバー保存） ===== */
@@ -908,12 +967,12 @@ function toggleEraser(){ drawEraser=!drawEraser; document.getElementById('dBtnE'
 function undoDraw(){ if(!drawHistory.length)return; drawStrokes=JSON.parse(drawHistory.pop()); renderDrawCanvas(drawStrokes); }
 function clearDraw(){ if(!confirm('手書きを全部消しますか？'))return; drawHistory.push(JSON.stringify(drawStrokes)); drawStrokes=[]; renderDrawCanvas(drawStrokes); }
 function openSiteDrawList(){
-  if(!curSite){go('p-memo-select');return;}
   go('p-draw-list');
-  document.getElementById('drawSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('drawSiteBar').innerHTML=filterBarHtml('drawFilter');
   document.getElementById('drawList').innerHTML='<div class="empty">読み込み中…</div>';
-  callGAS({action:'notesList',id:curSite.id}).then(function(res){
+  callGAS({action:'notesList',type:'draw'}).then(function(res){
     var list=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'')==='draw';});
+    if(siteFilter)list=list.filter(function(n){return String(n['案件ID'])===String(siteFilter);});
     renderDrawList(list);
     if(pendingNote){ var _t=pendingNote; pendingNote=null; if(drawCache[_t])openDraw(_t); }
   }).catch(function(){ document.getElementById('drawList').innerHTML='<div class="empty">読み込みに失敗しました。</div>'; });
@@ -922,10 +981,10 @@ function renderDrawList(list){
   var el=document.getElementById('drawList');
   list.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
   drawCache={}; list.forEach(function(n){drawCache[n['メモID']]=n;});
-  if(!list.length){ el.innerHTML='<div class="empty">この現場の手書きメモはまだありません。<br>「＋ 新しい手書きメモ」で作成できます。</div>'; return; }
+  if(!list.length){ el.innerHTML='<div class="empty">手書きメモはまだありません。<br>「＋ 新しい手書きメモ」で作成できます。</div>'; return; }
   el.innerHTML=list.map(function(n){
     var ttl=esc(n['タイトル']||'(無題)');
-    return '<div class="memo dcard" onclick="openDraw(\''+esc(n['メモID'])+'\')"><canvas class="draw-thumb-cv" data-id="'+esc(n['メモID'])+'"></canvas><div class="dcard-info"><div class="m-t">'+ttl+'</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div></div>';
+    return '<div class="memo dcard" onclick="openDraw(\''+esc(n['メモID'])+'\')"><canvas class="draw-thumb-cv" data-id="'+esc(n['メモID'])+'"></canvas><div class="dcard-info"><div class="m-s">'+esc(siteLabel(n['案件ID']))+'</div><div class="m-t">'+ttl+'</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div></div>';
   }).join('');
   setTimeout(function(){
     document.querySelectorAll('.draw-thumb-cv').forEach(function(cv){
@@ -947,7 +1006,7 @@ function newDraw(){
   curDraw=null; drawStrokes=[]; drawHistory=[]; drawInited=false;
   document.getElementById('drawTitle').value='';
   document.getElementById('drawSaved').classList.remove('show');
-  document.getElementById('drawEditSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('drawEditSiteBar').innerHTML=editSiteHtml('drawSiteSel',siteFilter||lastSiteId());
   go('p-draw-edit');
   setTimeout(function(){ initDrawPane(); renderDrawCanvas([]); document.getElementById('drawTitle').focus(); },120);
 }
@@ -957,16 +1016,18 @@ function openDraw(id){
   drawHistory=[]; drawInited=false;
   document.getElementById('drawTitle').value=n['タイトル']||'';
   document.getElementById('drawSaved').classList.remove('show');
-  document.getElementById('drawEditSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('drawEditSiteBar').innerHTML=editSiteHtml('drawSiteSel',n['案件ID']||'');
   go('p-draw-edit');
   setTimeout(function(){ initDrawPane(); renderDrawCanvas(drawStrokes); },120);
 }
 function saveDraw(){
   var t=document.getElementById('drawTitle').value.trim();
   if(!t){toast('タイトルを入力してください');document.getElementById('drawTitle').focus();return;}
-  if(!curSite){toast('現場が選ばれていません');go('p-memo-select');return;}
+  var sid=editSiteVal('drawSiteSel');
+  if(!sid){ toast('現場を選んでください'); return; }
+  setLastSite(sid);
   var u=gUser()||{};
-  var data={'案件ID':curSite.id,'種類':'draw','タイトル':t,'内容':JSON.stringify(drawStrokes),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  var data={'案件ID':sid,'種類':'draw','タイトル':t,'内容':JSON.stringify(drawStrokes),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
   if(curDraw)data['メモID']=curDraw;
   showLoad('保存中…');
   callGAS({action:'noteSave',data:data},true).then(function(res){
@@ -986,18 +1047,9 @@ function deleteDraw(){
   }).catch(function(e){toast('失敗：'+e.message);}).then(function(){hideLoad();});
 }
 function openDrawForCase(id){
-  curTool='draw';
-  showLoad('読み込み中…');
-  callGAS({action:'list'},true).then(function(res){
-    var ps=(res&&res.ok&&res.projects)||[];tbProjects=ps;
-    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
-    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
-    hideLoad();
-    var st=document.getElementById('selTitle');if(st)st.textContent='手書きメモ';
-    if(!p){toast('現場が見つかりませんでした');fillKinds();go('p-memo-select');return;}
-    curSite={id:String(id),name:p['案件名']||'',kind:p['種別']||'',cust:p['顧客']||''};
-    openSiteDrawList();
-  }).catch(function(){hideLoad();fillKinds();go('p-memo-select');});
+  // 手書きメモは現場メモに統合されたため、メモ一覧を開く
+  curTool='memo'; siteFilter=String(id||'');
+  refreshProjects(); openSiteMemoList();
 }
 
 /* ===== ⑥ 電気計算機 ===== */
@@ -1547,14 +1599,14 @@ measRenderList();
 /* ===== 材料リスト（種類=mat・現場メモシートに保存） ===== */
 var matItems=[],curMat=null,matCache={},matSuppliers=[];
 function openSiteMatList(){
-  if(!curSite){ go('p-memo-select'); return; }
   go('p-mat-list');
-  document.getElementById('matSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('matSiteBar').innerHTML=filterBarHtml('matFilter');
   document.getElementById('matList').innerHTML='<div class="empty">読み込み中…</div>';
   // 仕入先候補も取得（datalist用）
   callGAS({action:'suppliers'},true).then(function(r){ matSuppliers=(r&&r.suppliers)||[]; }).catch(function(){});
-  callGAS({action:'notesList',id:curSite.id}).then(function(res){
+  callGAS({action:'notesList',type:'mat'}).then(function(res){
     var list=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'')==='mat';});
+    if(siteFilter)list=list.filter(function(n){return String(n['案件ID'])===String(siteFilter);});
     renderMatList(list);
     if(pendingNote){ var _t=pendingNote; pendingNote=null; if(matCache[_t]) openMat(_t); }
   }).catch(function(){ document.getElementById('matList').innerHTML='<div class="empty">読み込みに失敗しました。<br>電波を確認して、もう一度お試しください。</div>'; });
@@ -1563,18 +1615,18 @@ function renderMatList(list){
   var el=document.getElementById('matList');
   list.sort(function(a,b){return String(b['更新日時']||'').localeCompare(String(a['更新日時']||''));});
   matCache={}; list.forEach(function(n){matCache[n['メモID']]=n;});
-  if(!list.length){ el.innerHTML='<div class="empty">この現場の材料リストはまだありません。<br>「＋ 新しい材料リスト」で作成できます。</div>'; return; }
+  if(!list.length){ el.innerHTML='<div class="empty">材料リストはまだありません。<br>「＋ 新しい材料リスト」で作成できます。</div>'; return; }
   el.innerHTML=list.map(function(n){
     var items=parseItems(n['内容']); var done=items.filter(function(it){return it&&it.d;}).length;
     var ttl=esc(n['タイトル']||'(無題)');
-    return '<div class="memo" onclick="openMat(\''+esc(n['メモID'])+'\')"><div class="m-t">📦 '+ttl+'</div><div class="m-p">'+done+' / '+items.length+' 手配済</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
+    return '<div class="memo" onclick="openMat(\''+esc(n['メモID'])+'\')"><div class="m-s">'+esc(siteLabel(n['案件ID']))+'</div><div class="m-t">📦 '+ttl+'</div><div class="m-p">'+done+' / '+items.length+' 手配済</div><div class="m-d">'+esc(String(n['更新日時']||'').replace('T',' '))+'</div></div>';
   }).join('');
 }
 function newMat(){
   curMat=null; matItems=[{n:'',q:'',s:'',d:false}];
   document.getElementById('matTitle').value='';
   document.getElementById('matSaved').classList.remove('show');
-  document.getElementById('matEditSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('matEditSiteBar').innerHTML=editSiteHtml('matSiteSel',siteFilter||lastSiteId());
   renderMatItems();
   go('p-mat-edit');
   setTimeout(function(){document.getElementById('matTitle').focus();},150);
@@ -1586,7 +1638,7 @@ function openMat(id){
   matItems=matItems.map(function(it){ return {n:it.n!==undefined?it.n:(it.t||''),q:it.q||'',s:it.s||'',d:!!it.d}; });
   document.getElementById('matTitle').value=n['タイトル']||'';
   document.getElementById('matSaved').classList.remove('show');
-  document.getElementById('matEditSiteBar').innerHTML=siteBarHtml();
+  document.getElementById('matEditSiteBar').innerHTML=editSiteHtml('matSiteSel',n['案件ID']||'');
   renderMatItems();
   go('p-mat-edit');
 }
@@ -1611,10 +1663,12 @@ function addMatItem(){ matItems.push({n:'',q:'',s:'',d:false}); renderMatItems()
 function saveMat(){
   var t=document.getElementById('matTitle').value.trim();
   if(!t){ toast('タイトルを入力してください'); document.getElementById('matTitle').focus(); return; }
-  if(!curSite){ toast('現場が選ばれていません'); go('p-memo-select'); return; }
+  var sid=editSiteVal('matSiteSel');
+  if(!sid){ toast('現場を選んでください'); return; }
+  setLastSite(sid);
   var items=matItems.filter(function(it){return String(it.n||'').trim()!=='';});
   var u=gUser()||{};
-  var data={'案件ID':curSite.id,'種類':'mat','タイトル':t,'内容':JSON.stringify(items),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  var data={'案件ID':sid,'種類':'mat','タイトル':t,'内容':JSON.stringify(items),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
   if(curMat)data['メモID']=curMat;
   showLoad('保存中…');
   callGAS({action:'noteSave',data:data},true).then(function(res){
@@ -1634,15 +1688,8 @@ function deleteMat(){
   }).catch(function(e){ toast('失敗：'+e.message); }).then(function(){hideLoad();});
 }
 function openMatForCase(id){
-  curTool='mat';
-  showLoad('読み込み中…');
-  callGAS({action:'list'},true).then(function(res){
-    var ps=(res&&res.ok&&res.projects)||[]; tbProjects=ps;
-    try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
-    var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
-    if(p){ curSite={id:p['案件ID'],name:p['案件名']||'',cust:p['顧客']||''}; openSiteMatList(); }
-    else { toast('案件が見つかりませんでした'); go('p-menu'); }
-  }).catch(function(){ toast('読み込みに失敗しました'); go('p-menu'); }).then(function(){hideLoad();});
+  curTool='mat'; siteFilter=String(id||'');
+  refreshProjects(); openSiteMatList();
 }
 var pendingBoard=null;
 function openBoardForCase(id){
@@ -1653,8 +1700,8 @@ function openBoardForCase(id){
     try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
     var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
     if(p){ curSite={id:p['案件ID'],name:p['案件名']||'',cust:p['顧客']||''}; openBoardCamera(); }
-    else { toast('案件が見つかりませんでした'); go('p-menu'); }
-  }).catch(function(){ toast('読み込みに失敗しました'); go('p-menu'); }).then(function(){hideLoad();});
+    else { toast('案件が見つかりませんでした'); go('p-home'); }
+  }).catch(function(){ toast('読み込みに失敗しました'); go('p-home'); }).then(function(){hideLoad();});
 }
 
 (function(){
