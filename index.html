@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 42 (2026-06-10) メニュー順番変更・管理者用→管理用・featクラス廃止 -->
+<!-- version 43 root (2026-06-11) 見積/安全/道具タイル＋ダッシュボード強化 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -52,7 +52,10 @@
   .t-time .ic{background:#e8910b;} .t-time{border-top:3px solid #e8910b;}
   .t-tool .ic{background:#0d9aa0;} .t-tool{border-top:3px solid #0d9aa0;}
   .t-cost .ic{background:#0f766e;} .t-cost{border-top:3px solid #0f766e;}
+  .t-est .ic{background:#9d7a18;} .t-est{border-top:3px solid #9d7a18;}
+  .t-safety .ic{background:#15803d;} .t-safety{border-top:3px solid #15803d;}
   .t-veh .ic{background:#b45309;} .t-veh{border-top:3px solid #b45309;}
+  .t-tool2 .ic{background:#b45309;} .t-tool2{border-top:3px solid #b45309;}
 
   /* スマホ：横3列の正方形タイル */
   .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -150,7 +153,11 @@
 
   <div class="dash" id="dash">
     <div class="dcard" id="dSched" style="display:none;"></div>
+    <div class="dcard" id="dMe" style="display:none;"></div>
     <div class="dcard" id="dRep" style="display:none;"></div>
+    <div class="dcard" id="dAR" style="display:none;"></div>
+    <div class="dcard" id="dDue" style="display:none;"></div>
+    <div class="dcard" id="dCheck" style="display:none;"></div>
     <div class="dcard" id="dAlert" style="display:none;"></div>
   </div>
 
@@ -167,6 +174,9 @@
   <div class="lbl">管理用</div>
   <div class="grid">
     <a class="sq t-veh" href="./vehicles/"><span class="ic">🚚</span><span class="txt"><span class="en">Vehicles</span><span class="nm">車両管理</span><span class="ds">車検・保険・オイル交換と走行距離</span></span><span class="cor">→</span></a>
+    <a class="sq t-tool2" href="./tools/"><span class="ic">🧰</span><span class="txt"><span class="en">Tools</span><span class="nm">道具・工具管理</span><span class="ds">道具の持出・返却と保有状況</span></span><span class="cor">→</span></a>
+    <a class="sq t-safety" href="./safety/"><span class="ic">📗</span><span class="txt"><span class="en">Safety</span><span class="nm">安全書類</span></span><span class="cor lock">🔒</span></a>
+    <a class="sq t-est" href="./estimate/"><span class="ic">💴</span><span class="txt"><span class="en">Invoice</span><span class="nm">見積・請求</span></span><span class="cor lock">🔒</span></a>
     <a class="sq t-cost" href="./daicho/"><span class="ic">📊</span><span class="txt"><span class="en">Ledger</span><span class="nm">工事台帳</span></span><span class="cor lock">🔒</span></a>
     <a class="sq t-admin" href="./admin/"><span class="ic">⚙️</span><span class="txt"><span class="en">Admin</span><span class="nm">管理画面</span></span><span class="cor lock">🔒</span></a>
   </div>
@@ -199,12 +209,12 @@ function doLogin(){
   s.onerror=function(){cleanup();setErr('通信エラー');};document.head.appendChild(s);
 }
 function logout(){localStorage.removeItem('genba_user');location.reload();}
-function jsonpGet(action,onOk){
+function jsonpGet(action,onOk,extra){
   var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
   var timer=setTimeout(function(){cleanup();},25000);
   function cleanup(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
   window[cb]=function(res){cleanup();if(res&&res.ok)onOk(res);};
-  s.src=GAS_URL+'?action='+encodeURIComponent(action)+'&secret='+encodeURIComponent(T_GENERAL)+'&callback='+cb;
+  s.src=GAS_URL+'?action='+encodeURIComponent(action)+'&secret='+encodeURIComponent(T_GENERAL)+'&callback='+cb+(extra||'');
   s.onerror=function(){cleanup();};
   document.head.appendChild(s);
 }
@@ -230,11 +240,53 @@ function renderDash(d){
   var pc=d.projCounts||{};
   var h2='<div class="dttl">📝 今日の日報・案件</div><div class="dchips">';
   h2+='<span class="dchip">日報 提出 '+sub+'/'+ws.length+'名</span>';
-  ['施工中','受注','段取済'].forEach(function(k){if(pc[k])h2+='<span class="dchip">'+escD(k)+' '+pc[k]+'件</span>';});
+  ['見積中','受注','段取済','施工中','完了'].forEach(function(k){if(pc[k])h2+='<span class="dchip">'+escD(k)+' '+pc[k]+'件</span>';});
   h2+='</div>';
   var miss=ws.filter(function(w){return !w['提出'];}).map(function(w){return w['略称']||w['氏名'];});
   if(sub>0&&miss.length)h2+='<div class="dempty" style="margin-top:6px;">未提出: '+escD(miss.join('・'))+'</div>';
   var rp=document.getElementById('dRep');rp.innerHTML=h2;rp.style.display='block';any=true;
+  // あなたの勤怠
+  var meEl=document.getElementById('dMe');
+  if(d.me){
+    var stTxt=d.me['状態']==='出勤中'?('出勤中（'+escD(d.me['出勤'])+'〜）'):escD(d.me['状態']);
+    var hMe='<div class="dttl">⏱ あなたの勤怠</div><div class="dchips">'
+      +'<span class="dchip"'+(d.me['状態']==='出勤中'?' style="background:#dcfce7;color:#166534;"':'')+'>'+stTxt+'</span>'
+      +'<span class="dchip">今月出勤 '+(d.me['今月出勤日数']||0)+'日</span></div>'
+      +'<a class="dmore" href="./timecard/">タイムカードを開く →</a>';
+    meEl.innerHTML=hMe;meEl.style.display='block';any=true;
+  }else meEl.style.display='none';
+  // 売掛（未入金）
+  var arEl=document.getElementById('dAR'),ar=d.ar||{};
+  if(ar['未入金件数']>0){
+    var arn=Math.round(ar['未入金額']||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,',');
+    var h6='<div class="dttl">💴 未入金（売掛）</div><div class="dchips">'
+      +'<span class="dchip" style="background:#fdf3d7;color:#9d7a18;">¥'+arn+'　'+ar['未入金件数']+'件</span>'
+      +(ar['期限超過']>0?'<span class="dchip" style="background:#fde2e2;color:#b91c1c;">⚠ 期限超過 '+ar['期限超過']+'件</span>':'')
+      +'</div><a class="dmore" href="./estimate/">見積・請求を開く →</a>';
+    arEl.innerHTML=h6;arEl.style.display='block';any=true;
+  }else arEl.style.display='none';
+  // 工期間近の案件
+  var duEl=document.getElementById('dDue'),duArr=d.dueProjects||[];
+  if(duArr.length){
+    var h4='<div class="dttl">⏳ 工期間近の案件</div>';
+    duArr.slice(0,5).forEach(function(p){
+      var col=p['残']<0?'#d63a3f':(p['残']<=3?'#e67e22':'#b8860b');
+      var txt=p['残']<0?('超過 '+(-p['残'])+'日'):(p['残']===0?'本日まで':'残 '+p['残']+'日');
+      h4+='<div class="dalert" style="color:'+col+'">📋 '+escD(p['案件名'])+'　'+txt+'<span class="dd">'+escD(p['期日'])+'</span></div>';
+    });
+    h4+='<a class="dmore" href="./projects/">案件管理を開く →</a>';
+    duEl.innerHTML=h4;duEl.style.display='block';any=true;
+  }else duEl.style.display='none';
+  // 未完了チェックリスト
+  var ckEl=document.getElementById('dCheck'),ckArr=d.checklists||[];
+  if(ckArr.length){
+    var h5='<div class="dttl">☑ 未完了チェックリスト（'+(d.checklistTotal||ckArr.length)+'件）</div>';
+    ckArr.forEach(function(c){
+      h5+='<div class="drow"><span class="dname">'+escD(c['タイトル'])+(c['案件名']?'<span class="dwho">　'+escD(c['案件名'])+'</span>':'')+'</span><span class="dtime">残 '+c['残']+'/'+c['全']+'</span></div>';
+    });
+    h5+='<a class="dmore" href="./toolbox/">ツールボックスを開く →</a>';
+    ckEl.innerHTML=h5;ckEl.style.display='block';any=true;
+  }else ckEl.style.display='none';
   // 車両アラート
   var al=document.getElementById('dAlert'),arr=d.vehicleAlerts||[];
   if(arr.length){
@@ -252,10 +304,11 @@ function renderDash(d){
 function loadDash(){
   try{var c=JSON.parse(localStorage.getItem('genba_dash')||'null');
     if(c&&c.today===new Date().toISOString().slice(0,10))renderDash(c);}catch(e){}
+  var u=gUser(),wq=(u&&u['作業員ID'])?('&wid='+encodeURIComponent(u['作業員ID'])):'';
   jsonpGet('dashboard',function(res){
     try{localStorage.setItem('genba_dash',JSON.stringify(res));}catch(e){}
     renderDash(res);
-  });
+  },wq);
 }
 (function(){var u=gUser();if(u&&u['作業員ID']){showMenu(u);loadDash();}})();
 </script>
