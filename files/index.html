@@ -34,6 +34,14 @@
   #photos{margin-bottom:120px;}
   .hint{font-size:12.5px;color:var(--sub);margin-top:10px;}
   .prog{font-size:13px;color:var(--accent-d);margin-top:10px;font-weight:600;}
+  .upwrap{margin-top:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;}
+  .upttl{font-size:12.5px;font-weight:700;color:var(--accent-d);margin-bottom:8px;}
+  .upgrid{display:flex;flex-wrap:wrap;gap:8px;}
+  .upitem{position:relative;width:74px;}
+  .upitem img{width:74px;height:74px;object-fit:cover;border-radius:8px;border:1px solid var(--line);display:block;}
+  .upfile{width:74px;height:74px;border-radius:8px;border:1px solid var(--line);background:#f6f7fb;display:flex;align-items:center;justify-content:center;font-size:24px;}
+  .upnm{font-size:9px;color:var(--sub);word-break:break-all;line-height:1.3;margin-top:2px;max-height:24px;overflow:hidden;}
+  .upst{position:absolute;top:3px;right:3px;background:rgba(255,255,255,.92);border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;}
   .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px;}
   .ph{position:relative;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#f1f2f4;display:flex;align-items:center;justify-content:center;text-decoration:none;}
   .ph img{width:100%;height:auto;display:block;}
@@ -59,7 +67,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v39</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v40</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -99,6 +107,7 @@
     <input type="file" id="file" multiple>
     <div class="hint" id="hint">「写真・ファイルの追加」で、スマホやPCの写真・ファイルをこの現場のドライブに保存できます（写真は写真フォルダ、その他はファイルフォルダ）。</div>
     <div class="prog" id="prog" style="display:none;"></div>
+    <div class="upwrap" id="upThumbs" style="display:none;"></div>
 
     <div id="gridArea" style="display:none;">
     <div id="folderRow" style="display:none;margin-bottom:8px;"><label style="font-size:13px;color:var(--sub);margin-right:6px;">フォルダ</label><select class="f" id="folderSel" onchange="loadCurFolderPhotos()" style="display:inline-block;width:auto;min-width:60%;"></select></div>
@@ -169,6 +178,7 @@ function onCand(){ buildProj(); }
 
 function onSelect(){
   curId=document.getElementById('projSel').value;
+  var ut=document.getElementById('upThumbs');if(ut){ut.style.display='none';ut.innerHTML='';}
   var panel=document.getElementById('panel');
   if(!curId){panel.style.display='none';return;}
   var p=projects.filter(function(x){return x['案件ID']===curId;})[0]||{};
@@ -349,23 +359,41 @@ document.getElementById('file').addEventListener('change',function(e){ var fs=e.
 function uploadAll(files){
   var arr=Array.prototype.slice.call(files),done=0,fail=0,i=0;
   var prog=document.getElementById('prog');prog.style.display='block';
+  var box=document.getElementById('upThumbs');
+  box.style.display='block';
+  box.innerHTML='<div class="upttl" id="upTtl">アップロード中…</div><div class="upgrid" id="upGrid"></div>';
+  var grid=document.getElementById('upGrid');
+  var items=arr.map(function(file){
+    var d=document.createElement('div');d.className='upitem';
+    var st='<span class="upst">⏳</span>';
+    if((file.type||'').indexOf('image')===0){
+      var u='';try{u=URL.createObjectURL(file);}catch(e){}
+      d.innerHTML=(u?'<img src="'+u+'">':'<div class="upfile">🖼</div>')+st+'<div class="upnm">'+esc(file.name)+'</div>';
+    }else{
+      d.innerHTML='<div class="upfile">📄</div>'+st+'<div class="upnm">'+esc(file.name)+'</div>';
+    }
+    grid.appendChild(d);return d;
+  });
+  function mark(idx,ok){var b=items[idx]&&items[idx].querySelector('.upst');if(b)b.textContent=ok?'✅':'❌';}
   function next(){
     if(i>=arr.length){
       prog.textContent='アップロード完了（'+done+'件'+(fail?'／失敗'+fail:'')+'）';
+      var tt=document.getElementById('upTtl');
+      if(tt)tt.textContent='今回アップロードした写真・ファイル（'+done+'件'+(fail?'／失敗'+fail:'')+'）— ドライブに保存済み';
       setTimeout(function(){prog.style.display='none';},4000);
       toast('ドライブに保存しました（'+done+'件）');
       return;
     }
-    var file=arr[i++];
+    var idx=i, file=arr[i++];
     prog.textContent='送信中… '+i+'/'+arr.length;
     if((file.type||'').indexOf('image')===0){
       resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
         return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',name:file.name,mime:'image/jpeg',data:dataUrl.split(',')[1]});
-      }).then(function(){done++;next();}).catch(function(){fail++;next();});
+      }).then(function(){done++;mark(idx,true);next();}).catch(function(){fail++;mark(idx,false);next();});
     }else{
       readB64(file).then(function(b64){
         return postNoCors({action:'uploadPhoto',id:curId,dest:'file',name:file.name,mime:file.type||'application/octet-stream',data:b64});
-      }).then(function(){done++;next();}).catch(function(){fail++;next();});
+      }).then(function(){done++;mark(idx,true);next();}).catch(function(){fail++;mark(idx,false);next();});
     }
   }
   next();
