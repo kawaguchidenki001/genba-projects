@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 45 calendar (2026-06-11) 週間天気予報を表示 -->
+<!-- version 46 calendar (2026-06-12) 週間天気予報＋完了・請求済の案件を予定作成の選択肢から除外 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -162,7 +162,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v45 天気</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v46</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -675,10 +675,13 @@ function buildCand(){ var t=document.getElementById('f_ctype').value,s=document.
   var list=customers.filter(function(c){return !t||String(c['区分']||'')===t;});
   s.innerHTML='<option value="">（取引先を選択）</option>';
   list.forEach(function(c){var nm=String(c['顧客名']||'');if(!nm)return;var o=document.createElement('option');o.value=nm;o.textContent=nm;s.appendChild(o);}); }
-function buildProjByCust(){ var cust=document.getElementById('f_cand').value,s=document.getElementById('f_proj');
-  var list=projects.filter(function(p){return !cust||String(p['顧客']||'')===cust;});
+function isActiveProj(p){var st=String(p['ステータス']||'').trim();return st!=='完了'&&st!=='請求済';}
+function buildProjByCust(keepId){ var cust=document.getElementById('f_cand').value,s=document.getElementById('f_proj');
+  var list=projects.filter(function(p){return isActiveProj(p)&&(!cust||String(p['顧客']||'')===cust);});
   s.innerHTML='<option value="">（現場を選択）</option>';
-  list.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);}); }
+  list.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];s.appendChild(o);});
+  if(keepId){ var kp=projects.filter(function(x){return String(x['案件ID'])===String(keepId);})[0];
+    if(kp&&!isActiveProj(kp)){var o2=document.createElement('option');o2.value=String(keepId);o2.textContent=(kp['案件名']||'')+'（完了）';s.appendChild(o2);} } }
 function onCType(){ buildCand(); buildProjByCust(); }
 function onCand(){ buildProjByCust(); }
 function setProjCascade(caseId){ caseId=String(caseId||'');
@@ -687,7 +690,7 @@ function setProjCascade(caseId){ caseId=String(caseId||'');
   var c=customers.filter(function(x){return String(x['顧客名']||'')===cust;})[0];
   document.getElementById('f_ctype').value=c?String(c['区分']||''):'';
   buildCand(); document.getElementById('f_cand').value=cust;
-  buildProjByCust(); document.getElementById('f_proj').value=caseId; }
+  buildProjByCust(caseId); document.getElementById('f_proj').value=caseId; }
 function closeEv(){document.getElementById('ovEv').classList.remove('show');}
 function gather(){var g=function(id){return document.getElementById(id).value;};var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
   return {'予定ID':g('f_id'),'日付':g('f_date'),'終了日':g('f_end'),'案件ID':pid,'案件名':p['案件名']||'','予定内容':g('f_ttl').trim(),'区分':g('f_kind'),'担当':checkedOwnerStr(),'開始':g('f_start'),'終了':g('f_etime'),'備考':g('f_note').trim(),'車両':checkedVehicleStr()};}
