@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version up (2026-06-12) ルート統一デザイン（ソフトグレー背景＋オレンジ時間テーマのヘッダー） -->
+<!-- version up2 (2026-06-12) ヘッダーを白基調に＋出勤/退勤ボタンを色ベタで濃く -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -18,19 +18,20 @@
     --shadow:0 2px 10px rgba(40,60,100,.10);--shadow-lg:0 8px 24px rgba(40,60,100,.16);}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
   body{background:#e8ecf2;min-height:100vh;color:var(--ink);font-family:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:66px;}
-  .head{background:linear-gradient(135deg,#f0a93c,#e8910b);color:#fff;text-align:center;padding:calc(env(safe-area-inset-top) + 14px) 16px 18px;position:relative;box-shadow:0 3px 14px rgba(40,60,100,.18);}
+  .head{background:rgba(255,255,255,.95);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink);text-align:center;padding:calc(env(safe-area-inset-top) + 14px) 16px 18px;position:relative;border-bottom:1px solid var(--line);box-shadow:0 1px 8px rgba(40,60,100,.06);}
   .head .bar{position:absolute;top:calc(env(safe-area-inset-top) + 10px);left:14px;right:14px;display:flex;justify-content:space-between;z-index:5;}
-  .head .bar a,.head .bar button{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:9px;padding:5px 9px;font-size:13px;cursor:pointer;text-decoration:none;position:relative;z-index:6;pointer-events:auto;}
-  .head .me{font-size:14px;opacity:.95;margin-bottom:4px;font-weight:700;}
-  .head .d{font-size:14px;opacity:.92;}
-  .head .t{font-size:44px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:.03em;line-height:1.15;}
+  .head .bar a,.head .bar button{background:#fff;border:1px solid var(--line);color:var(--orange);border-radius:9px;padding:5px 9px;font-size:13px;cursor:pointer;text-decoration:none;position:relative;z-index:6;pointer-events:auto;font-weight:600;}
+  .head .me{font-size:14px;color:var(--ink);margin-bottom:4px;font-weight:700;}
+  .head .d{font-size:14px;color:var(--sub);}
+  .head .t{font-size:44px;font-weight:400;font-variant-numeric:tabular-nums;letter-spacing:.03em;line-height:1.15;color:var(--orange);}
   main{max-width:540px;margin:0 auto;padding:14px;}
   .pane{display:none;} .pane.on{display:block;}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
   .pbtn{padding:26px 0;border-radius:14px;font-size:24px;font-weight:700;border:1.5px solid transparent;cursor:pointer;}
-  .b-in{background:var(--greenbg);color:var(--green);border-color:#cdeed6;}
-  .b-out{background:var(--orangebg);color:var(--orange);border-color:#f6e2c0;}
-  .pbtn:disabled{opacity:.4;}
+  .b-in{background:var(--green);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(34,160,107,.35);}
+  .b-out{background:var(--orange);color:#fff;border-color:transparent;box-shadow:0 4px 12px rgba(232,145,11,.35);}
+  .pbtn:disabled{opacity:.35;box-shadow:none;}
+  .pbtn:active:not(:disabled){transform:translateY(1px);}
   .stat{display:flex;gap:10px;margin-bottom:14px;}
   .stat .c{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;text-align:center;padding:11px 4pxbox-shadow:var(--shadow);}
   .stat .v{font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;}
