@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 39 (2026-06-10) 検索名統一・PC版1行横並び・①②③削除・ボタン色付け -->
+<!-- version 40 files (2026-06-11) 写真の工種別フォルダ自動仕分け -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -91,9 +91,9 @@
     <div class="pid" id="pId"></div>
 
     <div class="board" id="board" style="display:none">
+      <div class="bdrow"><label>工種<br><span style="font-size:10.5px;color:var(--sub);font-weight:400;">（写真フォルダ内で工種別に自動整理）</span></label><input id="bdKind" type="text" list="kindList" placeholder="例：電気配線工事"></div>
       <label class="bdtog"><input type="checkbox" id="bdOn" checked onchange="toggleBoard()"><span>小黒板を写真に焼き込んで保存</span></label>
       <div id="bdFields">
-        <div class="bdrow"><label>工種</label><input id="bdKind" type="text" list="kindList" placeholder="例：電気配線工事"></div>
         <div class="bdrow"><label>内容・状況</label><input id="bdMemo" type="text" placeholder="例：施工後"></div>
         <div class="bdrow"><label>日付</label><input id="bdDate" type="date"></div>
       </div>
@@ -105,7 +105,7 @@
       <button class="btn ledger" id="ledgerBtn" onclick="showLedger()">工事写真台帳作成</button>
     </div>
     <input type="file" id="file" multiple>
-    <div class="hint" id="hint">「写真・ファイルの追加」で、スマホやPCの写真・ファイルをこの現場のドライブに保存できます（写真は写真フォルダ、その他はファイルフォルダ）。</div>
+    <div class="hint" id="hint">「写真・ファイルの追加」で、スマホやPCの写真・ファイルをこの現場のドライブに保存できます。工種を入れておくと、写真フォルダ内で工種別フォルダに自動で仕分けされ、台帳作成が楽になります。</div>
     <div class="prog" id="prog" style="display:none;"></div>
     <div class="upwrap" id="upThumbs" style="display:none;"></div>
 
@@ -388,7 +388,7 @@ function uploadAll(files){
     prog.textContent='送信中… '+i+'/'+arr.length;
     if((file.type||'').indexOf('image')===0){
       resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
-        return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',name:file.name,mime:'image/jpeg',data:dataUrl.split(',')[1]});
+        return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',kind:(document.getElementById('bdKind').value||'').trim(),name:file.name,mime:'image/jpeg',data:dataUrl.split(',')[1]});
       }).then(function(){done++;mark(idx,true);next();}).catch(function(){fail++;mark(idx,false);next();});
     }else{
       readB64(file).then(function(b64){
