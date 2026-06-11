@@ -92,6 +92,20 @@
   #login .box{width:100%;max-width:340px;text-align:center;color:var(--ink);}
   #login .lg-t{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.22em;font-size:11px;color:var(--sub);text-transform:uppercase;}
   #login h2{font-size:24px;margin:8px 0 2px;font-weight:700;color:#1f5fa8;}
+  .dash{margin:0 0 18px;display:none;}
+  .dcard{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:14px 16px;margin-bottom:10px;}
+  .dttl{font-size:12px;font-weight:800;color:#1f5fa8;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .drow{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);padding:5px 0;border-bottom:1px dashed #e8eef5;}
+  .drow:last-child{border-bottom:none;}
+  .dtime{font-weight:700;color:#1f5fa8;font-size:12px;white-space:nowrap;}
+  .dname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .dwho{font-size:11px;color:var(--sub);white-space:nowrap;}
+  .dempty{font-size:12.5px;color:var(--sub);padding:2px 0;}
+  .dchips{display:flex;flex-wrap:wrap;gap:6px;}
+  .dchip{background:#eaf3fc;color:#1f5fa8;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;}
+  .dalert{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;padding:5px 0;}
+  .dalert .dd{font-size:11px;color:var(--sub);font-weight:400;margin-left:auto;white-space:nowrap;}
+  .dmore{font-size:12px;color:#1f5fa8;font-weight:700;text-decoration:none;display:inline-block;margin-top:4px;}
   #login p{font-size:13px;color:var(--sub);margin:0 0 22px;}
   #login input{width:100%;padding:14px;border:1px solid var(--line);border-radius:12px;font-size:16px;margin-bottom:10px;background:#fff;color:var(--ink);}
   #login input:focus{outline:none;border-color:#2d7dd2;box-shadow:0 0 0 3px #e3f0fb;}
@@ -106,7 +120,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v42</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v43</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -132,6 +146,12 @@
       </div>
     </div>
     <div class="co">河口電機株式会社</div>
+  </div>
+
+  <div class="dash" id="dash">
+    <div class="dcard" id="dSched" style="display:none;"></div>
+    <div class="dcard" id="dRep" style="display:none;"></div>
+    <div class="dcard" id="dAlert" style="display:none;"></div>
   </div>
 
   <div class="lbl">現場用</div>
@@ -173,13 +193,71 @@ function doLogin(){
   var timer=setTimeout(function(){cleanup();setErr('通信できませんでした。電波を確認してください');},20000);
   function cleanup(){hideLoad();btn.disabled=false;btn.textContent='ログイン';try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
   window[cb]=function(res){cleanup();
-    if(res&&res.ok&&res.worker){localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);}
+    if(res&&res.ok&&res.worker){localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);loadDash();}
     else setErr((res&&res.error)||'ログインできませんでした');};
   s.src=GAS_URL+'?action=login&secret='+encodeURIComponent(T_GENERAL)+'&id='+encodeURIComponent(id)+'&pw='+encodeURIComponent(pw)+'&callback='+cb;
   s.onerror=function(){cleanup();setErr('通信エラー');};document.head.appendChild(s);
 }
 function logout(){localStorage.removeItem('genba_user');location.reload();}
-(function(){var u=gUser();if(u&&u['作業員ID'])showMenu(u);})();
+function jsonpGet(action,onOk){
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+  var timer=setTimeout(function(){cleanup();},25000);
+  function cleanup(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+  window[cb]=function(res){cleanup();if(res&&res.ok)onOk(res);};
+  s.src=GAS_URL+'?action='+encodeURIComponent(action)+'&secret='+encodeURIComponent(T_GENERAL)+'&callback='+cb;
+  s.onerror=function(){cleanup();};
+  document.head.appendChild(s);
+}
+function escD(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function hm5(v){var t=String(v||'').slice(0,5);return t;}
+function renderDash(d){
+  if(!d)return;
+  var dash=document.getElementById('dash');var any=false;
+  // 今日の予定
+  var sc=document.getElementById('dSched'),list=d.schedules||[];
+  var h='<div class="dttl">🗓 今日の予定（'+list.length+'件）</div>';
+  if(!list.length){h+='<div class="dempty">今日の予定はありません</div>';}
+  else{
+    list.slice(0,4).forEach(function(e){
+      var t=hm5(e['開始'])?(hm5(e['開始'])+(hm5(e['終了'])?'〜'+hm5(e['終了']):'')):'終日';
+      h+='<div class="drow"><span class="dtime">'+escD(t)+'</span><span class="dname">'+escD(e['案件名']||e['予定内容']||'(予定)')+'</span>'+(e['担当']?'<span class="dwho">'+escD(e['担当'])+'</span>':'')+'</div>';
+    });
+    if(list.length>4)h+='<a class="dmore" href="./calendar/">他'+(list.length-4)+'件をカレンダーで見る →</a>';
+  }
+  sc.innerHTML=h;sc.style.display='block';any=true;
+  // 日報＋案件
+  var ws=d.workers||[],sub=ws.filter(function(w){return w['提出'];}).length;
+  var pc=d.projCounts||{};
+  var h2='<div class="dttl">📝 今日の日報・案件</div><div class="dchips">';
+  h2+='<span class="dchip">日報 提出 '+sub+'/'+ws.length+'名</span>';
+  ['施工中','受注','段取済'].forEach(function(k){if(pc[k])h2+='<span class="dchip">'+escD(k)+' '+pc[k]+'件</span>';});
+  h2+='</div>';
+  var miss=ws.filter(function(w){return !w['提出'];}).map(function(w){return w['略称']||w['氏名'];});
+  if(sub>0&&miss.length)h2+='<div class="dempty" style="margin-top:6px;">未提出: '+escD(miss.join('・'))+'</div>';
+  var rp=document.getElementById('dRep');rp.innerHTML=h2;rp.style.display='block';any=true;
+  // 車両アラート
+  var al=document.getElementById('dAlert'),arr=d.vehicleAlerts||[];
+  if(arr.length){
+    var h3='<div class="dttl">🚨 車両アラート</div>';
+    arr.forEach(function(a){
+      var col=a['残']<0?'#d63a3f':(a['残']<=7?'#e67e22':'#b8860b');
+      var txt=a['残']<0?('期限切れ '+(-a['残'])+'日'):('残 '+a['残']+'日');
+      h3+='<div class="dalert" style="color:'+col+'">🚚 '+escD(a['車両名'])+'　'+escD(a['種類'])+' '+txt+'<span class="dd">'+escD(a['期日'])+'</span></div>';
+    });
+    h3+='<a class="dmore" href="./vehicles/">車両管理を開く →</a>';
+    al.innerHTML=h3;al.style.display='block';any=true;
+  }else{al.style.display='none';}
+  if(any)dash.style.display='block';
+}
+function loadDash(){
+  try{var c=JSON.parse(localStorage.getItem('genba_dash')||'null');
+    if(c&&c.today===new Date().toISOString().slice(0,10))renderDash(c);}catch(e){}
+  jsonpGet('dashboard',function(res){
+    try{localStorage.setItem('genba_dash',JSON.stringify(res));}catch(e){}
+    renderDash(res);
+  });
+}
+(function(){var u=gUser();if(u&&u['作業員ID']){showMenu(u);loadDash();}})();
 </script>
 </body>
 </html>
