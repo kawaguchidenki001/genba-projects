@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 39 (2026-06-10) 仕入先表示をgrid-3スタイルに統一 (2026-06-10) 仕入先マスタタブを追加 -->
+<!-- version 40 admin (2026-06-11) 日報未提出チェックタブを追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -36,6 +36,17 @@
   .card.kg{border-left-color:#2563eb;} .card.kk{border-left-color:#7c3aed;} .card.kx{border-left-color:#b45309;}
   .tag.kg{background:#dbeafe;color:#1e40af;} .tag.kk{background:#ede9fe;color:#6d28d9;} .tag.kx{background:#fef3c7;color:#92400e;}
   .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14px;}
+  .rcbar{display:flex;gap:6px;margin-bottom:12px;}
+  .rcseg{flex:1;padding:9px 5px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--sub);font-size:13px;font-weight:700;cursor:pointer;}
+  .rcseg.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .rcday{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:11px 14px;margin-bottom:8px;border-left:5px solid #16a34a;}
+  .rcday.has{border-left-color:#dc2626;}
+  .rcday .rcd{display:flex;justify-content:space-between;align-items:center;}
+  .rcday .rcdate{font-weight:700;font-size:14.5px;}
+  .rcday .rcok{font-size:12px;color:#16a34a;font-weight:700;}
+  .rcday .rcmiss{margin-top:7px;display:flex;flex-wrap:wrap;gap:6px;}
+  .rcday .rcname{background:#fef2f2;color:#b91c1c;border:1px solid #f3c0c0;border-radius:999px;padding:3px 11px;font-size:12.5px;font-weight:700;}
+  .rcsum{background:#fff7ed;border:1px solid #f0c674;border-radius:12px;padding:11px 14px;margin-bottom:12px;font-size:13.5px;color:#92400e;font-weight:700;}
   .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;background:var(--accent);color:#fff;border:none;border-radius:999px;padding:14px 20px;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(31,41,55,.4);cursor:pointer;}
   .ov{position:fixed;inset:0;background:rgba(15,23,40,.45);z-index:40;display:none;align-items:flex-end;justify-content:center;}
   .ov.show{display:flex;}
@@ -102,6 +113,7 @@
     <button class="tab" id="tab-contact" onclick="switchTab('contact')">先方担当者</button>
     <button class="tab" id="tab-vehicle" onclick="switchTab('vehicle')">車両</button>
     <button class="tab" id="tab-supplier" onclick="switchTab('supplier')">仕入先</button>
+    <button class="tab" id="tab-repcheck" onclick="switchTab('repcheck')">日報チェック</button>
   </div>
   <div id="sec-worker">
     <div class="sec">作業員マスタ（単価はここで設定）</div>
@@ -122,6 +134,15 @@
   <div id="sec-supplier" style="display:none;">
     <div class="sec">仕入先マスタ（台帳の材料費・外注費などの候補）</div>
     <div id="listS"><div class="empty">読込中…</div></div>
+  </div>
+  <div id="sec-repcheck" style="display:none;">
+    <div class="sec">日報の未提出チェック（予定の担当に入っているのに日報が出ていない人）</div>
+    <div class="rcbar">
+      <button class="rcseg on" data-d="7" onclick="rcRange(7)">直近7日</button>
+      <button class="rcseg" data-d="14" onclick="rcRange(14)">直近14日</button>
+      <button class="rcseg" data-d="30" onclick="rcRange(30)">直近30日</button>
+    </div>
+    <div id="rcList"><div class="empty">「日報チェック」を開くと集計します。</div></div>
   </div>
 </main>
 
@@ -404,12 +425,48 @@ function doClearAll(){
   }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='削除する';});
 }
 function switchTab(t){ curTab=t;
-  ['worker','partner','contact','vehicle','supplier'].forEach(function(x){
+  ['worker','partner','contact','vehicle','supplier','repcheck'].forEach(function(x){
     document.getElementById('sec-'+x).style.display=(x===t)?'block':'none';
     document.getElementById('tab-'+x).className='tab'+(x===t?' on':'');
   });
+  document.getElementById('fab').style.display=(t==='repcheck')?'none':'block';
   document.getElementById('fab').textContent= t==='worker'?'＋ 作業員' : t==='partner'?'＋ 取引先' : t==='contact'?'＋ 担当者' : t==='vehicle'?'＋ 車両' : '＋ 仕入先';
   if(t==='supplier'&&!sLoaded){loadSuppliers();sLoaded=true;}
+  if(t==='repcheck'&&!rcLoaded){rcRange(7);rcLoaded=true;}
+}
+var rcLoaded=false,rcDays=7;
+function rcRange(days){
+  rcDays=days;
+  var bs=document.querySelectorAll('.rcseg');for(var i=0;i<bs.length;i++)bs[i].className='rcseg'+(String(bs[i].getAttribute('data-d'))===String(days)?' on':'');
+  var to=new Date(),from=new Date();from.setDate(to.getDate()-(days-1));
+  var p=function(n){return('0'+n).slice(-2);};
+  var fs=from.getFullYear()+'-'+p(from.getMonth()+1)+'-'+p(from.getDate());
+  var ts=to.getFullYear()+'-'+p(to.getMonth()+1)+'-'+p(to.getDate());
+  document.getElementById('rcList').innerHTML='<div class="empty">集計中…</div>';
+  callGAS({action:'reportGaps',from:fs,to:ts}).then(function(res){
+    if(!res||!res.ok){document.getElementById('rcList').innerHTML='<div class="empty">'+((res&&res.error)||'集計に失敗しました')+'</div>';return;}
+    renderRc(res);
+  }).catch(function(e){document.getElementById('rcList').innerHTML='<div class="empty">'+e.message+'</div>';});
+}
+function rcEsc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function renderRc(res){
+  var days=(res.days||[]).slice().reverse();
+  var el=document.getElementById('rcList');
+  var totalMiss=0;days.forEach(function(d){totalMiss+=d.missing.length;});
+  if(!days.length){el.innerHTML='<div class="empty">この期間は予定に担当が割り当てられた日がありません。<br>（スケジュールで担当を設定すると未提出チェックができます）</div>';return;}
+  var h='';
+  if(totalMiss===0)h+='<div class="rcsum" style="background:#f0fdf4;border-color:#86efac;color:#166534;">✅ この期間、未提出はありません。</div>';
+  else h+='<div class="rcsum">⚠ 未提出が合計 '+totalMiss+' 件あります。</div>';
+  days.forEach(function(d){
+    var dt=new Date(d.date+'T00:00:00');
+    var wd='日月火水木金土'[dt.getDay()];
+    var has=d.missing.length>0;
+    h+='<div class="rcday'+(has?' has':'')+'"><div class="rcd"><span class="rcdate">'+(dt.getMonth()+1)+'/'+dt.getDate()+'（'+wd+'）</span>'
+      +(has?'<span class="rcok" style="color:#b91c1c">未提出 '+d.missing.length+'/'+d.assigned+'名</span>':'<span class="rcok">全員提出済 '+d.assigned+'名</span>')+'</div>';
+    if(has){h+='<div class="rcmiss">'+d.missing.map(function(m){return '<span class="rcname">'+rcEsc(m['略称']||m['氏名'])+'</span>';}).join('')+'</div>';}
+    h+='</div>';
+  });
+  el.innerHTML=h;
 }
 function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner')openPartner(); else if(curTab==='contact')openContact(); else if(curTab==='vehicle')openVehicle(); else openSupplier(''); }
 
