@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 45 root (2026-06-12) ホーム追加アイコンのキャッシュ対策（?v=2でicon192/512を参照） -->
+<!-- version 46 root (2026-06-12) タイル文字を拡大＋白タイルで背景と差をつけ各機能色のアクセントを追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -34,32 +34,40 @@
   .lbl{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.14em;font-size:11px;color:var(--sub);text-transform:uppercase;margin:20px 4px 11px;}
 
   /* 共通タイル：B-4 ソフト質感（押せる立体感） */
-  a.sq{position:relative;display:flex;text-decoration:none;color:var(--ink);background:#e8ecf2;border:none;
-    box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;transition:box-shadow .12s ease,transform .12s ease;overflow:hidden;}
-  a.sq:hover{transform:translateY(-2px);box-shadow:8px 8px 16px #c8ceD8,-8px -8px 16px #ffffff;}
-  a.sq:active{transform:translateY(0);box-shadow:inset 4px 4px 8px #cdd3dc,inset -4px -4px 8px #ffffff;}
-  .sq .ic{display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:#e8ecf2;border-radius:50%;
-    box-shadow:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
-  .sq .ic svg{width:22px;height:22px;}
+  a.sq{position:relative;display:flex;text-decoration:none;color:var(--ink);background:#ffffff;border:1px solid #dfe5ee;
+    box-shadow:4px 6px 14px rgba(40,60,100,.16);transition:box-shadow .12s ease,transform .12s ease;overflow:hidden;}
+  a.sq:hover{transform:translateY(-2px);box-shadow:6px 10px 20px rgba(40,60,100,.22);}
+  a.sq:active{transform:translateY(0);box-shadow:2px 3px 8px rgba(40,60,100,.18);}
+  .sq .ic{display:flex;align-items:center;justify-content:center;flex:0 0 auto;border-radius:50%;
+    box-shadow:0 2px 6px rgba(40,60,100,.14);}
+  .sq .ic svg{width:24px;height:24px;stroke-width:2.2;}
   .sq .txt{display:flex;flex-direction:column;min-width:0;}
   .sq .en{font-family:"Manrope",sans-serif;text-transform:uppercase;letter-spacing:.16em;color:var(--sub);}
-  .sq .nm{font-weight:700;letter-spacing:.02em;color:var(--ink);}
+  .sq .nm{font-weight:800;letter-spacing:.02em;color:#1a2230;}
   .sq .ds{color:var(--sub);line-height:1.4;}
   .sq .cor{color:var(--sub);}
 
-  /* 色分け（アイコンの線色） */
-  .t-proj .ic{color:#5b5bd6;} .t-report .ic{color:#0e9f6e;} .t-time .ic{color:#7c3aed;}
-  .t-sched .ic{color:#2d7dd2;} .t-files .ic{color:#e8910b;} .t-tool .ic{color:#0d9aa0;}
-  .t-veh .ic{color:#b45309;} .t-tool2 .ic{color:#a16207;} .t-safety .ic{color:#15803d;}
-  .t-est .ic{color:#9d7a18;} .t-cost .ic{color:#0f766e;} .t-admin .ic{color:#475569;}
+  /* 色分け（アイコン円に淡い色背景＋濃い線色／タイル上辺に色帯） */
+  .t-proj .ic{color:#5b5bd6;background:#ecebfb;}  .t-proj{border-top:4px solid #5b5bd6;}
+  .t-report .ic{color:#0e9f6e;background:#e3f7ef;} .t-report{border-top:4px solid #0e9f6e;}
+  .t-time .ic{color:#7c3aed;background:#f1e9fc;}   .t-time{border-top:4px solid #7c3aed;}
+  .t-sched .ic{color:#2d7dd2;background:#e6f1fc;}  .t-sched{border-top:4px solid #2d7dd2;}
+  .t-files .ic{color:#e8910b;background:#fdf2dd;}  .t-files{border-top:4px solid #e8910b;}
+  .t-tool .ic{color:#0d9aa0;background:#def2f3;}   .t-tool{border-top:4px solid #0d9aa0;}
+  .t-veh .ic{color:#b45309;background:#fbeede;}   .t-veh{border-top:4px solid #b45309;}
+  .t-tool2 .ic{color:#a16207;background:#fbeede;}  .t-tool2{border-top:4px solid #a16207;}
+  .t-safety .ic{color:#15803d;background:#e2f5e9;} .t-safety{border-top:4px solid #15803d;}
+  .t-est .ic{color:#9d7a18;background:#f7f0d9;}    .t-est{border-top:4px solid #9d7a18;}
+  .t-cost .ic{color:#0f766e;background:#e0f2ef;}   .t-cost{border-top:4px solid #0f766e;}
+  .t-admin .ic{color:#475569;background:#eceff3;}  .t-admin{border-top:4px solid #475569;}
 
   /* スマホ：横3列の正方形タイル */
   .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-  a.sq{flex-direction:column;aspect-ratio:1/1;border-radius:16px;padding:12px;}
-  .sq .ic{width:42px;height:42px;}
+  a.sq{flex-direction:column;aspect-ratio:1/1;border-radius:18px;padding:13px;}
+  .sq .ic{width:48px;height:48px;}
   .sq .txt{margin-top:auto;}
   .sq .en{display:none;}
-  .sq .nm{font-size:13.5px;}
+  .sq .nm{font-size:15px;}
   .sq .ds{display:none;}
   .sq .cor{position:absolute;top:10px;right:11px;font-size:15px;}
   .sq .cor.lock{font-size:12px;}
@@ -71,12 +79,12 @@
   @media (min-width:680px){
     .grid{grid-template-columns:1fr;gap:11px;}
     a.sq{flex-direction:row;align-items:center;aspect-ratio:auto;border-radius:18px;padding:16px 18px;gap:16px;}
-    .sq .ic{width:50px;height:50px;border-radius:50%;}
-    .sq .ic svg{width:24px;height:24px;}
+    .sq .ic{width:56px;height:56px;border-radius:50%;}
+    .sq .ic svg{width:28px;height:28px;}
     .sq .txt{margin-top:0;}
     .sq .en{display:block;font-size:10px;}
-    .sq .nm{font-size:17px;}
-    .sq .ds{display:block;font-size:12.5px;}
+    .sq .nm{font-size:19px;}
+    .sq .ds{display:block;font-size:13px;}
     .sq .cor{position:static;margin-left:auto;font-size:20px;}
     .sq .cor.lock{font-size:12px;background:#eef4f9;border:1px solid var(--line);padding:5px 11px;border-radius:999px;color:var(--sub);}
   }
@@ -118,7 +126,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v45</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v46</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
