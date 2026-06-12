@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!-- version 1 (2026-06-12) 材料管理ハブ：材料リスト/在庫/発注への入口＋状況サマリ -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>材料管理｜河口電機</title>
+<style>
+  :root{ --bg:#eef0f6;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#2563eb;--accent-d:#1d4ed8;
+    --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:30px;}
+  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:calc(env(safe-area-inset-top) + 10px) 14px 12px;box-shadow:var(--shadow);border-bottom:1px solid var(--line);}
+  .back{color:var(--accent-d);text-decoration:none;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;}
+  header h1{font-size:18px;margin:8px 0 0;font-weight:700;color:var(--accent-d);}
+  main{padding:14px;max-width:680px;margin:0 auto;}
+  /* 状況サマリ */
+  .stats{display:flex;gap:9px;margin-bottom:16px;}
+  .stat{flex:1;background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:12px 8px;text-align:center;text-decoration:none;color:inherit;}
+  .stat .v{font-size:26px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;}
+  .stat .l{font-size:11.5px;color:var(--sub);margin-top:5px;font-weight:600;}
+  .stat.warn{border-color:#fdba74;background:#fff7ed;}
+  .stat.warn .v{color:#ea580c;}
+  .stat.alert .v{color:#b91c1c;}
+  /* 入口ボタン */
+  .menu{display:flex;flex-direction:column;gap:11px;}
+  .entry{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:15px;box-shadow:var(--shadow);padding:15px 16px;text-decoration:none;color:inherit;border-left:6px solid var(--accent);}
+  .entry .ic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:24px;flex:0 0 auto;color:#fff;}
+  .entry .tx{flex:1;min-width:0;}
+  .entry .nm{font-size:16.5px;font-weight:700;}
+  .entry .ds{font-size:12.5px;color:var(--sub);margin-top:2px;}
+  .entry .cor{color:var(--sub);font-size:20px;}
+  .e-list{border-left-color:#d97706;} .e-list .ic{background:#d97706;}
+  .e-stock{border-left-color:#0e7490;} .e-stock .ic{background:#0e7490;}
+  .e-order{border-left-color:#4f46e5;} .e-order .ic{background:#4f46e5;}
+  /* 流れ */
+  .flow{margin-top:18px;background:#eff4ff;border:1px solid #dbe6ff;border-radius:13px;padding:13px 14px;font-size:12.5px;color:#1e3a8a;line-height:1.9;}
+  .flow b{color:#1d4ed8;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:30px;z-index:80;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1</div>
+<header>
+  <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
+  <h1>📦 材料管理</h1>
+</header>
+
+<main>
+  <div class="stats">
+    <a class="stat warn" id="stWarn" href="./stock/"><div class="v" id="vWarn">–</div><div class="l">要発注</div></a>
+    <a class="stat alert" id="stOut" href="./stock/"><div class="v" id="vOut">–</div><div class="l">在庫切れ</div></a>
+    <a class="stat" href="./stock/"><div class="v" id="vItems">–</div><div class="l">在庫品数</div></a>
+  </div>
+
+  <div class="menu">
+    <a class="entry e-list" href="./toolbox/?tool=mat">
+      <span class="ic">📝</span>
+      <span class="tx"><span class="nm">材料リスト</span><span class="ds">現場ごとに記入・在庫照合・発注へ</span></span>
+      <span class="cor">→</span>
+    </a>
+    <a class="entry e-stock" href="./stock/">
+      <span class="ic">📦</span>
+      <span class="tx"><span class="nm">在庫</span><span class="ds">在庫数・棚卸・入出庫、切れたら発注へ</span></span>
+      <span class="cor">→</span>
+    </a>
+    <a class="entry e-order" href="./order/">
+      <span class="ic">🛒</span>
+      <span class="tx"><span class="nm">発注</span><span class="ds">仕入先ごとにメール・LINEで発注</span></span>
+      <span class="cor">→</span>
+    </a>
+  </div>
+
+  <div class="flow">
+    <b>材料の流れ</b><br>
+    ① 材料リストに記入 → ② 在庫を確認 → ③ あれば<b>出庫</b>／無ければ<b>発注</b> → ④ 入荷したら<b>入庫</b>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var T_GENERAL='kawaguchi-genba-2026';
+var CACHE='genba_material_hub';
+function tok(){return localStorage.getItem('genba_admin')||T_GENERAL;}
+function num(v){if(v==null||v==='')return 0;var n=Number(String(v).replace(/[,，]/g,''));return isNaN(n)?0:n;}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},2400);}
+
+function callGAS(params){
+  return new Promise(function(resolve,reject){
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+    var timer=setTimeout(function(){cleanup();reject(new Error('timeout'));},20000);
+    function cleanup(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    window[cb]=function(res){cleanup();resolve(res);};
+    var q=Object.assign({secret:tok(),callback:cb},params);
+    s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+    s.onerror=function(){cleanup();reject(new Error('error'));};document.head.appendChild(s);
+  });
+}
+function applySummary(products){
+  var warn=0,out=0;
+  (products||[]).forEach(function(p){
+    var stk=num(p['在庫数']), min=num(p['発注点']);
+    if(stk<=0) out++;
+    else if(min>0 && stk<=min) warn++;
+  });
+  document.getElementById('vWarn').textContent=warn;
+  document.getElementById('vOut').textContent=out;
+  document.getElementById('vItems').textContent=(products||[]).length;
+}
+function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'null');if(c&&c.products){applySummary(c.products);}}catch(e){}}
+function refresh(){
+  callGAS({action:'products'}).then(function(res){
+    if(!res.ok)return;
+    var products=res.products||[];
+    try{localStorage.setItem(CACHE,JSON.stringify({products:products}));}catch(e){}
+    applySummary(products);
+  }).catch(function(){});
+}
+loadCache();
+refresh();
+</script>
+</body>
+</html>
