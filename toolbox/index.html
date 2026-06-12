@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 30 (2026-06-12) 手書きメモを現場メモに統合（編集画面でテキスト⇄手書き切替）／材料リストの遷移整理 -->
+<!-- toolbox version 31 (忘れ物メモ④を追加) (2026-06-12) 手書きメモを現場メモに統合（編集画面でテキスト⇄手書き切替）／材料リストの遷移整理 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -43,7 +43,19 @@
   .t-check .ic{background:#2d7dd2;} .t-check{border-top:3px solid #2d7dd2;}
   .t-draw .ic{background:#7c3ab4;} .t-draw{border-top:3px solid #7c3ab4;}
   .t-mat .ic{background:#0f766e;} .t-mat{border-top:3px solid #0f766e;}
-  .t-rec .ic{background:#d64646;} .t-rec{border-top:3px solid #d64646;}
+  .t-rec .ic{background:#d64646;}
+  .t-rem .ic{background:#d97706;}
+  .rem-note{font-size:12px;color:var(--sub);line-height:1.7;margin:0 2px 12px;background:var(--accent-soft);border-radius:10px;padding:10px 12px;}
+  .rem-item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px;cursor:pointer;box-shadow:0 1px 2px rgba(20,30,50,.06);}
+  .rem-item .rt{font-weight:700;font-size:15px;white-space:pre-wrap;}
+  .rem-item .rw{font-size:12px;color:var(--accent-d);margin-top:5px;}
+  .rem-text{width:100%;min-height:90px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;font-size:16px;background:#fff;color:var(--ink);font-family:inherit;line-height:1.6;resize:vertical;}
+  .rem-seg{display:flex;gap:7px;}
+  .rem-seg button{flex:1;padding:11px 4px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:13.5px;font-weight:700;border-radius:11px;cursor:pointer;line-height:1.3;}
+  .rem-seg button small{font-weight:600;opacity:.8;}
+  .rem-seg button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  #remDt,#remHour{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;font-size:16px;background:#fff;color:var(--ink);font-family:inherit;}
+  .row-del2{text-align:center;margin-top:16px;} .t-rec{border-top:3px solid #d64646;}
   .t-board .ic{background:#e8910b;} .t-board{border-top:3px solid #e8910b;}
   .t-elec .ic{background:#bd941c;} .t-elec{border-top:3px solid #bd941c;}
   .t-area .ic{background:#0d9aa0;} .t-area{border-top:3px solid #0d9aa0;}
@@ -187,7 +199,7 @@
   .modeseg button.on{color:#1f5fa8;box-shadow:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v26</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v27</div>
 
 <div class="wrap">
 
@@ -203,6 +215,7 @@
       <div class="sq t-memo"  onclick="openTool('memo')"><span class="ic">📝</span><span class="txt"><span class="nm">現場メモ</span><span class="ds">テキスト・手書きでメモ</span></span><span class="cor">→</span></div>
       <div class="sq t-check" onclick="openTool('check')"><span class="ic">✅</span><span class="txt"><span class="nm">チェックリスト</span><span class="ds">確認項目を管理</span></span><span class="cor">→</span></div>
       <div class="sq t-mat"   onclick="openTool('mat')"><span class="ic">📦</span><span class="txt"><span class="nm">材料リスト</span><span class="ds">材料の数量・仕入先を管理</span></span><span class="cor">→</span></div>
+      <div class="sq t-rem"   onclick="openTool('rem')"><span class="ic">🔔</span><span class="txt"><span class="nm">忘れ物メモ</span><span class="ds">指定時刻・翌朝にホームで表示</span></span><span class="cor">→</span></div>
       <div class="sq t-rec"   onclick="openTool('rec')"><span class="ic">🎙️</span><span class="txt"><span class="nm">録音機</span><span class="ds">音声を記録</span></span><span class="cor">→</span></div>
       <div class="sq t-board" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">→</span></div>
       <div class="sq t-elec"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">→</span></div>
@@ -331,6 +344,46 @@
     <div class="savehint" id="matSaved"></div>
   </div>
 
+
+  <!-- ========== ④ 忘れ物メモ（リマインダー・端末ローカル保存） ========== -->
+  <div class="pane" id="p-rem-list">
+    <div class="thead">
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
+      <h2>忘れ物メモ</h2>
+    </div>
+    <p class="rem-note">設定したタイミングで、ホーム画面を開いたときにメモが表示されます。「OK」を押すと一旦消えますが、アプリを開き直すと再表示します。「削除」を押すと出なくなります。</p>
+    <button class="addbtn" onclick="newRem()">＋ 新しい忘れ物メモ</button>
+    <div id="remList"></div>
+  </div>
+
+  <div class="pane" id="p-rem-edit">
+    <div class="thead">
+      <span class="back2" onclick="renderRemList();go('p-rem-list')">← 一覧</span>
+      <h2>忘れ物メモ</h2>
+    </div>
+    <label class="slbl">メモ内容</label>
+    <textarea id="remText" class="rem-text" placeholder="例：明日の朝、脚立を積み込む"></textarea>
+    <label class="slbl">表示するタイミング</label>
+    <div class="rem-seg">
+      <button id="rmode-always" class="on" onclick="setRemMode('always')">今すぐ<br><small>毎回</small></button>
+      <button id="rmode-datetime" onclick="setRemMode('datetime')">日時を指定</button>
+      <button id="rmode-tomorrow" onclick="setRemMode('tomorrow')">翌朝</button>
+    </div>
+    <div id="remDtWrap" style="display:none;">
+      <label class="slbl">表示する日時</label>
+      <input type="datetime-local" id="remDt">
+    </div>
+    <div id="remHourWrap" style="display:none;">
+      <label class="slbl">翌朝 何時から表示</label>
+      <select id="remHour">
+        <option value="5">5:00</option><option value="6">6:00</option>
+        <option value="7" selected>7:00</option><option value="8">8:00</option>
+        <option value="9">9:00</option><option value="10">10:00</option>
+      </select>
+    </div>
+    <button class="savebtn" onclick="saveRem()">保存する</button>
+    <div class="row-del2" id="remDelRow" style="display:none;"><span class="del" onclick="deleteRem()">この忘れ物メモを削除</span></div>
+  </div>
 
   <!-- ========== ⑥ 電気計算機 ========== -->
   <div class="pane" id="p-elec">
@@ -599,15 +652,92 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
 /* 実装済みツール */
-var READY={memo:1,check:1,elec:1,board:1,rec:1,meas:1,mat:1};
+var READY={memo:1,check:1,elec:1,board:1,rec:1,meas:1,mat:1,rem:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
   if(k==='draw')k='memo'; if(k==='area')k='meas';
+  if(k==='rem'){ renderRemList(); go('p-rem-list'); return; }
   if(k==='memo'||k==='check'||k==='mat'){ curTool=k; siteFilter=''; refreshProjects(); refreshCurList(); return; }
   if(k==='board'||k==='rec'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='board'?'小黒板カメラ':'録音機'); go('p-memo-select'); loadSites(); return; }
   go('p-'+k);
 }
-function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'面積計算',meas:'面積計算',mat:'材料リスト'}[k]||k;}
+function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'面積計算',meas:'面積計算',mat:'材料リスト',rem:'忘れ物メモ'}[k]||k;}
+
+/* ===== ④ 忘れ物メモ（リマインダー・端末ローカル保存 / GAS不使用） ===== */
+var REM_KEY='genba_reminders';
+var curRem=null, curRemMode='always';
+function remLoad(){try{var a=JSON.parse(localStorage.getItem(REM_KEY)||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+function remSave(a){try{localStorage.setItem(REM_KEY,JSON.stringify(a));}catch(e){}}
+function remTiming(r){
+  if(r.mode==='always')return '毎回（アプリを開くたび）';
+  if(!r.at)return '';
+  var d=new Date(r.at);
+  return (d.getMonth()+1)+'月'+d.getDate()+'日 '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+' 以降';
+}
+function dtLocalVal(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)+'T'+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
+function renderRemList(){
+  var arr=remLoad();
+  var el=document.getElementById('remList'); if(!el)return;
+  if(!arr.length){el.innerHTML='<div class="empty">忘れ物メモはまだありません。<br>「＋ 新しい忘れ物メモ」で作成すると、<br>設定したタイミングでホームに表示されます。</div>';return;}
+  arr.sort(function(a,b){return (b.created||0)-(a.created||0);});
+  el.innerHTML=arr.map(function(r){
+    return '<div class="rem-item" onclick="openRem(\''+r.id+'\')">'
+      +'<div class="rt">'+esc(r.text||'(空のメモ)')+'</div>'
+      +'<div class="rw">⏰ '+esc(remTiming(r))+'</div></div>';
+  }).join('');
+}
+function setRemMode(m){
+  curRemMode=m;
+  ['always','datetime','tomorrow'].forEach(function(x){var b=document.getElementById('rmode-'+x);if(b)b.classList.toggle('on',x===m);});
+  var dw=document.getElementById('remDtWrap'); if(dw)dw.style.display=(m==='datetime')?'block':'none';
+  var hw=document.getElementById('remHourWrap'); if(hw)hw.style.display=(m==='tomorrow')?'block':'none';
+}
+function newRem(){
+  curRem=null;
+  document.getElementById('remText').value='';
+  document.getElementById('remDt').value='';
+  document.getElementById('remHour').value='7';
+  setRemMode('always');
+  document.getElementById('remDelRow').style.display='none';
+  go('p-rem-edit');
+  setTimeout(function(){document.getElementById('remText').focus();},120);
+}
+function openRem(id){
+  var arr=remLoad(),r=null; arr.forEach(function(x){if(x.id===id)r=x;}); if(!r)return;
+  curRem=id;
+  document.getElementById('remText').value=r.text||'';
+  document.getElementById('remHour').value=String(r.hour||7);
+  if(r.mode==='datetime'&&r.at){document.getElementById('remDt').value=dtLocalVal(new Date(r.at));}else{document.getElementById('remDt').value='';}
+  setRemMode(r.mode||'always');
+  document.getElementById('remDelRow').style.display='block';
+  go('p-rem-edit');
+}
+function saveRem(){
+  var text=document.getElementById('remText').value.trim();
+  if(!text){toast('メモ内容を入力してください');document.getElementById('remText').focus();return;}
+  var mode=curRemMode, at=0, hour=7;
+  if(mode==='datetime'){
+    var v=document.getElementById('remDt').value;
+    if(!v){toast('日時を指定してください');return;}
+    at=new Date(v).getTime();
+  }else if(mode==='tomorrow'){
+    hour=parseInt(document.getElementById('remHour').value||'7',10);
+    var d=new Date(); d.setDate(d.getDate()+1); d.setHours(hour,0,0,0); at=d.getTime();
+  }
+  var arr=remLoad(), done=false;
+  if(curRem){ for(var i=0;i<arr.length;i++){ if(arr[i].id===curRem){ arr[i].text=text; arr[i].mode=mode; arr[i].at=at; arr[i].hour=hour; done=true; } } }
+  if(!done){ arr.push({id:'R'+Date.now().toString(36)+Math.floor(Math.random()*1e4).toString(36),text:text,mode:mode,at:at,hour:hour,created:Date.now()}); }
+  remSave(arr);
+  toast('保存しました');
+  renderRemList(); go('p-rem-list');
+}
+function deleteRem(){
+  if(!curRem)return;
+  if(!confirm('この忘れ物メモを削除しますか？'))return;
+  remSave(remLoad().filter(function(x){return x.id!==curRem;}));
+  curRem=null; toast('削除しました'); renderRemList(); go('p-rem-list');
+}
+
 
 /* ===== ① 現場メモ（現場ごと・サーバー保存） ===== */
 var PROJ_KEY='tb_projects';
