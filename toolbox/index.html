@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 35 (小黒板カメラ刷新：選択ラベル/自由3行/行別文字サイズ/黒板なし保存/シャッター音切替) -->
+<!-- toolbox version 38 (工事手帳を追加：許容電流/減少係数/接地/絶縁抵抗/分岐回路/リングスリーブ) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -45,6 +45,23 @@
   .t-mat .ic{background:#0f766e;} .t-mat{border-top:3px solid #0f766e;}
   .t-rec .ic{background:#d64646;}
   .t-rem .ic{background:#d97706;}
+  .t-book .ic{background:#7c3ab4;}
+  .bk-srch{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;font-size:15px;margin-bottom:10px;box-sizing:border-box;}
+  .bkc{border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:8px;overflow:hidden;}
+  .bkh{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;font-weight:700;font-size:15px;cursor:pointer;user-select:none;background:#fff;}
+  .bkb{display:none;padding:0 12px 12px;background:#fafbfc;}
+  .bkc.open .bkb{display:block;}
+  .bkc.open .bkar{transform:rotate(180deg);}
+  .bkar{transition:transform .2s;font-size:13px;color:var(--sub);}
+  .bksub{font-size:12px;font-weight:800;color:var(--sub);letter-spacing:.08em;margin:10px 0 5px;}
+  .bkx{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:4px;}
+  .ktbl{width:100%;border-collapse:collapse;font-size:13.5px;min-width:180px;}
+  .ktbl th{background:#374151;color:#fff;padding:6px 10px;text-align:center;font-weight:700;font-size:12px;white-space:nowrap;}
+  .ktbl td{padding:6px 10px;border-bottom:1px solid #e5e7eb;text-align:center;white-space:nowrap;}
+  .ktbl tr:last-child td{border-bottom:none;}
+  .ktbl tr:nth-child(even) td{background:#f9fafb;}
+  .kz{font-weight:800;color:#1a4fa8;}
+  .kn{font-size:11.5px;color:var(--sub);margin-top:5px;line-height:1.6;}
   .rem-note{font-size:12px;color:var(--sub);line-height:1.7;margin:0 2px 12px;background:var(--accent-soft);border-radius:10px;padding:10px 12px;}
   .rem-item{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:9px;cursor:pointer;box-shadow:0 1px 2px rgba(20,30,50,.06);}
   .rem-item .rt{font-weight:700;font-size:15px;white-space:pre-wrap;}
@@ -93,6 +110,7 @@
     .sq{flex-direction:row;align-items:center;aspect-ratio:auto;padding:16px 18px;gap:14px;border-top:1px solid var(--line);border-left:4px solid;}
     .t-memo{border-left-color:#22a06b;} .t-check{border-left-color:#2d7dd2;} .t-draw{border-left-color:#7c3ab4;} .t-mat{border-left-color:#0f766e;}
     .t-rec{border-left-color:#d64646;} .t-board{border-left-color:#e8910b;} .t-elec{border-left-color:#bd941c;} .t-area{border-left-color:#0d9aa0;}
+    .t-book{border-left-color:#7c3ab4;}
     .sq .ic{width:48px;height:48px;font-size:24px;}
     .sq .txt{margin-top:0;} .sq .nm{font-size:16px;}
     .sq .ds{display:block;font-size:12.5px;color:var(--sub);margin-top:2px;}
@@ -151,7 +169,8 @@
   .matrow.done .mt-name{text-decoration:line-through;opacity:.55;}
   .additem{width:100%;padding:11px;border:1px dashed var(--accent);border-radius:11px;background:var(--accent-soft);color:var(--accent-d);font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px;}
   .additem:active{background:#cdeeef;}
-  #drawCanvas{width:100%;height:300px;border-radius:12px;background:#fff;touch-action:none;cursor:crosshair;display:block;border:1px solid var(--line);}
+  #drawCanvas{width:100%;height:60vh;height:60dvh;min-height:300px;border-radius:12px;background:#fff;touch-action:none;cursor:crosshair;display:block;border:1px solid var(--line);}
+  #p-memo-edit{padding-bottom:84px;}
   .dtoolbar{display:flex;gap:7px;align-items:center;margin-bottom:10px;flex-wrap:wrap;}
   .dtoolbar button{padding:7px 11px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--accent-d);font-size:13px;font-weight:700;cursor:pointer;}
   .dtoolbar button.on{border-color:var(--accent);background:var(--accent-soft);}
@@ -200,7 +219,10 @@
   #boardVideo{width:100%;height:100%;object-fit:cover;display:block;}
   .bov-bd{position:absolute;background:#1a8c78;border:2px solid #fff;box-sizing:border-box;cursor:move;touch-action:none;user-select:none;-webkit-user-select:none;font-size:10px;line-height:1;overflow:hidden;}
   .bov-row{display:flex;border-bottom:1px solid rgba(255,255,255,.5);height:14%;}
-  .bov-lb{width:22%;border-right:1px solid rgba(255,255,255,.5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .bov-lb{width:15%;border-right:1px solid rgba(255,255,255,.5);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;overflow:hidden;}
+  .bov-lb .bv-l{display:inline-block;white-space:nowrap;transform-origin:center center;}
+  .bshoot-bar{position:fixed;left:0;right:0;bottom:0;z-index:30;padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);background:rgba(255,255,255,.96);box-shadow:0 -2px 12px rgba(20,30,50,.12);}
+  #p-board{padding-bottom:8px;}
   .bov-vl{flex:1;color:#fff;display:flex;align-items:center;padding-left:5%;font-weight:700;white-space:nowrap;overflow:hidden;}
   .bov-ph{height:58%;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;}
   .bov-co{height:14%;color:rgba(255,255,255,.85);display:flex;align-items:center;justify-content:flex-end;padding-right:5%;font-weight:700;}
@@ -239,7 +261,7 @@
   .modeseg button.on{color:#1f5fa8;box-shadow:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v32</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v35</div>
 
 <div class="wrap">
 
@@ -259,6 +281,7 @@
       <div class="sq t-board" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">→</span></div>
       <div class="sq t-elec"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">→</span></div>
       <div class="sq t-meas"  onclick="openTool('meas')"><span class="ic">📐</span><span class="txt"><span class="nm">面積計算</span><span class="ds">面積の計算と坪・㎡・畳換算</span></span><span class="cor">→</span></div>
+      <div class="sq t-book" onclick="openTool('book')"><span class="ic">📖</span><span class="txt"><span class="nm">工事手帳</span><span class="ds">許容電流・接地・スリーブ早見表</span></span><span class="cor">→</span></div>
     </div>
   </div>
 
@@ -318,8 +341,7 @@
       </div>
       <canvas id="drawCanvas"></canvas>
     </div>
-    <button class="savebtn" onclick="saveNote()">保存する</button>
-    <div class="savehint" id="noteSaved"></div>
+    <div class="bshoot-bar"><button class="savebtn" style="width:100%;margin:0;" onclick="saveNote()">保存する</button><div class="savehint" id="noteSaved" style="text-align:center;"></div></div>
   </div>
 
   <!-- ② 現場チェックリスト：一覧 -->
@@ -540,9 +562,7 @@
       <input type="range" id="boardSizeRange" min="20" max="55" value="37" oninput="boardSetSize(this.value)">
       <span class="bsize-val" id="boardSizeVal">37%</span>
     </div>
-    <label class="bchk"><input type="checkbox" id="boardShutter" checked> シャッター音を鳴らす</label>
     <label class="bchk"><input type="checkbox" id="boardNoBoard"> 黒板なしも保存する（黒板あり＋なしの2枚）</label>
-    <div class="enote" style="margin:0 2px 12px;">黒板はドラッグで移動／ダブルタップで入力欄の表示切替。各行の −／＋ で文字サイズを調整できます。</div>
     <div class="board-grid" id="boardFormWrap">
       <div class="brow"><select class="bsel" id="boardLbl1Sel" onchange="bov()"><option>工事名</option><option>修繕名</option></select><input class="enum binp" id="boardProjName" oninput="bov()" placeholder="工事・修繕名"><button class="bfs" onclick="boardFontStep('a',-0.1)">−</button><button class="bfs" onclick="boardFontStep('a',0.1)">＋</button></div>
       <div class="brow"><select class="bsel" id="boardLbl2Sel" onchange="bov()"><option>工事場所</option><option>修繕場所</option><option>場所</option></select><input class="enum binp" id="boardPlace" oninput="bov()" placeholder="場所"><button class="bfs" onclick="boardFontStep('b',-0.1)">−</button><button class="bfs" onclick="boardFontStep('b',0.1)">＋</button></div>
@@ -551,7 +571,8 @@
       <div class="brow"><span class="blbl3">自由3</span><input class="enum binp" id="boardFree3" oninput="bov()" placeholder="自由記入"><button class="bfs" onclick="boardFontStep('e',-0.1)">−</button><button class="bfs" onclick="boardFontStep('e',0.1)">＋</button></div>
       <div class="brow"><span class="blbl3">会社名</span><input class="enum binp" id="boardCompany" oninput="bov()" value="河口電機株式会社"><button class="bfs" onclick="boardFontStep('f',-0.1)">−</button><button class="bfs" onclick="boardFontStep('f',0.1)">＋</button></div>
     </div>
-    <button class="savebtn" style="background:#d97b12;margin-top:14px;" onclick="boardShoot()">📷 撮影してDriveに保存</button>
+    <div class="enote" style="margin:12px 2px 84px;">黒板はドラッグで移動／ダブルタップで入力欄の表示切替。各行の −／＋ で文字サイズを調整できます。</div>
+    <div class="bshoot-bar"><button class="savebtn" style="background:#d97b12;width:100%;margin:0;" onclick="boardShoot()">📷 撮影してDriveに保存</button></div>
   </div>
 
   <!-- ========== ④ 録音機 ========== -->
@@ -595,6 +616,151 @@
       </div>
       <div id="recList"><div class="empty">「↻ 更新」で一覧を読み込みます</div></div>
     </div>
+  </div>
+
+  <!-- ========== ⑨ 工事手帳 ========== -->
+  <div class="pane" id="p-book">
+    <div class="thead">
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
+      <h2>📖 工事手帳</h2>
+    </div>
+    <input class="bk-srch" id="bkQ" placeholder="🔍 検索（例：VVF・接地・スリーブ）" oninput="bkFilter()">
+
+    <!-- IV線許容電流 -->
+    <div class="bkc" data-kw="iv 絶縁電線 許容電流 単線 より線 sq スケ 幹線">
+      <div class="bkh" onclick="bkToggle(this)"><span>IV線の許容電流</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">単線（気中・周囲30℃）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>太さ</th><th>許容電流</th></tr>
+        <tr><td>1.6mm</td><td class="kz">27A</td></tr>
+        <tr><td>2.0mm</td><td class="kz">35A</td></tr>
+        <tr><td>2.6mm</td><td class="kz">48A</td></tr>
+        <tr><td>3.2mm</td><td class="kz">62A</td></tr></table></div>
+        <div class="bksub">より線（気中・周囲30℃）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>太さ</th><th>許容電流</th><th>太さ</th><th>許容電流</th></tr>
+        <tr><td>2sq</td><td class="kz">27A</td><td>38sq</td><td class="kz">162A</td></tr>
+        <tr><td>3.5sq</td><td class="kz">37A</td><td>60sq</td><td class="kz">217A</td></tr>
+        <tr><td>5.5sq</td><td class="kz">49A</td><td>100sq</td><td class="kz">298A</td></tr>
+        <tr><td>8sq</td><td class="kz">61A</td><td>150sq</td><td class="kz">395A</td></tr>
+        <tr><td>14sq</td><td class="kz">88A</td><td>200sq</td><td class="kz">469A</td></tr>
+        <tr><td>22sq</td><td class="kz">115A</td><td>250sq</td><td class="kz">556A</td></tr></table></div>
+        <div class="kn">※メーカー公表値を基にした目安。最終判断は内線規程・メーカー資料で確認。</div>
+      </div>
+    </div>
+
+    <!-- 電流減少係数 -->
+    <div class="bkc" data-kw="電流減少係数 管内 同一管 低減 合成">
+      <div class="bkh" onclick="bkToggle(this)"><span>電流減少係数（管内配線）</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bkx"><table class="ktbl"><tr><th>同一管内の電線本数</th><th>係数</th></tr>
+        <tr><td>3本以下</td><td class="kz">0.70</td></tr>
+        <tr><td>4本</td><td class="kz">0.63</td></tr>
+        <tr><td>5〜6本</td><td class="kz">0.56</td></tr>
+        <tr><td>7〜15本</td><td class="kz">0.49</td></tr>
+        <tr><td>16〜40本</td><td class="kz">0.43</td></tr>
+        <tr><td>41〜60本</td><td class="kz">0.39</td></tr>
+        <tr><td>61本以上</td><td class="kz">0.34</td></tr></table></div>
+        <div class="kn">※IV線・600Vビニル絶縁電線の場合。CVはCV用の低減係数を参照。</div>
+      </div>
+    </div>
+
+    <!-- VVF許容電流 -->
+    <div class="bkc" data-kw="vvf ビニル 許容電流 平形 ケーブル">
+      <div class="bkh" onclick="bkToggle(this)"><span>VVFケーブルの許容電流</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bkx"><table class="ktbl"><tr><th>サイズ</th><th>許容電流</th><th>40℃時</th></tr>
+        <tr><td>1.6mm×2C</td><td class="kz">19A</td><td>17A</td></tr>
+        <tr><td>2.0mm×2C</td><td class="kz">24A</td><td>22A</td></tr>
+        <tr><td>2.6mm×2C</td><td class="kz">33A</td><td>30A</td></tr>
+        <tr><td>1.6mm×3C</td><td class="kz">19A</td><td>17A</td></tr>
+        <tr><td>2.0mm×3C</td><td class="kz">24A</td><td>22A</td></tr></table></div>
+        <div class="kn">※気中・周囲30℃時の値。管内配線は減少係数を乗じること。</div>
+      </div>
+    </div>
+
+    <!-- CVケーブル許容電流 -->
+    <div class="bkc" data-kw="cv cvt 架橋 ポリエチレン 許容電流 仕上外径">
+      <div class="bkh" onclick="bkToggle(this)"><span>CVケーブルの許容電流・外径</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">単心（周囲40℃・気中1条）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>sq</th><th>電流</th><th>外径目安</th><th>sq</th><th>電流</th><th>外径目安</th></tr>
+        <tr><td>2</td><td class="kz">36A</td><td>10.0mm</td><td>38</td><td class="kz">170A</td><td>23.6mm</td></tr>
+        <tr><td>3.5</td><td class="kz">49A</td><td>11.0mm</td><td>60</td><td class="kz">220A</td><td>27.4mm</td></tr>
+        <tr><td>5.5</td><td class="kz">66A</td><td>12.5mm</td><td>100</td><td class="kz">290A</td><td>33.2mm</td></tr>
+        <tr><td>8</td><td class="kz">84A</td><td>13.6mm</td><td>150</td><td class="kz">360A</td><td>39.1mm</td></tr>
+        <tr><td>14</td><td class="kz">115A</td><td>16.0mm</td><td>200</td><td class="kz">430A</td><td>44.6mm</td></tr>
+        <tr><td>22</td><td class="kz">145A</td><td>18.7mm</td><td></td><td></td><td></td></tr></table></div>
+        <div class="kn">※外径はメーカー・公称値により異なる場合あり。最新カタログで確認。</div>
+      </div>
+    </div>
+
+    <!-- 単線⇔より線対応 -->
+    <div class="bkc" data-kw="単線 より線 対応 換算 スケ sq mm">
+      <div class="bkh" onclick="bkToggle(this)"><span>単線 ⇔ より線の対応</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bkx"><table class="ktbl"><tr><th>単線</th><th>より線（目安）</th></tr>
+        <tr><td>1.6mm</td><td class="kz">2sq</td></tr>
+        <tr><td>2.0mm</td><td class="kz">3.5sq</td></tr>
+        <tr><td>2.6mm</td><td class="kz">5.5sq</td></tr>
+        <tr><td>3.2mm</td><td class="kz">8sq</td></tr></table></div>
+        <div class="kn">※許容電流・断面積を基にした目安対応。用途に応じて確認を。</div>
+      </div>
+    </div>
+
+    <!-- 接地工事 -->
+    <div class="bkc" data-kw="接地 アース 抵抗 a種 b種 c種 d種 接地線">
+      <div class="bkh" onclick="bkToggle(this)"><span>接地工事の種類</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bkx"><table class="ktbl"><tr><th>種別</th><th>接地抵抗</th><th>接地線の太さ</th><th>主な対象</th></tr>
+        <tr><td>A種</td><td class="kz">10Ω以下</td><td>2.6mm以上（5.5sq以上）</td><td>高圧機器外箱</td></tr>
+        <tr><td>B種</td><td class="kz">変圧器容量による</td><td>4.0mm以上（14sq以上）</td><td>変圧器中性点・2次側</td></tr>
+        <tr><td>C種</td><td class="kz">10Ω以下<br><small>※0.5秒遮断なら500Ω</small></td><td>1.6mm以上（2sq以上）</td><td>300Vを超える低圧機器</td></tr>
+        <tr><td>D種</td><td class="kz">100Ω以下<br><small>※0.5秒遮断なら500Ω</small></td><td>1.6mm以上（2sq以上）</td><td>300V以下低圧機器</td></tr></table></div>
+        <div class="kn">※電気設備技術基準・内線規程に基づく。変更される場合があるため最新版で確認。</div>
+      </div>
+    </div>
+
+    <!-- 絶縁抵抗 -->
+    <div class="bkc" data-kw="絶縁抵抗 メガー megger 測定 低圧 meg mΩ">
+      <div class="bkh" onclick="bkToggle(this)"><span>絶縁抵抗の基準値</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bkx"><table class="ktbl"><tr><th>電路の区分</th><th>絶縁抵抗値</th></tr>
+        <tr><td>対地電圧150V以下</td><td class="kz">0.1MΩ以上</td></tr>
+        <tr><td>対地電圧150V超300V以下</td><td class="kz">0.2MΩ以上</td></tr>
+        <tr><td>300Vを超えるもの</td><td class="kz">0.4MΩ以上</td></tr></table></div>
+        <div class="kn">※電気設備技術基準第58条に基づく。単相3線式100/200Vは対地電圧150V以下として扱う。</div>
+      </div>
+    </div>
+
+    <!-- 分岐回路 -->
+    <div class="bkc" data-kw="分岐回路 ブレーカ 過電流遮断器 コンセント 電線 配線">
+      <div class="bkh" onclick="bkToggle(this)"><span>分岐回路の組合せ</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bkx"><table class="ktbl"><tr><th>遮断器</th><th>電線（最小）</th><th>コンセント（最大）</th></tr>
+        <tr><td>15A</td><td class="kz">1.6mm（2sq）</td><td>15A以下</td></tr>
+        <tr><td>20A（配線用）</td><td class="kz">1.6mm（2sq）</td><td>20A以下</td></tr>
+        <tr><td>20A（ヒューズ）</td><td class="kz">2.0mm（3.5sq）</td><td>20A以下</td></tr>
+        <tr><td>30A</td><td class="kz">2.6mm（5.5sq）</td><td>20A以上30A以下</td></tr>
+        <tr><td>40A</td><td class="kz">8sq</td><td>30A以上40A以下</td></tr>
+        <tr><td>50A</td><td class="kz">8sq</td><td>40A以上50A以下</td></tr></table></div>
+        <div class="kn">※内線規程の分岐回路の施設基準。VVFを基準とした目安。</div>
+      </div>
+    </div>
+
+    <!-- リングスリーブ -->
+    <div class="bkc" data-kw="リングスリーブ 刻印 圧着 スリーブ 接続 大 中 小">
+      <div class="bkh" onclick="bkToggle(this)"><span>リングスリーブの選定</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bkx"><table class="ktbl"><tr><th>刻印</th><th>スリーブ</th><th>電線の組合せ</th></tr>
+        <tr><td class="kz">○</td><td>小</td><td>1.6mm×2本</td></tr>
+        <tr><td class="kz">小</td><td>小</td><td>1.6mm×3〜4本 / 1.6mm×1＋2.0mm×1〜2</td></tr>
+        <tr><td class="kz">中</td><td>中</td><td>2.0mm×3〜4本 / 1.6mm×5〜6本 / 2.0mm×1＋1.6mm×3〜5本</td></tr>
+        <tr><td class="kz">大</td><td>大</td><td>2.6mm×2〜4本 / 2.0mm×5〜6本など</td></tr></table></div>
+        <div class="kn">※第二種電気工事士技能試験の判定基準に基づく。施工前に最新の基準を確認のこと。</div>
+      </div>
+    </div>
+
+    <div class="enote" style="margin-top:16px;">数値はすべて目安・参考値です。実際の施工は内線規程・電気設備技術基準の最新版およびメーカー資料で必ず確認してください。</div>
   </div>
 
   <!-- ========== ⑧ 面積計算（寸法計算＋坪・㎡・畳換算） ========== -->
@@ -708,7 +874,7 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
 /* 実装済みツール */
-var READY={memo:1,check:1,elec:1,board:1,rec:1,meas:1,mat:1,rem:1};
+var READY={memo:1,check:1,elec:1,board:1,rec:1,meas:1,mat:1,rem:1,book:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
   if(k==='draw')k='memo'; if(k==='area')k='meas';
@@ -717,7 +883,7 @@ function openTool(k){
   if(k==='board'||k==='rec'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='board'?'小黒板カメラ':'録音機'); go('p-memo-select'); loadSites(); return; }
   go('p-'+k);
 }
-function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'面積計算',meas:'面積計算',mat:'材料リスト',rem:'忘れ物メモ'}[k]||k;}
+function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'面積計算',meas:'面積計算',mat:'材料リスト',rem:'忘れ物メモ',book:'工事手帳'}[k]||k;}
 
 /* ===== ④ 忘れ物メモ（リマインダー・端末ローカル保存 / GAS不使用） ===== */
 var REM_KEY='genba_reminders';
@@ -944,7 +1110,7 @@ function openNote(id){
   // 手書きデータと本文を両方準備（途中でモードを切り替えても保持）
   drawStrokes=[]; drawHistory=[]; drawInited=false;
   if(isDraw){
-    try{drawStrokes=JSON.parse(n['内容']||'[]');}catch(e){drawStrokes=[];} if(!Array.isArray(drawStrokes))drawStrokes=[];
+    try{drawStrokes=JSON.parse(n['内容']||'[]');}catch(e){drawStrokes=[];} if(!Array.isArray(drawStrokes))drawStrokes=[]; drawStrokes=normLoad(drawStrokes);
     document.getElementById('noteBody').value='';
   } else {
     document.getElementById('noteBody').value=n['内容']||'';
@@ -1088,6 +1254,17 @@ function openCheckForCase(id){
 }
 
 /* ===== ③ 手書きメモ（現場ごと・サーバー保存） ===== */
+var drawBW=680, drawBH=300; // 現在の描画面の論理サイズ（動的）
+function normLoad(strokes){ // 旧データ(680x300px)は0〜1に正規化して読み込む
+  return (strokes||[]).map(function(st){
+    var pts=st.pts||[];
+    var legacy=pts.some(function(p){return Math.abs(p[0])>1.5||Math.abs(p[1])>1.5;});
+    var np=legacy?pts.map(function(p){return [p[0]/680,p[1]/300];}):pts;
+    var w=(st.width!=null)?st.width:2;
+    var wn=(legacy||w>1.5)?(w/680):w;
+    return {color:st.color||'#222',width:wn,eraser:!!st.eraser,pts:np};
+  });
+}
 function initDrawCanvas(){
   if(drawInited)return;
   drawCvs=document.getElementById('drawCanvas');
@@ -1097,14 +1274,14 @@ function initDrawCanvas(){
     drawHistory.push(JSON.stringify(drawStrokes));
     if(drawHistory.length>30)drawHistory.shift();
     var pos=getDrawPos(e);
-    drawCurStroke={color:drawEraser?'#fff':drawColor,width:drawEraser?20:drawWidth,eraser:drawEraser,pts:[pos]};
+    drawCurStroke={color:drawEraser?'#fff':drawColor,width:(drawEraser?20:drawWidth)/680,eraser:drawEraser,pts:[pos]};
   },{passive:false});
   drawCvs.addEventListener('pointermove',function(e){
     e.preventDefault(); if(!drawPainting||!drawCurStroke)return;
     var pos=getDrawPos(e);
     var last=drawCurStroke.pts[drawCurStroke.pts.length-1];
     var dx=pos[0]-last[0],dy=pos[1]-last[1];
-    if(dx*dx+dy*dy<9)return;
+    if(dx*dx+dy*dy<0.00002)return;
     drawCurStroke.pts.push(pos);
     if(drawCurStroke.pts.length>=2){
       var n=drawCurStroke.pts.length;
@@ -1120,26 +1297,29 @@ function initDrawCanvas(){
   drawInited=true;
 }
 var drawCurStroke=null;
-function getDrawPos(e){ var r=drawCvs.getBoundingClientRect(); return [Math.round((e.clientX-r.left)*680/(r.width||680)),Math.round((e.clientY-r.top)*300/(r.height||300))]; }
+function getDrawPos(e){ var r=drawCvs.getBoundingClientRect(); var x=(e.clientX-r.left)/(r.width||1), y=(e.clientY-r.top)/(r.height||1); return [Math.min(1,Math.max(0,x)),Math.min(1,Math.max(0,y))]; }
 function drawSegment(a,b,color,width,eraser){
   if(!drawCtx)return; drawCtx.save();
   drawCtx.globalCompositeOperation=eraser?'destination-out':'source-over';
   drawCtx.strokeStyle=eraser?'rgba(0,0,0,1)':color;
-  drawCtx.lineWidth=width; drawCtx.lineCap='round'; drawCtx.lineJoin='round';
-  drawCtx.beginPath(); drawCtx.moveTo(a[0],a[1]); drawCtx.lineTo(b[0],b[1]); drawCtx.stroke(); drawCtx.restore();
+  drawCtx.lineWidth=Math.max(1,(width||0.003)*drawBW); drawCtx.lineCap='round'; drawCtx.lineJoin='round';
+  drawCtx.beginPath(); drawCtx.moveTo(a[0]*drawBW,a[1]*drawBH); drawCtx.lineTo(b[0]*drawBW,b[1]*drawBH); drawCtx.stroke(); drawCtx.restore();
 }
 function renderDrawCanvas(strokes){
   if(!drawCtx||!drawCvs)return;
-  drawCtx.clearRect(0,0,680,300); drawCtx.fillStyle='#fff'; drawCtx.fillRect(0,0,680,300);
-  strokes.forEach(function(st){ for(var i=1;i<st.pts.length;i++) drawSegment(st.pts[i-1],st.pts[i],st.color||'#222',st.width||2,st.eraser||false); });
+  drawCtx.clearRect(0,0,drawBW,drawBH); drawCtx.fillStyle='#fff'; drawCtx.fillRect(0,0,drawBW,drawBH);
+  (strokes||[]).forEach(function(st){ var p=st.pts||[]; for(var i=1;i<p.length;i++) drawSegment(p[i-1],p[i],st.color||'#222',st.width||0.003,st.eraser||false); });
 }
 function initDrawPane(){
-  var c=document.getElementById('drawCanvas');
-  var dpr=window.devicePixelRatio||1; c.width=680*dpr; c.height=300*dpr;
-  drawCtx=drawCvs=c; drawCtx=c.getContext('2d'); drawCtx.scale(dpr,dpr);
-  drawCtx.fillStyle='#fff'; drawCtx.fillRect(0,0,680,300);
-  if(!drawInited){ drawCvs=c; initDrawCanvas(); }
-  drawCvs=c; drawCtx=c.getContext('2d');
+  var c=document.getElementById('drawCanvas'); if(!c)return;
+  var dpr=window.devicePixelRatio||1;
+  var rect=c.getBoundingClientRect();
+  drawBW=Math.max(1,Math.round(rect.width)); drawBH=Math.max(1,Math.round(rect.height));
+  c.width=Math.round(drawBW*dpr); c.height=Math.round(drawBH*dpr);
+  drawCvs=c; drawCtx=c.getContext('2d'); drawCtx.setTransform(dpr,0,0,dpr,0,0);
+  drawCtx.fillStyle='#fff'; drawCtx.fillRect(0,0,drawBW,drawBH);
+  if(!drawInited)initDrawCanvas();
+  renderDrawCanvas(drawStrokes);
 }
 function setDrawColor(c,btnId){ drawColor=c; drawEraser=false; ['cswB','cswR','cswU','cswG'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('on');}); var el=document.getElementById(btnId); if(el)el.classList.add('on'); document.getElementById('dBtnE').classList.remove('on'); }
 function setDrawWidth(w,btnId){ drawWidth=w; drawEraser=false; ['dBtnS','dBtnM','dBtnL'].forEach(function(id){var el=document.getElementById(id);if(el)el.classList.remove('on');}); var el=document.getElementById(btnId); if(el)el.classList.add('on'); document.getElementById('dBtnE').classList.remove('on'); }
@@ -1172,12 +1352,12 @@ function renderDrawList(list){
       var sts=[]; try{sts=JSON.parse(n['内容']||'[]');}catch(e){} if(!Array.isArray(sts))sts=[];
       cv.width=80; cv.height=60;
       var ctx=cv.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,80,60);
-      var sx=80/680, sy=60/300; ctx.save(); ctx.scale(sx,sy);
+      sts=normLoad(sts); ctx.save();
       sts.forEach(function(st){ if(!st.pts||st.pts.length<2)return;
-        ctx.strokeStyle=st.eraser?'#fff':(st.color||'#222'); ctx.lineWidth=(st.width||2);
+        ctx.strokeStyle=st.eraser?'#fff':(st.color||'#222'); ctx.lineWidth=Math.max(0.5,(st.width||0.003)*80);
         ctx.lineCap='round'; ctx.lineJoin='round';
-        ctx.beginPath(); ctx.moveTo(st.pts[0][0],st.pts[0][1]);
-        for(var i=1;i<st.pts.length;i++)ctx.lineTo(st.pts[i][0],st.pts[i][1]); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(st.pts[0][0]*80,st.pts[0][1]*60);
+        for(var i=1;i<st.pts.length;i++)ctx.lineTo(st.pts[i][0]*80,st.pts[i][1]*60); ctx.stroke();
       }); ctx.restore();
     });
   },50);
@@ -1192,7 +1372,7 @@ function newDraw(){
 }
 function openDraw(id){
   var n=drawCache[id]||{}; curDraw=id; drawStrokes=[];
-  try{drawStrokes=JSON.parse(n['内容']||'[]');}catch(e){drawStrokes=[];} if(!Array.isArray(drawStrokes))drawStrokes=[];
+  try{drawStrokes=JSON.parse(n['内容']||'[]');}catch(e){drawStrokes=[];} if(!Array.isArray(drawStrokes))drawStrokes=[]; drawStrokes=normLoad(drawStrokes);
   drawHistory=[]; drawInited=false;
   document.getElementById('drawTitle').value=n['タイトル']||'';
   document.getElementById('drawSaved').classList.remove('show');
@@ -1460,8 +1640,8 @@ function bov(){
   var v=function(id){var e=document.getElementById(id);return e?e.value:'';};
   var l1=v('boardLbl1Sel')||'工事名', l2=v('boardLbl2Sel')||'場所';
   ov.innerHTML=
-    '<div class="bov-row" style="height:15%"><div class="bov-lb">'+esc(l1)+'</div><div class="bov-vl"><span class="bv-t" data-k="a">'+esc(v('boardProjName'))+'</span></div></div>'+
-    '<div class="bov-row" style="height:15%"><div class="bov-lb">'+esc(l2)+'</div><div class="bov-vl"><span class="bv-t" data-k="b">'+esc(v('boardPlace'))+'</span></div></div>'+
+    '<div class="bov-row" style="height:15%"><div class="bov-lb"><span class="bv-l" data-k="la">'+esc(l1)+'</span></div><div class="bov-vl"><span class="bv-t" data-k="a">'+esc(v('boardProjName'))+'</span></div></div>'+
+    '<div class="bov-row" style="height:15%"><div class="bov-lb"><span class="bv-l" data-k="lb">'+esc(l2)+'</span></div><div class="bov-vl"><span class="bv-t" data-k="b">'+esc(v('boardPlace'))+'</span></div></div>'+
     '<div class="bov-fr" style="height:18%"><span class="bv-t" data-k="c">'+esc(v('boardFree1'))+'</span></div>'+
     '<div class="bov-fr" style="height:18%"><span class="bv-t" data-k="d">'+esc(v('boardFree2'))+'</span></div>'+
     '<div class="bov-fr" style="height:18%"><span class="bv-t" data-k="e">'+esc(v('boardFree3'))+'</span></div>'+
@@ -1489,9 +1669,8 @@ function boardLayout(){
   ov.style.left=(x*W)+'px';ov.style.top=(y*H)+'px';
   ov.style.width=bw+'px';ov.style.height=bh+'px';
   // ラベル（左列）：行高に合わせる
-  var lbs=ov.querySelectorAll('.bov-lb');
-  if(lbs[0])lbs[0].style.fontSize=Math.max(6,Math.floor(bh*BROWH.a*0.42))+'px';
-  if(lbs[1])lbs[1].style.fontSize=Math.max(6,Math.floor(bh*BROWH.b*0.42))+'px';
+  setF('.bv-l[data-k="la"]','la',BROWH.a,0.4);
+  setF('.bv-l[data-k="lb"]','lb',BROWH.b,0.4);
   // 各行の値/自由/会社名：行高×係数×個別スケール、横はみ出しはscaleXで縮小
   function setF(sel,k,frac,kk){
     var el=ov.querySelector(sel); if(!el)return;
@@ -1500,11 +1679,11 @@ function boardLayout(){
     var parent=el.parentNode, avail=(parent?parent.clientWidth:bw)-2;
     if(avail>0 && el.scrollWidth>avail){ el.style.transform='scaleX('+(avail/el.scrollWidth)+')'; }
   }
-  setF('.bv-t[data-k="a"]','a',BROWH.a,0.5);
-  setF('.bv-t[data-k="b"]','b',BROWH.b,0.5);
-  setF('.bv-t[data-k="c"]','c',BROWH.c,0.55);
-  setF('.bv-t[data-k="d"]','d',BROWH.d,0.55);
-  setF('.bv-t[data-k="e"]','e',BROWH.e,0.55);
+  setF('.bv-t[data-k="a"]','a',BROWH.a,0.6);
+  setF('.bv-t[data-k="b"]','b',BROWH.b,0.6);
+  setF('.bv-t[data-k="c"]','c',BROWH.c,0.66);
+  setF('.bv-t[data-k="d"]','d',BROWH.d,0.66);
+  setF('.bv-t[data-k="e"]','e',BROWH.e,0.66);
   setF('.bv-t[data-k="f"]','f',BROWH.f,0.45);
 }
 function boardSetSize(v){boardRect.w=parseInt(v,10)/100;var e=document.getElementById('boardSizeVal');if(e)e.textContent=v+'%';boardLayout();}
@@ -1575,9 +1754,8 @@ function boardShoot(){
   var cvs=document.createElement('canvas');cvs.width=outW;cvs.height=outH;
   var ctx=cvs.getContext('2d');
   ctx.drawImage(vid,sx,sy,sw,sh,0,0,outW,outH);
-  var doShutter=!!(document.getElementById('boardShutter')||{}).checked;
   var doNoBoard=!!(document.getElementById('boardNoBoard')||{}).checked;
-  if(doShutter)shutterSound();
+  shutterSound();
   var noBoardData = doNoBoard ? cvs.toDataURL('image/jpeg',0.82).split(',')[1] : null;
   // 黒板（プレビュー位置・サイズを反映）
   var bw=Math.floor(outW*boardRect.w),bh=Math.floor(bw*BOARD_HR);
@@ -1587,7 +1765,7 @@ function boardShoot(){
   ctx.fillStyle='#1a8c78';ctx.fillRect(bx,by,bw,bh);
   ctx.strokeStyle='#ffffff';ctx.lineWidth=2;ctx.strokeRect(bx+2,by+2,bw-4,bh-4);
   var val=function(id){var e=document.getElementById(id);return e?e.value:'';};
-  var pad=Math.floor(bw*0.03), labelW=Math.floor(bw*0.26);
+  var pad=Math.floor(bw*0.03), labelW=Math.floor(bw*0.17);
   ctx.textBaseline='middle';
   var yy=by;
   function rowLV(lbl,value,k,hf){
@@ -1596,16 +1774,16 @@ function boardShoot(){
     ctx.beginPath();ctx.moveTo(bx+4,yy+rh);ctx.lineTo(bx+bw-4,yy+rh);ctx.stroke();
     ctx.beginPath();ctx.moveTo(bx+labelW,yy+2);ctx.lineTo(bx+labelW,yy+rh);ctx.stroke();
     ctx.fillStyle='#ffffff';ctx.textAlign='center';
-    ctx.font=Math.max(7,Math.floor(rh*0.42))+'px sans-serif';
+    ctx.font=Math.max(7,Math.floor(rh*0.4))+'px sans-serif';
     ctx.fillText(lbl,bx+labelW/2,yy+rh/2,labelW-6);
-    var fs=Math.max(8,Math.floor(rh*0.5*(lineScale[k]||1)));
+    var fs=Math.max(8,Math.floor(rh*0.6*(lineScale[k]||1)));
     ctx.font='bold '+fs+'px sans-serif';ctx.textAlign='left';
     if(value)ctx.fillText(value,bx+labelW+pad,yy+rh/2,bw-labelW-pad*2);
     yy+=rh;
   }
   function rowFree(value,k,hf){
     var rh=bh*hf;
-    var fs=Math.max(8,Math.floor(rh*0.55*(lineScale[k]||1)));
+    var fs=Math.max(8,Math.floor(rh*0.66*(lineScale[k]||1)));
     ctx.fillStyle='#ffffff';ctx.font='bold '+fs+'px sans-serif';ctx.textAlign='center';
     if(value)ctx.fillText(value,bx+bw/2,yy+rh/2,bw-pad*2);
     yy+=rh;
@@ -1722,6 +1900,20 @@ function recLoadList(){
   }).catch(function(){el.innerHTML='<div class="empty">読み込みに失敗しました。</div>';});
 }
 
+
+/* ===== ⑨ 工事手帳 ===== */
+function bkToggle(hd){ hd.parentNode.classList.toggle('open'); }
+function bkFilter(){
+  var q=(document.getElementById('bkQ').value||'').trim().toLowerCase();
+  document.querySelectorAll('.bkc').forEach(function(c){
+    if(!q){ c.style.display=''; c.classList.remove('open'); return; }
+    var kw=(c.getAttribute('data-kw')||'').toLowerCase();
+    var hit=kw.indexOf(q)>=0;
+    c.style.display=hit?'':'none';
+    if(q&&hit){ c.classList.add('open'); }
+    if(!q){ c.classList.remove('open'); }
+  });
+}
 
 /* ===== ⑧ 面積計算（寸法計算＋単位換算） ===== */
 var measItems=[],measShapeVal='rect';
