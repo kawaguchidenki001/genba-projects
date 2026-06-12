@@ -41,7 +41,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2</div>
 <header>
   <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
   <h1>📦 材料管理</h1>
@@ -49,23 +49,23 @@
 
 <main>
   <div class="stats">
-    <a class="stat warn" id="stWarn" href="./stock/"><div class="v" id="vWarn">–</div><div class="l">要発注</div></a>
-    <a class="stat alert" id="stOut" href="./stock/"><div class="v" id="vOut">–</div><div class="l">在庫切れ</div></a>
-    <a class="stat" href="./stock/"><div class="v" id="vItems">–</div><div class="l">在庫品数</div></a>
+    <a class="stat warn" id="stWarn" href="../stock/"><div class="v" id="vWarn">–</div><div class="l">要発注</div></a>
+    <a class="stat alert" id="stOut" href="../stock/"><div class="v" id="vOut">–</div><div class="l">在庫切れ</div></a>
+    <a class="stat" href="../stock/"><div class="v" id="vItems">–</div><div class="l">在庫品数</div></a>
   </div>
 
   <div class="menu">
-    <a class="entry e-list" href="./toolbox/?tool=mat">
+    <a class="entry e-list" href="../toolbox/?tool=mat">
       <span class="ic">📝</span>
       <span class="tx"><span class="nm">材料リスト</span><span class="ds">現場ごとに記入・在庫照合・発注へ</span></span>
       <span class="cor">→</span>
     </a>
-    <a class="entry e-stock" href="./stock/">
+    <a class="entry e-stock" href="../stock/">
       <span class="ic">📦</span>
       <span class="tx"><span class="nm">在庫</span><span class="ds">在庫数・棚卸・入出庫、切れたら発注へ</span></span>
       <span class="cor">→</span>
     </a>
-    <a class="entry e-order" href="./order/">
+    <a class="entry e-order" href="../order/">
       <span class="ic">🛒</span>
       <span class="tx"><span class="nm">発注</span><span class="ds">仕入先ごとにメール・LINEで発注</span></span>
       <span class="cor">→</span>
