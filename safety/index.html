@@ -288,6 +288,16 @@
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 function admTok(){return localStorage.getItem('genba_admin')||'';}
+
+/* 書類アップロード専用：fetch POST（URL長制限を回避） */
+function postGAS(params){
+  var body=Object.assign({secret:admTok()},params);
+  return fetch(GAS_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain;charset=utf-8'},
+    body:JSON.stringify(body)
+  }).then(function(r){return r.json();});
+}
 function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
@@ -506,10 +516,12 @@ function uploadWorkerDoc(inp){
   var reader=new FileReader();
   reader.onload=function(e){
     var b64=e.target.result.split(',')[1];
-    callGAS({action:'docUpload',type:'worker',targetId:wid,name:file.name,mime:file.type||'application/octet-stream',data:b64},admTok(),false).then(function(r){
+    showLoad();
+    postGAS({action:'docUpload',type:'worker',targetId:wid,name:file.name,mime:file.type||'application/octet-stream',data:b64}).then(function(r){
+      hideLoad();
       if(!r.ok)throw new Error(r.error||'失敗');
       wCurDocs.unshift(r.doc);renderWorkerDocs();toast('✓ アップロードしました');
-    }).catch(function(err){toast('失敗：'+err.message);});
+    }).catch(function(err){hideLoad();toast('失敗：'+err.message);});
     inp.value='';
   };
   reader.readAsDataURL(file);
@@ -693,10 +705,12 @@ function dkUploadDoc(inp){
   var reader=new FileReader();
   reader.onload=function(e){
     var b64=e.target.result.split(',')[1];
-    callGAS({action:'docUpload',type:'sub',targetId:sid,name:file.name,mime:file.type||'application/octet-stream',data:b64},admTok(),false).then(function(r){
+    showLoad();
+    postGAS({action:'docUpload',type:'sub',targetId:sid,name:file.name,mime:file.type||'application/octet-stream',data:b64}).then(function(r){
+      hideLoad();
       if(!r.ok)throw new Error(r.error||'失敗');
       dkCurDocs.unshift(r.doc);dkRenderDocs();toast('✓ アップロードしました');
-    }).catch(function(err){toast('失敗：'+err.message);});
+    }).catch(function(err){hideLoad();toast('失敗：'+err.message);});
     inp.value='';
   };
   reader.readAsDataURL(file);
