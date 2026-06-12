@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 32 (材料リスト×在庫連携：在庫から選ぶ/在庫チェック)
+<!-- toolbox version 33 (ハブ用 ?tool= 直リンク対応) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -228,7 +228,7 @@
   .modeseg button.on{color:#1f5fa8;box-shadow:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v28</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v30</div>
 
 <div class="wrap">
 
@@ -2022,6 +2022,9 @@ function openBoardForCase(id){
     openBoardForCase(decodeURIComponent(bd[1]));
   }
 })();
+
+/* 材料管理ハブからの直リンク（?tool=mat 等）でツールを開く */
+(function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ openTool(m[1]); }catch(e){} } })();
 </script>
 </body>
 </html>
