@@ -103,7 +103,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -251,7 +251,7 @@ function refresh(silent){
   callGAS({action:'orderData'},silent).then(function(res){
     if(!res.ok)throw new Error(res.error||'エラー');
     DATA={suppliers:res.suppliers||[],products:res.products||[],matLists:res.matLists||[],projects:res.projects||[]};
-    buildMaps();saveCache();renderSrc();if(curTab==='set')renderSet();
+    buildMaps();saveCache();renderSrc();applyHandoff();if(curTab==='set')renderSet();
   }).catch(function(err){if(!silent)toast('読込失敗：'+err.message);});
 }
 function loadOrders(silent){
@@ -330,9 +330,10 @@ function renderSrc(){
       var supTxt=sup?supLabel(sup):(p['標準仕入先']||'');
       var checked=inCart(cid)>=0?'checked':'';
       var spec=p['規格']?' <small>'+esc(p['規格'])+'</small>':'';
+      var stk=(p['在庫数']!==''&&p['在庫数']!=null)?' <small>在庫'+esc(String(num(p['在庫数'])))+'</small>':'';
       h2+='<label class="it">'
         +'<input type="checkbox" '+checked+' onchange="toggleProd(this,\''+cid+'\')">'
-        +'<span class="nm">'+esc(p['商品名']||'')+spec+'</span>'
+        +'<span class="nm">'+esc(p['商品名']||'')+spec+stk+'</span>'
         +'<span class="sup '+(supTxt?'':'none')+'">'+esc(supTxt||'仕入先未設定')+'</span>'
         +'</label>';
     });
@@ -343,6 +344,18 @@ function renderSrc(){
 function resolveSup(s){
   var sup=s?supByName[String(s).trim()]:null;
   return sup?{supId:sup['仕入先ID'],supName:sup['略称']||sup['仕入先名']||''}:{supId:'',supName:String(s||'')};
+}
+var pendingHandoff=null;
+function readHandoff(){try{var h=JSON.parse(localStorage.getItem('genba_order_handoff')||'null');if(Array.isArray(h)&&h.length){localStorage.removeItem('genba_order_handoff');pendingHandoff=h;}}catch(e){}}
+function applyHandoff(){
+  if(!pendingHandoff)return; var h=pendingHandoff; pendingHandoff=null;
+  cart=[]; var idx=0;
+  h.forEach(function(o){
+    var r=resolveSup(o.supName||o.s||'');
+    if(o.supId&&supById[o.supId]){r={supId:o.supId,supName:(supById[o.supId]['略称']||supById[o.supId]['仕入先名']||'')};}
+    cart.push({cid:'h:'+(idx++),n:o.n||'',q:o.q||'',supId:r.supId,supName:r.supName,site:o.site||'',siteId:''});
+  });
+  if(cart.length){ switchTab('make'); goReview(); toast('在庫切れの材料を読み込みました'); }
 }
 function toggleMat(cb,cid){
   var o=matCand[cid]; if(!o)return; var r=resolveSup(o.s);
@@ -653,8 +666,10 @@ function delProd(e){
 }
 
 /* ===== 起動 ===== */
+readHandoff();
 loadCache();
 renderSrc();
+applyHandoff();
 refresh(false);
 </script>
 </body>
