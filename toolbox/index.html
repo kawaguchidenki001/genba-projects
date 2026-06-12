@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 33 (ハブ用 ?tool= 直リンク対応) -->
+<!-- toolbox version 34 (材料リストは材料管理へ移動・タイル削除) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -228,7 +228,7 @@
   .modeseg button.on{color:#1f5fa8;box-shadow:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v30</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v31</div>
 
 <div class="wrap">
 
@@ -243,7 +243,6 @@
     <div class="grid">
       <div class="sq t-memo"  onclick="openTool('memo')"><span class="ic">📝</span><span class="txt"><span class="nm">現場メモ</span><span class="ds">テキスト・手書きでメモ</span></span><span class="cor">→</span></div>
       <div class="sq t-check" onclick="openTool('check')"><span class="ic">✅</span><span class="txt"><span class="nm">チェックリスト</span><span class="ds">確認項目を管理</span></span><span class="cor">→</span></div>
-      <div class="sq t-mat"   onclick="openTool('mat')"><span class="ic">📦</span><span class="txt"><span class="nm">材料リスト</span><span class="ds">材料の数量・仕入先を管理</span></span><span class="cor">→</span></div>
       <div class="sq t-rem"   onclick="openTool('rem')"><span class="ic">🔔</span><span class="txt"><span class="nm">忘れ物メモ</span><span class="ds">指定時刻・翌朝にホームで表示</span></span><span class="cor">→</span></div>
       <div class="sq t-rec"   onclick="openTool('rec')"><span class="ic">🎙️</span><span class="txt"><span class="nm">録音機</span><span class="ds">音声を記録</span></span><span class="cor">→</span></div>
       <div class="sq t-board" onclick="openTool('board')"><span class="ic">📷</span><span class="txt"><span class="nm">小黒板カメラ</span><span class="ds">工事黒板付き撮影</span></span><span class="cor">→</span></div>
