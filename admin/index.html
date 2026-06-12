@@ -604,6 +604,11 @@ function delContact(ev){ ev.preventDefault();var id=document.getElementById('k_i
 
 function numv(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN(n)?0:n;}
 function yen(v){var n=numv(v);return n?('¥'+Math.round(n).toLocaleString('ja-JP')):'';}
+
+function postGAS(params){
+  var body=Object.assign({secret:admTok()},params);
+  return fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){return r.json();});
+}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
 
@@ -784,10 +789,12 @@ function uploadCompDoc(inp){
   var reader=new FileReader();
   reader.onload=function(e){
     var b64=e.target.result.split(',')[1];
-    callGAS({action:'docUpload',type:'company',targetId:'company',name:file.name,mime:file.type||'application/octet-stream',data:b64}).then(function(r){
+    showLoad();
+    postGAS({action:'docUpload',type:'company',targetId:'company',name:file.name,mime:file.type||'application/octet-stream',data:b64}).then(function(r){
+      hideLoad();
       if(!r.ok)throw new Error(r.error||'失敗');
       compDocs.unshift(r.doc);renderCompDocs();toast('✓ アップロードしました');
-    }).catch(function(err){toast('失敗：'+err.message);});
+    }).catch(function(err){hideLoad();toast('失敗：'+err.message);});
     inp.value='';
   };
   reader.readAsDataURL(file);
