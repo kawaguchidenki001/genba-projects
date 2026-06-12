@@ -545,7 +545,7 @@ function openDetail(p){
       if(m.act==='memo')  location.href='../toolbox/?memo='+cid;
       else if(m.act==='check') location.href='../toolbox/?check='+cid;
       else if(m.act==='draw')  location.href='../toolbox/?draw='+cid;
-      else if(m.act==='mat')   location.href='../toolbox/?mat='+cid;
+      else if(m.act==='mat')   location.href='../material/list/?case='+cid;
       else if(m.act==='board') location.href='../toolbox/?board='+cid+'&name='+encodeURIComponent(nm)+'&loc='+encodeURIComponent(loc);
       else if(m.act==='folder'){
         if(el._url){ window.open(el._url,'_blank'); }
