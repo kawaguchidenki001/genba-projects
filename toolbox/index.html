@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 31 (忘れ物メモ④を追加) (2026-06-12) 手書きメモを現場メモに統合（編集画面でテキスト⇄手書き切替）／材料リストの遷移整理 -->
+<!-- toolbox version 32 (材料リスト×在庫連携：在庫から選ぶ/在庫チェック)
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -55,7 +55,36 @@
   .rem-seg button small{font-weight:600;opacity:.8;}
   .rem-seg button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
   #remDt,#remHour{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;font-size:16px;background:#fff;color:var(--ink);font-family:inherit;}
-  .row-del2{text-align:center;margin-top:16px;} .t-rec{border-top:3px solid #d64646;}
+  .row-del2{text-align:center;margin-top:16px;}
+  .mt-link{order:1;flex:0 0 auto;font-size:13px;}
+  .stkpickbtn{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#ecfeff;color:#155e75;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px;}
+  .chk-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:10px;box-shadow:0 1px 2px rgba(20,30,50,.06);}
+  .chk-card.done{opacity:.6;}
+  .chk-nm{font-weight:700;font-size:15px;}
+  .chk-nm .qt{font-size:12px;color:var(--sub);font-weight:600;}
+  .chk-row{display:flex;align-items:center;gap:8px;margin-top:7px;}
+  .chk-row .cl{font-size:12px;color:var(--sub);flex:0 0 44px;}
+  .chk-row select{flex:1;min-width:0;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff;}
+  .chk-row .ned{flex:0 0 66px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff;}
+  .chk-row .un{font-size:12px;color:var(--sub);}
+  .chk-st{margin-left:auto;font-size:11.5px;font-weight:800;padding:2px 9px;border-radius:999px;white-space:nowrap;}
+  .chk-st.ok{background:#dcfce7;color:#166534;} .chk-st.warn{background:#fef3c7;color:#92400e;}
+  .chk-act{display:flex;align-items:center;gap:9px;margin-top:10px;flex-wrap:wrap;}
+  .chk-act .outb{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:9px 12px;font-size:13px;font-weight:800;cursor:pointer;}
+  .chk-act .outb:disabled{background:#cbd5e1;}
+  .chk-act .regb{background:#fff;color:#155e75;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;}
+  .chk-act .ordb{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#b45309;margin-left:auto;}
+  .chk-act .ordb input{width:18px;height:18px;accent-color:#d97706;}
+  .chk-act .doneb{color:#166534;font-weight:800;font-size:13.5px;}
+  .stk-ov{position:fixed;inset:0;z-index:200;background:rgba(20,30,50,.45);display:none;align-items:flex-end;justify-content:center;}
+  .stk-ov.show{display:flex;}
+  .stk-sheet{background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:16px 14px calc(env(safe-area-inset-bottom) + 16px);max-height:86vh;overflow:auto;}
+  .stk-head{display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:700;margin-bottom:10px;}
+  .stk-x{font-size:24px;color:var(--sub);cursor:pointer;line-height:1;}
+  .stk-srch{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;margin-bottom:10px;}
+  .stk-pick{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;cursor:pointer;}
+  .stk-pick .pn{font-weight:700;font-size:14.5px;} .stk-pick .pn small{color:var(--sub);font-weight:600;}
+  .stk-pick .ps{font-size:12px;color:#155e75;white-space:nowrap;} .t-rec{border-top:3px solid #d64646;}
   .t-board .ic{background:#e8910b;} .t-board{border-top:3px solid #e8910b;}
   .t-elec .ic{background:#bd941c;} .t-elec{border-top:3px solid #bd941c;}
   .t-area .ic{background:#0d9aa0;} .t-area{border-top:3px solid #0d9aa0;}
@@ -199,7 +228,7 @@
   .modeseg button.on{color:#1f5fa8;box-shadow:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v27</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v28</div>
 
 <div class="wrap">
 
@@ -340,8 +369,10 @@
     <label class="slbl">材料（チェックで手配済み）</label>
     <div id="matItems"></div>
     <button class="additem" onclick="addMatItem()">＋ 材料を追加</button>
+    <button class="stkpickbtn" onclick="openStockPick()">📦 在庫から選んで追加</button>
     <button class="savebtn" onclick="saveMat()">保存する</button>
     <div class="savehint" id="matSaved"></div>
+    <button class="stkpickbtn" style="margin-top:10px;" onclick="openStockCheck()">📦 在庫を確認（在庫から出す／発注へ）</button>
   </div>
 
 
@@ -384,6 +415,24 @@
     <button class="savebtn" onclick="saveRem()">保存する</button>
     <div class="row-del2" id="remDelRow" style="display:none;"><span class="del" onclick="deleteRem()">この忘れ物メモを削除</span></div>
   </div>
+
+  <!-- ========== 在庫チェック（材料リスト→在庫照合） ========== -->
+  <div class="pane" id="p-stockchk">
+    <div class="thead">
+      <span class="back2" onclick="go('p-mat-edit')">← 材料リスト</span>
+      <h2>在庫を確認</h2>
+    </div>
+    <p class="rem-note">材料を在庫台帳と照合します。在庫があれば〔在庫から出す〕、足りない・無い物は〔発注に回す〕を選び、最後に「発注へ」でまとめて発注画面に渡せます。</p>
+    <div id="chkList"></div>
+    <button class="savebtn" id="chkOrderBtn" style="display:none;" onclick="chkGoOrder()">発注に回した材料を発注へ（<span id="chkOrderCnt">0</span>点）</button>
+  </div>
+
+  <!-- 在庫から選ぶ ピッカー -->
+  <div class="stk-ov" id="ovStock"><div class="stk-sheet">
+    <div class="stk-head"><span>在庫から選ぶ</span><span class="stk-x" onclick="closeStockPick()">×</span></div>
+    <input class="stk-srch" id="stkSrch" placeholder="🔍 品名・規格で検索" oninput="renderStockPick()">
+    <div id="stkPickList"></div>
+  </div></div>
 
   <!-- ========== ⑥ 電気計算機 ========== -->
   <div class="pane" id="p-elec">
@@ -1735,6 +1784,7 @@ function openSiteMatList(){
   document.getElementById('matList').innerHTML='<div class="empty">読み込み中…</div>';
   // 仕入先候補も取得（datalist用）
   callGAS({action:'suppliers'},true).then(function(r){ matSuppliers=(r&&r.suppliers)||[]; }).catch(function(){});
+  callGAS({action:'products'},true).then(function(r){ stockProducts=(r&&r.products)||[]; }).catch(function(){});
   callGAS({action:'notesList',type:'mat'}).then(function(res){
     var list=((res&&res.ok&&res.notes)||[]).filter(function(n){return (n['種類']||'')==='mat';});
     if(siteFilter)list=list.filter(function(n){return String(n['案件ID'])===String(siteFilter);});
@@ -1766,7 +1816,7 @@ function openMat(id){
   var n=matCache[id]||{};
   curMat=id; matItems=parseItems(n['内容']); if(!matItems.length)matItems=[{n:'',q:'',s:'',d:false}];
   // 旧形式(配列の各要素が{t,d})だった場合のガード
-  matItems=matItems.map(function(it){ return {n:it.n!==undefined?it.n:(it.t||''),q:it.q||'',s:it.s||'',d:!!it.d}; });
+  matItems=matItems.map(function(it){ return {n:it.n!==undefined?it.n:(it.t||''),q:it.q||'',s:it.s||'',d:!!it.d,pid:it.pid||''}; });
   document.getElementById('matTitle').value=n['タイトル']||'';
   document.getElementById('matSaved').classList.remove('show');
   document.getElementById('matEditSiteBar').innerHTML=editSiteHtml('matSiteSel',n['案件ID']||'');
@@ -1776,6 +1826,127 @@ function openMat(id){
 function matSupOptions(){
   return (matSuppliers||[]).map(function(x){var nm=x['略称']||x['仕入先名']||'';return nm?'<option value="'+esc(nm)+'"></option>':'';}).join('');
 }
+/* ===== 在庫連携（在庫から選ぶ / 在庫チェック→出庫・発注） ===== */
+var stockProducts=[], chkRows=[];
+function numTb(v){if(v==null||v==='')return 0;var n=Number(String(v).replace(/[,，]/g,''));return isNaN(n)?0:n;}
+function stkLoad(cb){ callGAS({action:'products'},true).then(function(r){stockProducts=(r&&r.products)||[];cb&&cb();}).catch(function(){cb&&cb();}); }
+function prodById(id){var p=null;stockProducts.forEach(function(x){if(String(x['商品ID'])===String(id))p=x;});return p;}
+function normNm(x){return String(x||'').replace(/[\s\u3000]/g,'').toLowerCase();}
+function autoMatchProd(name){
+  var nn=normNm(name); if(!nn)return null; var best=null,bs=0;
+  stockProducts.forEach(function(p){
+    var a=normNm(p['商品名']||''), b=normNm((p['商品名']||'')+(p['規格']||'')); var sc=0;
+    if(a&&(nn.indexOf(a)>=0||a.indexOf(nn)>=0))sc=Math.min(nn.length,a.length);
+    else if(b&&(nn.indexOf(b)>=0||b.indexOf(nn)>=0))sc=Math.min(nn.length,b.length)-1;
+    if(sc>bs){bs=sc;best=p;}
+  });
+  return bs>=2?best:null;
+}
+function parseQtyNum(q){var m=String(q||'').match(/[\d.]+/);return m?parseFloat(m[0]):'';}
+function openStockPick(){
+  if(!stockProducts.length){ stkLoad(function(){renderStockPick();}); }
+  document.getElementById('stkSrch').value=''; renderStockPick();
+  document.getElementById('ovStock').classList.add('show');
+}
+function closeStockPick(){document.getElementById('ovStock').classList.remove('show');}
+function renderStockPick(){
+  var q=(document.getElementById('stkSrch').value||'').trim();
+  var arr=stockProducts.slice().sort(function(a,b){return String(a['商品名']).localeCompare(String(b['商品名']),'ja');});
+  if(q)arr=arr.filter(function(p){return (String(p['商品名']||'')+String(p['規格']||'')).indexOf(q)>=0;});
+  var el=document.getElementById('stkPickList');
+  if(!arr.length){el.innerHTML='<div class="empty">'+(stockProducts.length?'該当なし':'在庫品がありません。<br>在庫管理画面で登録してください。')+'</div>';return;}
+  el.innerHTML=arr.map(function(p){
+    return '<div class="stk-pick" onclick="addStockToMat(\''+esc(p['商品ID'])+'\')">'
+      +'<span class="pn">'+esc(p['商品名']||'')+(p['規格']?(' <small>'+esc(p['規格'])+'</small>'):'')+'</span>'
+      +'<span class="ps">在庫'+esc(String(numTb(p['在庫数'])))+esc(p['単位']||'')+'</span></div>';
+  }).join('');
+}
+function addStockToMat(id){
+  var p=prodById(id); if(!p)return;
+  matItems.push({n:(p['商品名']||'')+(p['規格']?(' '+p['規格']):''),q:'',s:p['標準仕入先']||'',d:false,pid:p['商品ID']});
+  renderMatItems(); closeStockPick(); toast('追加しました');
+}
+function openStockCheck(){
+  var items=matItems.filter(function(it){return String(it.n||'').trim()!=='';});
+  if(!items.length){toast('材料を入力してください');return;}
+  go('p-stockchk');
+  document.getElementById('chkList').innerHTML='<div class="empty">在庫を読み込み中…</div>';
+  var build=function(){ buildChkRows(items); renderStockCheck(); };
+  if(!stockProducts.length) stkLoad(build); else build();
+}
+function buildChkRows(items){
+  chkRows=items.map(function(it){
+    var p = it.pid?prodById(it.pid):autoMatchProd(it.n);
+    return {n:it.n,q:it.q,pid:p?p['商品ID']:'',need:parseQtyNum(it.q),order:false,done:false,sup:it.s||(p?(p['標準仕入先']||''):'')};
+  });
+}
+function prodOptions(selId){
+  var h='<option value="">― 在庫品を選ぶ ―</option>';
+  stockProducts.slice().sort(function(a,b){return String(a['商品名']).localeCompare(String(b['商品名']),'ja');}).forEach(function(p){
+    h+='<option value="'+esc(p['商品ID'])+'" '+(selId===p['商品ID']?'selected':'')+'>'+esc(p['商品名']||'')+(p['規格']?(' '+esc(p['規格'])):'')+'</option>';
+  });
+  return h;
+}
+function chkStatus(r){
+  if(!r.pid)return {t:'未登録',c:'warn'};
+  var p=prodById(r.pid),stk=numTb(p?p['在庫数']:0);
+  if(r.need===''||r.need<=0)return {t:'在庫'+stk+'・必要数を入力',c:'warn'};
+  if(stk>=r.need)return {t:'在庫あり（'+stk+'）',c:'ok'};
+  return {t:'不足（在庫'+stk+'）',c:'warn'};
+}
+function renderStockCheck(){
+  var el=document.getElementById('chkList');
+  el.innerHTML=chkRows.map(function(r,i){
+    var p=r.pid?prodById(r.pid):null; var unit=p?(p['単位']||''):'';
+    var st=chkStatus(r); var canOut=(r.pid&&r.need>0&&p&&numTb(p['在庫数'])>=r.need&&!r.done);
+    return '<div class="chk-card'+(r.done?' done':'')+'">'
+      +'<div class="chk-nm">'+esc(r.n)+(r.q?' <span class="qt">'+esc(r.q)+'</span>':'')+'</div>'
+      +'<div class="chk-row"><span class="cl">在庫品</span>'
+        +'<select onchange="chkSetProd('+i+',this.value)" '+(r.done?'disabled':'')+'>'+prodOptions(r.pid)+'</select></div>'
+      +'<div class="chk-row"><span class="cl">必要数</span>'
+        +'<input class="ned" value="'+esc(String(r.need))+'" inputmode="decimal" onchange="chkSetNeed('+i+',this.value)" '+(r.done?'disabled':'')+'>'
+        +'<span class="un">'+esc(unit)+'</span>'
+        +'<span class="chk-st '+st.c+'">'+esc(st.t)+'</span></div>'
+      +'<div class="chk-act">'
+        +(r.done?'<span class="doneb">✓ 出庫済み</span>'
+                :'<button class="outb" '+(canOut?'':'disabled')+' onclick="chkOut('+i+')">在庫から出す</button>'
+                 +(!r.pid?'<button class="regb" onclick="chkRegister('+i+')">在庫に新規登録</button>':'')
+                 +'<label class="ordb"><input type="checkbox" '+(r.order?'checked':'')+' onchange="chkSetOrder('+i+',this.checked)">発注に回す</label>')
+      +'</div></div>';
+  }).join('');
+  updateChkOrderBtn();
+}
+function chkSetProd(i,v){chkRows[i].pid=v;renderStockCheck();}
+function chkSetNeed(i,v){var m=String(v).match(/[\d.]+/);chkRows[i].need=m?parseFloat(m[0]):'';renderStockCheck();}
+function chkSetOrder(i,on){chkRows[i].order=on;updateChkOrderBtn();}
+function updateChkOrderBtn(){
+  var n=chkRows.filter(function(r){return r.order&&!r.done;}).length;
+  var c=document.getElementById('chkOrderCnt'); if(c)c.textContent=n;
+  var b=document.getElementById('chkOrderBtn'); if(b)b.style.display=n?'block':'none';
+}
+function chkOut(i){
+  var r=chkRows[i],p=prodById(r.pid); if(!p||!(r.need>0))return;
+  var u=gUser()||{};
+  callGAS({action:'stockAdjust',data:{'商品ID':r.pid,mode:'delta','数量':-r.need,'種別':'出庫','メモ':'材料リストから出庫','作業員ID':u['作業員ID']||'','作業員名':u['氏名']||''}}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'失敗');
+    var rec=res.product; for(var k=0;k<stockProducts.length;k++){if(stockProducts[k]['商品ID']===rec['商品ID'])stockProducts[k]=rec;}
+    r.done=true; renderStockCheck(); toast('在庫から出庫しました');
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+function chkRegister(i){
+  var r=chkRows[i];
+  if(!confirm('「'+r.n+'」を在庫品として新規登録しますか？'))return;
+  callGAS({action:'productSave',data:{'商品名':r.n,'標準仕入先':r.sup||'','在庫数':0}}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'失敗');
+    stockProducts.push(res.product); r.pid=res.product['商品ID']; renderStockCheck(); toast('在庫に登録しました（数量は在庫管理で調整）');
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+function chkGoOrder(){
+  var items=chkRows.filter(function(r){return r.order&&!r.done;}).map(function(r){return {n:r.n,q:(r.need?String(r.need):(r.q||'')),supName:r.sup||''};});
+  if(!items.length){toast('発注に回す材料を選んでください');return;}
+  try{localStorage.setItem('genba_order_handoff',JSON.stringify(items));}catch(e){}
+  location.href='../order/';
+}
 function renderMatItems(){
   var el=document.getElementById('matItems');
   el.innerHTML=matItems.map(function(it,i){
@@ -1784,7 +1955,7 @@ function renderMatItems(){
       '<input class="mt-name" placeholder="材料名" value="'+esc(it.n||'')+'" oninput="matSet('+i+',\'n\',this.value)">'+
       '<input class="mt-qty" placeholder="数量" value="'+esc(it.q||'')+'" oninput="matSet('+i+',\'q\',this.value)">'+
       '<input class="mt-sup" list="matSupList" placeholder="仕入先" value="'+esc(it.s||'')+'" oninput="matSet('+i+',\'s\',this.value)">'+
-      '<button class="mdel" onclick="matDel('+i+')">×</button></div>';
+      (it.pid?'<span class="mt-link" title="在庫品とリンク">📦</span>':'')+'<button class="mdel" onclick="matDel('+i+')">×</button></div>';
   }).join('')+'<datalist id="matSupList">'+matSupOptions()+'</datalist>';
 }
 function matToggle(i,v){ if(matItems[i]){ matItems[i].d=v; var el=document.getElementById('matItems').children[i]; if(el){ if(v)el.classList.add('done'); else el.classList.remove('done'); } } }
