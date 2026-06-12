@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 41 (仕入先に担当者名・メール欄を追加) admin (2026-06-11) 日報未提出チェックタブを追加 -->
+<!-- version 42 (自社設定タブ追加：会社書類アップロード) admin (2026-06-11) 日報未提出チェックタブを追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -114,6 +114,7 @@
     <button class="tab" id="tab-vehicle" onclick="switchTab('vehicle')">車両</button>
     <button class="tab" id="tab-supplier" onclick="switchTab('supplier')">仕入先</button>
     <button class="tab" id="tab-repcheck" onclick="switchTab('repcheck')">日報チェック</button>
+    <button class="tab" id="tab-company" onclick="switchTab('company')">自社設定</button>
   </div>
   <div id="sec-worker">
     <div class="sec">作業員マスタ（単価はここで設定）</div>
@@ -143,6 +144,21 @@
       <button class="rcseg" data-d="30" onclick="rcRange(30)">直近30日</button>
     </div>
     <div id="rcList"><div class="empty">「日報チェック」を開くと集計します。</div></div>
+  </div>
+
+
+  <!-- 自社設定タブ -->
+  <div id="sec-company" style="display:none;">
+    <div class="sec">自社情報・会社書類</div>
+    <p style="font-size:13px;color:#64748b;margin:0 0 12px;">建退共許可票・建設業許可票などの会社書類を保管します。</p>
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">📁 会社書類一覧</div>
+      <div id="compDocList" style="display:flex;flex-direction:column;gap:7px;min-height:20px;"><div style="font-size:12.5px;color:#64748b;">読込中…</div></div>
+      <label style="display:flex;align-items:center;gap:8px;background:#eff4ff;border:1px dashed #93c5fd;border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:700;color:#1d4ed8;cursor:pointer;margin-top:10px;" for="compDocFile">
+        ＋ ファイルを追加（建退共許可票・建設業許可票・PDF・画像）
+        <input type="file" id="compDocFile" accept=".pdf,image/*" style="display:none;" onchange="uploadCompDoc(this)">
+      </label>
+    </div>
   </div>
 </main>
 
@@ -428,8 +444,8 @@ function doClearAll(){
     closeClearModal();toast('全データを削除しました');loadAll();
   }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='削除する';});
 }
-function switchTab(t){ curTab=t;
-  ['worker','partner','contact','vehicle','supplier','repcheck'].forEach(function(x){
+function switchTab(t){ curTab=t; if(t==='company'&&!compDocs.length)loadCompDocs();
+  ['worker','partner','contact','vehicle','supplier','repcheck','company'].forEach(function(x){
     document.getElementById('sec-'+x).style.display=(x===t)?'block':'none';
     document.getElementById('tab-'+x).className='tab'+(x===t?' on':'');
   });
@@ -739,6 +755,49 @@ function delSupplier(ev){
     suppliers=suppliers.filter(function(x){return x['仕入先ID']!==id;});
     renderSuppliers(); closeOvS(); toast('削除しました');
   }).catch(function(e){toast('削除失敗：'+e.message);});
+}
+/* ===== 自社書類管理 ===== */
+var compDocs=[];
+function loadCompDocs(){
+  callGAS({action:'docList',type:'company',targetId:'company'},null,true).then(function(r){
+    compDocs=(r&&r.ok&&r.docs)||[];renderCompDocs();
+  }).catch(function(){});
+}
+function renderCompDocs(){
+  var el=document.getElementById('compDocList');
+  if(!el)return;
+  if(!compDocs.length){el.innerHTML='<div style="font-size:12.5px;color:#64748b;">まだ書類が登録されていません</div>';return;}
+  el.innerHTML=compDocs.map(function(d){
+    var ic=String(d['MIME']||'').indexOf('image')>=0?'🖼️':'📄';
+    var dt=String(d['登録日時']||'').replace('T',' ').slice(0,16);
+    return '<div style="display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #dbe2ec;border-radius:9px;padding:8px 11px;">'+
+      '<span style="font-size:17px;">'+ic+'</span>'+
+      '<a style="flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;color:inherit;" href="'+esc(d['DriveFileUrl']||'')+'" target="_blank" rel="noopener">'+esc(d['書類名']||'')+'</a>'+
+      '<span style="font-size:11px;color:#64748b;white-space:nowrap;">'+esc(dt)+'</span>'+
+      '<button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700;cursor:pointer;" onclick="deleteCompDoc(&quot;'+esc(d['書類ID'])+'&quot;)">削除</button>'+
+      '</div>';
+  }).join('');
+}
+function uploadCompDoc(inp){
+  var file=inp.files[0]; if(!file)return;
+  toast('アップロード中…');
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var b64=e.target.result.split(',')[1];
+    callGAS({action:'docUpload',type:'company',targetId:'company',name:file.name,mime:file.type||'application/octet-stream',data:b64}).then(function(r){
+      if(!r.ok)throw new Error(r.error||'失敗');
+      compDocs.unshift(r.doc);renderCompDocs();toast('✓ アップロードしました');
+    }).catch(function(err){toast('失敗：'+err.message);});
+    inp.value='';
+  };
+  reader.readAsDataURL(file);
+}
+function deleteCompDoc(id){
+  if(!confirm('この書類を削除しますか？'))return;
+  callGAS({action:'docDelete',id:id}).then(function(r){
+    if(!r.ok)throw new Error(r.error||'失敗');
+    compDocs=compDocs.filter(function(d){return d['書類ID']!==id;});renderCompDocs();toast('削除しました');
+  }).catch(function(err){toast('失敗：'+err.message);});
 }
 </script>
 </body>
