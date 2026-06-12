@@ -53,6 +53,7 @@
   .t-veh .ic{color:#b45309;} .t-tool2 .ic{color:#a16207;} .t-safety .ic{color:#15803d;}
   .t-est .ic{color:#9d7a18;} .t-cost .ic{color:#0f766e;} .t-admin .ic{color:#475569;}
   .t-order .ic{color:#4f46e5;}
+  .t-stock .ic{color:#0e7490;}
 
   /* スマホ：横3列の正方形タイル */
   .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -131,7 +132,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v45</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v46</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -182,6 +183,7 @@
   <div class="lbl">管理用</div>
   <div class="grid">
     <a class="sq t-order" href="./order/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h11l3 3v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"/><path d="M9 8h7M9 12h7M9 16h4"/></svg></span><span class="txt"><span class="en">Order</span><span class="nm">発注管理</span><span class="ds">材料を選んで仕入先へメール・LINE</span></span><span class="cor">→</span></a>
+    <a class="sq t-stock" href="./stock/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span><span class="txt"><span class="en">Stock</span><span class="nm">在庫管理</span><span class="ds">在庫数・棚卸、切れたら発注へ</span></span><span class="cor">→</span></a>
     <a class="sq t-veh" href="./vehicles/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h12v9H2zM14 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg></span><span class="txt"><span class="en">Vehicles</span><span class="nm">車両管理</span><span class="ds">車検・保険・オイル交換と走行距離</span></span><span class="cor">→</span></a>
     <a class="sq t-tool2" href="./tools/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4.5 4.5 0 0 0-5.9 5.9L3 18l3 3 5.8-5.8a4.5 4.5 0 0 0 5.9-5.9L14 13l-3-3Z"/></svg></span><span class="txt"><span class="en">Tools</span><span class="nm">道具・工具管理</span><span class="ds">道具の持出・返却と保有状況</span></span><span class="cor">→</span></a>
     <a class="sq t-safety" href="./safety/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5Z"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/></svg></span><span class="txt"><span class="en">Safety</span><span class="nm">安全書類</span></span><span class="cor lock">🔒</span></a>
