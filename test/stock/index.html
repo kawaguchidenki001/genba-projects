@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<!-- version 1 (2026-06-12) 在庫管理：商品マスタ統合・在庫数/発注点・入出庫/棚卸・要発注を発注へ・入出庫履歴 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>在庫管理｜河口電機</title>
+<style>
+  :root{ --bg:#eef0f6;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#0e7490;--accent-d:#155e75;
+    --radius:12px;--shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:96px;}
+  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:calc(env(safe-area-inset-top) + 10px) 14px 0;box-shadow:var(--shadow);border-bottom:1px solid var(--line);}
+  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .hd-row h1{font-size:17px;margin:0;font-weight:700;color:var(--accent-d);}
+  .back{color:var(--accent-d);text-decoration:none;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;}
+  .tabs{display:flex;gap:4px;margin-top:8px;}
+  .tabs button{flex:1;border:none;background:transparent;color:var(--sub);font-size:13px;font-weight:700;padding:10px 4px;border-bottom:2.5px solid transparent;cursor:pointer;}
+  .tabs button.on{color:var(--accent-d);border-bottom-color:var(--accent);}
+  main{padding:12px;max-width:760px;margin:0 auto;}
+  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14px;line-height:1.8;}
+  .srch{width:100%;padding:11px 13px;border:1px solid var(--line);border-radius:11px;font-size:15px;background:#fff;margin-bottom:10px;}
+  .addbtn{width:100%;padding:12px;border:1px dashed var(--accent);background:#ecfeff;color:var(--accent-d);border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px;}
+  .alertbar{background:#fff7ed;border:1px solid #fdba74;border-radius:11px;padding:10px 13px;margin-bottom:11px;font-size:13px;color:#9a3412;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .alertbar button{border:none;background:#ea580c;color:#fff;border-radius:9px;padding:8px 12px;font-size:12.5px;font-weight:800;cursor:pointer;white-space:nowrap;}
+  .item{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:11px 13px;margin-bottom:9px;border-left:5px solid #94a3b8;}
+  .item.low{border-left-color:#ea580c;}
+  .item .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;}
+  .item .nm{font-weight:700;font-size:15px;}
+  .item .nm small{color:var(--sub);font-weight:600;font-size:12px;}
+  .item .meta{font-size:12px;color:var(--sub);margin-top:2px;}
+  .stock{text-align:right;white-space:nowrap;}
+  .stock .v{font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;}
+  .stock .v.low{color:#ea580c;}
+  .stock .u{font-size:11px;color:var(--sub);}
+  .lowtag{display:inline-block;font-size:10.5px;font-weight:800;background:#ffedd5;color:#9a3412;border-radius:999px;padding:1px 7px;margin-top:3px;}
+  .ops{display:flex;gap:6px;margin-top:9px;flex-wrap:wrap;align-items:center;}
+  .ops button{border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px 10px;font-size:13px;font-weight:700;cursor:pointer;color:var(--ink);}
+  .ops .minus{color:#b91c1c;} .ops .plus{color:#166534;}
+  .ops .stk{color:var(--accent-d);} .ops .edit{margin-left:auto;color:var(--sub);}
+  .ordchk{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--accent-d);font-weight:700;}
+  .ordchk input{width:18px;height:18px;accent-color:var(--accent);}
+  /* 履歴 */
+  .log{background:var(--card);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);padding:10px 13px;margin-bottom:8px;}
+  .log .lt{display:flex;justify-content:space-between;gap:8px;}
+  .log .lnm{font-weight:700;font-size:14px;}
+  .log .ld{font-size:11.5px;color:var(--sub);}
+  .kbn{font-size:11px;font-weight:800;padding:1px 8px;border-radius:999px;}
+  .kbn.in{background:#dcfce7;color:#166534;} .kbn.out{background:#fee2e2;color:#b91c1c;}
+  .kbn.set{background:#dbeafe;color:#1e40af;}
+  /* フッター */
+  .footbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(255,255,255,.96);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);display:none;}
+  .footbar.show{display:block;}
+  .footbar .in{max-width:760px;margin:0 auto;display:flex;gap:10px;align-items:center;}
+  .footbar .cnt{flex:1;font-size:13px;font-weight:700;}
+  .footbar .cnt b{color:var(--accent-d);font-size:16px;}
+  .footbar button{border:none;border-radius:10px;padding:12px 16px;font-size:14px;font-weight:800;cursor:pointer;background:var(--accent);color:#fff;}
+  /* モーダル */
+  .ov{position:fixed;inset:0;z-index:40;background:rgba(20,30,50,.45);display:none;align-items:flex-end;justify-content:center;}
+  .ov.show{display:flex;}
+  .sheet{background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px);max-height:92vh;overflow:auto;}
+  .sheet h2{font-size:16px;margin:0 0 4px;}
+  .sheet .cur{font-size:13px;color:var(--sub);margin-bottom:12px;}
+  .fld{margin-top:9px;}
+  .fld label{display:block;font-size:11.5px;color:var(--sub);font-weight:700;margin-bottom:3px;}
+  .fld input,.fld select{width:100%;padding:10px 11px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;font-family:inherit;}
+  .two{display:flex;gap:8px;}.two>*{flex:1;}
+  .modeseg{display:flex;gap:7px;margin:4px 0 2px;}
+  .modeseg button{flex:1;padding:10px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:13.5px;font-weight:700;border-radius:10px;cursor:pointer;}
+  .modeseg button.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .acts{display:flex;gap:8px;margin-top:14px;}
+  .btn{flex:1;padding:12px;border:none;border-radius:11px;font-size:14px;font-weight:800;cursor:pointer;}
+  .btn.sub{background:#eef0f6;color:var(--sub);}
+  .btn.primary{background:var(--accent);color:#fff;}
+  .row-del{margin-top:12px;text-align:center;}
+  .row-del a{color:#b91c1c;font-size:12.5px;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:104px;z-index:80;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(240,242,245,.72);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
+  .loading.show{display:flex;}
+  .lbox{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(20,30,50,.18);padding:24px 32px;text-align:center;}
+  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .lbox .txt{font-size:14px;font-weight:700;}
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1 TEST</div>
+<header>
+  <div class="hd-row">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
+  </div>
+  <div class="hd-row" style="margin-top:6px;"><h1>📦 在庫管理</h1></div>
+  <div class="tabs">
+    <button id="tabList" class="on" onclick="switchTab('list')">在庫一覧</button>
+    <button id="tabLog" onclick="switchTab('log')">入出庫履歴</button>
+  </div>
+</header>
+
+<main>
+  <section id="pgList">
+    <input class="srch" id="srch" placeholder="🔍 品名・規格・置き場所で検索" oninput="renderList()">
+    <button class="addbtn" onclick="openEdit()">＋ 在庫品を追加</button>
+    <div id="alertBox"></div>
+    <div id="list"><div class="empty">読込中…</div></div>
+  </section>
+  <section id="pgLog" style="display:none;">
+    <div id="logList"><div class="empty">読込中…</div></div>
+  </section>
+</main>
+
+<!-- 選択発注フッター -->
+<div class="footbar" id="foot">
+  <div class="in"><div class="cnt"><b id="footCnt">0</b> 品を発注へ</div>
+    <button onclick="orderSelected()">発注へ →</button></div>
+</div>
+
+<!-- 入出庫モーダル -->
+<div class="ov" id="ovAdj"><div class="sheet">
+  <h2 id="adjTitle">入出庫</h2>
+  <div class="cur" id="adjCur"></div>
+  <input type="hidden" id="adj_id">
+  <div class="modeseg">
+    <button id="amode-in" class="on" onclick="setAdjMode('in')">入庫 ＋</button>
+    <button id="amode-out" onclick="setAdjMode('out')">出庫 −</button>
+    <button id="amode-set" onclick="setAdjMode('set')">棚卸 =</button>
+  </div>
+  <div class="fld"><label id="adjQtyLbl">数量</label><input id="adj_qty" inputmode="decimal" placeholder="数量"></div>
+  <div class="fld"><label>メモ（任意）</label><input id="adj_memo" placeholder="例：○○現場で使用 / 入荷"></div>
+  <div class="acts">
+    <button class="btn sub" onclick="closeAdj()">キャンセル</button>
+    <button class="btn primary" id="adjBtn" onclick="saveAdj()">確定</button>
+  </div>
+</div></div>
+
+<!-- 在庫品編集モーダル -->
+<div class="ov" id="ovEdit"><div class="sheet">
+  <h2 id="edTitle">在庫品の追加</h2>
+  <input type="hidden" id="e_id">
+  <div class="fld"><label>品名 *</label><input id="e_name" placeholder="例）VVF1.6-2C"></div>
+  <div class="two">
+    <div class="fld"><label>規格・サイズ</label><input id="e_spec" placeholder="例）100m巻"></div>
+    <div class="fld"><label>単位</label><input id="e_unit" placeholder="例）巻 / 本 / 個"></div>
+  </div>
+  <div class="fld"><label>標準仕入先</label><select id="e_sup"></select></div>
+  <div class="two">
+    <div class="fld"><label>発注点（これ以下で要発注）</label><input id="e_min" inputmode="numeric" placeholder="例）2"></div>
+    <div class="fld"><label>置き場所</label><input id="e_loc" placeholder="例）倉庫A棚"></div>
+  </div>
+  <div class="two">
+    <div class="fld"><label>単価（任意）</label><input id="e_price" inputmode="numeric" placeholder="円"></div>
+    <div class="fld"><label>表示順</label><input id="e_order" inputmode="numeric" placeholder="数字"></div>
+  </div>
+  <div class="fld" id="initStockWrap"><label>初期在庫数</label><input id="e_stock" inputmode="decimal" placeholder="0"></div>
+  <div class="acts">
+    <button class="btn sub" onclick="closeEdit()">キャンセル</button>
+    <button class="btn primary" id="edBtn" onclick="saveEdit()">保存</button>
+  </div>
+  <div class="row-del" id="edDelRow" style="display:none;"><a href="#" onclick="delItem(event)">この在庫品を削除</a></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
+
+<script>
+var GAS_URL='https://script.google.com/macros/s/AKfycbxmgOKj5b_FRr04RX4qbiedgXm2OBX-Chsz4rynj-iMYvsLWHKCrE0zPYb3Cg_rj1hRWw/exec';
+var T_GENERAL='kawaguchi-genba-2026';
+var CACHE='genba_stock_cache';
+var products=[], suppliers=[], stockLog=[], sel={}, adjMode='in';
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+function tok(){return admTok()||T_GENERAL;}
+function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
+
+var loadCnt=0,loadShownAt=0;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,500-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},2600);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function num(v){if(v==null||v==='')return 0;var n=Number(String(v).replace(/[,，]/g,''));return isNaN(n)?0:n;}
+
+function callGAS(params,silent){
+  return new Promise(function(resolve,reject){
+    if(!silent) showLoad();
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+    var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
+    function cleanup(){if(!silent) hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    window[cb]=function(res){cleanup();resolve(res);};
+    var q=Object.assign({secret:tok(),callback:cb},params);
+    if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
+    s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+    s.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(s);
+  });
+}
+function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'null');if(c){products=c.products||[];suppliers=c.suppliers||[];}}catch(e){}}
+function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({products:products,suppliers:suppliers}));}catch(e){}}
+function refresh(silent){
+  callGAS({action:'orderData'},silent).then(function(res){
+    if(!res.ok)throw new Error(res.error||'エラー');
+    products=res.products||[];suppliers=res.suppliers||[];saveCache();renderList();
+  }).catch(function(err){if(!silent)toast('読込失敗：'+err.message);});
+}
+function loadLog(){
+  callGAS({action:'stockLog'}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'エラー');
+    stockLog=res.log||[];renderLog();
+  }).catch(function(err){toast('履歴の読込失敗：'+err.message);});
+}
+
+function switchTab(t){
+  document.getElementById('tabList').classList.toggle('on',t==='list');
+  document.getElementById('tabLog').classList.toggle('on',t==='log');
+  document.getElementById('pgList').style.display=(t==='list')?'':'none';
+  document.getElementById('pgLog').style.display=(t==='log')?'':'none';
+  document.getElementById('foot').classList.toggle('show',t==='list'&&Object.keys(sel).length>0);
+  if(t==='log')loadLog();
+}
+
+function prodById(id){var p=null;products.forEach(function(x){if(String(x['商品ID'])===String(id))p=x;});return p;}
+function isLow(p){var min=num(p['発注点']);return min>0 && num(p['在庫数'])<=min;}
+
+function renderList(){
+  var q=(document.getElementById('srch').value||'').trim();
+  var arr=products.slice().sort(function(a,b){return num(a['表示順'])-num(b['表示順'])||String(a['商品名']).localeCompare(String(b['商品名']),'ja');});
+  if(q){arr=arr.filter(function(p){return (String(p['商品名']||'')+String(p['規格']||'')+String(p['置き場所']||'')).indexOf(q)>=0;});}
+  // 要発注バー
+  var lows=products.filter(isLow);
+  document.getElementById('alertBox').innerHTML = lows.length
+    ? '<div class="alertbar"><span>⚠ 発注点を下回る品が '+lows.length+' 件あります</span><button onclick="orderLows()">まとめて発注へ</button></div>' : '';
+  if(!arr.length){document.getElementById('list').innerHTML='<div class="empty">'+(q?'該当する在庫品がありません。':'在庫品がまだありません。<br>「＋ 在庫品を追加」で登録してください。<br>（発注画面の定番材料と同じ台帳です）')+'</div>';return;}
+  document.getElementById('list').innerHTML=arr.map(function(p){
+    var low=isLow(p), id=p['商品ID'];
+    var unit=p['単位']||'';
+    var meta=[p['規格'],p['置き場所']?('📍'+p['置き場所']):'',p['標準仕入先']].filter(Boolean).join('　');
+    return '<div class="item'+(low?' low':'')+'">'
+      +'<div class="top"><div><div class="nm">'+esc(p['商品名']||'')+(p['発注点']?' <small>発注点'+esc(p['発注点'])+'</small>':'')+'</div>'
+      +(meta?'<div class="meta">'+esc(meta)+'</div>':'')+'</div>'
+      +'<div class="stock"><div class="v'+(low?' low':'')+'">'+esc(String(num(p['在庫数'])))+'</div><div class="u">'+esc(unit)+'</div>'
+      +(low?'<div class="lowtag">要発注</div>':'')+'</div></div>'
+      +'<div class="ops">'
+      +'<button class="minus" onclick="quickAdj(\''+esc(id)+'\',\'out\')">− 出庫</button>'
+      +'<button class="plus" onclick="quickAdj(\''+esc(id)+'\',\'in\')">＋ 入庫</button>'
+      +'<button class="stk" onclick="quickAdj(\''+esc(id)+'\',\'set\')">棚卸</button>'
+      +'<label class="ordchk"><input type="checkbox" '+(sel[id]?'checked':'')+' onchange="toggleSel(\''+esc(id)+'\',this.checked)">発注</label>'
+      +'<button class="edit" onclick="openEdit(\''+esc(id)+'\')">編集</button>'
+      +'</div></div>';
+  }).join('');
+}
+function toggleSel(id,on){if(on)sel[id]=1;else delete sel[id];document.getElementById('footCnt').textContent=Object.keys(sel).length;document.getElementById('foot').classList.toggle('show',Object.keys(sel).length>0);}
+
+/* 入出庫モーダル */
+var adjId=null;
+function quickAdj(id,mode){
+  var p=prodById(id);if(!p)return;adjId=id;
+  document.getElementById('adj_id').value=id;
+  document.getElementById('adjTitle').textContent=p['商品名']||'入出庫';
+  document.getElementById('adjCur').textContent='現在の在庫：'+num(p['在庫数'])+' '+(p['単位']||'');
+  document.getElementById('adj_qty').value='';
+  document.getElementById('adj_memo').value='';
+  setAdjMode(mode||'in');
+  document.getElementById('ovAdj').classList.add('show');
+  setTimeout(function(){document.getElementById('adj_qty').focus();},120);
+}
+function setAdjMode(m){adjMode=m;['in','out','set'].forEach(function(x){document.getElementById('amode-'+x).classList.toggle('on',x===m);});document.getElementById('adjQtyLbl').textContent=(m==='set')?'棚卸後の在庫数':'数量';}
+function closeAdj(){document.getElementById('ovAdj').classList.remove('show');}
+function saveAdj(){
+  var id=document.getElementById('adj_id').value;var qty=num(document.getElementById('adj_qty').value);
+  if(qty<=0&&adjMode!=='set'){toast('数量を入力してください');return;}
+  var u=gUser()||{};
+  var d={'商品ID':id,'メモ':document.getElementById('adj_memo').value.trim(),'作業員ID':u['作業員ID']||'','作業員名':u['氏名']||''};
+  if(adjMode==='set'){d.mode='set';d['数量']=num(document.getElementById('adj_qty').value);d['種別']='棚卸';}
+  else if(adjMode==='out'){d.mode='delta';d['数量']=-qty;d['種別']='出庫';}
+  else{d.mode='delta';d['数量']=qty;d['種別']='入庫';}
+  var btn=document.getElementById('adjBtn');btn.disabled=true;btn.textContent='処理中…';
+  callGAS({action:'stockAdjust',data:d}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'失敗');
+    var rec=res.product;for(var i=0;i<products.length;i++){if(products[i]['商品ID']===rec['商品ID'])products[i]=rec;}
+    saveCache();closeAdj();renderList();toast('在庫を更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='確定';});
+}
+
+/* 在庫品 編集モーダル */
+function supOptionsSel(cur){
+  var h='<option value="">（指定なし）</option>';
+  suppliers.slice().sort(function(a,b){return String(a['仕入先名']).localeCompare(String(b['仕入先名']),'ja');}).forEach(function(x){
+    var lab=x['略称']||x['仕入先名']||'';h+='<option value="'+esc(lab)+'" '+(cur===lab?'selected':'')+'>'+esc(lab)+'</option>';
+  });
+  return h;
+}
+function openEdit(id){
+  var p=id?prodById(id):null;
+  document.getElementById('edTitle').textContent=p?'在庫品の編集':'在庫品の追加';
+  document.getElementById('e_id').value=p?p['商品ID']:'';
+  document.getElementById('e_name').value=p?(p['商品名']||''):'';
+  document.getElementById('e_spec').value=p?(p['規格']||''):'';
+  document.getElementById('e_unit').value=p?(p['単位']||''):'';
+  document.getElementById('e_min').value=p?(p['発注点']||''):'';
+  document.getElementById('e_loc').value=p?(p['置き場所']||''):'';
+  document.getElementById('e_price').value=p?(p['単価']||''):'';
+  document.getElementById('e_order').value=p?(p['表示順']||''):'';
+  document.getElementById('e_sup').innerHTML=supOptionsSel(p?(p['標準仕入先']||''):'');
+  document.getElementById('initStockWrap').style.display=p?'none':'block';
+  document.getElementById('e_stock').value='';
+  document.getElementById('edDelRow').style.display=p?'block':'none';
+  document.getElementById('ovEdit').classList.add('show');
+}
+function closeEdit(){document.getElementById('ovEdit').classList.remove('show');}
+function saveEdit(){
+  var name=document.getElementById('e_name').value.trim();
+  if(!name){toast('品名を入力してください');return;}
+  var id=document.getElementById('e_id').value;
+  var d={'商品ID':id,'商品名':name,'規格':document.getElementById('e_spec').value.trim(),
+    '単位':document.getElementById('e_unit').value.trim(),'標準仕入先':document.getElementById('e_sup').value,
+    '単価':document.getElementById('e_price').value.trim(),'表示順':document.getElementById('e_order').value.trim(),
+    '発注点':document.getElementById('e_min').value.trim(),'置き場所':document.getElementById('e_loc').value.trim()};
+  if(!id){ d['在庫数']=num(document.getElementById('e_stock').value)||0; }
+  var btn=document.getElementById('edBtn');btn.disabled=true;btn.textContent='保存中…';
+  callGAS({action:'productSave',data:d}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'保存失敗');
+    var rec=res.product;
+    if(id){for(var i=0;i<products.length;i++){if(products[i]['商品ID']===rec['商品ID'])products[i]=rec;}}
+    else products.push(rec);
+    saveCache();closeEdit();renderList();toast('保存しました');
+  }).catch(function(err){toast('保存失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+function delItem(e){
+  e.preventDefault();var id=document.getElementById('e_id').value;if(!id)return;
+  if(!confirm('この在庫品を削除しますか？'))return;
+  callGAS({action:'productDelete',id:id}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'削除失敗');
+    products=products.filter(function(x){return x['商品ID']!==id;});delete sel[id];
+    saveCache();closeEdit();renderList();toast('削除しました');
+  }).catch(function(err){toast('削除失敗：'+err.message);});
+}
+
+/* 発注へ引き継ぎ */
+function handoffAndGo(items){
+  if(!items.length){toast('対象がありません');return;}
+  try{localStorage.setItem('genba_order_handoff',JSON.stringify(items));}catch(e){}
+  location.href='../order/';
+}
+function itemFromProduct(p){
+  var min=num(p['発注点']),stk=num(p['在庫数']);
+  var rec=(min>stk)?(min-stk):1; if(rec<1)rec=1;
+  var q=String(rec)+(p['単位']||'');
+  return {n:(p['商品名']||'')+(p['規格']?(' '+p['規格']):''),q:q,supName:p['標準仕入先']||''};
+}
+function orderLows(){handoffAndGo(products.filter(isLow).map(itemFromProduct));}
+function orderSelected(){
+  var items=Object.keys(sel).map(function(id){var p=prodById(id);return p?itemFromProduct(p):null;}).filter(Boolean);
+  handoffAndGo(items);
+}
+
+/* 履歴 */
+function dDisp(v){if(!v)return'';var m=String(v).match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}:\d{2})/);return m?(m[2]+'/'+m[3]+' '+m[4]):String(v);}
+function kbnCls(k){return k==='出庫'?'out':(k==='入庫'?'in':'set');}
+function renderLog(){
+  var arr=stockLog.slice().sort(function(a,b){return String(b['日時']).localeCompare(String(a['日時']));}).slice(0,200);
+  if(!arr.length){document.getElementById('logList').innerHTML='<div class="empty">入出庫の記録はまだありません。</div>';return;}
+  document.getElementById('logList').innerHTML=arr.map(function(o){
+    var sign=(o['種別']==='出庫')?'−':(o['種別']==='入庫'?'＋':'＝');
+    return '<div class="log"><div class="lt"><span class="lnm">'+esc(o['品名']||'')+'</span>'
+      +'<span class="kbn '+kbnCls(o['種別'])+'">'+esc(o['種別']||'')+'</span></div>'
+      +'<div class="ld">'+esc(dDisp(o['日時']))+'　'+sign+esc(String(Math.abs(num(o['数量']))))+' → 在庫'+esc(String(num(o['調整後'])))
+      +(o['現場名']?('　/　'+esc(o['現場名'])):'')+(o['メモ']?('　'+esc(o['メモ'])):'')+'</div></div>';
+  }).join('');
+}
+
+/* 起動 */
+loadCache();renderList();refresh(false);
+</script>
+</body>
+</html>

@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<!-- version 56 (2026-06-12) ルート統一デザイン（ソフトグレー背景＋機能色ヘッダー）／緑をルート色#0e9f6eに -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>作業日報｜河口電機</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --accent:#0e9f6e;--accent-d:#0b7d57;--accent-soft:#e3f7ef;
+    --bg1:#e8ecf2;--bg2:#eef1f6;--ink:#1f3a52;--sub:#5e7a92;
+    --line:#d2e8dc;--card:#ffffff;--kyo:#e8910b;--kyo-soft:#fdf0db;
+    --radius:14px;--shadow:0 2px 10px rgba(40,60,100,.10);--shadow-lg:0 8px 24px rgba(40,60,100,.16);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.5;padding-bottom:80px;
+    background:#e8ecf2;min-height:100vh;}
+  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink);padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;border-bottom:1px solid var(--line);box-shadow:0 1px 8px rgba(40,60,100,.06);}
+  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .hd-row h1{font-size:17px;margin:0;font-weight:700;letter-spacing:.04em;color:var(--accent-d);}
+  .back{color:var(--accent-d);text-decoration:none;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-weight:600;}
+  .back:active{background:var(--accent-soft);}
+  .sync{font-size:12px;display:flex;align-items:center;gap:5px;color:var(--sub);}
+  .dot{width:8px;height:8px;border-radius:50%;background:#c2d3cb;display:inline-block;}
+  .dot.ok{background:#22a06b;}.dot.busy{background:#e8910b;}.dot.off{background:#e5484d;}
+  .ghost{padding:7px 11px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--accent-d);font-size:13px;cursor:pointer;font-weight:600;box-shadow:var(--shadow);}
+  .ghost:active{background:var(--accent-soft);}
+  .toolbar{padding:10px 12px;display:flex;flex-direction:column;gap:8px;position:sticky;top:54px;z-index:10;background:rgba(244,251,248,.9);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);}
+  .seg{display:flex;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fff;box-shadow:var(--shadow);}
+  .seg button{flex:1;padding:9px 6px;border:none;background:#fff;font-size:13px;cursor:pointer;color:var(--sub);font-family:inherit;font-weight:700;}
+  .seg button.on{background:var(--accent);color:#fff;}
+  .chips{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .chip{flex:0 0 auto;padding:7px 13px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--sub);font-size:13px;cursor:pointer;white-space:nowrap;font-weight:600;box-shadow:var(--shadow);}
+  .chip.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:700;}
+  select.f{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font-size:14px;font-family:inherit;font-weight:600;box-shadow:var(--shadow);}
+  main{padding:4px 12px 12px;}
+  .count{font-size:12px;color:var(--sub);margin:2px 2px 8px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:11px 13px;margin-bottom:9px;cursor:pointer;display:flex;flex-direction:column;gap:5px;border-left:5px solid var(--accent);}
+  .card.kyo{border-left-color:var(--kyo);}
+  .c-top{display:flex;justify-content:space-between;gap:8px;}
+  .c-date{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;}
+  .c-proj{font-weight:700;font-size:15px;color:var(--ink);}
+  .c-meta{font-size:13px;color:var(--sub);display:flex;flex-wrap:wrap;gap:3px 12px;}
+  .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent-d);white-space:nowrap;}
+  .pill.kyo{background:var(--kyo-soft);color:#b06f0c;}
+  .desc{font-size:13.5px;color:var(--ink);}
+  .empty{text-align:center;color:var(--sub);padding:38px 10px;font-size:14px;}
+  .lhead,.lrow{display:grid;grid-template-columns:46px 1.1fr .9fr .9fr 1fr 38px 26px;gap:6px;align-items:center;}
+  .lhead{font-size:10.5px;color:var(--sub);font-weight:700;letter-spacing:.04em;padding:2px 11px 6px;}
+  .lhead .r{text-align:right;}
+  .lrow{background:var(--card);border:1px solid var(--line);border-radius:11px;padding:10px 11px;margin-bottom:6px;cursor:pointer;font-size:12.5px;box-shadow:var(--shadow);}
+  .lrow span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .lr-date{color:var(--sub);font-variant-numeric:tabular-nums;font-size:11.5px;}
+  .lr-site{font-weight:700;color:var(--ink);}
+  .lr-emp{color:var(--ink);}
+  .lr-part{color:#b06f0c;}
+  .lr-nk{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent-d);}
+  .lr-desc{color:var(--sub);font-size:11.5px;}
+  .lr-del{text-align:center;color:#d63a3f;font-size:15px;font-weight:800;cursor:pointer;border-radius:7px;padding:2px 0;}
+  .lr-del:active{background:#fdeced;}
+  .dvrow{display:flex;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);}
+  .dvrow:last-child{border-bottom:none;}
+  .dvl{flex:0 0 88px;font-size:12px;color:var(--sub);font-weight:700;padding-top:2px;}
+  .dvv{flex:1;font-size:14px;white-space:pre-wrap;word-break:break-word;color:var(--ink);}
+  #printArea{display:none;}
+  @media print{
+    body{background:#fff!important;padding:0!important;}
+    body>*{display:none!important;}
+    #printArea{display:block!important;color:#000;font-size:11px;padding:10mm;}
+    #printArea h1{font-size:18px;margin:0 0 6px;}
+    #printArea .pmeta{font-size:11px;margin-bottom:10px;}
+    #printArea table{width:100%;border-collapse:collapse;}
+    #printArea th,#printArea td{border:1px solid #444;padding:4px 6px;text-align:left;font-size:10.5px;}
+    #printArea th{background:#eee;}
+    #printArea .r{text-align:right;}
+    #printArea .pfoot{margin-top:10px;font-size:10px;text-align:right;}
+  }
+  .projcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;border-left:5px solid var(--accent);}
+  .pchd{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 13px;background:var(--accent-soft);}
+  .pcname{font-weight:700;font-size:15px;color:var(--ink);}
+  .pcsum{font-size:13px;color:var(--accent-d);font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap;display:flex;gap:8px;align-items:center;}
+  .pcry{color:#b06f0c;}
+  .rrow{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;padding:9px 13px;border-top:1px solid var(--line);cursor:pointer;}
+  .rr-l{flex:1;min-width:0;}
+  .rr-date{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;}
+  .rr-who{font-size:14px;color:var(--ink);}
+  .rr-who.kyo{color:#b06f0c;}
+  .rr-desc{font-size:13px;color:var(--ink);margin-top:2px;}
+  .rr-nk{font-size:13px;font-weight:700;color:var(--sub);white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .drow{padding:9px 13px;border-top:1px solid var(--line);cursor:pointer;}
+  .dr-date{font-size:12px;color:var(--sub);font-variant-numeric:tabular-nums;margin-bottom:3px;}
+  .dr-line{display:flex;align-items:baseline;gap:8px;margin:3px 0;}
+  .dr-tag{flex:0 0 auto;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;}
+  .dr-tag.emp{background:var(--accent-soft);color:var(--accent-d);} .dr-tag.part{background:var(--kyo-soft);color:#b06f0c;}
+  .dr-names{flex:1;font-size:14.5px;min-width:0;color:var(--ink);}
+  .dr-nk{flex:0 0 auto;font-size:13px;font-weight:700;color:var(--sub);font-variant-numeric:tabular-nums;}
+  .grp-meta{color:var(--sub);font-size:13px;margin-bottom:8px;}
+  .grp-item{padding:9px 0;border-top:1px solid var(--line);cursor:pointer;}
+  .gi-top{display:flex;align-items:center;gap:8px;}
+  .gi-name{flex:1;font-size:15px;font-weight:600;color:var(--ink);} .gi-name.kyo{color:#b06f0c;}
+  .gi-tag{font-size:11px;color:var(--sub);}
+  .gi-nk{font-size:13px;font-weight:700;color:var(--sub);}
+  .gi-desc{font-size:13px;color:var(--ink);margin-top:3px;}
+  .sumcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:10px;}
+  .sumcard h3{margin:0 0 8px;font-size:14px;color:var(--accent-d);}
+  .srow{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--line);font-size:14px;}
+  .srow:first-of-type{border-top:none;}
+  .srow .nm{flex:1;color:var(--ink);} .srow .nk{color:var(--sub);font-variant-numeric:tabular-nums;} .srow .ry{font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent-d);}
+  .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;background:var(--accent);color:#fff;border:none;border-radius:999px;padding:14px 20px;font-size:15px;font-weight:700;box-shadow:0 6px 18px rgba(40,60,100,.28);cursor:pointer;font-family:inherit;}
+  .ov{position:fixed;inset:0;background:rgba(31,58,82,.35);z-index:40;display:none;align-items:flex-end;justify-content:center;-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);}
+  .ov.show{display:flex;}
+  .sheet{background:#fff;border-top:1px solid var(--line);width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 16px);color:var(--ink);box-shadow:var(--shadow-lg);}
+  .sheet h2{font-size:17px;margin:2px 0 14px;font-weight:700;color:var(--accent-d);}
+  .fld{margin-bottom:12px;} .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:5px;font-weight:700;}
+  .fld input,.fld select,.fld textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;font-size:15px;background:#fff;color:var(--ink);font-family:inherit;font-weight:500;}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+  .fld textarea{resize:vertical;min-height:50px;}
+  .two{display:flex;gap:8px;} .two>.fld{flex:1;}
+  .ftgrid{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:8px;margin-bottom:11px;}
+  .ftgrid .fld{margin-bottom:0;}
+  .ftg-date{grid-column:1;grid-row:1;}
+  .ftg-st{grid-column:2;grid-row:1;}
+  .ftg-et{grid-column:3;grid-row:1;}
+  .ftg-nd{grid-column:4;grid-row:1;}
+  .ftg-br{grid-column:1;grid-row:2;}
+  .ftg-nk{grid-column:2/5;grid-row:2;}
+  .ndchk{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;flex:0 0 auto;cursor:pointer;padding-bottom:11px;}
+  .ndchk .ndlbl{font-size:11px;font-weight:700;color:var(--sub);line-height:1;}
+  .ndchk input[type=checkbox]{width:20px;height:20px;accent-color:var(--kyo);cursor:pointer;margin:0;}
+  .ndchk.on .ndlbl{color:#b06f0c;}
+  .custrow{display:flex;gap:8px;}
+  .custrow .fkind{flex:0 0 130px;}
+  .custrow .fcust{flex:1 1 0;min-width:0;}
+  .lr-ynk{font-size:10px;color:#b06f0c;font-weight:700;display:block;line-height:1.2;}
+  .nks{display:flex;gap:6px;margin-top:6px;} .nks button{flex:1;padding:8px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);font-size:14px;cursor:pointer;font-family:inherit;}
+  .calc{background:var(--accent-soft);border:1px solid var(--line);border-radius:11px;padding:9px 12px;font-size:14px;display:flex;justify-content:space-between;color:var(--accent-d);}
+  .calc b{font-variant-numeric:tabular-nums;color:var(--accent-d);}
+  .drvlink{display:inline-block;margin-top:2px;font-size:13px;color:var(--accent);}
+  .wgroup{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#fff;}
+  .wghd{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--accent-soft);font-size:12.5px;font-weight:700;color:var(--accent-d);}
+  .wghd a{font-size:12px;color:var(--accent);text-decoration:none;cursor:pointer;font-weight:700;}
+  .wlist{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;}
+  .wchk{display:flex;align-items:center;gap:5px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;font-size:12.5px;cursor:pointer;background:#fff;white-space:nowrap;}
+  .wchk:active{background:var(--accent-soft);}
+  .wchk input{width:15px;height:15px;flex:0 0 auto;accent-color:var(--accent);}
+  .wlist-emp{display:flex;flex-wrap:wrap;gap:5px;padding:7px 9px;}
+  .wlist-emp .wchk{flex:0 0 auto;}
+  .wlist-part{display:flex;flex-wrap:wrap;gap:5px;padding:7px 9px;}
+  .wchk-part{display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:6px 10px;border:1px solid var(--line);border-radius:9px;font-size:12.5px;cursor:pointer;background:#fff;}
+  .wchk-part:active{background:var(--accent-soft);}
+  .wchk-part input{width:15px;height:15px;accent-color:var(--accent);}
+  .wchk-part .pname{display:flex;align-items:center;gap:5px;font-weight:700;color:var(--ink);}
+  .wchk-part .pbiz{font-size:10.5px;color:var(--sub);padding-left:20px;line-height:1.2;}
+  .wchk input{width:17px;height:17px;flex:0 0 auto;accent-color:var(--accent);}
+  .wgroup .wempty{padding:10px 12px;border-top:1px solid var(--line);color:var(--sub);font-size:13px;}
+  .acts{display:flex;gap:8px;margin-top:6px;} .btn{flex:1;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .btn.primary{background:var(--accent);color:#fff;box-shadow:var(--shadow);} .btn.sub{background:#eef6f2;color:var(--accent-d);border:1px solid var(--line);}
+  .row-del{text-align:center;margin-top:10px;} .row-del a{color:#d63a3f;font-size:13px;text-decoration:none;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;z-index:60;background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:var(--shadow-lg);}
+  .toast.show{opacity:1;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(233,246,239,.78);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;}
+  .loading.show{display:flex;}
+  .lbox{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:24px 32px;text-align:center;color:var(--ink);}
+  .spin{width:38px;height:38px;border:4px solid var(--accent-soft);border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .lbox .txt{font-size:14px;font-weight:700;color:var(--ink);}
+.rchips{display:flex;flex-wrap:wrap;gap:6px;}
+.rchip{background:#eef7f1;color:#1a7a4a;border:1px solid #bfe0cf;border-radius:14px;padding:6px 12px;font-size:12.5px;cursor:pointer;font-weight:700;}
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v56 TEST</div>
+<header>
+  <div class="hd-row">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
+    <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
+  </div>
+  <div class="hd-row" style="margin-top:6px;"><h1>作業日報</h1>
+    <div style="display:flex;gap:6px;">
+      <button class="ghost" onclick="reload()">↻</button>
+    </div>
+  </div>
+</header>
+
+<div class="toolbar">
+  <div class="seg"><button id="vList" class="on" onclick="setView('list')">一覧</button><button id="vSum" onclick="setView('sum')">集計</button></div>
+  <div class="chips" id="dateChips"></div>
+  <select class="f" id="projFilter" onchange="render()"><option value="">すべての現場</option></select>
+  <div style="display:flex;gap:6px;">
+    <button class="ghost" style="flex:1;" onclick="exportExcel()">📊 Excel出力</button>
+    <button class="ghost" style="flex:1;" onclick="exportPDF()">📄 PDF出力</button>
+  </div>
+</div>
+
+<main>
+  <div class="count" id="count"></div>
+  <div id="list"></div>
+  <div id="sum" style="display:none;"></div>
+</main>
+
+<button class="fab" onclick="openForm()">＋ 日報</button>
+
+<div class="ov" id="ov">
+  <div class="sheet">
+    <h2 id="mTitle">日報の入力</h2>
+    <input type="hidden" id="f_id">
+    <!-- 日付・時間グリッド（2行・列1が自動同幅） -->
+    <div class="ftgrid">
+      <div class="fld ftg-date"><label>日付 *</label><input id="f_date" type="date"></div>
+      <div class="fld ftg-st"><label>開始時間</label><input id="f_st" type="time" step="300" value="08:00" oninput="timeCalc()"></div>
+      <div class="fld ftg-et"><label>終了時間</label><input id="f_et" type="time" step="300" value="17:00" oninput="timeCalc()"></div>
+      <label class="ndchk ftg-nd" id="nextDayBtn"><span class="ndlbl">翌日</span><input type="checkbox" id="ndChk" onchange="toggleNextDay()"></label>
+      <div class="fld ftg-br"><label>休憩時間</label><input id="f_break" type="time" step="300" value="01:00" oninput="timeCalc()"></div>
+      <div class="fld ftg-nk"><label>人工（自動）</label><div class="calc" id="f_nkDisp" style="padding:8px 10px;font-size:13px;">計算中…</div></div>
+    </div>
+    <input id="f_nk" type="hidden" value="1"><input id="f_ynk" type="hidden" value="0">
+    <div class="fld" id="recentRow" style="display:none;"><label>最近の現場（タップで選択）</label><div id="recentChips" class="rchips"></div></div>
+    <!-- 3行目：発注者区分（狭）・顧客名（広） -->
+    <div class="custrow">
+      <div class="fld fkind"><label>発注者区分</label><select id="f_kind" onchange="onKind()"></select></div>
+      <div class="fld fcust"><label>顧客名 *</label><select id="f_customer" onchange="onCustomer()"></select></div>
+    </div>
+    <!-- 4行目：現場名 -->
+    <div class="fld"><label>現場名 *</label><select id="f_proj" onchange="onProj()"></select>
+      <a id="f_drive" class="drvlink" target="_blank" style="display:none;">📁 この現場のフォルダを開く</a></div>
+    <!-- 社員・協力業者を横並び -->
+    <div class="fld" id="wmFld"><label>作業員 *</label>
+      <div id="wmEmp" class="wgroup"></div>
+      <div id="wmPart" class="wgroup" style="margin-top:8px;"></div>
+    </div>
+    <div class="fld" id="vmFld"><label>使用車両（工事台帳に反映されます）</label>
+      <div id="vmList" class="wgroup"></div>
+    </div>
+    <div class="fld"><label>作業内容</label><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea></div>
+    <div class="fld"><label>備考</label><textarea id="f_note"></textarea></div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeOv()">キャンセル</button>
+      <button class="btn primary" id="saveNextBtn" onclick="saveReport(true)" style="background:#1a7a4a;">保存して次へ</button>
+      <button class="btn primary" id="saveBtn" onclick="saveReport()">保存</button>
+    </div>
+    <div class="row-del" id="grpDelRow" style="display:none;"><a href="#" onclick="delGroupForm(event)">この日報（現場ごと）を削除</a></div>
+  </div>
+</div>
+
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+var GAS_URL='https://script.google.com/macros/s/AKfycbxmgOKj5b_FRr04RX4qbiedgXm2OBX-Chsz4rynj-iMYvsLWHKCrE0zPYb3Cg_rj1hRWw/exec';
+var T_GENERAL='kawaguchi-genba-2026';
+var ROLE='general';
+var projects=[],workers=[],reports=[],vehicles=[],dateFilter='month',view='list';
+var CACHE='genba_reports_cache';
+
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+function tok(){return admTok()||T_GENERAL;}
+function isAdmin(){return ROLE==='admin';}
+
+var loadCnt=0,loadShownAt=0;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+function callGAS(params,secretOverride,silent){
+  return new Promise(function(resolve,reject){
+    if(!silent) showLoad();
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+    var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
+    function cleanup(){if(!silent) hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    window[cb]=function(res){cleanup();resolve(res);};
+    var q=Object.assign({secret:secretOverride||tok(),callback:cb},params);
+    if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
+    s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+    s.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(s);
+  });
+}
+function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
+
+/* 管理者ログイン（PINで金額が見える）*/
+function toggleAdmin(){ if(admTok()){ if(confirm('管理者ログアウトしますか？')){localStorage.removeItem('genba_admin');location.reload();} return; }
+  var pin=prompt('管理者PINを入力してください');if(!pin)return;
+  callGAS({action:'checkRole'},pin).then(function(res){
+    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',pin);location.reload();}
+    else toast('管理者PINが違います');
+  }).catch(function(err){toast('通信エラー：'+err.message);});
+}
+function updateAdmBtn(){ /* 管理者ボタンは廃止済み */ }
+
+function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];workers=c.workers||[];reports=c.reports||[];vehicles=c.vehicles||[];}catch(e){}}
+function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,workers:workers,reports:reports,vehicles:vehicles}));}catch(e){}}
+function reload(silent){
+  setSync('busy','同期中…');
+  callGAS({action:'checkRole'},null,silent).then(function(r){ ROLE=(r&&r.ok)?r.role:'general'; if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin'); updateAdmBtn(); })
+    .then(function(){return callGAS({action:'reportData'},null,silent);})
+    .then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
+      projects=res.projects||[];workers=res.workers||[];reports=res.reports||[];vehicles=res.vehicles||[];saveCache();buildProjOptions();render();setSync('ok','同期済み');trySchedPre(); })
+    .catch(function(err){setSync('off','オフライン'); if(!silent){render();toast('読込失敗：'+err.message);} });
+}
+
+function buildDateChips(){var defs=[['today','今日'],['month','今月'],['all','すべて']],w=document.getElementById('dateChips');w.innerHTML='';
+  defs.forEach(function(d){var c=document.createElement('div');c.className='chip'+(dateFilter===d[0]?' on':'');c.textContent=d[1];c.onclick=function(){dateFilter=d[0];buildDateChips();render();};w.appendChild(c);});}
+function buildProjOptions(){var sel=document.getElementById('projFilter'),cur=sel.value;sel.innerHTML='<option value="">すべての現場</option>';
+  projects.forEach(function(p){var o=document.createElement('option');o.value=p['案件ID'];o.textContent=p['案件名'];sel.appendChild(o);});sel.value=cur;}
+function setView(v){view=v;document.getElementById('vList').className=v==='list'?'on':'';document.getElementById('vSum').className=v==='sum'?'on':'';
+  document.getElementById('list').style.display=v==='list'?'block':'none';document.getElementById('sum').style.display=v==='sum'?'block':'none';render();}
+
+function filtered(){var pf=document.getElementById('projFilter').value,now=new Date(),ym=now.toISOString().slice(0,7),today=now.toISOString().slice(0,10);
+  return reports.filter(function(r){if(pf&&r['案件ID']!==pf)return false;var d=String(r['日付']||'').slice(0,10);
+    if(dateFilter==='today'&&d!==today)return false;if(dateFilter==='month'&&d.slice(0,7)!==ym)return false;return true;})
+    .sort(function(a,b){return String(b['日付']||'').localeCompare(String(a['日付']||''));});}
+
+function projFull(pid,nm){var p=projects.filter(function(x){return String(x['案件ID'])===String(pid);})[0];return (p&&p['案件名'])?p['案件名']:(nm||'(現場未設定)');}
+function workerShort(r){var w=workers.filter(function(x){return String(x['作業員ID'])===String(r['作業員ID']);})[0];if(w&&w['略称'])return w['略称'];return r['氏名']||(w&&w['氏名'])||'';}
+var detailCtx=null;
+function dvRow(l,v){return '<div class="dvrow"><div class="dvl">'+esc(l)+'</div><div class="dvv">'+esc(v)+'</div></div>';}
+function showDetail(pid,date){
+  var grp=reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
+  if(!grp.length)return;
+  detailCtx={pid:pid,date:date};
+  var rpid=(pid==='__none__'?'':pid);
+  var emp=grp.filter(function(r){return !isKyo(r['区分']);}),part=grp.filter(function(r){return isKyo(r['区分']);});
+  var nk=0;grp.forEach(function(r){nk+=numv(r['人工']);});
+  var desc='',note='';grp.forEach(function(r){if(!desc&&r['作業内容'])desc=r['作業内容'];if(!note&&r['備考'])note=r['備考'];});
+  var h='';
+  h+=dvRow('日付',date);
+  h+=dvRow('発注者区分',kindOfProj(rpid)||'－');
+  h+=dvRow('顧客名',customerOfProj(rpid)||'－');
+  h+=dvRow('現場名',projFull(rpid,grp[0]['案件名']));
+  h+=dvRow('社員',emp.map(workerShort).join('、')||'－');
+  h+=dvRow('協力業者',part.map(workerShort).join('、')||'－');
+  var ynkSum=0;grp.forEach(function(r){ynkSum+=numv(r['深夜人工']);});
+  var t0=grp[0]||{};
+  if(t0['開始']||t0['終了'])h+=dvRow('時間',String(t0['開始']||'').slice(0,5)+' 〜 '+(String(t0['翌日'])==='1'?'翌':'')+String(t0['終了']||'').slice(0,5)+(t0['休憩分']!==''&&t0['休憩分']!=null?'（休憩 '+t0['休憩分']+'分）':''));
+  h+=dvRow('人工（合計）',round2(nk)+' 人工'+(ynkSum>0?'　＋　深夜 '+round2(ynkSum)+' 人工':'')+'（'+grp.length+'名分）');
+  var vh='';grp.forEach(function(r){if(!vh&&r['車両'])vh=r['車両'];});
+  if(vh)h+=dvRow('使用車両','🚚 '+vehNames(vh));
+  h+=dvRow('作業内容',desc||'－');
+  h+=dvRow('備考',note||'－');
+  document.getElementById('dvBody').innerHTML=h;
+  document.getElementById('dov').classList.add('show');
+}
+function closeDetail(){document.getElementById('dov').classList.remove('show');}
+function editFromDetail(){if(!detailCtx)return;closeDetail();openForm(detailCtx.pid,detailCtx.date);}
+var SCHED_PRE=(function(){try{var u=new URLSearchParams(location.search);
+  if(u.get('from_sched')!=='1')return null;
+  return {pid:u.get('pid')||'',date:u.get('date')||'',st:u.get('st')||'',et:u.get('et')||'',
+          names:u.get('names')||'',veh:u.get('veh')||'',desc:u.get('desc')||''};
+}catch(e){return null;}})();
+function normN(s){return String(s||'').replace(/\s+/g,'');}
+function trySchedPre(){
+  if(!SCHED_PRE)return;
+  if(!projects.length||!workers.length)return;
+  var p=SCHED_PRE;SCHED_PRE=null;
+  openForm();
+  var g=function(id){return document.getElementById(id);};
+  if(p.date)g('f_date').value=p.date;
+  if(p.st)g('f_st').value=String(p.st).slice(0,5);
+  if(p.et)g('f_et').value=String(p.et).slice(0,5);
+  timeCalc();
+  if(p.pid&&projects.some(function(x){return String(x['案件ID'])===String(p.pid);}))pickRecent(p.pid);
+  if(p.names){
+    var ns=String(p.names).split(/[・,、]/).map(normN).filter(Boolean);
+    var cbs=document.querySelectorAll('#wmFld .wcb');
+    for(var i=0;i<cbs.length;i++){
+      var id=cbs[i].value;
+      var w=workers.filter(function(x){return String(x['作業員ID'])===String(id);})[0];
+      if(w&&(ns.indexOf(normN(w['氏名']))>=0||ns.indexOf(normN(w['略称']))>=0))cbs[i].checked=true;
+    }
+    updateNkDisp();
+  }
+  if(p.veh)setVehicleChecks(p.veh);
+  if(p.desc)g('f_desc').value=p.desc;
+  g('mTitle').textContent='日報の入力（予定から作成）';
+  try{history.replaceState(null,'',location.pathname);}catch(e){}
+  toast('予定の内容を読み込みました。確認して保存してください');
+}
+var RECENT_KEY='report_recent_projs';
+function getRecents(){try{return JSON.parse(localStorage.getItem(RECENT_KEY))||[];}catch(e){return [];}}
+function pushRecent(pid){if(!pid)return;var a=getRecents().filter(function(x){return x!==pid;});a.unshift(pid);try{localStorage.setItem(RECENT_KEY,JSON.stringify(a.slice(0,3)));}catch(e){}}
+function renderRecents(){var row=document.getElementById('recentRow'),box=document.getElementById('recentChips');
+  var ids=getRecents().filter(function(id){return projects.some(function(p){return p['案件ID']===id;});});
+  if(!ids.length){row.style.display='none';return;}
+  box.innerHTML='';
+  ids.forEach(function(id){var p=projects.filter(function(x){return x['案件ID']===id;})[0];
+    var d=document.createElement('div');d.className='rchip';d.textContent=(p['略称']||p['案件名']||'');
+    d.onclick=function(){pickRecent(id);};box.appendChild(d);});
+  row.style.display='block';}
+function pickRecent(pid){var g=function(id){return document.getElementById(id);};
+  var k=kindOfProj(pid);g('f_kind').value=k||'';
+  buildCustomerOptions();g('f_customer').value=customerOfProj(pid);
+  onCustomer();g('f_proj').value=pid;onProj();}
+function copyFromDetail(){if(!detailCtx)return;var pid=detailCtx.pid,date=detailCtx.date;closeDetail();
+  openForm(pid,date);editGroup=null;
+  var g=function(id){return document.getElementById(id);};
+  g('f_date').value=new Date().toISOString().slice(0,10);
+  g('mTitle').textContent='日報の入力（複製・日付は今日になっています）';
+  g('grpDelRow').style.display='none';
+  g('saveNextBtn').style.display='';renderRecents();}
+
+/* ===== 出力（Excel CSV / PDF印刷） ===== */
+function csvq(v){v=String(v==null?'':v);return '"'+v.replace(/"/g,'""')+'"';}
+function exportExcel(){
+  var list=filtered();
+  if(!list.length){toast('出力するデータがありません');return;}
+  var sorted=list.slice().sort(function(a,b){return String(a['日付']||'').localeCompare(String(b['日付']||''));});
+  var head=['日付','発注者区分','顧客名','現場名','氏名','区分','所属','開始','終了','翌日','休憩分','人工','深夜人工','作業内容','備考'];
+  var lines=[head.map(csvq).join(',')];
+  sorted.forEach(function(r){var pid=r['案件ID']||'';
+    lines.push([String(r['日付']||'').slice(0,10),kindOfProj(pid),customerOfProj(pid),projFull(pid,r['案件名']),r['氏名']||'',r['区分']||'',r['所属']||'',String(r['開始']||'').slice(0,5),String(r['終了']||'').slice(0,5),String(r['翌日'])==='1'?'翌日':'',r['休憩分']||'',r['人工']||'',r['深夜人工']||'',r['作業内容']||'',r['備考']||''].map(csvq).join(','));});
+  var blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='作業日報_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){document.body.removeChild(a);URL.revokeObjectURL(a.href);},200);
+  toast('Excel用ファイル（CSV）を保存しました');
+}
+function exportPDF(){
+  var list=filtered();
+  if(!list.length){toast('出力するデータがありません');return;}
+  var sorted=list.slice().sort(function(a,b){return String(a['日付']||'').localeCompare(String(b['日付']||''));});
+  var pf=document.getElementById('projFilter');
+  var pname=pf.value?pf.options[pf.selectedIndex].textContent:'すべての現場';
+  var ds=sorted.map(function(r){return String(r['日付']||'').slice(0,10);});
+  var total=0;sorted.forEach(function(r){total+=numv(r['人工']);});
+  var h='<h1>作業日報</h1><div class="pmeta">期間：'+esc(ds[0])+' 〜 '+esc(ds[ds.length-1])+'　／　現場：'+esc(pname)+'　／　合計 '+round2(total)+' 人工</div>';
+  h+='<table><thead><tr><th>日付</th><th>現場名</th><th>氏名</th><th>区分</th><th>時間</th><th>人工</th><th>深夜</th><th>作業内容</th></tr></thead><tbody>';
+  sorted.forEach(function(r){var pid=r['案件ID']||'';
+    var tm=(r['開始']?String(r['開始']).slice(0,5)+'〜'+(String(r['翌日'])==='1'?'翌':'')+String(r['終了']||'').slice(0,5):'');
+    h+='<tr><td>'+esc(String(r['日付']||'').slice(0,10))+'</td><td>'+esc(projFull(pid,r['案件名']))+'</td><td>'+esc(r['氏名']||'')+'</td><td>'+esc(r['区分']||'')+'</td><td>'+esc(tm)+'</td><td class="r">'+esc(String(r['人工']||''))+'</td><td class="r">'+esc(String(r['深夜人工']||''))+'</td><td>'+esc(r['作業内容']||'')+'</td></tr>';});
+  h+='</tbody></table><div class="pfoot">河口電機株式会社　出力日：'+new Date().toLocaleDateString('ja-JP')+'</div>';
+  document.getElementById('printArea').innerHTML=h;
+  window.print();
+}
+function render(){
+  var list=filtered();document.getElementById('count').textContent=list.length+' 件';
+  if(view==='sum'){renderSum(list);return;}
+  var el=document.getElementById('list');
+  if(!list.length){el.innerHTML='<div class="empty">この期間の日報はありません。<br>右下の「＋日報」から登録できます。</div>';return;}
+  var gmap={},order=[];
+  list.forEach(function(r){
+    var d=String(r['日付']||'').slice(0,10),pid=r['案件ID']||'__none__';
+    var key=d+'|'+pid;
+    if(!gmap[key]){gmap[key]={date:d,pid:pid,name:projFull(pid==='__none__'?'':pid,r['案件名']),emp:[],part:[],nk:0,desc:''};order.push(key);}
+    var g=gmap[key];g.nk+=numv(r['人工']);g.ynk=(g.ynk||0)+numv(r['深夜人工']);if(!g.desc&&r['作業内容'])g.desc=String(r['作業内容']);
+    if(isKyo(r['区分']))g.part.push(workerShort(r));else g.emp.push(workerShort(r));
+  });
+  order.sort(function(a,b){var A=gmap[a],B=gmap[b];return B.date.localeCompare(A.date)||A.name.localeCompare(B.name);});
+  var h='<div class="lhead"><span>日付</span><span>現場名</span><span>社員</span><span>協力業者</span><span>作業内容</span><span class="r">人工</span><span></span></div>';
+  order.forEach(function(k){var g=gmap[k];
+    h+='<div class="lrow" data-pid="'+esc(g.pid)+'" data-date="'+esc(g.date)+'">'+
+      '<span class="lr-date">'+esc(g.date.slice(5).replace('-','/'))+'</span>'+
+      '<span class="lr-site">'+esc(g.name)+'</span>'+
+      '<span class="lr-emp">'+esc(g.emp.join('、')||'－')+'</span>'+
+      '<span class="lr-part">'+esc(g.part.join('、')||'－')+'</span>'+
+      '<span class="lr-desc">'+esc(g.desc||'－')+'</span>'+
+      '<span class="lr-nk">'+round2(g.nk)+(g.ynk>0?'<span class="lr-ynk">夜'+round2(g.ynk)+'</span>':'')+'</span>'+
+      '<span class="lr-del" data-pid="'+esc(g.pid)+'" data-date="'+esc(g.date)+'" title="削除">×</span></div>';
+  });
+  el.innerHTML=h;
+  var rows=el.querySelectorAll('.lrow');
+  for(var i=0;i<rows.length;i++){(function(x){x.onclick=function(ev){
+    if(ev.target.classList.contains('lr-del')){ev.stopPropagation();delRow(ev.target.getAttribute('data-pid'),ev.target.getAttribute('data-date'));return;}
+    showDetail(x.getAttribute('data-pid'),x.getAttribute('data-date'));};})(rows[i]);}
+}
+function delRow(pid,date){
+  var grp=reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
+  if(!grp.length)return;
+  var nm=projFull(pid==='__none__'?'':pid,grp[0]['案件名']);
+  if(!confirm(date+'\n「'+nm+'」の日報（'+grp.length+'名分）を削除します。\nよろしいですか？'))return;
+  Promise.all(grp.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
+    .then(function(){toast('削除しました');reload();})
+    .catch(function(){toast('削除に失敗しました');});
+}
+var editGroup=null;
+function delGroupForm(ev){ if(ev)ev.preventDefault(); if(!editGroup)return;
+  var pid=editGroup.pid,date=editGroup.date;
+  var existing=reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
+  if(!existing.length){closeOv();return;}
+  if(!confirm('この日報（現場ごと・'+existing.length+'名分）を削除します。よろしいですか？'))return;
+  Promise.all(existing.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
+    .then(function(){closeOv();toast('削除しました');reload();}).catch(function(err){toast('削除に失敗しました：'+(err&&err.message||''));});
+}
+function renderSum(list){
+  var byProj={},byKyo={};
+  list.forEach(function(r){var pid=r['案件ID']||'(未設定)',pn=r['案件名']||'(現場未設定)';
+    if(!byProj[pid])byProj[pid]={name:pn,nk:0,ynk:0};byProj[pid].nk+=numv(r['人工']);byProj[pid].ynk+=numv(r['深夜人工']);
+    if(isKyo(r['区分'])){var k=r['所属']||r['氏名']||'協力業者';if(!byKyo[k])byKyo[k]={nk:0};byKyo[k].nk+=numv(r['人工']);}});
+  var el=document.getElementById('sum'),html='';
+  var ps=Object.keys(byProj).sort(function(a,b){return byProj[b].nk-byProj[a].nk;});
+  html+='<div class="sumcard"><h3>案件別 人工</h3>';
+  if(!ps.length)html+='<div class="empty" style="padding:14px;">データなし</div>';
+  ps.forEach(function(k){var o=byProj[k];html+='<div class="srow"><span class="nm">'+esc(o.name)+'</span><span class="ry">'+round2(o.nk)+' 人工'+(o.ynk>0?'（深夜 '+round2(o.ynk)+'）':'')+'</span></div>';});
+  html+='</div>';
+  var ks=Object.keys(byKyo).sort(function(a,b){return byKyo[b].nk-byKyo[a].nk;});
+  html+='<div class="sumcard"><h3>協力会社別 出面（人工）</h3>';
+  if(!ks.length)html+='<div class="empty" style="padding:14px;">協力会社の日報はありません</div>';
+  ks.forEach(function(k){html+='<div class="srow"><span class="nm">'+esc(k)+'</span><span class="ry">'+round2(byKyo[k].nk)+' 人工</span></div>';});
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+var NOCUST='（未分類）';
+var KINDS=['官公庁','法人','個人'];
+function kindKey(p){var k=String(p['種別']||'').trim();return k||'未分類';}
+function buildKindOptions(){var sel=document.getElementById('f_kind');if(!sel)return;
+  var list=KINDS.slice();
+  projects.forEach(function(p){var k=kindKey(p);if(list.indexOf(k)<0)list.push(k);});
+  var cur=sel.value;sel.innerHTML='<option value="">（すべて）</option>';
+  list.forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=k;sel.appendChild(o);});
+  if(cur&&list.indexOf(cur)>=0)sel.value=cur;}
+function kindOfProj(pid){var p=projects.filter(function(x){return x['案件ID']===pid;})[0];return p?kindKey(p):'';}
+function onKind(){buildCustomerOptions();onCustomer();}
+function isKyo(k){return String(k||'').indexOf('協力')>=0;}
+function custKey(p){var c=String(p['顧客']||'').trim();return c||NOCUST;}
+function customerOfProj(pid){var p=projects.filter(function(x){return x['案件ID']===pid;})[0];return p?custKey(p):'';}
+function buildCustomerOptions(){var sel=document.getElementById('f_customer'),seen={},list=[];
+  var kEl=document.getElementById('f_kind'),kv=kEl?kEl.value:'';
+  projects.forEach(function(p){if(kv&&kindKey(p)!==kv)return;var c=custKey(p);if(!seen[c]){seen[c]=1;list.push(c);}});
+  var cur=sel.value;sel.innerHTML='';
+  list.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+  if(cur&&seen[cur])sel.value=cur;}
+function isActiveProj(p){var st=String(p['ステータス']||'').trim();return st!=='完了'&&st!=='請求済';}
+function projsForCustomer(c){var kEl=document.getElementById('f_kind'),kv=kEl?kEl.value:'';return projects.filter(function(p){if(!isActiveProj(p))return false;if(kv&&kindKey(p)!==kv)return false;return custKey(p)===c;});}
+function onCustomer(){var c=document.getElementById('f_customer').value;
+  buildSelect('f_proj',projsForCustomer(c),'案件ID','案件名',false);onProj();}
+
+function buildWorkerChecks(){var emp=[],part=[],seen={};
+  workers.forEach(function(w){var k=String(w['作業員ID']);if(!k||seen[k])return;seen[k]=1;(isKyo(w['区分'])?part:emp).push(w);});
+  renderWGroup('wmEmp','社員',emp);renderWGroup('wmPart','協力業者',part);}
+function renderWGroup(boxId,title,arr){var box=document.getElementById(boxId);
+  var isEmp=boxId==='wmEmp';
+  var h='<div class="wghd"><span>'+title+'（'+arr.length+'）</span>'+(arr.length?'<span><a onclick="toggleGroup(\''+boxId+'\',true)">全員</a> ／ <a onclick="toggleGroup(\''+boxId+'\',false)">解除</a></span>':'')+'</div>';
+  if(!arr.length){h+='<div class="wempty">登録なし</div>';box.innerHTML=h;return;}
+  if(isEmp){
+    h+='<div class="wlist-emp">';
+    arr.forEach(function(w){
+      h+='<label class="wchk"><input type="checkbox" class="wcb" value="'+esc(w['作業員ID'])+'" onchange="updateNkDisp()"> '+esc(w['氏名']||'')+'</label>';});
+  }else{
+    h+='<div class="wlist-part">';
+    arr.forEach(function(w){
+      h+='<label class="wchk-part"><div class="pname"><input type="checkbox" class="wcb" value="'+esc(w['作業員ID'])+'" onchange="updateNkDisp()">'+esc(w['氏名']||'')+'</div>'+(w['所属']?'<span class="pbiz">'+esc(w['所属'])+'</span>':'')+'</label>';});
+  }
+  h+='</div>';
+  box.innerHTML=h;}
+function toggleGroup(boxId,on){var cbs=document.querySelectorAll('#'+boxId+' .wcb');for(var i=0;i<cbs.length;i++)cbs[i].checked=on;updateNkDisp();}
+function checkedWorkers(){var cbs=document.querySelectorAll('#wmFld .wcb:checked'),out=[];
+  for(var i=0;i<cbs.length;i++){var id=cbs[i].value,w=workers.filter(function(x){return String(x['作業員ID'])===String(id);})[0];if(w)out.push(w);}
+  return out;}
+
+function openForm(pid,date){   // pid・date 指定で編集、未指定で新規
+  if(!projects.length){toast('先に案件管理で現場を登録してください');return;}
+  if(!workers.length){toast('作業員が未登録です。管理画面で登録してください');return;}
+  var g=function(id){return document.getElementById(id);};
+  var editing=!!(pid!=null&&date);
+  var grp=editing?reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;}):[];
+  editGroup=editing?{pid:pid,date:date}:null;
+  g('mTitle').textContent=editing?'この日報を編集（現場ごと）':'日報の入力（まとめて記入できます）';
+  g('grpDelRow').style.display=(editing&&grp.length)?'block':'none';
+  g('f_date').value=editing?date:new Date().toISOString().slice(0,10);
+  var g0=grp[0]||{};
+  g('f_st').value=(editing&&g0['開始'])?String(g0['開始']).slice(0,5):'08:00';
+  g('f_et').value=(editing&&g0['終了'])?String(g0['終了']).slice(0,5):'17:00';
+  var brMin=(editing&&g0['休憩分']!==''&&g0['休憩分']!=null)?(parseInt(g0['休憩分'],10)||0):60;
+  g('f_break').value=('0'+Math.floor(brMin/60)).slice(-2)+':'+('0'+(brMin%60)).slice(-2);
+  nextDay=!!(editing&&String(g0['翌日'])==='1');
+  document.getElementById('ndChk').checked=nextDay;
+  document.getElementById('nextDayBtn').classList.toggle('on',nextDay);
+  timeCalc();
+  buildKindOptions();
+  if(editing){var ek=kindOfProj(pid==='__none__'?'':pid);if(ek)g('f_kind').value=ek;}
+  buildCustomerOptions();
+  g('f_customer').value=editing?customerOfProj(pid==='__none__'?'':pid):g('f_customer').value;
+  onCustomer();
+  if(editing){var pv=(pid==='__none__'?'':pid)||'';
+    if(pv && !projects.filter(function(p){return p['案件ID']===pv;}).some(isActiveProj)){
+      var px=projects.filter(function(p){return p['案件ID']===pv;})[0];
+      if(px){var op=document.createElement('option');op.value=pv;op.textContent=(px['案件名']||'')+'（完了）';g('f_proj').appendChild(op);}
+    }
+    g('f_proj').value=pv;}
+  onProj();
+  buildWorkerChecks();
+  if(editing){var ids={};grp.forEach(function(r){ids[String(r['作業員ID'])]=1;});
+    var cbs=document.querySelectorAll('#wmFld .wcb');for(var i=0;i<cbs.length;i++){if(ids[String(cbs[i].value)])cbs[i].checked=true;}}
+  var vstr='';grp.forEach(function(r){if(!vstr&&r['車両'])vstr=r['車両'];});
+  setVehicleChecks(editing?vstr:'');
+  var desc='',note='';grp.forEach(function(r){if(!desc&&r['作業内容'])desc=r['作業内容'];if(!note&&r['備考'])note=r['備考'];});
+  g('f_desc').value=editing?desc:'';
+  g('f_note').value=editing?note:'';
+  document.getElementById('saveNextBtn').style.display=editing?'none':'';
+  if(editing){document.getElementById('recentRow').style.display='none';}else{renderRecents();}
+  calc();g('ov').classList.add('show');
+}
+function buildSelect(id,arr,vk,tk,withBelong){var s=document.getElementById(id);s.innerHTML='';arr.forEach(function(o){var op=document.createElement('option');op.value=o[vk];op.textContent=o[tk]+(withBelong&&o['所属']?'（'+o['所属']+'）':'');s.appendChild(op);});}
+function onProj(){var pid=document.getElementById('f_proj').value,p=projects.filter(function(x){return x['案件ID']===pid;})[0],a=document.getElementById('f_drive');
+  if(p&&p['Driveフォルダ']){a.href=p['Driveフォルダ'];a.style.display='inline-block';}else{a.style.display='none';}}
+var nextDay=false;
+function toggleNextDay(){nextDay=document.getElementById('ndChk').checked;
+  document.getElementById('nextDayBtn').classList.toggle('on',nextDay);timeCalc();}
+function toMin(t){var m=/^(\d{1,2}):(\d{2})/.exec(String(t||''));return m?(+m[1])*60+(+m[2]):null;}
+function fmtHM(min){var h=Math.floor(min/60),m=min%60;return h+'時間'+('0'+m).slice(-2)+'分';}
+function timeCalc(){
+  var st=toMin(document.getElementById('f_st').value),et=toMin(document.getElementById('f_et').value);
+  var br=toMin(document.getElementById('f_break').value)||0;
+  var disp=document.getElementById('f_nkDisp');
+  if(st==null||et==null){disp.textContent='開始・終了時間を入力してください';return;}
+  var end=et+(nextDay?1440:0);
+  if(end<=st){disp.textContent='⚠ 終了が開始より前です（日をまたぐ場合は「翌日」を押してください）';
+    document.getElementById('f_nk').value='';document.getElementById('f_ynk').value='0';return;}
+  var total=end-st;
+  // 深夜帯：22:00〜翌5:00（0:00-5:00 / 22:00-29:00 / 46:00-53:00 の各窓）
+  var wins=[[0,300],[1320,1740],[2760,3180]],night=0;
+  wins.forEach(function(w){night+=Math.max(0,Math.min(end,w[1])-Math.max(st,w[0]));});
+  var day=total-night;
+  // 休憩は通常帯から先に控除、超過分は深夜帯から控除
+  var dayW=Math.max(0,day-br),rem=Math.max(0,br-day),nightW=Math.max(0,night-rem);
+  var nk=Math.round(dayW/480*100)/100,ynk=Math.round(nightW/480*100)/100;
+  document.getElementById('f_nk').value=nk;
+  document.getElementById('f_ynk').value=ynk;
+  disp.innerHTML='<span>実働 '+fmtHM(dayW+nightW)+'</span><b>'+nk+' 人工'+(ynk>0?'　＋　深夜 '+ynk+' 人工':'')+'</b>';
+  updateNkDisp();
+}
+function workerRate(id){var w=workers.filter(function(x){return x['作業員ID']===id;})[0];return w?numv(w['標準単価']):0;}
+function calc(){ updateNkDisp(); }
+function updateNkDisp(){
+  var nk=parseFloat(document.getElementById('f_nk').value)||0;
+  var ynk=parseFloat(document.getElementById('f_ynk').value)||0;
+  var cnt=document.querySelectorAll('#wmFld .wcb:checked').length;
+  var disp=document.getElementById('f_nkDisp');
+  if(!disp)return;
+  if(!nk&&!ynk){return;} // 時間未入力時はtimeCalcの表示を維持
+  var total=Math.round(nk*cnt*100)/100,ytotal=Math.round(ynk*cnt*100)/100;
+  var base='<b>'+nk+' 人工'+(ynk>0?'＋深夜'+ynk:'')+'</b>';
+  if(cnt>1) base+=' × '+cnt+'名 ＝ <b>計 '+total+'人工'+(ytotal>0?'＋深夜'+ytotal:'')+'</b>';
+  disp.innerHTML=base;
+}
+/* 使用車両（チェックボックス・IDで保存） */
+function buildVehicleChecks(){var box=document.getElementById('vmList');if(!box)return;
+  var h='<div class="wghd"><span>車両（'+vehicles.length+'）</span></div>';
+  if(!vehicles.length){h+='<div class="wempty">登録なし（管理画面の「車両」タブから登録）</div>';box.innerHTML=h;return;}
+  h+='<div class="wlist">';
+  vehicles.forEach(function(v){var nm=esc(v['車両名']||'')+(v['ナンバー']?'（'+esc(v['ナンバー'])+'）':'');
+    h+='<label class="wchk"><input type="checkbox" class="vcb" value="'+esc(v['車両ID'])+'"> 🚚 '+nm+'</label>';});
+  h+='</div>'; box.innerHTML=h;}
+function checkedVehicleStr(){var cbs=document.querySelectorAll('#vmList .vcb:checked'),out=[];for(var i=0;i<cbs.length;i++)out.push(cbs[i].value);return out.join(',');}
+function setVehicleChecks(str){ buildVehicleChecks();
+  var ids=String(str||'').split(',').map(function(x){return x.trim();}).filter(Boolean); if(!ids.length)return;
+  var cbs=document.querySelectorAll('#vmList .vcb');
+  for(var i=0;i<cbs.length;i++){ if(ids.indexOf(cbs[i].value)>=0)cbs[i].checked=true; }}
+function vehName(id){var v=vehicles.filter(function(x){return String(x['車両ID'])===String(id);})[0];return v?(v['車両名']||id):id;}
+function vehNames(str){return String(str||'').split(',').map(function(x){return x.trim();}).filter(Boolean).map(vehName).join('、');}
+function gatherCommon(){var g=function(id){return document.getElementById(id).value;};
+  var pid=g('f_proj'),p=projects.filter(function(x){return x['案件ID']===pid;})[0]||{};
+  var st=g('f_st'),et=g('f_et'),br=toMin(g('f_break'))||0;
+  var stM=toMin(st)||0,etM=(toMin(et)||0)+(nextDay?1440:0);
+  return {'日付':g('f_date'),'案件ID':pid,'案件名':p['案件名']||'',
+    '作業内容':document.getElementById('f_desc').value.trim(),'人工':g('f_nk'),
+    '開始':st,'終了':et,'翌日':nextDay?'1':'','休憩分':String(br),
+    '作業時間':String(Math.max(0,etM-stM-br)),'深夜人工':g('f_ynk'),
+    '備考':document.getElementById('f_note').value.trim(),'車両':checkedVehicleStr()};}
+function saveReport(keepOpen){
+  var c=gatherCommon();
+  if(!c['日付']){toast('日付を入れてください');return;}
+  if(!c['案件ID']){toast('現場名を選んでください');return;}
+  var ws=checkedWorkers();
+  if(!ws.length){toast('作業員を選んでください（複数可）');return;}
+  var seen={},uniq=[];ws.forEach(function(w){var k=String(w['作業員ID']);if(k&&!seen[k]){seen[k]=1;uniq.push(w);}});ws=uniq;
+  var pid=c['案件ID'],date=c['日付'];
+  var sameGrp=reports.filter(function(r){return String(r['案件ID']||'')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
+  var isEditing=!!editGroup;
+  if(!isEditing){
+    var dupNames=[];
+    ws.forEach(function(w){
+      if(sameGrp.some(function(r){return String(r['作業員ID'])===String(w['作業員ID']);}))dupNames.push(w['氏名']||'');
+    });
+    if(dupNames.length){toast('⚠ '+dupNames.join('、')+' は同じ日に同じ現場で登録済みです');return;}
+  }
+  // 1日の上限チェック：同じ人は通常＋深夜の合計で1.5人工まで（全現場合算）
+  var addNk=numv(c['人工'])+numv(c['深夜人工']);
+  var grpIds={};sameGrp.forEach(function(r){grpIds[String(r['日報ID'])]=1;});
+  var overNames=[];
+  ws.forEach(function(w){
+    var cur=0;
+    reports.forEach(function(r){
+      if(String(r['日付']||'').slice(0,10)!==date)return;
+      if(String(r['作業員ID'])!==String(w['作業員ID']))return;
+      if(isEditing&&grpIds[String(r['日報ID'])])return; // 編集中の日報は置き換わるため除外
+      cur+=numv(r['人工'])+numv(r['深夜人工']);
+    });
+    if(cur+addNk>1.5+1e-9)overNames.push((w['氏名']||'')+'（登録済 '+round2(cur)+'＋今回 '+round2(addNk)+'＝'+round2(cur+addNk)+'）');
+  });
+  if(overNames.length){toast('⚠ 1日の上限は合計1.5人工までです：'+overNames.join('、'));return;}
+  var existing=isEditing?sameGrp:[];
+  var data={};for(var k in c)data[k]=c[k];
+  data['_workers']=ws.map(function(w){return {'作業員ID':w['作業員ID'],'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||''};});
+  var btn=document.getElementById('saveBtn'),btn2=document.getElementById('saveNextBtn');btn.disabled=true;btn2.disabled=true;btn.textContent='保存中…';
+  Promise.all(existing.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
+    .then(function(){return callGAS({action:'addReportMulti',data:data});})
+    .then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
+      pushRecent(pid);
+      if(keepOpen===true&&!isEditing){
+        toast(ws.length+'名分を保存しました。続けて入力できます');
+        resetForNext();reload(true);
+      }else{
+        closeOv();toast(ws.length+'名分を保存しました');reload();
+      }
+    }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn2.disabled=false;btn.textContent='保存';});
+}
+function resetForNext(){
+  document.getElementById('f_desc').value='';document.getElementById('f_note').value='';
+  var cbs=document.querySelectorAll('#wmFld .wcb');for(var i=0;i<cbs.length;i++)cbs[i].checked=false;
+  setVehicleChecks('');updateNkDisp();renderRecents();
+  var sh=document.querySelector('#ov .sheet');if(sh)sh.scrollTop=0;}
+function closeOv(){document.getElementById('ov').classList.remove('show');}
+
+function numv(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN(n)?0:n;}
+function yen(v){var n=numv(v);return n?('¥'+Math.round(n).toLocaleString('ja-JP')):'';}
+function round2(n){return Math.round(n*100)/100;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
+document.getElementById('ov').addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
+document.addEventListener('visibilitychange',function(){if(!document.hidden)reload(true);});
+
+loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadCache=(projects&&projects.length>0)||(reports&&reports.length>0);trySchedPre();reload(hadCache);
+</script>
+<div class="ov" id="dov" onclick="if(event.target===this)closeDetail()">
+  <div class="sheet">
+    <h2>日報の内容</h2>
+    <div id="dvBody"></div>
+    <div class="acts"><button class="btn sub" onclick="closeDetail()">閉じる</button><button class="btn sub" onclick="copyFromDetail()" style="color:#1a7a4a;border-color:#1a7a4a;">📋 複製して今日の日報に</button><button class="btn primary" onclick="editFromDetail()">✏️ 編集する</button></div>
+  </div>
+</div>
+<div id="printArea"></div>
+<div id="offlineBar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:9px 12px;box-shadow:0 2px 10px rgba(0,0,0,.3);">📡 オフラインです。電波の良い場所で再読み込みしてください。</div>
+<script>
+(function(){
+  function offUpd(){var b=document.getElementById('offlineBar');if(b)b.style.display=navigator.onLine?'none':'block';}
+  window.addEventListener('online',offUpd);
+  window.addEventListener('offline',offUpd);
+  offUpd();
+})();
+</script>
+</body>
+</html>

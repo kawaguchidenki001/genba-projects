@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!-- version 1 share (2026-06-11) 顧客向け進捗共有 閲覧専用ページ -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>工事進捗</title>
+<style>
+  :root{ --bg:#f4f6f9;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#2563eb;--accent-d:#1d4ed8;
+    --radius:14px;--shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.6;padding-bottom:40px;}
+  header{background:linear-gradient(135deg,#2563eb,#1e40af);color:#fff;padding:calc(env(safe-area-inset-top) + 22px) 18px 22px;}
+  header .co{font-size:12.5px;opacity:.9;letter-spacing:.04em;}
+  header h1{font-size:20px;margin:6px 0 4px;font-weight:800;line-height:1.3;}
+  header .place{font-size:13px;opacity:.95;}
+  main{max-width:680px;margin:0 auto;padding:14px;}
+  .statusbar{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:13px 16px;margin-bottom:14px;}
+  .statusbar .badge{flex:0 0 auto;font-size:13px;font-weight:800;padding:5px 14px;border-radius:999px;color:#fff;}
+  .statusbar .term{font-size:13px;color:var(--sub);}
+  .sec{font-size:13px;font-weight:800;color:var(--accent-d);margin:18px 4px 10px;letter-spacing:.04em;display:flex;align-items:center;gap:6px;}
+  /* 工程タイムライン */
+  .timeline{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:6px 16px;}
+  .tl{display:flex;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line);}
+  .tl:last-child{border-bottom:none;}
+  .tl .dot{flex:0 0 auto;width:11px;height:11px;border-radius:50%;background:var(--accent);margin-top:5px;position:relative;}
+  .tl .dot.done{background:#16a34a;} .tl .dot.next{background:#ea580c;box-shadow:0 0 0 4px rgba(234,88,12,.15);}
+  .tl .body{flex:1;min-width:0;}
+  .tl .d{font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums;}
+  .tl .t{font-weight:700;font-size:14.5px;margin-top:1px;}
+  .tl .k{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:6px;background:#eef2ff;color:var(--accent-d);margin-top:3px;}
+  /* 写真グリッド */
+  .photos{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+  .photos img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;background:#e7ebef;cursor:pointer;border:1px solid var(--line);}
+  .empty{text-align:center;color:var(--sub);padding:26px 10px;font-size:13.5px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);}
+  .foot{text-align:center;color:var(--sub);font-size:11.5px;margin-top:24px;line-height:1.7;}
+  /* ローディング・エラー */
+  .center{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;color:var(--sub);}
+  .center .ic{font-size:46px;margin-bottom:10px;}
+  .center h2{font-size:17px;color:var(--ink);margin:0 0 6px;}
+  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;margin-bottom:14px;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  /* ライトボックス */
+  .lb{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:90;}
+  .lb.on{display:flex;}
+  .lb img{max-width:96vw;max-height:90vh;border-radius:8px;}
+  .lb .x{position:absolute;top:calc(env(safe-area-inset-top) + 14px);right:18px;color:#fff;font-size:30px;cursor:pointer;line-height:1;}
+</style>
+</head>
+<body>
+<div id="loadView" class="center"><div class="spin"></div><div>読み込み中…</div></div>
+<div id="errView" class="center" style="display:none"><div class="ic">🔒</div><h2 id="errTtl">表示できません</h2><div id="errMsg"></div></div>
+
+<div id="app" style="display:none">
+  <header>
+    <div class="co" id="coName"></div>
+    <h1 id="pName"></h1>
+    <div class="place" id="pPlace"></div>
+  </header>
+  <main>
+    <div class="statusbar">
+      <span class="badge" id="badge"></span>
+      <span class="term" id="term"></span>
+    </div>
+
+    <div id="schedSec" style="display:none">
+      <div class="sec">📅 工事の予定</div>
+      <div class="timeline" id="timeline"></div>
+    </div>
+
+    <div id="photoSec" style="display:none">
+      <div class="sec">📷 現場の写真</div>
+      <div class="photos" id="photos"></div>
+    </div>
+
+    <div class="foot" id="foot"></div>
+  </main>
+</div>
+
+<div class="lb" id="lb" onclick="closeLb()"><span class="x">×</span><img id="lbImg" src="" alt=""></div>
+
+<script>
+var GAS_URL='https://script.google.com/macros/s/AKfycbxmgOKj5b_FRr04RX4qbiedgXm2OBX-Chsz4rynj-iMYvsLWHKCrE0zPYb3Cg_rj1hRWw/exec';
+function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function qp(k){var m=new RegExp('[?&]'+k+'=([^&]+)').exec(location.search);return m?decodeURIComponent(m[1]):'';}
+function statusColor(s){var m={'見積中':'#6b7280','受注':'#2563eb','段取済':'#9333ea','施工中':'#ea580c','完了':'#16a34a','請求済':'#7c3aed'};return m[s]||'#6b7280';}
+function showErr(ttl,msg){
+  document.getElementById('loadView').style.display='none';
+  document.getElementById('app').style.display='none';
+  document.getElementById('errView').style.display='flex';
+  document.getElementById('errTtl').textContent=ttl;
+  document.getElementById('errMsg').textContent=msg||'';
+}
+function jsonp(params){return new Promise(function(resolve,reject){
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),sc=document.createElement('script');
+  var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},25000);
+  function cleanup(){try{delete window[cb];}catch(e){}if(sc.parentNode)sc.parentNode.removeChild(sc);clearTimeout(timer);}
+  window[cb]=function(res){cleanup();resolve(res);};
+  var q=Object.assign({callback:cb},params);
+  sc.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+  sc.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(sc);
+});}
+function todayS(){var d=new Date(),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function render(d){
+  var p=d.project||{};
+  document.getElementById('loadView').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('coName').textContent=d.company||'';
+  document.getElementById('pName').textContent=p.name||'工事';
+  document.getElementById('pPlace').textContent=p.place||'';
+  var b=document.getElementById('badge');b.textContent=p.status||'進行中';b.style.background=statusColor(p.status);
+  var term=(p.start||'')+(p.end?' 〜 '+p.end:'');
+  document.getElementById('term').textContent=term?('工期 '+term):'';
+  document.title=(p.name||'工事')+' 進捗';
+  // 工程
+  var scs=d.schedules||[],tl=document.getElementById('timeline'),tdy=todayS();
+  if(scs.length){
+    document.getElementById('schedSec').style.display='block';
+    tl.innerHTML=scs.map(function(s){
+      var done=s.date&&s.date<tdy, isToday=s.date===tdy;
+      var cls=done?'done':(isToday?'next':'');
+      var dt=s.date?(s.date.slice(5).replace('-','/')):'';
+      if(s.end&&s.end!==s.date)dt+='〜'+s.end.slice(5).replace('-','/');
+      var tm=s.st?(s.st+(s.et?'〜'+s.et:'')):'';
+      return '<div class="tl"><div class="dot '+cls+'"></div><div class="body">'
+        +'<div class="d">'+esc(dt)+(tm?'　'+esc(tm):'')+'</div>'
+        +'<div class="t">'+esc(s.title)+'</div>'
+        +(s.kubun?'<span class="k">'+esc(s.kubun)+'</span>':'')+'</div></div>';
+    }).join('');
+  }
+  // 写真
+  var phs=d.photos||[],pg=document.getElementById('photos');
+  if(phs.length){
+    document.getElementById('photoSec').style.display='block';
+    pg.innerHTML=phs.map(function(x){return '<img loading="lazy" src="'+esc(x.thumb)+'" onclick="openLb(this.src)" alt="現場写真">';}).join('');
+  }
+  document.getElementById('foot').textContent='この画面は '+(d.company||'')+' が工事の進捗をお知らせするためのものです。';
+}
+function openLb(src){var big=src.replace(/sz=w\d+/,'sz=w2000');document.getElementById('lbImg').src=big;document.getElementById('lb').classList.add('on');}
+function closeLb(){document.getElementById('lb').classList.remove('on');document.getElementById('lbImg').src='';}
+
+(function(){
+  var token=qp('t')||qp('token');
+  if(!token){showErr('リンクが正しくありません','お手数ですが、お送りしたURLをもう一度ご確認ください。');return;}
+  jsonp({action:'shareView',token:token}).then(function(res){
+    if(res&&res.ok)render(res);
+    else showErr('表示できません',(res&&res.error)||'このリンクは無効か、公開が停止されています。');
+  }).catch(function(e){showErr('読み込みに失敗しました','通信状況をご確認のうえ、再度お試しください。');});
+})();
+</script>
+</body>
+</html>

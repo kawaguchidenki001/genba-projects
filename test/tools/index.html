@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<!-- version 3 tools (2026-06-12) 貸出先の現場選択から完了・請求済を除外 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>道具・工具管理｜河口電機</title>
+<style>
+  :root{ --bg:#e8ecf2;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#b45309;--accent-d:#92400e;
+    --radius:12px;--shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:90px;}
+  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink);padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);border-bottom:1px solid var(--line);}
+  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .hd-row h1{font-size:17px;margin:0;font-weight:700;color:var(--accent-d);}
+  .back{color:var(--accent-d);text-decoration:none;font-size:13px;flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;}
+  main{padding:12px;max-width:760px;margin:0 auto;}
+  .pane{display:none;} .pane.on{display:block;}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;}
+  .tabs button{flex:1;padding:11px 5px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;}
+  .tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .lead{font-size:13px;color:var(--sub);margin:0 2px 12px;line-height:1.7;}
+  .lbl{display:block;font-size:12.5px;font-weight:700;color:var(--sub);margin:12px 2px 5px;}
+  .inp,select.inp,textarea.inp{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;color:var(--ink);font-family:inherit;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14px;}
+  .addbtn{width:100%;padding:13px;border:1.5px dashed var(--accent);border-radius:12px;background:#fff7ed;color:var(--accent-d);font-size:14.5px;font-weight:700;cursor:pointer;margin-bottom:10px;}
+  .search{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;margin-bottom:10px;background:#fff;}
+  /* 道具カード */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:9px;border-left:5px solid var(--accent);}
+  .card .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+  .nm{font-weight:700;font-size:15.5px;}
+  .meta{font-size:12.5px;color:var(--sub);margin-top:1px;}
+  .stat{flex:0 0 auto;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;}
+  .stat.通常{background:#dcfce7;color:#166534;}
+  .stat.修理中{background:#fef3c7;color:#92400e;}
+  .stat.廃棄{background:#f3f4f6;color:#9ca3af;}
+  .lendinfo{margin-top:8px;border-top:1px dashed var(--line);padding-top:7px;font-size:12.5px;}
+  .lendrow{display:flex;justify-content:space-between;align-items:center;padding:3px 0;}
+  .lendrow .who{color:var(--accent-d);font-weight:700;}
+  .lendrow .rtn{flex:0 0 auto;padding:4px 10px;border:1px solid var(--accent);border-radius:8px;background:#fff;color:var(--accent-d);font-size:11.5px;font-weight:700;cursor:pointer;}
+  .cardbtns{display:flex;gap:6px;margin-top:9px;}
+  .cardbtns button{flex:1;padding:9px;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:#fff;color:var(--accent-d);}
+  .cardbtns .lend{background:var(--accent);border-color:var(--accent);color:#fff;}
+  /* モーダル */
+  .ov{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:flex-end;justify-content:center;z-index:60;}
+  .ov.on{display:flex;}
+  .sheet{background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 20px);box-shadow:0 -4px 24px rgba(0,0,0,.18);max-height:88vh;overflow:auto;}
+  .sheet h3{margin:0 0 4px;font-size:16px;}
+  .sheet .sub2{font-size:12.5px;color:var(--sub);margin-bottom:10px;}
+  .savebtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:14px;}
+  .delbtn{width:100%;padding:11px;border:1px solid #f3c0c0;border-radius:11px;background:#fff;color:#dc2626;font-size:13.5px;font-weight:700;cursor:pointer;margin-top:8px;}
+  .closebtn{width:100%;padding:11px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--sub);font-size:13.5px;font-weight:700;cursor:pointer;margin-top:8px;}
+  /* 貸出中一覧 */
+  .lcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:11px 14px;margin-bottom:8px;border-left:5px solid var(--accent);}
+  .lcard.over{border-left-color:#dc2626;}
+  .lcard .lt{display:flex;justify-content:space-between;align-items:center;}
+  .lcard .od{font-size:11.5px;color:#dc2626;font-weight:700;}
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:#1f2733;color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:88vw;text-align:center;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .loading{position:fixed;inset:0;background:rgba(244,245,247,.7);display:none;align-items:center;justify-content:center;z-index:80;}
+  .loading.show{display:flex;}
+  .lbox{background:#fff;border-radius:14px;padding:22px 30px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.12);}
+  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .lbox .txt{font-size:13.5px;color:var(--sub);}
+</style>
+</head>
+<body>
+<header>
+  <div class="hd-row">
+    <a class="back" href="../">← 現場管理メニュー</a>
+    <h1>🧰 道具・工具管理</h1>
+    <span style="width:30px;"></span>
+  </div>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="on" id="tabTools" onclick="tab('tools')">道具一覧</button>
+    <button id="tabLends" onclick="tab('lends')">貸出中</button>
+  </div>
+
+  <!-- 道具一覧 -->
+  <div class="pane on" id="p-tools">
+    <button class="addbtn" id="addTool" style="display:none" onclick="openEdit(null)">＋ 道具を登録（管理者）</button>
+    <input class="search" id="q" placeholder="道具名・区分で検索" oninput="renderTools()">
+    <div id="toolList"></div>
+  </div>
+
+  <!-- 貸出中 -->
+  <div class="pane" id="p-lends">
+    <p class="lead">現在貸出中の道具です。返却予定日を過ぎたものは赤く表示されます。</p>
+    <div id="lendList"></div>
+  </div>
+</main>
+
+<!-- 貸出モーダル -->
+<div class="ov" id="ovLend">
+  <div class="sheet">
+    <h3 id="lendTtl">道具を持ち出す</h3>
+    <div class="sub2" id="lendSub"></div>
+    <div class="grid2">
+      <div>
+        <label class="lbl">数量</label>
+        <input class="inp" id="lQty" type="number" inputmode="numeric" value="1" min="1">
+      </div>
+      <div>
+        <label class="lbl">返却予定日（任意）</label>
+        <input class="inp" id="lDue" type="date">
+      </div>
+    </div>
+    <label class="lbl">持ち出す人</label>
+    <select class="inp" id="lWorker"></select>
+    <label class="lbl">現場（任意）</label>
+    <select class="inp" id="lCase"></select>
+    <label class="lbl">備考（任意）</label>
+    <input class="inp" id="lNote" placeholder="例：充電器も一緒に持出">
+    <button class="savebtn" onclick="doLend()">持ち出しを記録する</button>
+    <button class="closebtn" onclick="closeOv('ovLend')">キャンセル</button>
+  </div>
+</div>
+
+<!-- 編集モーダル -->
+<div class="ov" id="ovEdit">
+  <div class="sheet">
+    <h3 id="editTtl">道具を登録</h3>
+    <label class="lbl">道具名</label>
+    <input class="inp" id="eName" placeholder="例：インパクトドライバー">
+    <div class="grid2">
+      <div>
+        <label class="lbl">区分（任意）</label>
+        <input class="inp" id="eKind" placeholder="例：電動工具">
+      </div>
+      <div>
+        <label class="lbl">保有数</label>
+        <input class="inp" id="eQty" type="number" inputmode="numeric" value="1" min="1">
+      </div>
+    </div>
+    <div class="grid2">
+      <div>
+        <label class="lbl">管理番号（任意）</label>
+        <input class="inp" id="eNo" placeholder="例：T-001">
+      </div>
+      <div>
+        <label class="lbl">状態</label>
+        <select class="inp" id="eState"><option>通常</option><option>修理中</option><option>廃棄</option></select>
+      </div>
+    </div>
+    <label class="lbl">保管場所（任意）</label>
+    <input class="inp" id="ePlace" placeholder="例：倉庫A棚">
+    <label class="lbl">備考（任意）</label>
+    <input class="inp" id="eNote">
+    <button class="savebtn" onclick="saveTool()">保存する</button>
+    <button class="delbtn" id="delTool" style="display:none" onclick="deleteTool()">この道具を削除</button>
+    <button class="closebtn" onclick="closeOv('ovEdit')">キャンセル</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt" id="ltxt">読み込み中…</div></div></div>
+
+<script>
+var GAS_URL='https://script.google.com/macros/s/AKfycbxmgOKj5b_FRr04RX4qbiedgXm2OBX-Chsz4rynj-iMYvsLWHKCrE0zPYb3Cg_rj1hRWw/exec';
+var T_GENERAL='kawaguchi-genba-2026';
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
+function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastT;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
+var loadCnt=0;
+function showLoad(t){loadCnt++;if(t)document.getElementById('ltxt').textContent=t;if(loadCnt===1)document.getElementById('loading').classList.add('show');}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){document.getElementById('loading').classList.remove('show');document.getElementById('ltxt').textContent='読み込み中…';}}
+function callGAS(params,silent){return new Promise(function(resolve,reject){
+  if(!silent)showLoad();
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),sc=document.createElement('script');
+  var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},30000);
+  function cleanup(){if(!silent)hideLoad();try{delete window[cb];}catch(e){}if(sc.parentNode)sc.parentNode.removeChild(sc);clearTimeout(timer);}
+  window[cb]=function(res){cleanup();resolve(res);};
+  // 編集系は管理者トークン（params._adm=1）、それ以外は一般トークン
+  var p=Object.assign({},params);
+  var secret=(p._adm?admTok():T_GENERAL); delete p._adm;
+  var q=Object.assign({},p,{secret:secret,callback:cb});
+  if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
+  sc.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+  sc.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(sc);
+});}
+function closeOv(id){document.getElementById(id).classList.remove('on');}
+function todayS(){var d=new Date(),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+
+var DB={tools:[],lends:[],workers:[],projects:[]};
+var isAdmin=false;
+var CACHE_KEY='tool_cache_v1';
+function applyData(d){
+  DB.tools=d.tools||[];DB.lends=d.lends||[];DB.workers=d.workers||[];DB.projects=d.projects||[];
+  fillSelects();renderTools();renderLends();
+}
+function loadAll(silent){
+  return callGAS({action:'toolData'},silent).then(function(res){
+    if(res&&res.ok){try{localStorage.setItem(CACHE_KEY,JSON.stringify(res));}catch(e){}applyData(res);}
+    else if(res&&res.error)toast(res.error);
+  }).catch(function(e){toast(e.message);});
+}
+function tab(t){
+  document.getElementById('tabTools').classList.toggle('on',t==='tools');
+  document.getElementById('tabLends').classList.toggle('on',t==='lends');
+  document.getElementById('p-tools').classList.toggle('on',t==='tools');
+  document.getElementById('p-lends').classList.toggle('on',t==='lends');
+  window.scrollTo(0,0);
+}
+
+/* ===== 一覧 ===== */
+function lendsOf(toolId){return DB.lends.filter(function(l){return String(l['道具ID'])===String(toolId)&&String(l['状態'])==='貸出中';});}
+function renderTools(){
+  var q=(document.getElementById('q').value||'').trim();
+  var list=DB.tools.slice();
+  if(q)list=list.filter(function(t){return (String(t['道具名'])+String(t['区分'])+String(t['管理番号'])).indexOf(q)>=0;});
+  var el=document.getElementById('toolList');
+  if(!list.length){el.innerHTML='<div class="empty">道具が登録されていません。'+(isAdmin?'<br>「＋ 道具を登録」から追加できます。':'')+'</div>';return;}
+  el.innerHTML=list.map(function(t){
+    var id=esc(t['道具ID']);
+    var act=lendsOf(t['道具ID']);
+    var lentQty=0;act.forEach(function(l){lentQty+=Number(l['数量'])||1;});
+    var have=Number(t['保有数'])||1;
+    var st=String(t['状態']||'通常');
+    var h='<div class="card"><div class="top"><div><div class="nm">'+esc(t['道具名']||'')+'</div>'
+      +'<div class="meta">'+esc(t['区分']||'')+(t['管理番号']?'　'+esc(t['管理番号']):'')+'　保有'+have+(t['保管場所']?'　／ '+esc(t['保管場所']):'')+'</div></div>'
+      +'<span class="stat '+esc(st)+'">'+esc(st)+'</span></div>';
+    if(act.length){
+      h+='<div class="lendinfo">';
+      act.forEach(function(l){
+        h+='<div class="lendrow"><span><span class="who">'+esc(l['作業員名']||'?')+'</span>'+(Number(l['数量'])>1?' ×'+l['数量']:'')+(l['現場名']?'　@'+esc(l['現場名']):'')+'　'+esc(l['貸出日'])+'</span>'
+          +'<button class="rtn" onclick="returnLend(\''+esc(l['貸出ID'])+'\')">返却</button></div>';
+      });
+      h+='</div>';
+    }
+    h+='<div class="cardbtns">';
+    if(st==='通常'&&lentQty<have)h+='<button class="lend" onclick="openLend(\''+id+'\')">持ち出す</button>';
+    if(isAdmin)h+='<button onclick="openEdit(\''+id+'\')">編集</button>';
+    h+='</div></div>';
+    return h;
+  }).join('');
+}
+function renderLends(){
+  var list=DB.lends.filter(function(l){return String(l['状態'])==='貸出中';});
+  list.sort(function(a,b){return String(a['返却予定日']||'9999').localeCompare(String(b['返却予定日']||'9999'));});
+  var el=document.getElementById('lendList');
+  if(!list.length){el.innerHTML='<div class="empty">貸出中の道具はありません。</div>';return;}
+  var tdy=todayS();
+  el.innerHTML=list.map(function(l){
+    var due=String(l['返却予定日']||'').slice(0,10);
+    var over=due&&due<tdy;
+    return '<div class="lcard'+(over?' over':'')+'"><div class="lt"><div>'
+      +'<div class="nm">'+esc(l['道具名']||'')+(Number(l['数量'])>1?' ×'+l['数量']:'')+'</div>'
+      +'<div class="meta">'+esc(l['作業員名']||'?')+(l['現場名']?'　@'+esc(l['現場名']):'')+'　貸出 '+esc(l['貸出日'])+'</div>'
+      +(due?'<div class="'+(over?'od':'meta')+'">'+(over?'⚠ 返却予定 '+esc(due)+' を超過':'返却予定 '+esc(due))+'</div>':'')
+      +'</div><button class="rtn" onclick="returnLend(\''+esc(l['貸出ID'])+'\')">返却</button></div></div>';
+  }).join('');
+}
+
+/* ===== 貸出 ===== */
+function fillSelects(){
+  var ws=DB.workers.filter(function(w){return String(w['区分']||'').indexOf('協力')<0;});
+  var u=gUser();
+  document.getElementById('lWorker').innerHTML=ws.map(function(w){
+    return '<option value="'+esc(w['作業員ID'])+'"'+(u&&String(u['作業員ID'])===String(w['作業員ID'])?' selected':'')+'>'+esc(w['氏名']||'')+'</option>';}).join('');
+  document.getElementById('lCase').innerHTML='<option value="">（現場なし）</option>'+DB.projects.filter(function(p){var st=String(p['ステータス']||'').trim();return st!=='完了'&&st!=='請求済';}).map(function(p){
+    return '<option value="'+esc(p['案件ID'])+'" data-name="'+esc(p['案件名'])+'">'+esc(p['案件名'])+'</option>';}).join('');
+}
+var lendToolId=null;
+function openLend(id){
+  var t=DB.tools.filter(function(x){return String(x['道具ID'])===id;})[0];if(!t)return;
+  lendToolId=id;
+  document.getElementById('lendTtl').textContent=t['道具名']+' を持ち出す';
+  var act=lendsOf(id);var lent=0;act.forEach(function(l){lent+=Number(l['数量'])||1;});
+  var rest=(Number(t['保有数'])||1)-lent;
+  document.getElementById('lendSub').textContent='貸出可能：'+rest+' / 保有 '+(Number(t['保有数'])||1);
+  document.getElementById('lQty').value=1;document.getElementById('lQty').max=rest;
+  document.getElementById('lDue').value='';document.getElementById('lNote').value='';
+  document.getElementById('ovLend').classList.add('on');
+}
+function doLend(){
+  if(!lendToolId)return;
+  var t=DB.tools.filter(function(x){return String(x['道具ID'])===lendToolId;})[0];
+  var wsel=document.getElementById('lWorker'),wid=wsel.value,wname=wsel.selectedOptions[0]?wsel.selectedOptions[0].textContent:'';
+  if(!wid){toast('持ち出す人を選んでください');return;}
+  var csel=document.getElementById('lCase'),cid=csel.value,cname=csel.selectedOptions[0]?(csel.selectedOptions[0].getAttribute('data-name')||''):'';
+  var data={'道具ID':lendToolId,'道具名':t['道具名'],'数量':Number(document.getElementById('lQty').value)||1,
+    '作業員ID':wid,'作業員名':wname,'現場ID':cid,'現場名':cname,
+    '貸出日':todayS(),'返却予定日':document.getElementById('lDue').value,'備考':document.getElementById('lNote').value.trim()};
+  callGAS({action:'toolLend',data:data}).then(function(res){
+    if(res&&res.ok){DB.lends.push(res.lend);saveCache();closeOv('ovLend');toast('持ち出しを記録しました');renderTools();renderLends();}
+    else toast((res&&res.error)||'失敗しました');
+  }).catch(function(e){toast(e.message);});
+}
+function returnLend(id){
+  if(!confirm('この道具を返却済みにしますか？'))return;
+  callGAS({action:'toolReturn',id:id,date:todayS()}).then(function(res){
+    if(res&&res.ok){
+      var idx=-1;DB.lends.forEach(function(l,i){if(String(l['貸出ID'])===String(id))idx=i;});
+      if(idx>=0)DB.lends[idx]=res.lend;saveCache();toast('返却しました');renderTools();renderLends();
+    }else toast((res&&res.error)||'失敗しました');
+  }).catch(function(e){toast(e.message);});
+}
+
+/* ===== 道具の登録・編集（管理者） ===== */
+var editId=null;
+function openEdit(id){
+  editId=id;
+  if(id){
+    var t=DB.tools.filter(function(x){return String(x['道具ID'])===id;})[0];if(!t)return;
+    document.getElementById('editTtl').textContent='道具を編集';
+    document.getElementById('eName').value=t['道具名']||'';
+    document.getElementById('eKind').value=t['区分']||'';
+    document.getElementById('eQty').value=t['保有数']||1;
+    document.getElementById('eNo').value=t['管理番号']||'';
+    document.getElementById('eState').value=t['状態']||'通常';
+    document.getElementById('ePlace').value=t['保管場所']||'';
+    document.getElementById('eNote').value=t['備考']||'';
+    document.getElementById('delTool').style.display='block';
+  }else{
+    document.getElementById('editTtl').textContent='道具を登録';
+    document.getElementById('eName').value='';document.getElementById('eKind').value='';
+    document.getElementById('eQty').value=1;document.getElementById('eNo').value='';
+    document.getElementById('eState').value='通常';document.getElementById('ePlace').value='';document.getElementById('eNote').value='';
+    document.getElementById('delTool').style.display='none';
+  }
+  document.getElementById('ovEdit').classList.add('on');
+}
+function saveTool(){
+  var name=document.getElementById('eName').value.trim();
+  if(!name){toast('道具名を入力してください');return;}
+  var data={'道具名':name,'区分':document.getElementById('eKind').value.trim(),
+    '保有数':Number(document.getElementById('eQty').value)||1,'管理番号':document.getElementById('eNo').value.trim(),
+    '状態':document.getElementById('eState').value,'保管場所':document.getElementById('ePlace').value.trim(),
+    '備考':document.getElementById('eNote').value.trim()};
+  if(editId)data['道具ID']=editId;
+  callGAS({action:'toolSave',data:data,_adm:1}).then(function(res){
+    if(res&&res.ok){
+      var saved=res.tool;var idx=-1;DB.tools.forEach(function(t,i){if(String(t['道具ID'])===String(saved['道具ID']))idx=i;});
+      if(idx>=0)DB.tools[idx]=saved;else DB.tools.push(saved);
+      saveCache();closeOv('ovEdit');toast('保存しました');renderTools();
+    }else toast((res&&res.error)||'保存に失敗しました');
+  }).catch(function(e){toast(e.message);});
+}
+function deleteTool(){
+  if(!editId)return;
+  if(lendsOf(editId).length){toast('貸出中の道具は削除できません');return;}
+  if(!confirm('この道具を削除しますか？'))return;
+  callGAS({action:'toolDelete',id:editId,_adm:1}).then(function(res){
+    if(res&&res.ok){DB.tools=DB.tools.filter(function(t){return String(t['道具ID'])!==String(editId);});
+      saveCache();closeOv('ovEdit');toast('削除しました');renderTools();}
+    else toast((res&&res.error)||'削除に失敗しました');
+  }).catch(function(e){toast(e.message);});
+}
+function saveCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify({ok:true,tools:DB.tools,lends:DB.lends,workers:DB.workers,projects:DB.projects}));}catch(e){}}
+
+/* ===== 起動 ===== */
+(function(){
+  // 管理者PINがあれば管理者判定（編集ボタンを出す）
+  var pin=admTok();
+  if(pin){
+    callGAS({action:'checkRole',_adm:1},true).then(function(res){
+      if(res&&res.ok&&res.role==='admin'){isAdmin=true;document.getElementById('addTool').style.display='block';renderTools();}
+    }).catch(function(){});
+  }
+  // データ読み込み（一覧・貸出は一般トークンで誰でも閲覧可）
+  var c=null;try{c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');}catch(e){}
+  if(c){applyData(c);loadAll(true);}else loadAll(false);
+})();
+</script>
+</body>
+</html>
