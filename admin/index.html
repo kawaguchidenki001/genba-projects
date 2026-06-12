@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 40 admin (2026-06-11) 日報未提出チェックタブを追加 -->
+<!-- version 41 (仕入先に担当者名・メール欄を追加) admin (2026-06-11) 日報未提出チェックタブを追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -82,7 +82,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v39</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v41</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -279,7 +279,11 @@
       <div class="fld"><label>種別</label><select id="s_type"><option>電材店</option><option>外注業者</option><option>機械リース</option><option>その他</option></select></div>
     </div>
     <div class="fld"><label>電話番号</label><input id="s_tel" inputmode="tel" placeholder="例）0586-00-0000"></div>
-    <div class="fld"><label>メモ</label><textarea id="s_memo" placeholder="担当者名・支払条件など"></textarea></div>
+    <div class="two">
+      <div class="fld"><label>担当者名</label><input id="s_person" placeholder="例）山田"></div>
+      <div class="fld"><label>メールアドレス</label><input id="s_mail" inputmode="email" autocapitalize="off" placeholder="発注メールの宛先"></div>
+    </div>
+    <div class="fld"><label>メモ</label><textarea id="s_memo" placeholder="支払条件など"></textarea></div>
     <div class="acts">
       <button class="btn sub" onclick="closeOvS()">キャンセル</button>
       <button class="btn primary" id="sBtnSave" onclick="saveSupplier()">保存</button>
@@ -703,6 +707,8 @@ function openSupplier(id){
   document.getElementById('s_short').value=p?(p['略称']||''):'';
   document.getElementById('s_type').value=p?(p['種別']||'電材店'):'電材店';
   document.getElementById('s_tel').value=p?(p['電話番号']||''):'';
+  document.getElementById('s_person').value=p?(p['担当者名']||''):'';
+  document.getElementById('s_mail').value=p?(p['メールアドレス']||''):'';
   document.getElementById('s_memo').value=p?(p['メモ']||''):'';
   document.getElementById('sDelRow').style.display=p?'block':'none';
   document.getElementById('ovS').classList.add('show');
@@ -711,7 +717,9 @@ function closeOvS(){document.getElementById('ovS').classList.remove('show');}
 function saveSupplier(){
   var d={'仕入先ID':document.getElementById('s_id').value,'仕入先名':document.getElementById('s_name').value.trim(),
     '略称':document.getElementById('s_short').value.trim(),'種別':document.getElementById('s_type').value,
-    '電話番号':document.getElementById('s_tel').value.trim(),'メモ':document.getElementById('s_memo').value.trim()};
+    '電話番号':document.getElementById('s_tel').value.trim(),
+    '担当者名':document.getElementById('s_person').value.trim(),'メールアドレス':document.getElementById('s_mail').value.trim(),
+    'メモ':document.getElementById('s_memo').value.trim()};
   if(!d['仕入先名']){toast('仕入先名を入力してください');return;}
   var btn=document.getElementById('sBtnSave'); btn.disabled=true; btn.textContent='保存中…';
   callGAS({action:'supplierSave',data:d}).then(function(res){
