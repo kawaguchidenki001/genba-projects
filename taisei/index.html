@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<!-- version 1 (2026-06-12) 施工体制台帳・再下請負通知書管理 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>施工体制台帳｜河口電機</title>
+<style>
+  :root{--bg:#eef0f6;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#1e3a5f;--accent2:#2d4e7c;--ok:#166534;--warn:#92400e;--danger:#b91c1c;--shadow:0 1px 3px rgba(20,30,50,.08);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:40px;}
+  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.95);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:calc(env(safe-area-inset-top)+10px) 14px 10px;box-shadow:var(--shadow);border-bottom:1px solid var(--line);}
+  .back{color:var(--accent2);text-decoration:none;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;}
+  header h1{font-size:17px;margin:8px 0 0;font-weight:700;color:var(--accent);}
+  main{padding:13px;max-width:720px;margin:0 auto;}
+  .gate{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:24px;text-align:center;margin:20px 0;}
+  .gate .lk{font-size:36px;margin-bottom:8px;}
+  .gate h2{font-size:17px;margin:0 0 8px;}
+  .gate p{font-size:13px;color:var(--sub);margin:0 0 14px;}
+  .inp{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;font-size:15px;background:#fff;font-family:inherit;}
+  select.inp{background:#fff;}
+  .btn{padding:11px 18px;border:none;border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;}
+  .btn-prim{background:var(--accent);color:#fff;width:100%;margin-top:10px;}
+  .btn-pdf{background:#0e7490;color:#fff;border-radius:10px;padding:10px 14px;font-size:13.5px;font-weight:700;border:none;cursor:pointer;width:100%;margin-top:8px;}
+  .btn-add{background:#fff7ed;color:#92400e;border:1px dashed #d97706;border-radius:11px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;}
+  .btn-del{background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn-edit{background:#eff4ff;color:#1d4ed8;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;}
+  .btn-sai{background:#6b21a8;color:#fff;border:none;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer;}
+  label.lbl{display:block;font-size:11.5px;color:var(--sub);font-weight:700;margin:10px 2px 3px;}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:13px 14px;margin-bottom:9px;}
+  .card .nm{font-weight:700;font-size:15px;}
+  .card .meta{font-size:12px;color:var(--sub);margin-top:3px;}
+  .card .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;}
+  .b1{background:#dbeafe;color:#1d4ed8;} .b2{background:#ede9fe;color:#6b21a8;}
+  .pane{display:none;} .pane.show{display:block;}
+  .empty{text-align:center;color:var(--sub);padding:28px;font-size:14px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .savebtn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-top:14px;}
+
+  .doc-sec{margin-top:16px;border-top:1px solid var(--line);padding-top:14px;}
+  .doc-sec-title{font-size:12.5px;font-weight:800;color:var(--sub);margin-bottom:8px;}
+  .doc-list{display:flex;flex-direction:column;gap:7px;}
+  .doc-card{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:8px 11px;}
+  .doc-card .dc-ic{font-size:17px;flex:0 0 auto;}
+  .doc-card .dc-nm{flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;color:inherit;}
+  .doc-card .dc-dt{font-size:11px;color:var(--sub);white-space:nowrap;}
+  .doc-card .dc-del{background:#fee2e2;color:#b91c1c;border:none;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700;cursor:pointer;}
+  .doc-upload-label{display:flex;align-items:center;gap:8px;background:#eff4ff;border:1px dashed #93c5fd;border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:700;color:#1d4ed8;cursor:pointer;margin-top:6px;}
+  .doc-empty{font-size:12.5px;color:var(--sub);padding:4px 2px;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:28px;z-index:90;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(240,242,245,.75);display:none;align-items:center;justify-content:center;}
+  .loading.show{display:flex;}
+  .lbox{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(20,30,50,.18);padding:22px 28px;text-align:center;}
+  .spin{width:34px;height:34px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 10px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .section-hd{font-size:13px;font-weight:800;color:var(--accent2);margin:16px 0 6px;border-left:4px solid var(--accent2);padding-left:9px;}
+  .note{font-size:12px;color:var(--sub);background:#eff4ff;border:1px solid #dbe6ff;border-radius:10px;padding:10px 12px;margin-bottom:12px;line-height:1.7;}
+  .pdf-btns{display:flex;flex-direction:column;gap:8px;}
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1</div>
+<header>
+  <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
+  <h1>🏗 施工体制台帳・再下請負通知書</h1>
+</header>
+<main>
+
+  <!-- ログインゲート -->
+  <div id="gate" class="gate">
+    <div class="lk">🔒</div>
+    <h2>管理者専用</h2>
+    <p>施工体制台帳は管理者のみ利用できます。管理者PINを入力してください。</p>
+    <input class="inp" id="pin" type="password" placeholder="管理者PIN" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn btn-prim" onclick="doLogin()">開く</button>
+  </div>
+
+  <!-- メイン -->
+  <div id="main" style="display:none;">
+
+    <!-- 案件選択 -->
+    <div class="pane show" id="p-list">
+      <div class="note">案件を選ぶと、その案件の下請業者を登録して施工体制台帳・再下請負通知書のPDFを作成できます。</div>
+      <label class="lbl">案件を選ぶ</label>
+      <select class="inp" id="caseSelect" onchange="selectCase()"><option value="">（案件を選択）</option></select>
+      <div id="caseContent" style="display:none;">
+        <div class="pdf-btns" style="margin-top:14px;">
+          <button class="btn-pdf" onclick="makePdf('taisei')">📄 施工体制台帳 PDFを作成</button>
+        </div>
+        <div class="section-hd">一次下請業者</div>
+        <div id="list1"></div>
+        <button class="btn-add" onclick="openForm(null,'一次')">＋ 一次下請業者を追加</button>
+        <div class="section-hd" style="margin-top:18px;">二次下請業者（一次下請が元請に通知するもの）</div>
+        <div id="list2"></div>
+        <button class="btn-add" onclick="openForm(null,'二次')">＋ 二次下請業者を追加</button>
+      </div>
+    </div>
+
+    <!-- 下請業者 フォーム -->
+    <div class="pane" id="p-form">
+      <a href="#" onclick="backList(event)" style="font-size:13px;color:var(--accent2);text-decoration:none;">← 一覧</a>
+      <h2 id="formTitle" style="font-size:16px;margin:10px 0 4px;"></h2>
+      <input type="hidden" id="fId">
+      <input type="hidden" id="fKind">
+      <div id="parentRow">
+        <label class="lbl">一次下請業者（この業者に発注した一次下請）</label>
+        <select class="inp" id="fParent"><option value="">（選択）</option></select>
+      </div>
+      <label class="lbl">会社名 *</label>
+      <input class="inp" id="fName" placeholder="例：○○電気工事株式会社">
+      <label class="lbl">建設業許可番号</label>
+      <input class="inp" id="fLicense" placeholder="例：大臣許可（般-00）第000000号">
+      <label class="lbl">許可業種</label>
+      <input class="inp" id="fBizType" placeholder="例：電気工事業">
+      <label class="lbl">代表者名</label>
+      <input class="inp" id="fRepName" placeholder="例：山田 太郎">
+      <label class="lbl">住所</label>
+      <input class="inp" id="fAddr" placeholder="例：○○県○○市…">
+      <label class="lbl">電話番号</label>
+      <input class="inp" id="fTel" placeholder="例：06-0000-0000" inputmode="tel">
+      <label class="lbl">工種</label>
+      <input class="inp" id="fWork" placeholder="例：電気設備工事">
+      <label class="lbl">請負金額</label>
+      <input class="inp" id="fAmt" placeholder="例：500,000円" inputmode="numeric">
+      <div class="grid2">
+        <div><label class="lbl">工期開始</label><input class="inp" id="fS" type="date"></div>
+        <div><label class="lbl">工期完了</label><input class="inp" id="fE" type="date"></div>
+      </div>
+      <label class="lbl">主任技術者名</label>
+      <input class="inp" id="fTech" placeholder="例：鈴木 一郎">
+      <label class="lbl">主任技術者の資格</label>
+      <input class="inp" id="fTechQ" placeholder="例：第一種電気工事士">
+      <label class="lbl">備考</label>
+      <input class="inp" id="fNote" placeholder="">
+      <div class="doc-sec" id="subDocSec" style="display:none;">
+        <div class="doc-sec-title">📁 建設業許可証・資格書類の写し</div>
+        <div class="doc-list" id="subDocList"><div class="doc-empty">読込中…</div></div>
+        <label class="doc-upload-label" for="subDocFile">＋ ファイルを追加（PDF・画像）
+          <input type="file" id="subDocFile" accept=".pdf,image/*" style="display:none;" onchange="uploadSubDoc(this)">
+        </label>
+      </div>
+      <button class="savebtn" onclick="saveSub()">保存する</button>
+      <div id="saiRow" style="display:none;margin-top:12px;">
+        <button class="btn-pdf" style="background:#6b21a8;" onclick="makeSaiteke()">📄 再下請負通知書 PDFを作成</button>
+      </div>
+    </div>
+
+  </div><!-- /main -->
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div style="font-size:14px;font-weight:700;">処理中…</div></div></div>
+
+<script>
+var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var CACHE='genba_taisei';
+var DB={projects:[],subs:[],settings:{}};
+var curCase=null, curSubs=[];
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(function(){t.classList.remove('show');},2600);}
+var _lc=0; function showLoad(){_lc++;document.getElementById('loading').classList.add('show');} function hideLoad(){_lc=Math.max(0,_lc-1);if(!_lc)document.getElementById('loading').classList.remove('show');}
+function callGAS(p,silent){
+  return new Promise(function(res,rej){
+    if(!silent)showLoad();
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),sc=document.createElement('script');
+    var tm=setTimeout(function(){cleanup();rej(new Error('timeout'));},20000);
+    function cleanup(){if(!silent)hideLoad();try{delete window[cb];}catch(e){}if(sc.parentNode)sc.parentNode.removeChild(sc);clearTimeout(tm);}
+    window[cb]=function(r){cleanup();res(r);};
+    p=Object.assign({secret:admTok(),callback:cb},p);
+    if(p.data&&typeof p.data!=='string')p.data=JSON.stringify(p.data);
+    sc.src=GAS_URL+'?'+Object.keys(p).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(p[k]);}).join('&');
+    sc.onerror=function(){cleanup();rej(new Error('error'));};document.head.appendChild(sc);
+  });
+}
+function show(id){['p-list','p-form'].forEach(function(x){document.getElementById(x).classList.toggle('show',x===id);}); window.scrollTo(0,0);}
+function backList(e){if(e)e.preventDefault();show('p-list');}
+
+/* ログイン */
+function doLogin(){
+  var pin=document.getElementById('pin').value; if(!pin){toast('PINを入力してください');return;}
+  callGAS({action:'checkPin',pin:pin}).then(function(r){
+    if(r&&r.ok){localStorage.setItem('genba_admin',pin);document.getElementById('gate').style.display='none';document.getElementById('main').style.display='block';loadData(false);}
+    else{toast('PINが違います');}
+  }).catch(function(){toast('接続エラー');});
+}
+
+/* データ読込 */
+function loadData(silent){
+  callGAS({action:'daikoData',caseId:''},silent).then(function(r){
+    if(!r.ok)return;
+    DB={projects:r.projects||[],subs:r.subs||[],settings:r.settings||{}};
+    try{localStorage.setItem(CACHE,JSON.stringify(DB));}catch(e){}
+    renderCaseSelect();
+    if(curCase)loadCase(curCase,true);
+  }).catch(function(e){if(!silent)toast('読込失敗：'+e.message);});
+}
+function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'null');if(c&&c.projects){DB=c;renderCaseSelect();}}catch(e){}}
+
+function renderCaseSelect(){
+  var sel=document.getElementById('caseSelect');
+  var prev=sel.value;
+  sel.innerHTML='<option value="">（案件を選択）</option>'+(DB.projects||[]).map(function(p){return '<option value="'+esc(p['案件ID'])+'">'+esc(p['案件名']||p['案件ID'])+'</option>';}).join('');
+  if(prev)sel.value=prev;
+}
+
+function selectCase(){
+  var id=document.getElementById('caseSelect').value;
+  if(!id){document.getElementById('caseContent').style.display='none';return;}
+  document.getElementById('caseContent').style.display='block';
+  loadCase(id,false);
+}
+function loadCase(id,fromCache){
+  curCase=id;
+  document.getElementById('caseSelect').value=id;
+  document.getElementById('caseContent').style.display='block';
+  curSubs=(DB.subs||[]).filter(function(x){return String(x['案件ID'])===String(id);});
+  renderSubLists();
+  if(!fromCache) callGAS({action:'daikoData',caseId:id},true).then(function(r){
+    if(!r.ok)return;
+    curSubs=r.subs||[];
+    DB.subs=(DB.subs||[]).filter(function(x){return String(x['案件ID'])!==String(id);}).concat(curSubs);
+    try{localStorage.setItem(CACHE,JSON.stringify(DB));}catch(e){}
+    renderSubLists();
+  }).catch(function(){});
+}
+
+function renderSubLists(){
+  var ichi=curSubs.filter(function(x){return String(x['種別']||'')!=='二次';});
+  var ni=curSubs.filter(function(x){return String(x['種別']||'')==='二次';});
+  document.getElementById('list1').innerHTML=ichi.length?ichi.map(function(s){return cardHtml(s,false);}).join(''):'<div class="empty">一次下請業者がまだ登録されていません</div>';
+  document.getElementById('list2').innerHTML=ni.length?ni.map(function(s){return cardHtml(s,true);}).join(''):'<div class="empty">二次下請業者がまだ登録されていません</div>';
+}
+function cardHtml(s,isSai){
+  var ichi=curSubs.filter(function(x){return String(x['種別']||'')!=='二次';});
+  var parent=ichi.filter(function(x){return String(x['下請ID'])===String(s['親下請ID']||'');})[0];
+  return '<div class="card"><div class="nm">'+esc(s['会社名']||'')+'<span class="badge '+(isSai?'b2':'b1')+'" style="margin-left:8px;">'+(isSai?'二次':'一次')+'</span></div>'
+    +'<div class="meta">'+esc(s['工種']||'')+(parent?' / 一次：'+esc(parent['会社名']||''):'')+(s['請負金額']?' / '+esc(s['請負金額']):'')+'</div>'
+    +'<div class="acts">'
+    +'<button class="btn-edit" onclick="openForm(\''+esc(s['下請ID'])+'\',\''+(isSai?'二次':'一次')+'\')">編集</button>'
+    +(isSai?'<button class="btn-sai" onclick="makeSaitekeById(\''+esc(s['下請ID'])+'\')">📄 再下請負通知書</button>':'')
+    +'<button class="btn-del" onclick="deleteSub(\''+esc(s['下請ID'])+'\')">削除</button>'
+    +'</div></div>';
+}
+
+/* フォーム */
+function openForm(id,kind){
+  document.getElementById('fId').value=id||'';
+  document.getElementById('fKind').value=kind;
+  document.getElementById('formTitle').textContent=(kind==='二次'?'二次':'一次')+'下請業者 '+(id?'編集':'追加');
+  // 一次のselectを構築（二次の場合のみ表示）
+  var ichi=curSubs.filter(function(x){return String(x['種別']||'')!=='二次';});
+  document.getElementById('fParent').innerHTML='<option value="">（選択）</option>'+ichi.map(function(x){return '<option value="'+esc(x['下請ID'])+'">'+esc(x['会社名']||'')+'</option>';}).join('');
+  document.getElementById('parentRow').style.display=(kind==='二次')?'block':'none';
+  // 再下請負通知書ボタン（一次の編集時のみ表示）
+  document.getElementById('saiRow').style.display=(id&&kind!=='二次')?'block':'none';
+  // 書類セクション
+  document.getElementById('subDocSec').style.display=id?'block':'none';
+  if(id)loadSubDocs(id); else document.getElementById('subDocList').innerHTML='<div class="doc-empty">保存後に書類を登録できます</div>';
+  // フォームをクリア
+  ['fName','fLicense','fBizType','fRepName','fAddr','fTel','fWork','fAmt','fS','fE','fTech','fTechQ','fNote'].forEach(function(k){document.getElementById(k).value='';});
+  document.getElementById('fParent').value='';
+  if(id){
+    var sub=curSubs.filter(function(x){return String(x['下請ID'])===String(id);})[0];
+    if(sub){
+      document.getElementById('fName').value=sub['会社名']||'';
+      document.getElementById('fLicense').value=sub['建設業許可番号']||'';
+      document.getElementById('fBizType').value=sub['許可業種']||'';
+      document.getElementById('fRepName').value=sub['代表者名']||'';
+      document.getElementById('fAddr').value=sub['住所']||'';
+      document.getElementById('fTel').value=sub['電話']||'';
+      document.getElementById('fWork').value=sub['工種']||'';
+      document.getElementById('fAmt').value=sub['請負金額']||'';
+      document.getElementById('fS').value=String(sub['工期開始']||'').slice(0,10);
+      document.getElementById('fE').value=String(sub['工期完了']||'').slice(0,10);
+      document.getElementById('fTech').value=sub['主任技術者名']||'';
+      document.getElementById('fTechQ').value=sub['主任技術者資格']||'';
+      document.getElementById('fNote').value=sub['備考']||'';
+      document.getElementById('fParent').value=sub['親下請ID']||'';
+    }
+  }
+  show('p-form');
+}
+
+function saveSub(){
+  var nm=document.getElementById('fName').value.trim();
+  if(!nm){toast('会社名を入力してください');return;}
+  var kind=document.getElementById('fKind').value;
+  var data={
+    '案件ID':curCase, '種別':kind,
+    '親下請ID':(kind==='二次'?document.getElementById('fParent').value:''),
+    '会社名':nm,
+    '建設業許可番号':document.getElementById('fLicense').value.trim(),
+    '許可業種':document.getElementById('fBizType').value.trim(),
+    '代表者名':document.getElementById('fRepName').value.trim(),
+    '住所':document.getElementById('fAddr').value.trim(),
+    '電話':document.getElementById('fTel').value.trim(),
+    '工種':document.getElementById('fWork').value.trim(),
+    '請負金額':document.getElementById('fAmt').value.trim(),
+    '工期開始':document.getElementById('fS').value,
+    '工期完了':document.getElementById('fE').value,
+    '主任技術者名':document.getElementById('fTech').value.trim(),
+    '主任技術者資格':document.getElementById('fTechQ').value.trim(),
+    '備考':document.getElementById('fNote').value.trim()
+  };
+  var eid=document.getElementById('fId').value;
+  if(eid)data['下請ID']=eid;
+  callGAS({action:'daikoSave',data:data}).then(function(r){
+    if(!r.ok)throw new Error(r.error||'保存失敗');
+    var sub=r.sub;
+    curSubs=curSubs.filter(function(x){return String(x['下請ID'])!==String(sub['下請ID']);});
+    curSubs.push(sub);
+    DB.subs=(DB.subs||[]).filter(function(x){return String(x['下請ID'])!==String(sub['下請ID']);});
+    DB.subs.push(sub);
+    try{localStorage.setItem(CACHE,JSON.stringify(DB));}catch(e){}
+    toast('保存しました');backList();
+  }).catch(function(e){toast('保存失敗：'+e.message);});
+}
+
+function deleteSub(id){
+  if(!confirm('この下請業者を削除しますか？'))return;
+  callGAS({action:'daikoDelete',id:id}).then(function(r){
+    if(!r.ok)throw new Error(r.error||'削除失敗');
+    curSubs=curSubs.filter(function(x){return String(x['下請ID'])!==String(id);});
+    DB.subs=(DB.subs||[]).filter(function(x){return String(x['下請ID'])!==String(id);});
+    try{localStorage.setItem(CACHE,JSON.stringify(DB));}catch(e){}
+    toast('削除しました');renderSubLists();
+  }).catch(function(e){toast('削除失敗：'+e.message);});
+}
+
+/* PDF */
+function makePdf(type){
+  if(!curCase){toast('案件を選択してください');return;}
+  callGAS({action:'taiseiPdf',caseId:curCase}).then(function(r){
+    if(!r.ok)throw new Error(r.error||'失敗');
+    toast('PDF作成完了');
+    setTimeout(function(){window.open(r.pdfUrl,'_blank');},400);
+  }).catch(function(e){toast('PDF作成失敗：'+e.message);});
+}
+function makeSaiteke(){
+  var id=document.getElementById('fId').value;
+  if(!id){toast('先に保存してください');return;}
+  makeSaitekeById(id);
+}
+function makeSaitekeById(id){
+  callGAS({action:'saitekePdf',subId:id}).then(function(r){
+    if(!r.ok)throw new Error(r.error||'失敗');
+    toast('PDF作成完了');
+    setTimeout(function(){window.open(r.pdfUrl,'_blank');},400);
+  }).catch(function(e){toast('PDF作成失敗：'+e.message);});
+}
+
+/* 起動 */
+(function(){
+  var pin=localStorage.getItem('genba_admin');
+  if(pin){
+    document.getElementById('gate').style.display='none';
+    document.getElementById('main').style.display='block';
+    loadCache();
+    loadData(true);
+  }
+})();
+/* ===== 下請業者書類管理 ===== */
+var subCurDocs=[];
+function loadSubDocs(sid){
+  callGAS({action:'docList',type:'sub',targetId:sid},true).then(function(r){
+    subCurDocs=(r&&r.ok&&r.docs)||[];renderSubDocs();
+  }).catch(function(){});
+}
+function renderSubDocs(){
+  var el=document.getElementById('subDocList');
+  if(!subCurDocs.length){el.innerHTML='<div class="doc-empty">まだ書類が登録されていません</div>';return;}
+  el.innerHTML=subCurDocs.map(function(d){
+    var ic=String(d['MIME']||'').indexOf('image')>=0?'🖼️':'📄';
+    var dt=String(d['登録日時']||'').replace('T',' ').slice(0,16);
+    return '<div class="doc-card">'+
+      '<span class="dc-ic">'+ic+'</span>'+
+      '<a class="dc-nm" href="'+esc(d['DriveFileUrl']||'')+'" target="_blank" rel="noopener">'+esc(d['書類名']||'')+'</a>'+
+      '<span class="dc-dt">'+esc(dt)+'</span>'+
+      '<button class="dc-del" onclick="deleteSubDoc(&quot;'+esc(d['書類ID'])+'&quot;)">削除</button>'+
+      '</div>';
+  }).join('');
+}
+function uploadSubDoc(inp){
+  var sid=document.getElementById('fId').value;
+  if(!sid){toast('先に保存してください');inp.value='';return;}
+  var file=inp.files[0]; if(!file)return;
+  toast('アップロード中…');
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var b64=e.target.result.split(',')[1];
+    callGAS({action:'docUpload',type:'sub',targetId:sid,name:file.name,mime:file.type||'application/octet-stream',data:b64}).then(function(r){
+      if(!r.ok)throw new Error(r.error||'失敗');
+      subCurDocs.unshift(r.doc);renderSubDocs();toast('✓ アップロードしました');
+    }).catch(function(err){toast('失敗：'+err.message);});
+    inp.value='';
+  };
+  reader.readAsDataURL(file);
+}
+function deleteSubDoc(id){
+  if(!confirm('この書類を削除しますか？'))return;
+  callGAS({action:'docDelete',id:id}).then(function(r){
+    if(!r.ok)throw new Error(r.error||'失敗');
+    subCurDocs=subCurDocs.filter(function(d){return d['書類ID']!==id;});renderSubDocs();toast('削除しました');
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+</script>
+</body>
+</html>
