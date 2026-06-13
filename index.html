@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 49 root (2026-06-12) メニュータイルの文字サイズを復元（13.5→15.5px） -->
+<!-- version 50 root (2026-06-14) AIアシスタントタイル追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -53,6 +53,7 @@
   .t-veh .ic{color:#b45309;} .t-tool2 .ic{color:#a16207;} .t-safety .ic{color:#15803d;}
   .t-est .ic{color:#9d7a18;} .t-cost .ic{color:#0f766e;} .t-admin .ic{color:#475569;}
   .t-material .ic{color:#2563eb;}
+  .t-ai .ic{color:#7c3aed;}
 
   /* スマホ：横3列の正方形タイル */
   .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -176,6 +177,7 @@
     <a class="sq t-time" href="./timecard/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="txt"><span class="en">Timecard</span><span class="nm">タイムカード</span><span class="ds">出勤・退勤の打刻と勤怠集計</span></span><span class="cor">→</span></a>
     <a class="sq t-sched" href="./calendar/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="txt"><span class="en">Schedule</span><span class="nm">スケジュール</span><span class="ds">現場の予定をカレンダーで管理</span></span><span class="cor">→</span></a>
     <a class="sq t-files" href="./files/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l2-3h6l2 3h2a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="4"/></svg></span><span class="txt"><span class="en">Files</span><span class="nm">写真ファイル</span><span class="ds">現場の写真・ファイルの保存と閲覧</span></span><span class="cor">→</span></a>
+    <a class="sq t-ai" href="./ai/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span><span class="txt"><span class="en">AI Chat</span><span class="nm">AIアシスタント</span><span class="ds">何でも聞けるAIチャット</span></span><span class="cor">✨</span></a>
     <a class="sq t-tool" href="./toolbox/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a3 3 0 0 1 6 0v2M3 13h18M12 12v3"/></svg></span><span class="txt"><span class="en">Toolbox</span><span class="nm">ツールボックス</span><span class="ds">メモ・計算・カメラなどの現場道具</span></span><span class="cor">→</span></a>
   </div>
 
