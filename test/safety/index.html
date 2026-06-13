@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 7 safety (2026-06-13) 作業員編集に電話番号/特殊健診日/血圧/技能者ID/退職金区分を追加 -->
+<!-- version 8 safety (2026-06-13) 健康保険・年金保険を○×から「名称入力」に変更（作業員名簿は名称欄のため） -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -87,7 +87,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v7</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v8</div>
 <header>
   <div class="hd-row">
     <a class="back" href="../">← 現場管理メニュー</a>
@@ -183,19 +183,21 @@
     <textarea class="inp" id="eCert" placeholder="例：第二種電気工事士、高所作業車運転技能講習"></textarea>
     <label class="lbl">最近の健康診断日（任意）</label>
     <input class="inp" id="eHealth" type="date">
-    <label class="lbl">社会保険・雇用保険加入状況</label>
+    <label class="lbl">保険の名称（作業員名簿に記載されます）</label>
     <div class="grid2" style="margin-bottom:8px;">
       <div>
         <label class="lbl" style="margin-top:0;">健康保険</label>
-        <select class="inp" id="eHenko"><option value="">未入力</option><option>○</option><option>×</option><option>除</option></select>
+        <input class="inp" id="eHenko" list="henkoList" placeholder="例：協会けんぽ／建設国保">
+        <datalist id="henkoList"><option>協会けんぽ</option><option>建設国保</option><option>土建国保</option><option>健康保険組合</option><option>国民健康保険</option><option>適用除外</option></datalist>
       </div>
       <div>
-        <label class="lbl" style="margin-top:0;">厚生年金</label>
-        <select class="inp" id="eKosei"><option value="">未入力</option><option>○</option><option>×</option><option>除</option></select>
+        <label class="lbl" style="margin-top:0;">年金保険</label>
+        <input class="inp" id="eKosei" list="koseiList" placeholder="例：厚生年金／国民年金">
+        <datalist id="koseiList"><option>厚生年金</option><option>国民年金</option><option>受給者</option><option>適用除外</option></datalist>
       </div>
     </div>
     <div style="margin-bottom:12px;">
-      <label class="lbl" style="margin-top:0;">雇用保険</label>
+      <label class="lbl" style="margin-top:0;">雇用保険（加入状況）</label>
       <select class="inp" id="eKoyo"><option value="">未入力</option><option>○</option><option>×</option><option>除</option></select>
     </div>
     <label class="lbl">雇用保険被保険者番号（任意）</label>
