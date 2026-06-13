@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 2 estimate (2026-06-11) 入金管理・売掛サマリーを追加 -->
+<!-- version 3 estimate (2026-06-14) AI見積もりOCR追加（GAS内蔵Gemini） -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -110,6 +110,24 @@
   .lbox .txt{font-size:13.5px;color:var(--sub);}
   /* 設定 */
   .shint{font-size:12px;color:var(--sub);margin:4px 2px 0;}
+  /* AI見積もりOCR */
+  .aibtn{width:100%;padding:13px;border:1.5px solid #059669;border-radius:12px;background:#fff;color:#065f46;font-size:14.5px;font-weight:700;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;}
+  .aibtn:active{background:#f0fdf4;}
+  .ai-modal{position:fixed;inset:0;background:rgba(20,30,50,.45);z-index:90;display:flex;align-items:flex-end;justify-content:center;}
+  .ai-inner{background:#fff;border-radius:20px 20px 0 0;padding:24px 18px 36px;width:100%;max-width:560px;box-shadow:0 -4px 24px rgba(0,0,0,.12);}
+  .ai-inner h3{margin:0 0 6px;font-size:16px;color:#065f46;}
+  .ai-inner p{font-size:13px;color:var(--sub);margin:0 0 16px;line-height:1.6;}
+  .ai-drop{border:2px dashed #6ee7b7;border-radius:14px;padding:32px 16px;text-align:center;cursor:pointer;background:#f0fdf4;margin-bottom:14px;}
+  .ai-drop .ai-ico{font-size:36px;margin-bottom:8px;}
+  .ai-drop .ai-dtxt{font-size:14px;color:#065f46;font-weight:700;}
+  .ai-drop .ai-dsub{font-size:12px;color:var(--sub);margin-top:4px;}
+  .ai-drop input[type=file]{display:none;}
+  .ai-preview{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--sub);margin-bottom:14px;display:none;}
+  .ai-preview .fname{font-weight:700;color:var(--ink);font-size:14px;}
+  .ai-readbtn{width:100%;padding:13px;border:none;border-radius:12px;background:#059669;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;}
+  .ai-readbtn:disabled{background:#a7f3d0;cursor:default;}
+  .ai-cancelbtn{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;}
+  .ai-result{background:#f0fdf4;border:1px solid #6ee7b7;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;color:#065f46;display:none;}
 </style>
 </head>
 <body>
@@ -189,6 +207,7 @@
       <button class="un" onclick="markPaid(false)">未入金に戻す</button>
     </div>
 
+    <button class="aibtn" id="aiBtn" onclick="openAiModal()">✨ AIで見積を読み取る（PDF・画像）</button>
     <label class="lbl">明細</label>
     <div id="items"></div>
     <button class="additem" onclick="addItem()">＋ 行を追加</button>
@@ -245,6 +264,27 @@
     <button class="savebtn" onclick="saveSettings()">保存する</button>
   </div>
 </main>
+
+<!-- AI見積もりOCRモーダル -->
+<div class="ai-modal" id="aiModal" style="display:none" onclick="if(event.target===this)closeAiModal()">
+  <div class="ai-inner">
+    <h3>✨ AI見積もり読み取り</h3>
+    <p>取引先からもらった見積書や発注書（PDF・画像）をアップロードすると、品名・数量・単価を自動で読み取って明細に入力します。</p>
+    <div class="ai-drop" id="aiDrop" onclick="document.getElementById('aiFile').click()">
+      <div class="ai-ico">📄</div>
+      <div class="ai-dtxt">タップしてファイルを選択</div>
+      <div class="ai-dsub">PDF / JPG / PNG / HEIC に対応</div>
+      <input type="file" id="aiFile" accept=".pdf,.jpg,.jpeg,.png,.heic,.webp,image/*,application/pdf" onchange="aiFileSelected(this)">
+    </div>
+    <div class="ai-preview" id="aiPreview">
+      <div class="fname" id="aiFileName"></div>
+      <div id="aiFileSize" style="font-size:12px;margin-top:2px;"></div>
+    </div>
+    <div class="ai-result" id="aiResult"></div>
+    <button class="ai-readbtn" id="aiReadBtn" disabled onclick="doAiOcr()">AIで読み取る</button>
+    <button class="ai-cancelbtn" onclick="closeAiModal()">キャンセル</button>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt" id="ltxt">読み込み中…</div></div></div>
@@ -618,6 +658,93 @@ function saveSettings(){
     }).catch(function(e){});
   }
 })();
+
+/* ===== AI見積もりOCR ===== */
+var _aiBase64='', _aiMime='';
+function openAiModal(){
+  var m=document.getElementById('aiModal');
+  m.style.display='flex';
+  _aiBase64='';_aiMime='';
+  document.getElementById('aiFile').value='';
+  document.getElementById('aiPreview').style.display='none';
+  document.getElementById('aiResult').style.display='none';
+  document.getElementById('aiResult').textContent='';
+  document.getElementById('aiReadBtn').disabled=true;
+}
+function closeAiModal(){
+  document.getElementById('aiModal').style.display='none';
+}
+function aiFileSelected(input){
+  var file=input.files[0];if(!file)return;
+  var limit=10*1024*1024; // 10MB
+  if(file.size>limit){toast('ファイルが大きすぎます（10MB以内）');return;}
+  document.getElementById('aiFileName').textContent=file.name;
+  document.getElementById('aiFileSize').textContent=Math.round(file.size/1024)+'KB';
+  document.getElementById('aiPreview').style.display='block';
+  document.getElementById('aiResult').style.display='none';
+  document.getElementById('aiReadBtn').disabled=true;
+  var mime=file.type||'application/pdf';
+  if(!mime||mime==='application/octet-stream'){
+    if(/\.pdf$/i.test(file.name))mime='application/pdf';
+    else if(/\.(jpg|jpeg)$/i.test(file.name))mime='image/jpeg';
+    else if(/\.png$/i.test(file.name))mime='image/png';
+    else if(/\.heic$/i.test(file.name))mime='image/heic';
+    else mime='image/jpeg';
+  }
+  _aiMime=mime;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var dataUrl=e.target.result;
+    _aiBase64=dataUrl.split(',')[1]||'';
+    if(_aiBase64)document.getElementById('aiReadBtn').disabled=false;
+  };
+  reader.onerror=function(){toast('ファイルの読み込みに失敗しました');};
+  reader.readAsDataURL(file);
+}
+function doAiOcr(){
+  if(!_aiBase64){toast('ファイルを選択してください');return;}
+  var btn=document.getElementById('aiReadBtn');
+  btn.disabled=true; btn.textContent='読み取り中…';
+  var resEl=document.getElementById('aiResult');
+  resEl.style.display='none';resEl.textContent='';
+  showLoad('AIが見積書を読み取り中…');
+  callGAS({action:'aiOcr',base64:_aiBase64,mime:_aiMime},null,true)
+    .then(function(res){
+      hideLoad();
+      btn.textContent='AIで読み取る';
+      if(!res||!res.ok){
+        resEl.textContent='エラー: '+(res&&res.error||'不明なエラーが発生しました');
+        resEl.style.display='block';
+        resEl.style.background='#fff1f2';resEl.style.borderColor='#fecdd3';resEl.style.color='#9f1239';
+        btn.disabled=false;
+        return;
+      }
+      // 明細を上書き（空行を除外）
+      var newItems=(res.items||[]).filter(function(it){return String(it.n||'').trim()!=='';})
+        .map(function(it){return {n:String(it.n||''),q:Number(it.q)||1,u:String(it.u||'式'),p:Number(it.p)||0};});
+      if(!newItems.length){
+        resEl.textContent='明細を読み取れませんでした。手動で入力してください。';
+        resEl.style.display='block';
+        resEl.style.background='#fffbeb';resEl.style.borderColor='#fde68a';resEl.style.color='#92400e';
+        btn.disabled=false;
+        return;
+      }
+      items=newItems;
+      // 件名・宛名が空なら補完
+      if(res.subject&&!document.getElementById('fSubj').value.trim())
+        document.getElementById('fSubj').value=res.subject;
+      if(res.atena&&!document.getElementById('fAtena').value.trim())
+        document.getElementById('fAtena').value=res.atena;
+      renderItems();
+      closeAiModal();
+      toast('✨ '+newItems.length+'行の明細を読み取りました！内容を確認してください。');
+    })
+    .catch(function(e){
+      hideLoad();
+      btn.disabled=false;btn.textContent='AIで読み取る';
+      toast('通信エラー: '+e.message);
+    });
+}
 </script>
 </body>
 </html>
