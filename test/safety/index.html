@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 8 safety (2026-06-13) 健康保険・年金保険を○×から「名称入力」に変更（作業員名簿は名称欄のため） -->
+<!-- version 9 safety (2026-06-13) 提出日・作成年月日のカレンダー入力追加、役割記号を作業員ごとにチェック選択 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -36,6 +36,9 @@
   .wchk .ws{font-size:12px;color:var(--sub);}
   .wchk.miss{border-color:#f0c674;background:#fffbeb;}
   .wchk .warn{margin-left:auto;font-size:11px;color:#b45309;font-weight:700;flex:0 0 auto;}
+.wchk-wrap{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0;}
+.wchk-wrap .wchk{flex:1;border:none;padding:0;}
+.role-sel{font-size:11px;padding:3px 4px;border:1px solid #d1d5db;border-radius:6px;background:#f8fafc;color:#374151;min-width:90px;max-width:130px;flex-shrink:0;}
   .selall{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
   .selall button{padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--accent-d);font-size:12.5px;font-weight:700;cursor:pointer;}
   .pdfbtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:12px;}
@@ -87,7 +90,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v8</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v9</div>
 <header>
   <div class="hd-row">
     <a class="back" href="../">← 現場管理メニュー</a>
@@ -124,6 +127,10 @@
         <label class="lbl">元請会社名（任意）</label>
         <input class="inp" id="rPrime" placeholder="例：○○建設株式会社">
       </div>
+    </div>
+    <div class="grid2" style="margin-top:8px;">
+      <div><label class="lbl">提出日（任意）</label><input class="inp" id="rSubmitDate" type="date"></div>
+      <div><label class="lbl">作成年月日（任意）</label><input class="inp" id="rMakeDate" type="date"></div>
     </div>
     <div class="selall" style="margin-top:14px;">
       <span class="lbl" style="margin:0;">対象の作業員</span>
@@ -389,14 +396,14 @@ function renderWlist(){
   el.innerHTML=DB.workers.map(function(w){
     var id=esc(w['作業員ID']),miss=isMiss(w);
     var checked=sel[w['作業員ID']]?'checked':'';
-    return '<label class="wchk'+(miss?' miss':'')+'"><input type="checkbox" '+checked+' onchange="toggleSel(\''+id+'\',this.checked)">'
-      +'<span><span class="wn">'+esc(w['氏名']||'')+'</span>'
-      +(w['職種']?' <span class="ws">'+esc(w['職種'])+'</span>':'')
-      +'<br><span class="ws">'+esc(w['区分']||'')+(w['所属']?'・'+esc(w['所属']):'')+'</span></span>'
-      +(miss?'<span class="warn">⚠ 情報未入力</span>':'')+'</label>';
+    var roleOpts='<option value="">(役割なし)</option>'+ROLES.map(function(r){var sel2=(workerRoles[w['作業員ID']]===r)?'selected':'';return '<option value="'+r+'" '+sel2+'>'+r+'</option>';}).join('');
+    return '<div class="wchk-wrap'+(miss?' miss':'')+'">'+'<label class="wchk"><input type="checkbox" '+checked+' onchange="toggleSel(\''+id+'\',this.checked)">'+'<span><span class="wn">'+esc(w['氏名']||'')+'</span>'+(w['職種']?' <span class="ws">'+esc(w['職種'])+'</span>':'')+'<br><span class="ws">'+esc(w['区分']||'')+(w['所属']?'・'+esc(w['所属']):'')+'</span></span>'+(miss?'<span class="warn">⚠ 情報未入力</span>':'')+'</label>'+'<select class="role-sel" onchange="setRole(\''+id+'\',this.value)">'+roleOpts+'</select>'+'</div>';
   }).join('');
 }
 function toggleSel(id,v){if(v)sel[id]=1;else delete sel[id];}
+var ROLES=['現場代理人','主任技術者','作業主任者','職長','安全衛生責任者','女性作業員','18歳未満','能力向上教育','危険有害業務再発防止教育','外国人技能実習生','外国人建設就労者','1号特定技能外国人'];
+var workerRoles={};
+function setRole(id,v){workerRoles[id]=v;}
 function toggleAll(){
   var allSel=DB.workers.every(function(w){return sel[w['作業員ID']];});
   sel={};if(!allSel)DB.workers.forEach(function(w){sel[w['作業員ID']]=1;});
@@ -413,9 +420,13 @@ function makeRoster(mode){
     }
   }
   var label=(mode==='insurance')?'社会保険加入状況':'作業員名簿';
+  var rolesArr=wids.map(function(id){return workerRoles[id]||'';});
   var p={action:'rosterPdf',mode:mode,wids:wids.join(','),
     projName:document.getElementById('rProj').value.trim(),
-    prime:document.getElementById('rPrime').value.trim()};
+    prime:document.getElementById('rPrime').value.trim(),
+    submitDate:document.getElementById('rSubmitDate').value,
+    makeDate:document.getElementById('rMakeDate').value,
+    roles:rolesArr.join(',')};
   if(caseId)p.caseId=caseId;
   showLoad(label+'PDFを作成中…（10秒ほどかかります）');
   callGAS(p,null,true).then(function(res){
@@ -439,9 +450,13 @@ function makeRosterXlsx(mode){
     }
   }
   var label=(mode==='insurance')?'社会保険加入状況':'作業員名簿';
+  var rolesArr2=wids.map(function(id){return workerRoles[id]||'';});
   var p={action:'rosterXlsx',mode:mode,wids:wids.join(','),
     projName:document.getElementById('rProj').value.trim(),
-    prime:document.getElementById('rPrime').value.trim()};
+    prime:document.getElementById('rPrime').value.trim(),
+    submitDate:document.getElementById('rSubmitDate').value,
+    makeDate:document.getElementById('rMakeDate').value,
+    roles:rolesArr2.join(',')};
   if(caseId)p.caseId=caseId;
   showLoad(label+'Excelを作成中…（10秒ほどかかります）');
   callGAS(p,null,true).then(function(res){
