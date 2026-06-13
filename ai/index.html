@@ -268,7 +268,7 @@ function doStream() {
   var sc = document.createElement('script');
   var timer = setTimeout(function() {
     cleanup('タイムアウト：GASの応答がありません');
-  }, 90000);
+  }, 45000);
 
   function cleanup(errMsg) {
     clearTimeout(timer);
@@ -303,13 +303,18 @@ function doStream() {
 
   sc.onerror = function() { cleanup('通信エラーが発生しました'); };
 
-  // messagesとsystemをJSONでエンコードしてクエリに乗せる
+  // messagesのみ送る（systemはGAS側が保持。URL長を短く保つため）
   var q = 'action=aiChat'
     + '&secret=' + encodeURIComponent('kawaguchi-genba-2026')
     + '&messages=' + encodeURIComponent(JSON.stringify(chatLog))
-    + '&system=' + encodeURIComponent(SYSTEM_PROMPT)
     + '&callback=' + encodeURIComponent(cb);
-  sc.src = API_URL + '?' + q;
+  var fullUrl = API_URL + '?' + q;
+  // URL長チェック（GASのJSONP上限対策）
+  if(fullUrl.length > 7000) {
+    cleanup('会話が長くなりすぎました。「クリア」を押して会話をリセットしてください。');
+    return;
+  }
+  sc.src = fullUrl;
   document.head.appendChild(sc);
 }
 
