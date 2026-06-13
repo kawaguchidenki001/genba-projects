@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 1 safety (2026-06-11) 安全書類・作業員名簿 新規作成 -->
+<!-- version 5 safety (2026-06-13) 名簿/社会保険を別PDF化＋Excel生成ボタン追加（4ボタン常時表示） -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -87,7 +87,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v3 TEST</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v5</div>
 <header>
   <div class="hd-row">
     <a class="back" href="../">← 現場管理メニュー</a>
@@ -130,8 +130,13 @@
       <button onclick="toggleAll()">全選択／解除</button>
     </div>
     <div id="wlist"></div>
-    <button class="pdfbtn" onclick="makeRoster()">📄 作業員名簿 PDF を作成</button>
-    <a class="pdflink" id="pdfLink" style="display:none" target="_blank" rel="noopener">📎 作成済みPDFを開く</a>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <button class="pdfbtn" onclick="makeRoster('roster')">📄 作業員名簿 PDF</button>
+      <button class="pdfbtn" onclick="makeRoster('insurance')" style="background:#0e7490;">📄 社会保険加入状況 PDF</button>
+      <button class="pdfbtn" onclick="makeRosterXlsx('roster')" style="background:#15803d;">📊 作業員名簿 Excel</button>
+      <button class="pdfbtn" onclick="makeRosterXlsx('insurance')" style="background:#166534;">📊 社会保険加入状況 Excel</button>
+    </div>
+    <a class="pdflink" id="pdfLink" style="display:none;margin-top:12px;" target="_blank" rel="noopener">📎 作成済みファイルを開く</a>
   </div>
 
   <!-- 作業員情報：一覧 -->
@@ -286,7 +291,7 @@
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt" id="ltxt">読み込み中…</div></div></div>
 
 <script>
-var GAS_URL='https://script.google.com/macros/s/AKfycbxmgOKj5b_FRr04RX4qbiedgXm2OBX-Chsz4rynj-iMYvsLWHKCrE0zPYb3Cg_rj1hRWw/exec';
+var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 
 /* 書類アップロード専用：fetch POST（URL長制限を回避） */
@@ -383,20 +388,54 @@ function toggleAll(){
   sel={};if(!allSel)DB.workers.forEach(function(w){sel[w['作業員ID']]=1;});
   renderWlist();
 }
-function makeRoster(){
+function makeRoster(mode){
+  mode=mode||'roster';
   var wids=Object.keys(sel);
   if(!wids.length){toast('作業員を1人以上選んでください');return;}
   var caseId=document.getElementById('rCase').value;
-  var p={action:'rosterPdf',wids:wids.join(','),
+  if(!caseId){
+    if(!confirm('工事名（現場）が選ばれていません。\n\nこのまま作成すると、ファイルは現場フォルダではなく共通の「安全書類」フォルダに保存されます。\n\n上の「工事名」で現場を選ぶと、その現場のフォルダに保存され、後から探しやすくなります。\n\nこのまま作成しますか？')){
+      return;
+    }
+  }
+  var label=(mode==='insurance')?'社会保険加入状況':'作業員名簿';
+  var p={action:'rosterPdf',mode:mode,wids:wids.join(','),
     projName:document.getElementById('rProj').value.trim(),
     prime:document.getElementById('rPrime').value.trim()};
   if(caseId)p.caseId=caseId;
-  showLoad('名簿PDFを作成中…（10秒ほどかかります）');
+  showLoad(label+'PDFを作成中…（10秒ほどかかります）');
   callGAS(p,null,true).then(function(res){
     hideLoad();
     if(res&&res.ok&&res.pdfUrl){
       var pl=document.getElementById('pdfLink');pl.href=res.pdfUrl;pl.style.display='block';
-      toast(res.n+'名の名簿を作成しました');window.open(res.pdfUrl,'_blank');
+      var dest=res.dest?('（保存先：'+res.dest+'）'):'';
+      toast(label+'を作成しました'+dest);window.open(res.pdfUrl,'_blank');
+    }else toast((res&&res.error)||'作成に失敗しました');
+  }).catch(function(e){hideLoad();toast(e.message);});
+}
+
+function makeRosterXlsx(mode){
+  mode=mode||'roster';
+  var wids=Object.keys(sel);
+  if(!wids.length){toast('作業員を1人以上選んでください');return;}
+  var caseId=document.getElementById('rCase').value;
+  if(!caseId){
+    if(!confirm('工事名（現場）が選ばれていません。\n\nこのまま作成すると、ファイルは共通の「安全書類」フォルダに保存されます。\n\nこのまま作成しますか？')){
+      return;
+    }
+  }
+  var label=(mode==='insurance')?'社会保険加入状況':'作業員名簿';
+  var p={action:'rosterXlsx',mode:mode,wids:wids.join(','),
+    projName:document.getElementById('rProj').value.trim(),
+    prime:document.getElementById('rPrime').value.trim()};
+  if(caseId)p.caseId=caseId;
+  showLoad(label+'Excelを作成中…（10秒ほどかかります）');
+  callGAS(p,null,true).then(function(res){
+    hideLoad();
+    if(res&&res.ok&&res.fileUrl){
+      var pl=document.getElementById('pdfLink');pl.href=res.fileUrl;pl.style.display='block';
+      var dest=res.dest?('（保存先：'+res.dest+'）'):'';
+      toast(label+'(Excel)を作成しました'+dest);window.open(res.fileUrl,'_blank');
     }else toast((res&&res.error)||'作成に失敗しました');
   }).catch(function(e){hideLoad();toast(e.message);});
 }
