@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 42 (自社設定タブ追加：会社書類アップロード) admin (2026-06-11) 日報未提出チェックタブを追加 -->
+<!-- version 43 admin (2026-06-13) 作業員一覧が表示されない不具合を修正（区分を社員/常用などデータの値に依存せず全グループ表示）。追加・編集の区分も社員/常用に対応 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -82,7 +82,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v41</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v43</div>
 <header>
   <div class="hd-row">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
@@ -174,7 +174,7 @@
     </div>
     <div class="fld"><label>略称（日報・予定表に表示）</label><input id="w_short" placeholder="例）河口 / ナンカイ"></div>
     <div class="two">
-      <div class="fld"><label>区分</label><select id="w_kind" onchange="wKind()"><option>自社</option><option>協力会社</option></select></div>
+      <div class="fld"><label>区分</label><select id="w_kind" onchange="wKind()"><option>社員</option><option>常用</option></select></div>
       <div class="fld"><label>標準単価（円/人工）</label><input id="w_unit" type="number" inputmode="numeric" placeholder="例）20000"></div>
     </div>
     <div class="fld" id="belongWrap" style="display:none;"><label>所属（協力会社名）</label><input id="w_belong" placeholder="例）ナンカイ（株）"></div>
@@ -379,16 +379,15 @@ function render(){
   var el=document.getElementById('list');
   if(!workers.length){el.innerHTML='<div class="empty">作業員がまだいません。<br>右下の「＋作業員」から登録してください。</div>';return;}
   el.innerHTML='';
-  var groups={};
-  workers.forEach(function(w){var k=w['区分']||'自社';(groups[k]=groups[k]||[]).push(w);});
-  ['自社','協力会社'].forEach(function(k){
-    if(!groups[k]||!groups[k].length)return;
-    var arr=groups[k],sec=document.createElement('div');
+  var groups={},order=[];
+  workers.forEach(function(w){var k=String(w['区分']||'未分類');if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(w);});
+  order.forEach(function(k){
+    var arr=groups[k],isKyo=/常用|協力|外注|応援|下請/.test(k),sec=document.createElement('div');
     sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'（'+arr.length+'）</div>';
     var grid=document.createElement('div');grid.className='grid-3';
     arr.forEach(function(w){
-      var div=document.createElement('div');div.className='card'+(w['区分']==='協力会社'?' kyo':'');div.onclick=function(){openWorker(w);};
-      div.innerHTML='<div><div class="nm">'+esc(w['氏名']||'')+' <span class="tag'+(w['区分']==='協力会社'?' kyo':'')+'">'+esc(w['区分']||'')+'</span></div>'+
+      var div=document.createElement('div');div.className='card'+(isKyo?' kyo':'');div.onclick=function(){openWorker(w);};
+      div.innerHTML='<div><div class="nm">'+esc(w['氏名']||'')+' <span class="tag'+(isKyo?' kyo':'')+'">'+esc(w['区分']||'')+'</span></div>'+
         '<div class="meta">'+(w['所属']?esc(w['所属'])+' ・ ':'')+(w['ログインID']?'🔑 '+esc(w['ログインID']):'<span style="color:#bbb;">ログイン未設定</span>')+'</div></div>'+
         '<div class="yen">'+(numv(w['標準単価'])?yen(w['標準単価'])+'/人工':'<span style="color:#9aa1ab;font-weight:400;">単価未設定</span>')+'</div>';
       grid.appendChild(div);
@@ -406,18 +405,18 @@ function openWorker(w){
   g('w_sei').value=w?(w['氏']||sp[0]||''):'';
   g('w_mei').value=w?(w['名']||sp.slice(1).join(' ')||''):'';
   g('w_short').value=w?(w['略称']||''):'';
-  g('w_kind').value=w?(w['区分']||'自社'):'自社';g('w_unit').value=w?(numv(w['標準単価'])||''):'';g('w_belong').value=w?(w['所属']||''):'';
+  g('w_kind').value=w?(w['区分']||'社員'):'社員';g('w_unit').value=w?(numv(w['標準単価'])||''):'';g('w_belong').value=w?(w['所属']||''):'';
   g('w_loginid').value=w?(w['ログインID']||''):'';g('w_pw').value=w?(w['パスワード']||''):'';
   wKind();document.getElementById('ov').classList.add('show');
 }
-function wKind(){document.getElementById('belongWrap').style.display=document.getElementById('w_kind').value==='協力会社'?'block':'none';}
+function wKind(){document.getElementById('belongWrap').style.display=document.getElementById('w_kind').value==='常用'?'block':'none';}
 function closeOv(){document.getElementById('ov').classList.remove('show');}
 function saveWorker(){
   var g=function(id){return document.getElementById(id).value;},sei=g('w_sei').trim(),mei=g('w_mei').trim();
   if(!sei&&!mei){toast('氏（姓）を入れてください');return;}
   var name=[sei,mei].filter(Boolean).join('　');
   var kind=g('w_kind'),id=g('w_id'),isNew=!id;
-  var d={'氏名':name,'氏':sei,'名':mei,'略称':g('w_short').trim(),'区分':kind,'所属':kind==='協力会社'?g('w_belong').trim():'','標準単価':g('w_unit'),'ログインID':g('w_loginid').trim(),'パスワード':g('w_pw')};
+  var d={'氏名':name,'氏':sei,'名':mei,'略称':g('w_short').trim(),'区分':kind,'所属':kind==='常用'?g('w_belong').trim():'','標準単価':g('w_unit'),'ログインID':g('w_loginid').trim(),'パスワード':g('w_pw')};
   var btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
   var params=isNew?{action:'addWorker',data:d}:{action:'updateWorker',id:id,data:d};
   callGAS(params).then(function(res){
