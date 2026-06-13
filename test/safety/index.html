@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 6 safety (2026-06-13) 工事名ドロップダウンの選択がSWR再描画で消えるバグを修正 -->
+<!-- version 7 safety (2026-06-13) 作業員編集に電話番号/特殊健診日/血圧/技能者ID/退職金区分を追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -87,7 +87,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v6</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v7</div>
 <header>
   <div class="hd-row">
     <a class="back" href="../">← 現場管理メニュー</a>
@@ -202,6 +202,16 @@
     <input class="inp" id="eKoyoNum" placeholder="例：0123-456789-0">
     <label class="lbl">建退共手帳番号（任意）</label>
     <input class="inp" id="eKentaikyo" placeholder="例：○○-000001">
+    <label class="lbl">電話番号（本人・任意）</label>
+    <input class="inp" id="eTel" placeholder="例：090-1234-5678">
+    <label class="lbl">技能者ID（建設キャリアアップ・任意）</label>
+    <input class="inp" id="eCcus" placeholder="例：00001234567890">
+    <label class="lbl">特殊健康診断日（任意）</label>
+    <input class="inp" id="eSpHealth" type="date">
+    <label class="lbl">血圧（任意）</label>
+    <input class="inp" id="eBp" placeholder="例：120/80">
+    <label class="lbl">退職金共済手帳（任意）</label>
+    <select class="inp" id="eTaisyoku"><option value="">未入力</option><option value="建">建退共</option><option value="中">中退共</option><option value="他">その他</option><option value="無">無</option></select>
     <div class="doc-sec" id="wDocSec" style="display:none;">
       <div class="doc-sec-title">📁 資格・免許の写し</div>
       <div class="doc-list" id="wDocList"><div class="doc-empty">読込中…</div></div>
@@ -475,6 +485,11 @@ function openWorker(id){
   document.getElementById('eKoyo').value=w['雇用保険']||'';
   document.getElementById('eKoyoNum').value=w['雇用保険番号']||'';
   document.getElementById('eKentaikyo').value=w['建退共手帳番号']||'';
+  document.getElementById('eTel').value=w['電話番号']||'';
+  document.getElementById('eCcus').value=w['技能者ID']||'';
+  document.getElementById('eSpHealth').value=String(w['特殊健康診断日']||'').slice(0,10);
+  document.getElementById('eBp').value=w['血圧']||'';
+  document.getElementById('eTaisyoku').value=w['退職金共済手帳区分']||'';
   document.getElementById('wDocSec').style.display='block';
   loadWorkerDocs(id);
   var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');
@@ -499,7 +514,12 @@ function saveWorker(){
     '厚生年金':document.getElementById('eKosei').value,
     '雇用保険':document.getElementById('eKoyo').value,
     '雇用保険番号':document.getElementById('eKoyoNum').value.trim(),
-    '建退共手帳番号':document.getElementById('eKentaikyo').value.trim()
+    '建退共手帳番号':document.getElementById('eKentaikyo').value.trim(),
+    '電話番号':document.getElementById('eTel').value.trim(),
+    '技能者ID':document.getElementById('eCcus').value.trim(),
+    '特殊健康診断日':document.getElementById('eSpHealth').value,
+    '血圧':document.getElementById('eBp').value.trim(),
+    '退職金共済手帳区分':document.getElementById('eTaisyoku').value
   };
   callGAS({action:'updateWorker',id:curW,data:data}).then(function(res){
     if(res&&res.ok&&res.worker){
