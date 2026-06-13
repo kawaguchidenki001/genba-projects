@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 5 safety (2026-06-13) 名簿/社会保険を別PDF化＋Excel生成ボタン追加（4ボタン常時表示） -->
+<!-- version 6 safety (2026-06-13) 工事名ドロップダウンの選択がSWR再描画で消えるバグを修正 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -87,7 +87,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v5</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v6</div>
 <header>
   <div class="hd-row">
     <a class="back" href="../">← 現場管理メニュー</a>
@@ -361,8 +361,10 @@ function tab(t){
 function isMiss(w){ return !(w['生年月日']&&w['緊急連絡先電話']); }
 function fillCase(){
   var sel2=document.getElementById('rCase');
+  var prev=sel2.value;  // SWR再描画で選択が消えないよう現在値を保持
   sel2.innerHTML='<option value="">（現場を選ばない）</option>'+DB.projects.map(function(p){
     return '<option value="'+esc(p['案件ID'])+'" data-name="'+esc(p['案件名'])+'" data-cust="'+esc(p['顧客']||'')+'">'+esc(p['案件名'])+'</option>';}).join('');
+  if(prev)sel2.value=prev;  // 選択を復元
 }
 function caseChanged(){
   var op=document.getElementById('rCase').selectedOptions[0];
