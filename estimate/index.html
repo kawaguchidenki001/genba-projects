@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<!-- version 4 estimate (2026-06-14) AI見積もりOCRをfetch+POST方式に変更（画像URL長エラー対策） -->
+<!-- version 6 estimate (2026-06-14) AI見積もり読み取りにドラッグ&ドロップ対応を追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>見積・請求｜河口電機</title>
+<title>見積・請求｜Gen-Can</title>
 <style>
   :root{ --bg:#e8ecf2;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#9d7a18;--accent-d:#7c5e0f;
     --radius:12px;--shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
@@ -122,6 +122,8 @@
   .ai-drop .ai-dtxt{font-size:14px;color:#065f46;font-weight:700;}
   .ai-drop .ai-dsub{font-size:12px;color:var(--sub);margin-top:4px;}
   .ai-drop input[type=file]{display:none;}
+  .ai-drop.dragover{border-color:#059669;background:#dcfce7;transform:scale(1.01);}
+  .ai-drop.dragover .ai-dtxt{color:#047857;}
   .ai-preview{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--sub);margin-bottom:14px;display:none;}
   .ai-preview .fname{font-weight:700;color:var(--ink);font-size:14px;}
   .ai-readbtn{width:100%;padding:13px;border:none;border-radius:12px;background:#059669;color:#fff;font-size:15px;font-weight:700;cursor:pointer;margin-bottom:10px;}
@@ -250,7 +252,7 @@
     <input class="inp" id="sInv" placeholder="T0000000000000">
     <div class="shint">記入すると書類に「登録番号」として印字されます</div>
     <label class="lbl">振込先（請求書に印字）</label>
-    <textarea class="inp" id="sBank" placeholder="例：○○銀行 ○○支店 普通 0000000&#10;カ）カワグチデンキ"></textarea>
+    <textarea class="inp" id="sBank" placeholder="例：○○銀行 ○○支店 普通 0000000&#10;カ）○○ケンセツ"></textarea>
     <div class="grid2">
       <div>
         <label class="lbl">見積有効日数</label>
@@ -272,7 +274,7 @@
     <p>取引先からもらった見積書や発注書（PDF・画像）をアップロードすると、品名・数量・単価を自動で読み取って明細に入力します。</p>
     <div class="ai-drop" id="aiDrop" onclick="document.getElementById('aiFile').click()">
       <div class="ai-ico">📄</div>
-      <div class="ai-dtxt">タップしてファイルを選択</div>
+      <div class="ai-dtxt">タップで選択／ドラッグ&ドロップ</div>
       <div class="ai-dsub">PDF / JPG / PNG / HEIC に対応</div>
       <input type="file" id="aiFile" accept=".pdf,.jpg,.jpeg,.png,.heic,.webp,image/*,application/pdf" onchange="aiFileSelected(this)">
     </div>
@@ -671,7 +673,25 @@ function saveSettings(){
 
 /* ===== AI見積もりOCR ===== */
 var _aiBase64='', _aiMime='';
+// ドラッグ&ドロップの初期化（1回だけ実行）
+var _aiDropInit=false;
+function initAiDrop(){
+  if(_aiDropInit)return; _aiDropInit=true;
+  var drop=document.getElementById('aiDrop');
+  if(!drop)return;
+  ['dragenter','dragover'].forEach(function(ev){
+    drop.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();drop.classList.add('dragover');});
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    drop.addEventListener(ev,function(e){e.preventDefault();e.stopPropagation();drop.classList.remove('dragover');});
+  });
+  drop.addEventListener('drop',function(e){
+    var files=e.dataTransfer&&e.dataTransfer.files;
+    if(files&&files[0]) handleAiFile(files[0]);
+  });
+}
 function openAiModal(){
+  initAiDrop();
   var m=document.getElementById('aiModal');
   m.style.display='flex';
   _aiBase64='';_aiMime='';
@@ -685,7 +705,11 @@ function closeAiModal(){
   document.getElementById('aiModal').style.display='none';
 }
 function aiFileSelected(input){
-  var file=input.files[0];if(!file)return;
+  if(input.files&&input.files[0]) handleAiFile(input.files[0]);
+}
+// ファイルを直接受け取る共通処理（ファイル選択・ドラッグ&ドロップ両方から呼ぶ）
+function handleAiFile(file){
+  if(!file)return;
   var limit=10*1024*1024; // 10MB
   if(file.size>limit){toast('ファイルが大きすぎます（10MB以内）');return;}
   document.getElementById('aiFileName').textContent=file.name;
