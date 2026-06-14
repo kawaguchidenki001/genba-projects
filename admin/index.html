@@ -1,104 +1,131 @@
 <!DOCTYPE html>
-<!-- version 43 admin (2026-06-13) 作業員一覧が表示されない不具合を修正（区分を社員/常用などデータの値に依存せず全グループ表示）。追加・編集の区分も社員/常用に対応 -->
+<!-- version 44 admin (2026-06-14) デザイン統一（ニューモーフィズム/Gen-Can基準・スレート#475569・線画アイコン・文字拡大）。機能は不変。作業員/取引先/先方担当者/車両/仕入先/日報チェック/自社設定タブ -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>管理画面｜河口電機</title>
+<title>管理画面｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#eef1f6; --bg1:#eef1f6; --bg2:#f6f8fb;--card:#fff;--line:#dbe2ec;--ink:#1e293b;--sub:#64748b;--accent:#475569; --accent-d:#334155; --accent-soft:#e8edf3;
-    --radius:12px;--shadow:0 2px 10px rgba(40,60,100,.10); --shadow-lg:0 8px 24px rgba(40,60,100,.16);}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{margin:0;background:#e8ecf2;min-height:100vh;color:var(--ink);font-family:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:80px;}
-  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.9);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink);border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);}
-  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .hd-row h1{font-size:17px;margin:0;font-weight:700;;color:var(--accent-d);}
-  .back{color:var(--accent-d);text-decoration:none;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-weight:600;}
-  .ghost{padding:6px 10px;border:1px solid rgba(255,255,255,.3);border-radius:9px;background:rgba(255,255,255,.15);color:#fff;font-size:13px;cursor:pointer;}
-  main{padding:12px;}
+  :root{
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
+    --accent:#475569;--accent-d:#334155;--accent-soft:#dde3ec;
+    --radius:13px;
+    --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+    --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);min-height:100vh;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.55;padding-bottom:80px;}
+  select,input,textarea,button,a{font-family:inherit;}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);color:var(--ink);padding:calc(env(safe-area-inset-top) + 12px) 14px 11px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
+  .hbar{display:flex;align-items:center;gap:10px;max-width:760px;margin:0 auto;}
+  .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11px;letter-spacing:.05em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 12px;text-decoration:none;white-space:nowrap;flex:0 0 auto;}
+  .back:active{box-shadow:var(--well);}
+  .hic{width:40px;height:40px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hic svg{width:21px;height:21px;}
+  .htxt{flex:1;min-width:0;}
+  .htxt .en{font-family:"Manrope",sans-serif;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .htxt .nm{font-weight:700;font-size:16.5px;color:var(--ink);display:block;line-height:1.2;white-space:nowrap;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:13px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
+  .hd2{display:flex;align-items:center;gap:8px;max-width:760px;margin:9px auto 0;}
+  .hd2 .sp{flex:1;}
+  #who{font-size:12px;color:var(--accent-d);font-weight:700;}
+  .ghost{padding:8px 13px;border:none;border-radius:10px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);font-size:12.5px;cursor:pointer;font-weight:700;}
+  .ghost:active{box-shadow:var(--well);}
+  .ghost.danger-ghost{color:#dc2626;}
+  main{padding:12px;max-width:760px;margin:0 auto;}
   .gate{max-width:380px;margin:60px auto;text-align:center;padding:0 16px;}
-  .gate .lk{font-size:46px;}
-  .gate h2{font-size:18px;margin:10px 0 6px;}
-  .gate p{color:var(--sub);font-size:14px;margin:0 0 18px;}
-  .gate input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;text-align:center;margin-bottom:10px;}
-  .gate button{width:100%;padding:13px;border:none;border-radius:11px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+  .gate .lk{display:inline-flex;width:84px;height:84px;border-radius:50%;background:var(--bg);box-shadow:var(--well);align-items:center;justify-content:center;color:var(--accent);margin-bottom:6px;}
+  .gate .lk svg{width:42px;height:42px;}
+  .gate h2{font-size:19px;margin:10px 0 6px;color:var(--ink);}
+  .gate p{color:var(--sub);font-size:14.5px;margin:0 0 18px;line-height:1.7;}
+  .gate input{width:100%;padding:13px;border:none;border-radius:11px;font-size:16px;text-align:center;margin-bottom:12px;background:var(--bg);box-shadow:var(--well);color:var(--ink);}
+  .gate button{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:800;cursor:pointer;box-shadow:3px 4px 10px rgba(71,85,105,.4),-2px -2px 6px #ffffff;}
   .sec{font-size:13px;font-weight:700;color:var(--sub);margin:4px 2px 10px;}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:9px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;border-left:5px solid var(--accent);}
-  .card.kyo{border-left-color:#b45309;}
-  .nm{font-weight:700;font-size:15.5px;}
+  .card{position:relative;background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:13px 15px 13px 18px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;overflow:hidden;}
+  .card:active{box-shadow:var(--well);}
+  .card::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:var(--accent);}
+  .card.kyo::before{background:#b45309;}
+  .card.kg::before{background:#2563eb;} .card.kk::before{background:#7c3aed;} .card.kx::before{background:#b45309;}
+  .nm{font-weight:700;font-size:16px;color:var(--ink);}
   .meta{font-size:13px;color:var(--sub);}
-  .yen{font-weight:700;font-variant-numeric:tabular-nums;}
-  .tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#eef1f5;color:#374151;}
+  .yen{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#e7eaef;color:#374151;}
   .tag.kyo{background:#fef3c7;color:#92400e;}
-  .tabs{display:flex;gap:6px;margin-bottom:12px;}
-  .tab{flex:1;padding:9px 6px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--sub);font-size:13.5px;font-weight:700;cursor:pointer;text-align:center;}
-  .tab.on{background:var(--accent);color:#fff;border-color:var(--accent);}
-  .card.kg{border-left-color:#2563eb;} .card.kk{border-left-color:#7c3aed;} .card.kx{border-left-color:#b45309;}
   .tag.kg{background:#dbeafe;color:#1e40af;} .tag.kk{background:#ede9fe;color:#6d28d9;} .tag.kx{background:#fef3c7;color:#92400e;}
-  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14px;}
-  .rcbar{display:flex;gap:6px;margin-bottom:12px;}
-  .rcseg{flex:1;padding:9px 5px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--sub);font-size:13px;font-weight:700;cursor:pointer;}
-  .rcseg.on{background:var(--accent);color:#fff;border-color:var(--accent);}
-  .rcday{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:11px 14px;margin-bottom:8px;border-left:5px solid #16a34a;}
-  .rcday.has{border-left-color:#dc2626;}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+  .tab{flex:1;min-width:62px;padding:10px 6px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);font-size:13px;font-weight:700;cursor:pointer;text-align:center;}
+  .tab:active{box-shadow:var(--well);}
+  .tab.on{background:var(--accent);color:#fff;box-shadow:var(--well-soft);}
+  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14.5px;}
+  .rcbar{display:flex;gap:7px;margin-bottom:12px;}
+  .rcseg{flex:1;padding:10px 5px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);font-size:13px;font-weight:700;cursor:pointer;}
+  .rcseg:active{box-shadow:var(--well);}
+  .rcseg.on{background:var(--accent);color:#fff;box-shadow:var(--well-soft);}
+  .rcday{position:relative;background:var(--bg);border-radius:13px;box-shadow:var(--rise-sm);padding:11px 14px 11px 17px;margin-bottom:8px;overflow:hidden;}
+  .rcday::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:4px;border-radius:0 4px 4px 0;background:#16a34a;}
+  .rcday.has::before{background:#dc2626;}
   .rcday .rcd{display:flex;justify-content:space-between;align-items:center;}
-  .rcday .rcdate{font-weight:700;font-size:14.5px;}
+  .rcday .rcdate{font-weight:700;font-size:14.5px;color:var(--ink);}
   .rcday .rcok{font-size:12px;color:#16a34a;font-weight:700;}
   .rcday .rcmiss{margin-top:7px;display:flex;flex-wrap:wrap;gap:6px;}
-  .rcday .rcname{background:#fef2f2;color:#b91c1c;border:1px solid #f3c0c0;border-radius:999px;padding:3px 11px;font-size:12.5px;font-weight:700;}
-  .rcsum{background:#fff7ed;border:1px solid #f0c674;border-radius:12px;padding:11px 14px;margin-bottom:12px;font-size:13.5px;color:#92400e;font-weight:700;}
-  .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;background:var(--accent);color:#fff;border:none;border-radius:999px;padding:14px 20px;font-size:15px;font-weight:700;box-shadow:0 6px 16px rgba(31,41,55,.4);cursor:pointer;}
+  .rcday .rcname{background:#fdeaea;color:#b91c1c;border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;}
+  .rcsum{background:#fceede;box-shadow:var(--rise-sm);border-radius:12px;padding:11px 14px;margin-bottom:12px;font-size:13.5px;color:#92400e;font-weight:700;}
+  .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;background:var(--accent);color:#fff;border:none;border-radius:999px;padding:14px 22px;font-size:15px;font-weight:800;box-shadow:5px 6px 16px rgba(71,85,105,.45),-3px -3px 8px #ffffff;cursor:pointer;}
+  .fab:active{transform:translateY(1px);}
   .ov{position:fixed;inset:0;background:rgba(15,23,40,.45);z-index:40;display:none;align-items:flex-end;justify-content:center;}
   .ov.show{display:flex;}
-  .sheet{background:#fff;width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);}
-  .sheet h2{font-size:16px;margin:2px 0 12px;}
-  .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:600;}
-  .fld input,.fld select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;font-family:inherit;}
+  .sheet{background:var(--bg);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);max-height:90vh;overflow-y:auto;box-shadow:0 -10px 30px rgba(20,30,50,.2);}
+  .sheet h2{font-size:17px;margin:2px 0 12px;color:var(--ink);}
+  .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:700;}
+  .fld input,.fld select{width:100%;padding:11px 12px;border:none;border-radius:10px;font-size:15.5px;background:var(--bg);box-shadow:var(--well);color:var(--ink);font-family:inherit;}
   .two{display:flex;gap:8px;} .two>.fld{flex:1;}
-  .acts{display:flex;gap:8px;margin-top:6px;} .btn{flex:1;padding:13px;border-radius:11px;border:none;font-size:15px;font-weight:700;cursor:pointer;}
-  .btn.primary{background:var(--accent);color:#fff;} .btn.sub{background:#eef1f5;color:var(--ink);}
+  .acts{display:flex;gap:8px;margin-top:6px;} .btn{flex:1;padding:13px;border-radius:12px;border:none;font-size:15px;font-weight:800;cursor:pointer;}
+  .btn.primary{background:var(--accent);color:#fff;box-shadow:3px 4px 10px rgba(71,85,105,.4),-2px -2px 6px #ffffff;} .btn.primary:active{transform:translateY(1px);}
+  .btn.sub{background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);} .btn.sub:active{box-shadow:var(--well);}
   .row-del{text-align:center;margin-top:10px;} .row-del a{color:#dc2626;font-size:13px;text-decoration:none;}
-  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;z-index:60;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;z-index:60;background:#1f3a52;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 20px rgba(31,58,82,.3);}
   .toast.show{opacity:1;}
-  .loading{position:fixed;inset:0;z-index:1000;background:rgba(240,242,245,.72);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(232,236,242,.78);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
   .loading.show{display:flex;}
-  .lbox{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(20,30,50,.18);padding:24px 32px;text-align:center;}
-  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  .lbox{background:var(--bg);border-radius:18px;box-shadow:var(--rise);padding:24px 32px;text-align:center;}
+  .spin{width:38px;height:38px;border:4px solid #d6deea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
   @keyframes sp{to{transform:rotate(360deg);}}
-  .lbox .txt{font-size:14px;font-weight:700;}
-  /* 全データ削除の確認ポップアップ用 */
+  .lbox .txt{font-size:15px;font-weight:700;}
   .danger-txt{font-size:13px;color:#7f1d1d;margin:0 0 12px;line-height:1.6;}
-  /* グリッドレイアウト */
   .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
   @media(max-width:600px){.grid-3{grid-template-columns:repeat(2,1fr);}}
   @media(max-width:400px){.grid-3{grid-template-columns:1fr;}}
-  /* ヘッダーのデータ削除ボタン */
-  .ghost.danger-ghost{border-color:rgba(255,170,170,.55);background:rgba(220,50,50,.28);}
-  .ghost.danger-ghost:active{background:rgba(220,50,50,.45);}
-  /* 中央配置モーダル（確認ポップアップ）*/
   .ov-center{align-items:center;}
-  .ov-center .sheet{width:auto;max-width:380px;border-radius:16px;margin:0 16px;}
+  .ov-center .sheet{width:auto;max-width:380px;border-radius:18px;margin:0 16px;}
   .ov-center .sheet h2{text-align:center;}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v43</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v44</div>
 <header>
-  <div class="hd-row">
-    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
-    <span id="who" style="font-size:12px;color:#d1d5db;"></span>
+  <div class="hbar">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></span>
+    <span class="htxt"><span class="en">Admin</span><span class="nm">管理画面</span></span>
+    <span class="hmark">Gen-Can</span>
   </div>
-  <div class="hd-row" style="margin-top:6px;"><h1>管理画面</h1>
-    <div style="display:flex;gap:8px;">
-      <button class="ghost danger-ghost" id="clearBtn" style="display:none;" onclick="openClearModal()">データ削除</button>
-      <button class="ghost" id="logoutBtn" style="display:none;" onclick="adminLogout()">ログアウト</button>
-    </div>
+  <div class="hd2">
+    <span id="who"></span>
+    <span class="sp"></span>
+    <button class="ghost danger-ghost" id="clearBtn" style="display:none;" onclick="openClearModal()">データ削除</button>
+    <button class="ghost" id="logoutBtn" style="display:none;" onclick="adminLogout()">ログアウト</button>
   </div>
 </header>
 
 <!-- ログインゲート -->
 <div id="gate" class="gate" style="display:none;">
-  <div class="lk">🔒</div>
+  <div class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/><circle cx="12" cy="15.4" r="1.3"/></svg></div>
   <h2>管理者専用</h2>
   <p>この画面は管理者のみ利用できます。管理者PINを入力してください。</p>
   <input id="pin" type="password" inputmode="numeric" placeholder="管理者PIN" onkeydown="if(event.key==='Enter')doLogin()">
@@ -152,7 +179,7 @@
     <div class="sec">自社情報・会社書類</div>
     <p style="font-size:13px;color:#64748b;margin:0 0 12px;">建退共許可票・建設業許可票などの会社書類を保管します。</p>
     <div class="card" style="margin-bottom:12px;">
-      <div style="font-size:13px;font-weight:700;margin-bottom:10px;">📁 会社書類一覧</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;color:#475569;"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>会社書類一覧</div>
       <div id="compDocList" style="display:flex;flex-direction:column;gap:7px;min-height:20px;"><div style="font-size:12.5px;color:#64748b;">読込中…</div></div>
       <label style="display:flex;align-items:center;gap:8px;background:#eff4ff;border:1px dashed #93c5fd;border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:700;color:#1d4ed8;cursor:pointer;margin-top:10px;" for="compDocFile">
         ＋ ファイルを追加（建退共許可票・建設業許可票・PDF・画像）
@@ -311,7 +338,7 @@
 <!-- 全データ削除 確認ポップアップ -->
 <div class="ov ov-center" id="ovDel">
   <div class="sheet">
-    <div style="font-size:40px;text-align:center;line-height:1;margin-bottom:8px;">⚠️</div>
+    <div style="text-align:center;line-height:1;margin-bottom:8px;"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><path d="M12 9v5M12 17.4v.2"/></svg></div>
     <h2 style="color:#b91c1c;margin-top:0;">全データを削除します</h2>
     <p class="danger-txt" style="text-align:center;">案件・取引先・先方担当者・作業員・作業日報・スケジュール・勤怠を完全に削除します。<b>元に戻せません。</b><br>※ 写真・ファイル（Google Drive内）は削除されません。</p>
     <div class="acts">
@@ -388,7 +415,7 @@ function render(){
     arr.forEach(function(w){
       var div=document.createElement('div');div.className='card'+(isKyo?' kyo':'');div.onclick=function(){openWorker(w);};
       div.innerHTML='<div><div class="nm">'+esc(w['氏名']||'')+' <span class="tag'+(isKyo?' kyo':'')+'">'+esc(w['区分']||'')+'</span></div>'+
-        '<div class="meta">'+(w['所属']?esc(w['所属'])+' ・ ':'')+(w['ログインID']?'🔑 '+esc(w['ログインID']):'<span style="color:#bbb;">ログイン未設定</span>')+'</div></div>'+
+        '<div class="meta">'+(w['所属']?esc(w['所属'])+' ・ ':'')+(w['ログインID']?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px;"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 7.2-7.2M16 6l2.2 2.2M19 3l2.2 2.2"/></svg>'+esc(w['ログインID']):'<span style="color:#bbb;">ログイン未設定</span>')+'</div></div>'+
         '<div class="yen">'+(numv(w['標準単価'])?yen(w['標準単価'])+'/人工':'<span style="color:#9aa1ab;font-weight:400;">単価未設定</span>')+'</div>';
       grid.appendChild(div);
     });
@@ -474,8 +501,8 @@ function renderRc(res){
   var totalMiss=0;days.forEach(function(d){totalMiss+=d.missing.length;});
   if(!days.length){el.innerHTML='<div class="empty">この期間は予定に担当が割り当てられた日がありません。<br>（スケジュールで担当を設定すると未提出チェックができます）</div>';return;}
   var h='';
-  if(totalMiss===0)h+='<div class="rcsum" style="background:#f0fdf4;border-color:#86efac;color:#166534;">✅ この期間、未提出はありません。</div>';
-  else h+='<div class="rcsum">⚠ 未提出が合計 '+totalMiss+' 件あります。</div>';
+  if(totalMiss===0)h+='<div class="rcsum" style="background:#f0fdf4;border-color:#86efac;color:#166534;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="m20 6-11 11-5-5"/></svg>この期間、未提出はありません。</div>';
+  else h+='<div class="rcsum"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3 2 20h20Z"/><path d="M12 9v5M12 17.4v.2"/></svg>未提出が合計 '+totalMiss+' 件あります。</div>';
   days.forEach(function(d){
     var dt=new Date(d.date+'T00:00:00');
     var wd='日月火水木金土'[dt.getDay()];
@@ -772,7 +799,7 @@ function renderCompDocs(){
   if(!el)return;
   if(!compDocs.length){el.innerHTML='<div style="font-size:12.5px;color:#64748b;">まだ書類が登録されていません</div>';return;}
   el.innerHTML=compDocs.map(function(d){
-    var ic=String(d['MIME']||'').indexOf('image')>=0?'🖼️':'📄';
+    var ic=String(d['MIME']||'').indexOf('image')>=0?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m21 16-5-5-9 9"/></svg>':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>';
     var dt=String(d['登録日時']||'').replace('T',' ').slice(0,16);
     return '<div style="display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #dbe2ec;border-radius:9px;padding:8px 11px;">'+
       '<span style="font-size:17px;">'+ic+'</span>'+
