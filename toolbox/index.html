@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 40 (虫眼鏡：連続オートフォーカス＋タップフォーカス対応) -->
+<!-- toolbox version 41 (虫眼鏡：高解像度化＋シャープ強化＋高画質キャプチャ) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -275,11 +275,13 @@
   .mag-btn{flex:1;font-size:18px;font-weight:800;padding:18px 8px;border-radius:16px;border:2px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;box-shadow:var(--shadow);}
   .mag-btn:active{transform:scale(.97);}
   .mag-btn.freeze.on{background:#0d9aa0;border-color:#0d9aa0;color:#fff;}
+  .mag-btn.hq{background:#fffaf2;border-color:#f3c98a;color:#a05a00;}
+  .mag-btn.hq:active{background:#fef0d9;}
   .mag-btn.torch.on{background:#d97b12;border-color:#d97b12;color:#fff;}
   .mag-hint{font-size:14px;color:var(--sub);line-height:1.7;margin:0 4px 90px;text-align:center;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v40</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v41</div>
 
 <div class="wrap">
 
@@ -587,9 +589,10 @@
     </div>
     <div class="mag-btns">
       <button class="mag-btn freeze" id="magFreezeBtn" onclick="magToggleFreeze()">⏸ 止める</button>
+      <button class="mag-btn hq" id="magHQBtn" onclick="magHQCapture()" style="display:none;">📷 高画質</button>
       <button class="mag-btn torch" id="magTorchBtn" onclick="magToggleTorch()" style="display:none;">💡 ライト</button>
     </div>
-    <div class="mag-hint">ピントが甘いときは、カメラを<b>15〜20cm離す</b>か<b>画面をタップ</b>してください。<br>「止める」を押すと画面が固定され、ゆっくり読めます。</div>
+    <div class="mag-hint">ピントが甘いときは、カメラを<b>15〜20cm離す</b>か<b>画面をタップ</b>してください。<br><b>📷 高画質</b>を押すと、内蔵カメラに近い解像度で固定できます（対応機種のみ）。</div>
   </div>
 
   <div class="pane" id="p-board">
@@ -1666,7 +1669,7 @@ function startMag(){
   var tb=document.getElementById('magTorchBtn'); if(tb){tb.classList.remove('on');tb.style.display='none';}
   var zr=document.getElementById('magZoomRange'); if(zr)magSetZoom(zr.value);
   if(!navigator||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('\u30ab\u30e1\u30e9\u306b\u5bfe\u5fdc\u3057\u3066\u3044\u307e\u305b\u3093');return;}
-  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false})
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:2560},height:{ideal:1440}},audio:false})
     .then(function(stream){
       magStream=stream;
       var vv=document.getElementById('magVideo'); vv.srcObject=stream; vv.play();
@@ -1675,6 +1678,20 @@ function startMag(){
         var caps=(magTrack&&magTrack.getCapabilities)?magTrack.getCapabilities():{};
         if(caps&&caps.torch){var t=document.getElementById('magTorchBtn');if(t)t.style.display='block';}
         if(caps&&caps.focusMode&&caps.focusMode.indexOf('continuous')>=0){magTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});}
+        /* 解像度を上限まで引き上げ */
+        if(caps&&caps.width&&caps.height){
+          var maxW=caps.width.max||1920, maxH=caps.height.max||1080;
+          magTrack.applyConstraints({width:{ideal:maxW},height:{ideal:maxH}}).catch(function(){});
+        }
+        /* シャープネス・コントラストを上限へ */
+        var hq=[];
+        if(caps&&caps.sharpness&&caps.sharpness.max!=null)hq.push({sharpness:caps.sharpness.max});
+        if(caps&&caps.contrast&&caps.contrast.max!=null)hq.push({contrast:caps.contrast.max});
+        if(hq.length)magTrack.applyConstraints({advanced:hq}).catch(function(){});
+        /* 高画質キャプチャ対応端末ならボタン表示 */
+        if(typeof ImageCapture!=='undefined'){
+          var hb=document.getElementById('magHQBtn'); if(hb)hb.style.display='block';
+        }
       }catch(e){}
     })
     .catch(function(e){toast('\u30ab\u30e1\u30e9\u3092\u8d77\u52d5\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f\uff08'+e.message+'\uff09');});
@@ -1730,6 +1747,46 @@ function magTapFocus(){
   magTrack.applyConstraints({advanced:[c]}).then(function(){
     if(hasSingle&&hasCont)setTimeout(function(){magTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});},700);
   }).catch(function(){});
+}
+function magHQCapture(){
+  if(!magTrack){toast('\u30ab\u30e1\u30e9\u304c\u8d77\u52d5\u3057\u3066\u3044\u307e\u305b\u3093');return;}
+  if(magFrozen){magToggleFreeze();return;}
+  if(typeof ImageCapture==='undefined'){toast('\u3053\u306e\u7aef\u672b\u3067\u306f\u9ad8\u753b\u8cea\u64ae\u5f71\u306b\u672a\u5bfe\u5fdc\u3067\u3059');return;}
+  toast('\u9ad8\u753b\u8cea\u3067\u64ae\u5f71\u4e2d\u2026');
+  try{
+    var ic=new ImageCapture(magTrack);
+    ic.takePhoto().then(function(blob){
+      var img=new Image();
+      img.onload=function(){
+        var c=document.getElementById('magCanvas'), v=document.getElementById('magVideo');
+        if(!c||!v){URL.revokeObjectURL(img.src);return;}
+        c.width=img.naturalWidth; c.height=img.naturalHeight;
+        c.getContext('2d').drawImage(img,0,0);
+        URL.revokeObjectURL(img.src);
+        c.style.display='block'; v.style.display='none';
+        magFrozen=true;
+        var ft=document.getElementById('magFrozenTag'); if(ft){ft.textContent='\ud83d\udcf7 \u9ad8\u753b\u8cea\u56fa\u5b9a\u4e2d';ft.style.display='block';}
+        var fb=document.getElementById('magFreezeBtn'); if(fb){fb.classList.add('on');fb.textContent='\u25b6 \u89e3\u9664';}
+      };
+      img.onerror=function(){toast('\u753b\u50cf\u3092\u8aad\u307f\u8fbc\u3081\u307e\u305b\u3093\u3067\u3057\u305f');};
+      img.src=URL.createObjectURL(blob);
+    }).catch(function(){
+      /* takePhoto非対応の機種ではgrabFrameで代替 */
+      try{
+        var ic2=new ImageCapture(magTrack);
+        ic2.grabFrame().then(function(bmp){
+          var c=document.getElementById('magCanvas'), v=document.getElementById('magVideo');
+          if(!c||!v)return;
+          c.width=bmp.width; c.height=bmp.height;
+          c.getContext('2d').drawImage(bmp,0,0);
+          c.style.display='block'; v.style.display='none';
+          magFrozen=true;
+          var ft=document.getElementById('magFrozenTag'); if(ft){ft.textContent='\u23f8 \u56fa\u5b9a\u4e2d';ft.style.display='block';}
+          var fb=document.getElementById('magFreezeBtn'); if(fb){fb.classList.add('on');fb.textContent='\u25b6 \u89e3\u9664';}
+        }).catch(function(){toast('\u9ad8\u753b\u8cea\u64ae\u5f71\u306b\u5931\u6557\u3057\u307e\u3057\u305f');});
+      }catch(e){toast('\u9ad8\u753b\u8cea\u64ae\u5f71\u306b\u5931\u6557\u3057\u307e\u3057\u305f');}
+    });
+  }catch(e){toast('\u9ad8\u753b\u8cea\u64ae\u5f71\u306b\u5931\u6557\u3057\u307e\u3057\u305f');}
 }
 
 /* ===== ⑤ 小黒板カメラ ===== */
