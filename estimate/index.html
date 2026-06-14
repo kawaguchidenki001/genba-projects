@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 6 estimate (2026-06-14) AI見積もり読み取りにドラッグ&ドロップ対応を追加 -->
+<!-- version 7 estimate (2026-06-14) 見積・請求のExcel(帳票版)出力＋CSV出力ボタンを追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -98,6 +98,9 @@
   .savebtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:12px;}
   .pdfbtn{width:100%;padding:14px;border:1.5px solid var(--accent);border-radius:12px;background:#fff;color:var(--accent-d);font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;}
   .convbtn{width:100%;padding:13px;border:1.5px solid #b45309;border-radius:12px;background:#fff;color:#b45309;font-size:14.5px;font-weight:700;cursor:pointer;margin-top:8px;}
+  .exprow{display:flex;gap:8px;margin-top:8px;}
+  .xlsxbtn{flex:1;padding:13px;border:1.5px solid #15803d;border-radius:12px;background:#fff;color:#15803d;font-size:14.5px;font-weight:700;cursor:pointer;}
+  .csvbtn{flex:1;padding:13px;border:1.5px solid #475569;border-radius:12px;background:#fff;color:#475569;font-size:14.5px;font-weight:700;cursor:pointer;}
   .pdflink{display:block;text-align:center;margin-top:10px;font-size:13.5px;color:var(--accent-d);}
   /* トースト・ローディング */
   .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:#1f2733;color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:88vw;text-align:center;}
@@ -225,6 +228,10 @@
 
     <button class="savebtn" onclick="saveEst(false)">保存する</button>
     <button class="pdfbtn" onclick="saveEst(true)">保存して PDF を作成</button>
+    <div class="exprow">
+      <button class="xlsxbtn" onclick="saveAndExport('xlsx')">📊 Excel出力</button>
+      <button class="csvbtn" onclick="saveAndExport('csv')">📋 CSV出力</button>
+    </div>
     <button class="convbtn" id="convBtn" style="display:none" onclick="convertToInvoice()">📄 この見積を請求書に変換</button>
     <a class="pdflink" id="pdfLink" style="display:none" target="_blank" rel="noopener">📎 作成済みPDFを開く</a>
   </div>
@@ -591,6 +598,30 @@ function saveEst(makePdf){
         var pl=document.getElementById('pdfLink');pl.href=r2.pdfUrl;pl.style.display='block';
         toast('PDFを作成しました');window.open(r2.pdfUrl,'_blank');renderAR();renderList();
       } else toast((r2&&r2.error)||'PDF作成に失敗しました');
+    }).catch(function(e){hideLoad();toast(e.message);});
+  }).catch(function(e){hideLoad();toast(e.message);});
+}
+// 〔v7〕保存してから Excel(帳票版) または CSV を作成（fmt: 'xlsx' | 'csv'）。PDF処理経路は変更せず別系統で実装
+function saveAndExport(fmt){
+  var d=collectForm();if(!validate(d))return;
+  if(!d['伝票ID'])delete d['伝票ID'];
+  showLoad('保存中…');
+  callGAS({action:'estSave',data:d},null,true).then(function(res){
+    if(!(res&&res.ok)){hideLoad();toast((res&&res.error)||'保存に失敗しました');return;}
+    var saved=res.est;curId=saved['伝票ID'];
+    document.getElementById('edTitle').textContent=saved['伝票番号'];
+    document.getElementById('delBtn').style.visibility='visible';
+    document.getElementById('convBtn').style.display=(curKind==='見積')?'block':'none';
+    togglePayRow();
+    updateLocal(saved);
+    var isCsv=(fmt==='csv');
+    document.getElementById('ltxt').textContent=isCsv?'CSVを作成中…':'Excelを作成中…（10秒ほどかかります）';
+    callGAS({action:isCsv?'estCsv':'estXlsx',id:saved['伝票ID']},null,true).then(function(r2){
+      hideLoad();
+      if(r2&&r2.ok&&r2.fileUrl){
+        toast(isCsv?'CSVを作成しました':'Excelを作成しました');
+        window.open(r2.fileUrl,'_blank');renderAR();renderList();
+      } else toast((r2&&r2.error)||(isCsv?'CSV作成に失敗しました':'Excel作成に失敗しました'));
     }).catch(function(e){hideLoad();toast(e.message);});
   }).catch(function(e){hideLoad();toast(e.message);});
 }
