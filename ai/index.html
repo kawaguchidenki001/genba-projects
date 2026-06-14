@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 7 ai (2026-06-14) 入力欄がAndroidナビバー等に重ならないよう調整（viewport-fit=cover解除） -->
+<!-- version 8 ai (2026-06-14) 下スワイプ更新を復活（overflow:hidden解除）＋ユーザーアバターをログイン者の苗字に -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -16,7 +16,7 @@
     --radius:14px;--shadow:0 2px 10px rgba(40,60,100,.10);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
-  body{height:100vh;height:100dvh;overflow:hidden;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.6;background:var(--bg);display:flex;flex-direction:column;}
+  body{height:100vh;height:100dvh;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.6;background:var(--bg);display:flex;flex-direction:column;}
 
   /* ヘッダー */
   header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);border-bottom:1px solid var(--line);flex:0 0 auto;}
@@ -104,7 +104,7 @@
     <a class="back" href="../">← メニュー</a>
     <div class="hd-center">
       <h1>✨ AIアシスタント</h1>
-      <div class="model">Gemini 2.5 Flash（検索対応）　ai v7</div>
+      <div class="model">Gemini 2.5 Flash（検索対応）　ai v8</div>
     </div>
     <button class="clrbtn" onclick="clearChat()">クリア</button>
   </div>
@@ -234,6 +234,18 @@ function scrollBottom() {
   msgs.scrollTop = msgs.scrollHeight;
 }
 
+// ログイン者（genba_user）の苗字を返す。氏名の空白区切り先頭＝苗字。未ログイン時は「あ」
+function userLabel() {
+  try {
+    var u = JSON.parse(localStorage.getItem('genba_user') || 'null');
+    if (u) {
+      var nm = String(u['氏名'] || u['略称'] || '').trim();
+      if (nm) return nm.split(/[\s\u3000]+/)[0];
+    }
+  } catch (e) {}
+  return 'あ';
+}
+
 function showToast(m) {
   var t = document.getElementById('toast');
   t.textContent = m;
@@ -265,7 +277,7 @@ function addUserBubble(text) {
   addTimestamp();
   var div = document.createElement('div');
   div.className = 'msg user';
-  div.innerHTML = '<div class="avatar user">あ</div><div class="bubble">' + esc(text) + '</div>';
+  div.innerHTML = '<div class="avatar user">' + esc(userLabel()) + '</div><div class="bubble">' + esc(text) + '</div>';
   msgs.appendChild(div);
   scrollBottom();
 }
