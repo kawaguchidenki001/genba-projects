@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 4 (2026-06-14) 材料リストのリンク先を ../materiallist/ に修正（404解消）。材料管理ハブ：材料リスト/在庫/発注への入口＋状況サマリ -->
+<!-- version 5 (2026-06-14) 材料AI検索ボタンを追加（../materialsearch/）。材料リストのリンク先修正(404解消)。材料管理ハブ：材料リスト/在庫/発注への入口＋状況サマリ -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -33,6 +33,7 @@
   .e-list{border-left-color:#d97706;} .e-list .ic{background:#d97706;}
   .e-stock{border-left-color:#0e7490;} .e-stock .ic{background:#0e7490;}
   .e-order{border-left-color:#4f46e5;} .e-order .ic{background:#4f46e5;}
+  .e-search{border-left-color:#059669;} .e-search .ic{background:#059669;}
   /* 流れ */
   .flow{margin-top:18px;background:#eff4ff;border:1px solid #dbe6ff;border-radius:13px;padding:13px 14px;font-size:12.5px;color:#1e3a8a;line-height:1.9;}
   .flow b{color:#1d4ed8;}
@@ -41,7 +42,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v4</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v5</div>
 <header>
   <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
   <h1>📦 材料管理</h1>
@@ -58,6 +59,11 @@
     <a class="entry e-list" href="../materiallist/">
       <span class="ic">📝</span>
       <span class="tx"><span class="nm">材料リスト</span><span class="ds">現場ごとに記入・在庫照合・発注へ</span></span>
+      <span class="cor">→</span>
+    </a>
+    <a class="entry e-search" href="../materialsearch/">
+      <span class="ic">🔎</span>
+      <span class="tx"><span class="nm">材料AI検索</span><span class="ds">型番をAIで検索→リストに追加して保存</span></span>
       <span class="cor">→</span>
     </a>
     <a class="entry e-stock" href="../stock/">
