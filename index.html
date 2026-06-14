@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 50 root (2026-06-14) AIアシスタントタイル追加 -->
+<!-- version 51 root (2026-06-14) ダッシュボード折りたたみ＋要対応件数表示 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -93,6 +93,14 @@
   #login .lg-t{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.22em;font-size:11px;color:var(--sub);text-transform:uppercase;}
   #login h2{font-size:24px;margin:8px 0 2px;font-weight:700;color:#1f5fa8;}
   .dash{margin:0 0 18px;display:none;}
+  .dashHd{background:#e8ecf2;border-radius:14px;box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;padding:13px 16px;margin-bottom:12px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:800;color:#1f5fa8;-webkit-user-select:none;user-select:none;}
+  .dashHd .cnt{margin-left:auto;font-size:12.5px;font-weight:800;}
+  .dashHd .cnt.warn{color:#d63a3f;}
+  .dashHd .cnt.ok{color:var(--sub);}
+  .dashHd .arw{font-size:11px;color:var(--sub);transition:transform .2s;}
+  .dash.open .dashHd .arw{transform:rotate(180deg);}
+  .dash .dbody{display:none;}
+  .dash.open .dbody{display:block;}
   .dcard{background:#e8ecf2;border:none;border-radius:18px;box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;padding:14px 16px;margin-bottom:12px;}
   .dttl{font-size:12px;font-weight:800;color:#1f5fa8;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
   .drow{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);padding:5px 0;border-bottom:1px dashed #e8eef5;}
@@ -132,7 +140,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v49</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v51</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -161,6 +169,8 @@
   </div>
 
   <div class="dash" id="dash">
+    <div class="dashHd" id="dashHd" onclick="toggleDash()"><span>📊 今日の状況</span><span class="cnt ok" id="dashCnt"></span><span class="arw">▼</span></div>
+    <div class="dbody">
     <div class="dcard" id="dSched" style="display:none;"></div>
     <div class="dcard" id="dMe" style="display:none;"></div>
     <div class="dcard" id="dRep" style="display:none;"></div>
@@ -168,6 +178,7 @@
     <div class="dcard" id="dDue" style="display:none;"></div>
     <div class="dcard" id="dCheck" style="display:none;"></div>
     <div class="dcard" id="dAlert" style="display:none;"></div>
+    </div>
   </div>
 
   <div class="lbl">現場用</div>
@@ -245,7 +256,7 @@ function renderDash(d){
     });
     if(list.length>4)h+='<a class="dmore" href="./calendar/">他'+(list.length-4)+'件をカレンダーで見る →</a>';
   }
-  sc.innerHTML=h;sc.style.display='block';any=true;
+  if(list.length){sc.innerHTML=h;sc.style.display='block';any=true;}else{sc.style.display='none';}
   // 日報＋案件
   var ws=d.workers||[],sub=ws.filter(function(w){return w['提出'];}).length;
   var pc=d.projCounts||{};
@@ -310,8 +321,13 @@ function renderDash(d){
     h3+='<a class="dmore" href="./vehicles/">車両管理を開く →</a>';
     al.innerHTML=h3;al.style.display='block';any=true;
   }else{al.style.display='none';}
-  if(any)dash.style.display='block';
+  var todo=(d.dueProjects||[]).length+(d.checklistTotal||(d.checklists||[]).length)+(d.vehicleAlerts||[]).length+((((d.ar||{})['期限超過']))||0);
+  var cntEl=document.getElementById('dashCnt');
+  if(cntEl){if(todo>0){cntEl.textContent='⚠ 要対応 '+todo+'件';cntEl.className='cnt warn';}else{cntEl.textContent='順調です';cntEl.className='cnt ok';}}
+  if(any){dash.style.display='block';applyDashOpen();}
 }
+function applyDashOpen(){var d=document.getElementById('dash');if(d)d.classList.toggle('open',localStorage.getItem('genba_dash_open')==='1');}
+function toggleDash(){var d=document.getElementById('dash');if(!d)return;var open=!d.classList.contains('open');d.classList.toggle('open',open);try{localStorage.setItem('genba_dash_open',open?'1':'0');}catch(e){}}
 function loadDash(){
   try{var c=JSON.parse(localStorage.getItem('genba_dash')||'null');
     if(c&&c.today===new Date().toISOString().slice(0,10))renderDash(c);}catch(e){}
