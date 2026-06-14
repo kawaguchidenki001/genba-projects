@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 51 root (2026-06-14) ダッシュボード折りたたみ＋要対応件数表示 -->
+<!-- version 50 root (2026-06-14) ダッシュボード整理：日報案件/工期間近/未完了チェックリストを削除、車両アラートは件数のみ表示 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -53,7 +53,6 @@
   .t-veh .ic{color:#b45309;} .t-tool2 .ic{color:#a16207;} .t-safety .ic{color:#15803d;}
   .t-est .ic{color:#9d7a18;} .t-cost .ic{color:#0f766e;} .t-admin .ic{color:#475569;}
   .t-material .ic{color:#2563eb;}
-  .t-ai .ic{color:#7c3aed;}
 
   /* スマホ：横3列の正方形タイル */
   .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -93,14 +92,6 @@
   #login .lg-t{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.22em;font-size:11px;color:var(--sub);text-transform:uppercase;}
   #login h2{font-size:24px;margin:8px 0 2px;font-weight:700;color:#1f5fa8;}
   .dash{margin:0 0 18px;display:none;}
-  .dashHd{background:#e8ecf2;border-radius:14px;box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;padding:13px 16px;margin-bottom:12px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:800;color:#1f5fa8;-webkit-user-select:none;user-select:none;}
-  .dashHd .cnt{margin-left:auto;font-size:12.5px;font-weight:800;}
-  .dashHd .cnt.warn{color:#d63a3f;}
-  .dashHd .cnt.ok{color:var(--sub);}
-  .dashHd .arw{font-size:11px;color:var(--sub);transition:transform .2s;}
-  .dash.open .dashHd .arw{transform:rotate(180deg);}
-  .dash .dbody{display:none;}
-  .dash.open .dbody{display:block;}
   .dcard{background:#e8ecf2;border:none;border-radius:18px;box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;padding:14px 16px;margin-bottom:12px;}
   .dttl{font-size:12px;font-weight:800;color:#1f5fa8;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
   .drow{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);padding:5px 0;border-bottom:1px dashed #e8eef5;}
@@ -140,7 +131,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v51</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v50</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -169,16 +160,10 @@
   </div>
 
   <div class="dash" id="dash">
-    <div class="dashHd" id="dashHd" onclick="toggleDash()"><span>📊 今日の状況</span><span class="cnt ok" id="dashCnt"></span><span class="arw">▼</span></div>
-    <div class="dbody">
     <div class="dcard" id="dSched" style="display:none;"></div>
     <div class="dcard" id="dMe" style="display:none;"></div>
-    <div class="dcard" id="dRep" style="display:none;"></div>
     <div class="dcard" id="dAR" style="display:none;"></div>
-    <div class="dcard" id="dDue" style="display:none;"></div>
-    <div class="dcard" id="dCheck" style="display:none;"></div>
     <div class="dcard" id="dAlert" style="display:none;"></div>
-    </div>
   </div>
 
   <div class="lbl">現場用</div>
@@ -188,7 +173,6 @@
     <a class="sq t-time" href="./timecard/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="txt"><span class="en">Timecard</span><span class="nm">タイムカード</span><span class="ds">出勤・退勤の打刻と勤怠集計</span></span><span class="cor">→</span></a>
     <a class="sq t-sched" href="./calendar/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="txt"><span class="en">Schedule</span><span class="nm">スケジュール</span><span class="ds">現場の予定をカレンダーで管理</span></span><span class="cor">→</span></a>
     <a class="sq t-files" href="./files/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l2-3h6l2 3h2a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="4"/></svg></span><span class="txt"><span class="en">Files</span><span class="nm">写真ファイル</span><span class="ds">現場の写真・ファイルの保存と閲覧</span></span><span class="cor">→</span></a>
-    <a class="sq t-ai" href="./ai/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span><span class="txt"><span class="en">AI Chat</span><span class="nm">AIアシスタント</span><span class="ds">何でも聞けるAIチャット</span></span><span class="cor">✨</span></a>
     <a class="sq t-tool" href="./toolbox/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a3 3 0 0 1 6 0v2M3 13h18M12 12v3"/></svg></span><span class="txt"><span class="en">Toolbox</span><span class="nm">ツールボックス</span><span class="ds">メモ・計算・カメラなどの現場道具</span></span><span class="cor">→</span></a>
   </div>
 
@@ -256,17 +240,7 @@ function renderDash(d){
     });
     if(list.length>4)h+='<a class="dmore" href="./calendar/">他'+(list.length-4)+'件をカレンダーで見る →</a>';
   }
-  if(list.length){sc.innerHTML=h;sc.style.display='block';any=true;}else{sc.style.display='none';}
-  // 日報＋案件
-  var ws=d.workers||[],sub=ws.filter(function(w){return w['提出'];}).length;
-  var pc=d.projCounts||{};
-  var h2='<div class="dttl">📝 今日の日報・案件</div><div class="dchips">';
-  h2+='<span class="dchip">日報 提出 '+sub+'/'+ws.length+'名</span>';
-  ['見積中','受注','段取済','施工中','完了'].forEach(function(k){if(pc[k])h2+='<span class="dchip">'+escD(k)+' '+pc[k]+'件</span>';});
-  h2+='</div>';
-  var miss=ws.filter(function(w){return !w['提出'];}).map(function(w){return w['略称']||w['氏名'];});
-  if(sub>0&&miss.length)h2+='<div class="dempty" style="margin-top:6px;">未提出: '+escD(miss.join('・'))+'</div>';
-  var rp=document.getElementById('dRep');rp.innerHTML=h2;rp.style.display='block';any=true;
+  sc.innerHTML=h;sc.style.display='block';any=true;
   // あなたの勤怠
   var meEl=document.getElementById('dMe');
   if(d.me){
@@ -287,47 +261,18 @@ function renderDash(d){
       +'</div><a class="dmore" href="./estimate/">見積・請求を開く →</a>';
     arEl.innerHTML=h6;arEl.style.display='block';any=true;
   }else arEl.style.display='none';
-  // 工期間近の案件
-  var duEl=document.getElementById('dDue'),duArr=d.dueProjects||[];
-  if(duArr.length){
-    var h4='<div class="dttl">⏳ 工期間近の案件</div>';
-    duArr.slice(0,5).forEach(function(p){
-      var col=p['残']<0?'#d63a3f':(p['残']<=3?'#e67e22':'#b8860b');
-      var txt=p['残']<0?('超過 '+(-p['残'])+'日'):(p['残']===0?'本日まで':'残 '+p['残']+'日');
-      h4+='<div class="dalert" style="color:'+col+'">📋 '+escD(p['案件名'])+'　'+txt+'<span class="dd">'+escD(p['期日'])+'</span></div>';
-    });
-    h4+='<a class="dmore" href="./projects/">案件管理を開く →</a>';
-    duEl.innerHTML=h4;duEl.style.display='block';any=true;
-  }else duEl.style.display='none';
-  // 未完了チェックリスト
-  var ckEl=document.getElementById('dCheck'),ckArr=d.checklists||[];
-  if(ckArr.length){
-    var h5='<div class="dttl">☑ 未完了チェックリスト（'+(d.checklistTotal||ckArr.length)+'件）</div>';
-    ckArr.forEach(function(c){
-      h5+='<div class="drow"><span class="dname">'+escD(c['タイトル'])+(c['案件名']?'<span class="dwho">　'+escD(c['案件名'])+'</span>':'')+'</span><span class="dtime">残 '+c['残']+'/'+c['全']+'</span></div>';
-    });
-    h5+='<a class="dmore" href="./toolbox/">ツールボックスを開く →</a>';
-    ckEl.innerHTML=h5;ckEl.style.display='block';any=true;
-  }else ckEl.style.display='none';
-  // 車両アラート
+  // 車両アラート（件数のみ表示／内容は車両管理で確認）
   var al=document.getElementById('dAlert'),arr=d.vehicleAlerts||[];
   if(arr.length){
-    var h3='<div class="dttl">🚨 車両アラート</div>';
-    arr.forEach(function(a){
-      var col=a['残']<0?'#d63a3f':(a['残']<=7?'#e67e22':'#b8860b');
-      var txt=a['残']<0?('期限切れ '+(-a['残'])+'日'):('残 '+a['残']+'日');
-      h3+='<div class="dalert" style="color:'+col+'">🚚 '+escD(a['車両名'])+'　'+escD(a['種類'])+' '+txt+'<span class="dd">'+escD(a['期日'])+'</span></div>';
-    });
-    h3+='<a class="dmore" href="./vehicles/">車両管理を開く →</a>';
+    var over=arr.filter(function(a){return a['残']<0;}).length;
+    var h3='<div class="dttl">🚨 車両アラート</div><div class="dchips">'
+      +'<span class="dchip" style="background:#fde2e2;color:#b91c1c;">⚠ '+arr.length+'件</span>'
+      +(over>0?'<span class="dchip" style="background:#fde2e2;color:#b91c1c;">期限切れ '+over+'件</span>':'')
+      +'</div><a class="dmore" href="./vehicles/">車両管理で内容を確認 →</a>';
     al.innerHTML=h3;al.style.display='block';any=true;
   }else{al.style.display='none';}
-  var todo=(d.dueProjects||[]).length+(d.checklistTotal||(d.checklists||[]).length)+(d.vehicleAlerts||[]).length+((((d.ar||{})['期限超過']))||0);
-  var cntEl=document.getElementById('dashCnt');
-  if(cntEl){if(todo>0){cntEl.textContent='⚠ 要対応 '+todo+'件';cntEl.className='cnt warn';}else{cntEl.textContent='順調です';cntEl.className='cnt ok';}}
-  if(any){dash.style.display='block';applyDashOpen();}
+  if(any)dash.style.display='block';
 }
-function applyDashOpen(){var d=document.getElementById('dash');if(d)d.classList.toggle('open',localStorage.getItem('genba_dash_open')==='1');}
-function toggleDash(){var d=document.getElementById('dash');if(!d)return;var open=!d.classList.contains('open');d.classList.toggle('open',open);try{localStorage.setItem('genba_dash_open',open?'1':'0');}catch(e){}}
 function loadDash(){
   try{var c=JSON.parse(localStorage.getItem('genba_dash')||'null');
     if(c&&c.today===new Date().toISOString().slice(0,10))renderDash(c);}catch(e){}
