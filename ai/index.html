@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 1 ai (2026-06-14) AIアシスタント（汎用チャット・GAS内蔵Gemini）新規作成 -->
+<!-- version 2 ai (2026-06-14) 汎用化・回答簡潔化・候補削除・AI吹き出しID衝突バグ修正・画面にバージョン表示 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -89,7 +89,7 @@
     <a class="back" href="../">← メニュー</a>
     <div class="hd-center">
       <h1>✨ AIアシスタント</h1>
-      <div class="model">Gemini 2.5 Flash（無料）</div>
+      <div class="model">Gemini 2.5 Flash（無料）　ai v2</div>
     </div>
     <button class="clrbtn" onclick="clearChat()">クリア</button>
   </div>
@@ -189,10 +189,11 @@ function addUserBubble(text) {
 function addAiBubble() {
   var div = document.createElement('div');
   div.className = 'msg ai';
-  div.innerHTML = '<div class="avatar ai">AI</div><div class="bubble streaming" id="streamBubble"></div>';
+  div.innerHTML = '<div class="avatar ai">AI</div><div class="bubble streaming"></div>';
   msgs.appendChild(div);
   scrollBottom();
-  return document.getElementById('streamBubble');
+  // IDに頼らず、今作った吹き出し要素を直接返す（複数IDの衝突を防ぐ）
+  return div.querySelector('.bubble');
 }
 
 function renderMarkdown(text) {
