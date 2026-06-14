@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 48 (ライトボタンをタイトル右へ移動＋戻る操作でカメラ停止の不具合修正) -->
+<!-- toolbox version 49 (小黒板カメラの解像度を2560×1440に統一：ライト対応レンズ選択のため) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -296,7 +296,7 @@
   .bshoot-bar.two .hqbtn{flex:0 0 38%;background:#c2410c;display:none;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v48</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v49</div>
 
 <div class="wrap">
 
@@ -1867,7 +1867,7 @@ function startBoardCamera(){
   var tb=document.getElementById('boardTorchBtn'); if(tb){tb.classList.remove('on');}
   var hb=document.getElementById('boardHQBtn'); if(hb)hb.style.display='none';
   var zi=document.getElementById('boardZoomInfo'); if(zi)zi.style.display='none';
-  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false})
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:2560},height:{ideal:1440}},audio:false})
     .then(function(stream){
       boardStream=stream;
       var v=document.getElementById('boardVideo'); v.srcObject=stream; v.play();
