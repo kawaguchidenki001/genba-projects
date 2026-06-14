@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 46 (ライトボタン表示バグ修正：起動時に隠してしまう不具合) -->
+<!-- toolbox version 47 (カメラ機能判定をカメラ起動完了後に遅延実行：ライト/ズーム検出改善) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -293,7 +293,7 @@
   .bshoot-bar.two .hqbtn{flex:0 0 38%;background:#c2410c;display:none;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v46</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v47</div>
 
 <div class="wrap">
 
@@ -1691,25 +1691,31 @@ function startMag(){
       magStream=stream;
       var vv=document.getElementById('magVideo'); vv.srcObject=stream; vv.play();
       magTrack=stream.getVideoTracks()[0];
-      try{
-        var caps=(magTrack&&magTrack.getCapabilities)?magTrack.getCapabilities():{};
-        if(caps&&caps.torch){var t=document.getElementById('magTorchBtn');if(t)t.dataset.tsupported='1';}else{var t2=document.getElementById('magTorchBtn');if(t2)t2.dataset.tsupported='0';}
-        if(caps&&caps.focusMode&&caps.focusMode.indexOf('continuous')>=0){magTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});}
-        /* 解像度を上限まで引き上げ */
-        if(caps&&caps.width&&caps.height){
-          var maxW=caps.width.max||1920, maxH=caps.height.max||1080;
-          magTrack.applyConstraints({width:{ideal:maxW},height:{ideal:maxH}}).catch(function(){});
-        }
-        /* シャープネス・コントラストを上限へ */
-        var hq=[];
-        if(caps&&caps.sharpness&&caps.sharpness.max!=null)hq.push({sharpness:caps.sharpness.max});
-        if(caps&&caps.contrast&&caps.contrast.max!=null)hq.push({contrast:caps.contrast.max});
-        if(hq.length)magTrack.applyConstraints({advanced:hq}).catch(function(){});
-        /* 高画質キャプチャ対応端末ならボタン表示 */
-        if(typeof ImageCapture!=='undefined'){
-          var hb=document.getElementById('magHQBtn'); if(hb)hb.style.display='block';
-        }
-      }catch(e){}
+      /* カメラ起動直後はgetCapabilitiesが空を返すことがあるため、映像開始後に遅延判定 */
+      var magCapsDone=false;
+      function applyMagCaps(){
+        if(magCapsDone||!magTrack)return; magCapsDone=true;
+        try{
+          var caps=(magTrack.getCapabilities)?magTrack.getCapabilities():{};
+          var mbtn=document.getElementById('magTorchBtn');
+          if(mbtn)mbtn.dataset.tsupported=(caps&&caps.torch)?'1':'0';
+          if(caps&&caps.focusMode&&caps.focusMode.indexOf('continuous')>=0){magTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});}
+          if(caps&&caps.width&&caps.height){
+            var maxW=caps.width.max||1920, maxH=caps.height.max||1080;
+            magTrack.applyConstraints({width:{ideal:maxW},height:{ideal:maxH}}).catch(function(){});
+          }
+          var hq=[];
+          if(caps&&caps.sharpness&&caps.sharpness.max!=null)hq.push({sharpness:caps.sharpness.max});
+          if(caps&&caps.contrast&&caps.contrast.max!=null)hq.push({contrast:caps.contrast.max});
+          if(hq.length)magTrack.applyConstraints({advanced:hq}).catch(function(){});
+          if(typeof ImageCapture!=='undefined'){
+            var hb=document.getElementById('magHQBtn'); if(hb)hb.style.display='block';
+          }
+        }catch(e){}
+      }
+      var mv=document.getElementById('magVideo');
+      if(mv)mv.addEventListener('loadedmetadata',function(){setTimeout(applyMagCaps,500);});
+      setTimeout(applyMagCaps,1000);
     })
     .catch(function(e){toast('\u30ab\u30e1\u30e9\u3092\u8d77\u52d5\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f\uff08'+e.message+'\uff09');});
 }
@@ -1861,31 +1867,36 @@ function startBoardCamera(){
       boardStream=stream;
       var v=document.getElementById('boardVideo'); v.srcObject=stream; v.play();
       boardTrack=stream.getVideoTracks()[0];
-      try{
-        var caps=(boardTrack&&boardTrack.getCapabilities)?boardTrack.getCapabilities():{};
-        /* 連続オートフォーカス */
-        if(caps&&caps.focusMode&&caps.focusMode.indexOf('continuous')>=0){
-          boardTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});
-        }
-        /* ライト対応 */
-        if(caps&&caps.torch){var t=document.getElementById('boardTorchBtn');if(t)t.dataset.tsupported='1';}else{var t2=document.getElementById('boardTorchBtn');if(t2)t2.dataset.tsupported='0';}
-        /* ズーム対応 */
-        if(caps&&caps.zoom){
-          boardZoomMin=caps.zoom.min||1;
-          boardZoomMax=caps.zoom.max||1;
-          boardZoomStep=caps.zoom.step||0.1;
-          var st=(boardTrack.getSettings&&boardTrack.getSettings())||{};
-          boardZoom=st.zoom||boardZoomMin;
-          if(boardZoomMax>boardZoomMin){
-            var zi2=document.getElementById('boardZoomInfo');
-            if(zi2){zi2.textContent=boardZoom.toFixed(1)+'x';zi2.style.display='block';}
+      /* カメラ起動直後はgetCapabilitiesが空を返すことがあるため、映像開始後に遅延判定 */
+      var boardCapsDone=false;
+      function applyBoardCaps(){
+        if(boardCapsDone||!boardTrack)return; boardCapsDone=true;
+        try{
+          var caps=(boardTrack.getCapabilities)?boardTrack.getCapabilities():{};
+          if(caps&&caps.focusMode&&caps.focusMode.indexOf('continuous')>=0){
+            boardTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});
           }
-        }
-        /* 高画質キャプチャ対応 */
-        if(typeof ImageCapture!=='undefined'){
-          var hb2=document.getElementById('boardHQBtn'); if(hb2)hb2.style.display='block';
-        }
-      }catch(e){}
+          var tbtn=document.getElementById('boardTorchBtn');
+          if(tbtn)tbtn.dataset.tsupported=(caps&&caps.torch)?'1':'0';
+          if(caps&&caps.zoom){
+            boardZoomMin=caps.zoom.min||1;
+            boardZoomMax=caps.zoom.max||1;
+            boardZoomStep=caps.zoom.step||0.1;
+            var st=(boardTrack.getSettings&&boardTrack.getSettings())||{};
+            boardZoom=st.zoom||boardZoomMin;
+            if(boardZoomMax>boardZoomMin){
+              var zi2=document.getElementById('boardZoomInfo');
+              if(zi2){zi2.textContent=boardZoom.toFixed(1)+'x';zi2.style.display='block';}
+            }
+          }
+          if(typeof ImageCapture!=='undefined'){
+            var hb2=document.getElementById('boardHQBtn'); if(hb2)hb2.style.display='block';
+          }
+        }catch(e){}
+      }
+      var bv=document.getElementById('boardVideo');
+      if(bv)bv.addEventListener('loadedmetadata',function(){setTimeout(applyBoardCaps,500);});
+      setTimeout(applyBoardCaps,1000);
     })
     .catch(function(e){toast('カメラを起動できませんでした（'+e.message+'）');});
 }
