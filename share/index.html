@@ -1,46 +1,56 @@
 <!DOCTYPE html>
-<!-- version 1 share (2026-06-11) 顧客向け進捗共有 閲覧専用ページ -->
+<!-- version 2 share (2026-06-14) デザイン統一（Gen-Can基準・グラデヘッダー/ニューモーフィズム・線画アイコン・ブランドフォント）。顧客向け進捗 閲覧専用。機能・id不変 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>工事進捗</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#f4f6f9;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#2563eb;--accent-d:#1d4ed8;
-    --radius:14px;--shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
+  :root{
+    --bg:#e8ecf2;--ink:#1f2733;--sub:#6b7280;--line:#dbe2ea;
+    --accent:#2563eb;--accent-d:#1d4ed8;--accent-soft:#e6edfd;
+    --radius:14px;
+    --grad:linear-gradient(120deg,#06b6d4 8%,#2563eb 55%,#7c3aed 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+    --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
+  }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.6;padding-bottom:40px;}
-  header{background:linear-gradient(135deg,#2563eb,#1e40af);color:#fff;padding:calc(env(safe-area-inset-top) + 22px) 18px 22px;}
-  header .co{font-size:12.5px;opacity:.9;letter-spacing:.04em;}
-  header h1{font-size:20px;margin:6px 0 4px;font-weight:800;line-height:1.3;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Noto Sans JP",sans-serif;font-size:15.5px;line-height:1.6;padding-bottom:40px;}
+  header{background:var(--grad);color:#fff;padding:calc(env(safe-area-inset-top) + 20px) 18px 22px;box-shadow:0 8px 20px -10px rgba(37,99,235,.5);}
+  header .hbrand{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:13.5px;letter-spacing:.02em;color:rgba(255,255,255,.92);margin-bottom:12px;}
+  header .co{font-size:12.5px;opacity:.92;letter-spacing:.04em;}
+  header h1{font-size:21px;margin:6px 0 4px;font-weight:800;line-height:1.3;}
   header .place{font-size:13px;opacity:.95;}
-  main{max-width:680px;margin:0 auto;padding:14px;}
-  .statusbar{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:13px 16px;margin-bottom:14px;}
+  main{max-width:680px;margin:0 auto;padding:16px 14px;}
+  .statusbar{display:flex;align-items:center;gap:10px;background:var(--bg);border:none;border-radius:var(--radius);box-shadow:var(--rise-sm);padding:14px 16px;margin-bottom:14px;}
   .statusbar .badge{flex:0 0 auto;font-size:13px;font-weight:800;padding:5px 14px;border-radius:999px;color:#fff;}
   .statusbar .term{font-size:13px;color:var(--sub);}
-  .sec{font-size:13px;font-weight:800;color:var(--accent-d);margin:18px 4px 10px;letter-spacing:.04em;display:flex;align-items:center;gap:6px;}
-  /* 工程タイムライン */
-  .timeline{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:6px 16px;}
-  .tl{display:flex;gap:12px;padding:11px 0;border-bottom:1px dashed var(--line);}
+  .sec{font-size:13px;font-weight:800;color:var(--accent-d);margin:20px 4px 11px;letter-spacing:.04em;display:flex;align-items:center;gap:7px;}
+  .sec svg{width:17px;height:17px;}
+  .timeline{background:var(--bg);border:none;border-radius:var(--radius);box-shadow:var(--rise-sm);padding:6px 16px;}
+  .tl{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line);}
   .tl:last-child{border-bottom:none;}
   .tl .dot{flex:0 0 auto;width:11px;height:11px;border-radius:50%;background:var(--accent);margin-top:5px;position:relative;}
   .tl .dot.done{background:#16a34a;} .tl .dot.next{background:#ea580c;box-shadow:0 0 0 4px rgba(234,88,12,.15);}
   .tl .body{flex:1;min-width:0;}
   .tl .d{font-size:12.5px;color:var(--sub);font-variant-numeric:tabular-nums;}
-  .tl .t{font-weight:700;font-size:14.5px;margin-top:1px;}
-  .tl .k{display:inline-block;font-size:11px;font-weight:700;padding:1px 8px;border-radius:6px;background:#eef2ff;color:var(--accent-d);margin-top:3px;}
-  /* 写真グリッド */
-  .photos{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
-  .photos img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:10px;background:#e7ebef;cursor:pointer;border:1px solid var(--line);}
-  .empty{text-align:center;color:var(--sub);padding:26px 10px;font-size:13.5px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);}
-  .foot{text-align:center;color:var(--sub);font-size:11.5px;margin-top:24px;line-height:1.7;}
-  /* ローディング・エラー */
+  .tl .t{font-weight:700;font-size:14.5px;margin-top:1px;color:var(--ink);}
+  .tl .k{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:7px;background:var(--accent-soft);color:var(--accent-d);margin-top:4px;}
+  .photos{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+  .photos img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:11px;background:#dfe5ec;cursor:pointer;border:none;box-shadow:var(--rise-sm);}
+  .empty{text-align:center;color:var(--sub);padding:26px 10px;font-size:13.5px;background:var(--bg);border:none;border-radius:var(--radius);box-shadow:var(--well-soft);}
+  .foot{text-align:center;color:var(--sub);font-size:11.5px;margin-top:26px;line-height:1.7;}
+  .powered{text-align:center;margin-top:10px;font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:12px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:.85;}
   .center{min-height:60vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px;color:var(--sub);}
-  .center .ic{font-size:46px;margin-bottom:10px;}
+  .center .ic{margin-bottom:12px;}
   .center h2{font-size:17px;color:var(--ink);margin:0 0 6px;}
-  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;margin-bottom:14px;}
+  .spin{width:38px;height:38px;border:4px solid #d6deea;border-top-color:var(--accent);border-radius:50%;animation:sp .8s linear infinite;margin-bottom:14px;}
   @keyframes sp{to{transform:rotate(360deg)}}
-  /* ライトボックス */
   .lb{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:90;}
   .lb.on{display:flex;}
   .lb img{max-width:96vw;max-height:90vh;border-radius:8px;}
@@ -49,10 +59,11 @@
 </head>
 <body>
 <div id="loadView" class="center"><div class="spin"></div><div>読み込み中…</div></div>
-<div id="errView" class="center" style="display:none"><div class="ic">🔒</div><h2 id="errTtl">表示できません</h2><div id="errMsg"></div></div>
+<div id="errView" class="center" style="display:none"><div class="ic"><svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#9aa3b2" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.4"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/><circle cx="12" cy="15.4" r="1.3"/></svg></div><h2 id="errTtl">表示できません</h2><div id="errMsg"></div></div>
 
 <div id="app" style="display:none">
   <header>
+    <div class="hbrand">Gen-Can</div>
     <div class="co" id="coName"></div>
     <h1 id="pName"></h1>
     <div class="place" id="pPlace"></div>
@@ -64,16 +75,17 @@
     </div>
 
     <div id="schedSec" style="display:none">
-      <div class="sec">📅 工事の予定</div>
+      <div class="sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3"/></svg>工事の予定</div>
       <div class="timeline" id="timeline"></div>
     </div>
 
     <div id="photoSec" style="display:none">
-      <div class="sec">📷 現場の写真</div>
+      <div class="sec"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.2"/></svg>現場の写真</div>
       <div class="photos" id="photos"></div>
     </div>
 
     <div class="foot" id="foot"></div>
+    <div class="powered">Powered by Gen-Can</div>
   </main>
 </div>
 
