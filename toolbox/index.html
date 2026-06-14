@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 44 (録音機：起動即録音画面・現場バーで切替) -->
+<!-- toolbox version 45 (ライトボタン常時表示・非対応端末は押下時に案内) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -285,7 +285,7 @@
 
   /* 小黒板カメラ：ボタンとズーム */
   .bcam-tools{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:8px;z-index:10;}
-  .bcam-tool{width:42px;height:42px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:20px;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 6px rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;padding:0;}
+  .bcam-tool{width:42px;height:42px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:20px;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 6px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;padding:0;}
   .bcam-tool.on{background:#d97b12;}
   .bcam-zoominfo{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;font-size:13px;font-weight:700;padding:4px 12px;border-radius:14px;display:none;z-index:10;pointer-events:none;}
   .bshoot-bar.two{display:flex;gap:10px;}
@@ -293,7 +293,7 @@
   .bshoot-bar.two .hqbtn{flex:0 0 38%;background:#c2410c;display:none;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v44</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v45</div>
 
 <div class="wrap">
 
@@ -602,7 +602,7 @@
     <div class="mag-btns">
       <button class="mag-btn freeze" id="magFreezeBtn" onclick="magToggleFreeze()">⏸ 止める</button>
       <button class="mag-btn hq" id="magHQBtn" onclick="magHQCapture()" style="display:none;">📷 高画質</button>
-      <button class="mag-btn torch" id="magTorchBtn" onclick="magToggleTorch()" style="display:none;">💡 ライト</button>
+      <button class="mag-btn torch" id="magTorchBtn" onclick="magToggleTorch()">💡 ライト</button>
     </div>
     <div class="mag-hint">ピントが甘いときは、カメラを<b>15〜20cm離す</b>か<b>画面をタップ</b>してください。<br><b>📷 高画質</b>を押すと、内蔵カメラに近い解像度で固定できます（対応機種のみ）。</div>
   </div>
@@ -1693,7 +1693,7 @@ function startMag(){
       magTrack=stream.getVideoTracks()[0];
       try{
         var caps=(magTrack&&magTrack.getCapabilities)?magTrack.getCapabilities():{};
-        if(caps&&caps.torch){var t=document.getElementById('magTorchBtn');if(t)t.style.display='block';}
+        if(caps&&caps.torch){var t=document.getElementById('magTorchBtn');if(t)t.dataset.tsupported='1';}else{var t2=document.getElementById('magTorchBtn');if(t2)t2.dataset.tsupported='0';}
         if(caps&&caps.focusMode&&caps.focusMode.indexOf('continuous')>=0){magTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});}
         /* 解像度を上限まで引き上げ */
         if(caps&&caps.width&&caps.height){
@@ -1744,11 +1744,13 @@ function magToggleFreeze(){
   }
 }
 function magToggleTorch(){
-  if(!magTrack){toast('\u30e9\u30a4\u30c8\u306b\u5bfe\u5fdc\u3057\u3066\u3044\u307e\u305b\u3093');return;}
+  if(!magTrack){toast('\u30ab\u30e1\u30e9\u304c\u8d77\u52d5\u3057\u3066\u3044\u307e\u305b\u3093');return;}
+  var btn=document.getElementById('magTorchBtn');
+  if(btn&&btn.dataset.tsupported==='0'){toast('\u304a\u4f7f\u3044\u306e\u7aef\u672b\u306f\u30e9\u30a4\u30c8\u306b\u5bfe\u5fdc\u3057\u3066\u3044\u307e\u305b\u3093');return;}
   magTorchOn=!magTorchOn;
   magTrack.applyConstraints({advanced:[{torch:magTorchOn}]})
-    .then(function(){var t=document.getElementById('magTorchBtn');if(t)t.classList.toggle('on',magTorchOn);})
-    .catch(function(){magTorchOn=!magTorchOn;toast('\u30e9\u30a4\u30c8\u3092\u5207\u308a\u66ff\u3048\u3089\u308c\u307e\u305b\u3093\u3067\u3057\u305f');});
+    .then(function(){if(btn)btn.classList.toggle('on',magTorchOn);})
+    .catch(function(){magTorchOn=!magTorchOn;toast('\u304a\u4f7f\u3044\u306e\u7aef\u672b\u306f\u30e9\u30a4\u30c8\u306b\u5bfe\u5fdc\u3057\u3066\u3044\u307e\u305b\u3093');});
 }
 function magTapFocus(){
   if(!magTrack||magFrozen)return;
@@ -1866,7 +1868,7 @@ function startBoardCamera(){
           boardTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});
         }
         /* ライト対応 */
-        if(caps&&caps.torch){var t=document.getElementById('boardTorchBtn');if(t)t.style.display='flex';}
+        if(caps&&caps.torch){var t=document.getElementById('boardTorchBtn');if(t)t.dataset.tsupported='1';}else{var t2=document.getElementById('boardTorchBtn');if(t2)t2.dataset.tsupported='0';}
         /* ズーム対応 */
         if(caps&&caps.zoom){
           boardZoomMin=caps.zoom.min||1;
@@ -1895,11 +1897,13 @@ function stopBoardCamera(){
 }
 /* ライト ON/OFF */
 function boardToggleTorch(){
-  if(!boardTrack){toast('ライトに対応していません');return;}
+  if(!boardTrack){toast('カメラが起動していません');return;}
+  var btn=document.getElementById('boardTorchBtn');
+  if(btn&&btn.dataset.tsupported==='0'){toast('お使いの端末はライトに対応していません');return;}
   boardTorchOn=!boardTorchOn;
   boardTrack.applyConstraints({advanced:[{torch:boardTorchOn}]})
-    .then(function(){var t=document.getElementById('boardTorchBtn');if(t)t.classList.toggle('on',boardTorchOn);})
-    .catch(function(){boardTorchOn=!boardTorchOn;toast('ライトを切り替えられませんでした');});
+    .then(function(){if(btn)btn.classList.toggle('on',boardTorchOn);})
+    .catch(function(){boardTorchOn=!boardTorchOn;toast('お使いの端末はライトに対応していません');});
 }
 /* ピンチズーム：2本指タッチ */
 function boardPinchStart(e){
