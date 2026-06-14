@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 47 (カメラ機能判定をカメラ起動完了後に遅延実行：ライト/ズーム検出改善) -->
+<!-- toolbox version 48 (ライトボタンをタイトル右へ移動＋戻る操作でカメラ停止の不具合修正) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -119,6 +119,9 @@
     .sq.soon .cor{font-size:11px;}
   }
   .thead{display:flex;align-items:center;gap:10px;margin:0 2px 16px;}
+  .thead-tool{flex:0 0 auto;width:46px;height:46px;border-radius:12px;border:2px solid var(--line);background:#fff;font-size:22px;cursor:pointer;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;padding:0;}
+  .thead-tool:active{transform:scale(.95);}
+  .thead-tool.on{background:#d97b12;border-color:#d97b12;}
   .thead h2{font-size:20px;font-weight:700;letter-spacing:.04em;flex:1;min-width:0;color:var(--accent-d);}
   .back2{font-size:13px;color:var(--accent-d);background:#fff;border:1px solid var(--line);border-radius:10px;padding:7px 12px;cursor:pointer;white-space:nowrap;font-weight:600;box-shadow:var(--shadow);}
   .back2:active{background:var(--accent-soft);}
@@ -293,7 +296,7 @@
   .bshoot-bar.two .hqbtn{flex:0 0 38%;background:#c2410c;display:none;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v47</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v48</div>
 
 <div class="wrap">
 
@@ -611,14 +614,12 @@
     <div class="thead">
       <span class="back2" onclick="boardBack()">← ツールボックス</span>
       <h2>小黒板カメラ</h2>
+      <button class="thead-tool" id="boardTorchBtn" onclick="boardToggleTorch()" title="ライト">💡</button>
     </div>
     <div class="sitebar sb-tap" id="boardSiteBar" onclick="boardPickSite()">現場：<b>タップして選択</b><span class="sb-arrow">▼</span></div>
     <div class="bcam-wrap" id="bcamWrap">
       <video id="boardVideo" autoplay playsinline muted></video>
       <div class="bov-bd" id="boardOverlay" style="display:none;"></div>
-      <div class="bcam-tools">
-        <button class="bcam-tool" id="boardTorchBtn" onclick="boardToggleTorch()" title="ライト">💡</button>
-      </div>
       <div class="bcam-zoominfo" id="boardZoomInfo">1.0x</div>
     </div>
     <div class="bsize-row">
@@ -905,6 +906,10 @@ window.addEventListener('popstate',function(e){
     // → 何もしない（デフォルトのhistory.back()で前ページへ）
     return;
   }
+  // カメラ・マイクを使うペインから離れる場合は確実に停止（起動しっぱなし防止）
+  if(curId==='p-board'){ try{stopBoardCamera();}catch(e2){} }
+  if(curId==='p-mag'){ try{stopMag();}catch(e2){} }
+  if(curId==='p-rec'){ try{recStop2();}catch(e2){} }
   // それ以外のペインならp-homeに戻る（ページ遷移はキャンセル）
   // go()はpushStateするのでここでは直接DOMだけ操作
   var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');
