@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<!-- version 1 (2026-06-14) 材料AI検索（独立画面）：型番をGemini+Google検索→候補表示→リストに追加→材料リストとして保存 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>材料AI検索</title>
+<style>
+  :root{ --bg:#eef0f6;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#d97706;--accent-d:#b45309;
+    --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:40px;}
+  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);border-bottom:1px solid var(--line);}
+  .back{color:var(--accent-d);text-decoration:none;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;}
+  header h1{font-size:17px;margin:8px 0 0;font-weight:700;color:var(--accent-d);}
+  main{padding:13px;max-width:720px;margin:0 auto;}
+  .empty{text-align:center;color:var(--sub);padding:28px 10px;font-size:14px;line-height:1.9;}
+  label.lbl{display:block;font-size:11.5px;color:var(--sub);font-weight:700;margin:10px 2px 3px;}
+  select,input,textarea{font-family:inherit;}
+  .ssel{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;font-size:15px;background:#fff;}
+  .ti{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;font-size:16px;background:#fff;}
+  .note{font-size:12px;color:var(--sub);background:#fff7ed;border:1px solid #fde7c8;border-radius:11px;padding:10px 12px;margin-bottom:6px;line-height:1.7;}
+  .savebtn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-top:14px;}
+  /* 検索 */
+  .srchrow{display:flex;gap:8px;margin-top:4px;}
+  .srchrow .ti{flex:1;min-width:0;}
+  .srchbtn{flex:0 0 auto;padding:0 18px;border:none;border-radius:11px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;cursor:pointer;}
+  /* 検索結果カード */
+  .rescard{background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:9px;border-left:5px solid #0e7490;}
+  .rescard .rn{font-weight:700;font-size:15px;}
+  .rescard .rmodel{font-size:13.5px;color:#0e7490;font-weight:700;margin-top:3px;font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-all;}
+  .rescard .rmeta{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.7;}
+  .rescard .addb{margin-top:10px;background:#fff7ed;border:1px solid var(--accent);color:var(--accent-d);border-radius:9px;padding:8px 14px;font-size:13.5px;font-weight:800;cursor:pointer;}
+  .rescard .addb.added{background:#dcfce7;border-color:#86efac;color:#166534;}
+  /* 出典 */
+  details.sources{margin-top:6px;border-top:1px dashed var(--line);padding-top:8px;margin-bottom:8px;}
+  .src-ttl{font-size:11.5px;color:var(--sub);font-weight:700;cursor:pointer;user-select:none;-webkit-user-select:none;list-style:none;display:flex;align-items:center;gap:5px;}
+  .src-ttl::-webkit-details-marker{display:none;}
+  .src-ttl::before{content:'\25B8';font-size:10px;display:inline-block;transition:transform .15s;}
+  details.sources[open] .src-ttl::before{transform:rotate(90deg);}
+  .src-link{display:block;font-size:12.5px;color:#0e7490;text-decoration:none;padding:3px 0;word-break:break-all;}
+  /* ためたリスト */
+  .cartwrap{background:#fff7ed;border:1px solid #fde7c8;border-radius:13px;padding:12px 14px;margin-top:10px;}
+  .cartwrap h2{font-size:14.5px;margin:0 0 6px;color:var(--accent-d);font-weight:800;}
+  .crow{display:flex;align-items:center;gap:7px;padding:7px 0;border-top:1px solid #f3e4cf;flex-wrap:wrap;}
+  .crow:first-of-type{border-top:none;}
+  .c-name{flex:1 1 100%;order:3;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:14.5px;background:#fff;}
+  .c-qty{flex:0 0 96px;order:2;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff;}
+  .c-del{order:1;border:none;background:#fee2e2;color:#b91c1c;border-radius:8px;font-size:16px;font-weight:800;width:34px;height:34px;cursor:pointer;flex:0 0 auto;}
+  /* トースト・ローディング */
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:30px;z-index:90;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .toast.show{opacity:1;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(240,242,245,.72);display:none;align-items:center;justify-content:center;}
+  .loading.show{display:flex;}
+  .lbox{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(20,30,50,.18);padding:22px 30px;text-align:center;}
+  .spin{width:36px;height:36px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 10px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1</div>
+<header>
+  <a class="back" href="../">← 材料管理</a>
+  <h1>🔎 材料AI検索</h1>
+</header>
+
+<main>
+  <div class="note">材料名や型番でAI検索すると、メーカー・型番・参考価格つきの候補が出ます。各候補の「＋リストに追加」で下にためて、現場とタイトルを決めて材料リストとして保存できます。<br>※AIとGoogle検索の結果です。型番・価格は念のためご確認ください。</div>
+
+  <label class="lbl">検索ワード（材料名・型番・用途など）</label>
+  <div class="srchrow">
+    <input class="ti" id="q" placeholder="例：露出スイッチ パナソニック / VVF1.6 2C / 防水コンセント" enterkeyhint="search" onkeydown="if(event.key==='Enter')doSearch()">
+    <button class="srchbtn" id="srchBtn" onclick="doSearch()">検索</button>
+  </div>
+
+  <div id="results" style="margin-top:12px;"></div>
+
+  <!-- ためたリスト -->
+  <div class="cartwrap" id="cartWrap" style="display:none;">
+    <h2>追加した材料（<span id="cartCnt">0</span>点）</h2>
+    <div id="cart"></div>
+    <label class="lbl">現場（どの現場の材料か）</label>
+    <select class="ssel" id="saveSite"></select>
+    <label class="lbl">タイトル</label>
+    <input class="ti" id="saveTitle" placeholder="例：1F 照明・スイッチ材料">
+    <button class="savebtn" onclick="saveAsList()">この内容で材料リストとして保存</button>
+  </div>
+</main>
+
+<datalist id="supDL"></datalist>
+<div class="toast" id="toast"></div>
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div id="ltxt" style="font-size:14px;font-weight:700;">読み込み中…</div></div></div>
+
+<script>
+var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var T_GENERAL='kawaguchi-genba-2026';
+var CACHE='genba_matlist_cache', LASTSITE='genba_matlist_lastsite';
+var DATA={projects:[],suppliers:[],products:[],matLists:[]};
+var results=[], cart=[];
+function tok(){return localStorage.getItem('genba_admin')||T_GENERAL;}
+function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},2400);}
+var lc=0,ls=0;
+function showLoad(msg){lc++;if(msg)document.getElementById('ltxt').textContent=msg;if(lc===1){ls=Date.now();document.getElementById('loading').classList.add('show');}}
+function hideLoad(){lc=Math.max(0,lc-1);if(lc===0){var w=Math.max(0,400-(Date.now()-ls));setTimeout(function(){if(lc===0)document.getElementById('loading').classList.remove('show');},w);}}
+function lastSite(){try{return localStorage.getItem(LASTSITE)||'';}catch(e){return '';}}
+function setLastSite(id){try{localStorage.setItem(LASTSITE,String(id||''));}catch(e){}}
+
+// JSONP（GET）：現場一覧の取得・材料リスト保存に使用
+function callGAS(params,silent){
+  return new Promise(function(resolve,reject){
+    if(!silent)showLoad();
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+    var timer=setTimeout(function(){cleanup();reject(new Error('timeout'));},20000);
+    function cleanup(){if(!silent)hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    window[cb]=function(res){cleanup();resolve(res);};
+    var q=Object.assign({secret:tok(),callback:cb},params);
+    if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
+    s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+    s.onerror=function(){cleanup();reject(new Error('error'));};document.head.appendChild(s);
+  });
+}
+// POST（text/plainでCORSプリフライト回避）：AI検索（materialSearch）に使用
+function callGASPost(params,silent){return new Promise(function(resolve,reject){
+  if(!silent)showLoad();
+  var body=Object.assign({secret:tok()},params);
+  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
+    .then(function(r){return r.json();})
+    .then(function(res){if(!silent)hideLoad();resolve(res);})
+    .catch(function(e){if(!silent)hideLoad();reject(new Error('通信エラー: '+e.message));});
+});}
+
+function siteOptions(sel){
+  var h='<option value="">（現場を選ぶ）</option>';
+  (DATA.projects||[]).forEach(function(p){
+    var nm=p['案件名']||p['案件ID'];
+    h+='<option value="'+esc(p['案件ID'])+'" '+(String(sel)===String(p['案件ID'])?'selected':'')+'>'+esc(nm)+'</option>';
+  });
+  return h;
+}
+function populateSites(){
+  var cur=document.getElementById('saveSite').value;
+  document.getElementById('saveSite').innerHTML=siteOptions(cur||lastSite());
+}
+
+/* データ読込（現場一覧） */
+function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'null');if(c&&c.projects){DATA=c;}}catch(e){}}
+function refresh(silent){
+  callGAS({action:'orderData'},silent).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'エラー');
+    DATA={projects:res.projects||[],suppliers:res.suppliers||[],products:res.products||[],matLists:res.matLists||[]};
+    try{localStorage.setItem(CACHE,JSON.stringify(DATA));}catch(e){}
+    populateSites();
+  }).catch(function(err){if(!silent)toast('現場の読込に失敗：'+err.message);});
+}
+
+/* 検索 */
+function doSearch(){
+  var q=(document.getElementById('q').value||'').trim();
+  if(!q){toast('検索ワードを入力してください');return;}
+  var btn=document.getElementById('srchBtn');btn.disabled=true;btn.textContent='検索中';
+  document.getElementById('results').innerHTML='';
+  showLoad('AIが検索中…（10秒ほど）');
+  callGASPost({action:'materialSearch',q:q},true).then(function(res){
+    hideLoad();btn.disabled=false;btn.textContent='検索';
+    if(!res||!res.ok){
+      document.getElementById('results').innerHTML='<div class="empty">'+esc((res&&res.error)||'検索できませんでした')+'</div>';
+      return;
+    }
+    results=(res.results||[]).filter(function(r){return String(r.n||'').trim()!==''||String(r.model||'').trim()!=='';});
+    renderResults(res.sources||[]);
+  }).catch(function(e){hideLoad();btn.disabled=false;btn.textContent='検索';toast(e.message);});
+}
+function renderResults(sources){
+  var el=document.getElementById('results');
+  if(!results.length){el.innerHTML='<div class="empty">候補が見つかりませんでした。<br>言葉を変えて検索してみてください。</div>';return;}
+  var h=results.map(function(r,i){
+    var meta=[];
+    if(r.maker)meta.push('メーカー：'+esc(r.maker));
+    if(r.spec)meta.push('規格：'+esc(r.spec));
+    if(r.price)meta.push('参考価格：'+esc(String(r.price))+(/^[0-9,]+$/.test(String(r.price))?'円':''));
+    return '<div class="rescard">'
+      +'<div class="rn">'+esc(r.n||'(名称不明)')+'</div>'
+      +(r.model?'<div class="rmodel">型番：'+esc(r.model)+'</div>':'')
+      +(meta.length?'<div class="rmeta">'+meta.join('　/　')+'</div>':'')
+      +'<button class="addb" id="addb'+i+'" onclick="addToCart('+i+')">＋ リストに追加</button>'
+      +'</div>';
+  }).join('');
+  if(sources&&sources.length){
+    h+='<details class="sources"><summary class="src-ttl">📎 検索の出典 '+sources.length+'件（タップで開く）</summary>';
+    sources.forEach(function(s){
+      var t=esc(s.title||s.url); if(t.length>46)t=t.slice(0,46)+'…';
+      h+='<a class="src-link" href="'+esc(s.url)+'" target="_blank" rel="noopener">🔗 '+t+'</a>';
+    });
+    h+='</details>';
+  }
+  el.innerHTML=h;
+}
+// 製品名＋型番（＋メーカー）を1つの材料名にまとめる
+function composeName(r){
+  var parts=[];
+  if(r.maker)parts.push(String(r.maker).trim());
+  if(r.n)parts.push(String(r.n).trim());
+  var base=parts.join(' ');
+  var model=String(r.model||'').trim();
+  if(model)base=base?(base+' '+model):model;
+  return base.trim();
+}
+function addToCart(i){
+  var r=results[i];if(!r)return;
+  cart.push({n:composeName(r),q:'',s:''});
+  var b=document.getElementById('addb'+i);
+  if(b){b.classList.add('added');b.textContent='✓ 追加済み';}
+  renderCart();
+  toast('追加しました');
+}
+function renderCart(){
+  var wrap=document.getElementById('cartWrap');
+  document.getElementById('cartCnt').textContent=cart.length;
+  if(!cart.length){wrap.style.display='none';return;}
+  wrap.style.display='block';
+  document.getElementById('cart').innerHTML=cart.map(function(it,i){
+    return '<div class="crow">'
+      +'<button class="c-del" onclick="delCart('+i+')">×</button>'
+      +'<input class="c-qty" placeholder="数量" value="'+esc(it.q||'')+'" oninput="setCart('+i+',\'q\',this.value)">'
+      +'<input class="c-name" value="'+esc(it.n||'')+'" oninput="setCart('+i+',\'n\',this.value)">'
+      +'</div>';
+  }).join('');
+  populateSites();
+}
+function setCart(i,k,v){if(cart[i])cart[i][k]=v;}
+function delCart(i){cart.splice(i,1);renderCart();}
+
+/* 材料リストとして保存（種類:mat → 既存の材料リスト・発注画面と共通） */
+function saveAsList(){
+  if(!cart.length){toast('先に材料を追加してください');return;}
+  var sid=document.getElementById('saveSite').value;
+  if(!sid){toast('現場を選んでください');return;}
+  var title=document.getElementById('saveTitle').value.trim();
+  if(!title){toast('タイトルを入力してください');document.getElementById('saveTitle').focus();return;}
+  setLastSite(sid);
+  var its=cart.filter(function(it){return String(it.n||'').trim()!=='';})
+    .map(function(it){return {n:String(it.n||'').trim(),q:it.q||'',s:it.s||'',d:false,pid:''};});
+  if(!its.length){toast('材料名が空です');return;}
+  var u=gUser()||{};
+  var data={'案件ID':sid,'種類':'mat','タイトル':title,'内容':JSON.stringify(its),'作成者ID':u['作業員ID']||'','作成者名':u['氏名']||''};
+  callGAS({action:'noteSave',data:data}).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'保存失敗');
+    toast('✓ 材料リストとして保存しました');
+    cart=[];renderCart();
+    document.getElementById('saveTitle').value='';
+    // 検索結果の「追加済み」表示を戻す
+    var bs=document.querySelectorAll('.addb.added');
+    for(var k=0;k<bs.length;k++){bs[k].classList.remove('added');bs[k].textContent='＋ リストに追加';}
+  }).catch(function(err){toast('保存失敗：'+err.message);});
+}
+
+/* 初期化 */
+loadCache();
+populateSites();
+refresh(true);
+</script>
+</body>
+</html>
