@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 38 (工事手帳を追加：許容電流/減少係数/接地/絶縁抵抗/分岐回路/リングスリーブ) -->
+<!-- toolbox version 39 (虫眼鏡を追加：カメラ拡大・固定・ライト) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -104,13 +104,14 @@
   .stk-pick .ps{font-size:12px;color:#155e75;white-space:nowrap;} .t-rec{border-top:3px solid #d64646;}
   .t-board .ic{background:#e8910b;} .t-board{border-top:3px solid #e8910b;}
   .t-elec .ic{background:#bd941c;} .t-elec{border-top:3px solid #bd941c;}
+  .t-mag .ic{background:#4f46e5;} .t-mag{border-top:3px solid #4f46e5;}
   .t-area .ic{background:#0d9aa0;} .t-area{border-top:3px solid #0d9aa0;}
   @media (min-width:680px){
     .grid{grid-template-columns:1fr 1fr;}
     .sq{flex-direction:row;align-items:center;aspect-ratio:auto;padding:16px 18px;gap:14px;border-top:1px solid var(--line);border-left:4px solid;}
     .t-memo{border-left-color:#22a06b;} .t-check{border-left-color:#2d7dd2;} .t-draw{border-left-color:#7c3ab4;} .t-mat{border-left-color:#0f766e;}
     .t-rec{border-left-color:#d64646;} .t-board{border-left-color:#e8910b;} .t-elec{border-left-color:#bd941c;} .t-area{border-left-color:#0d9aa0;}
-    .t-book{border-left-color:#7c3ab4;}
+    .t-book{border-left-color:#7c3ab4;} .t-mag{border-left-color:#4f46e5;}
     .sq .ic{width:48px;height:48px;font-size:24px;}
     .sq .txt{margin-top:0;} .sq .nm{font-size:16px;}
     .sq .ds{display:block;font-size:12.5px;color:var(--sub);margin-top:2px;}
@@ -259,9 +260,26 @@
   .modeseg button{flex:1;padding:10px;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;
     background:#e8ecf2;color:#6b7280;box-shadow:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;}
   .modeseg button.on{color:#1f5fa8;box-shadow:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
+
+  /* 虫眼鏡 */
+  .mag-stage{position:relative;width:100%;aspect-ratio:3/4;max-height:60vh;background:#000;border-radius:16px;overflow:hidden;box-shadow:var(--shadow-lg);margin:0 2px;}
+  .mag-zoomer{position:absolute;inset:0;transform-origin:center center;transition:transform .05s linear;}
+  .mag-zoomer video,.mag-zoomer canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+  .mag-center{position:absolute;top:50%;left:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border:2px solid rgba(255,255,255,.75);border-radius:50%;pointer-events:none;}
+  .mag-frozen-tag{position:absolute;top:10px;left:50%;transform:translateX(-50%);background:rgba(13,154,160,.93);color:#fff;font-size:13px;font-weight:700;padding:5px 14px;border-radius:20px;display:none;}
+  .mag-zoombar{display:flex;align-items:center;gap:12px;margin:16px 4px 4px;}
+  .mag-zoombar label{font-size:15px;font-weight:700;color:var(--accent-d);white-space:nowrap;}
+  .mag-zoombar input[type=range]{flex:1;height:34px;}
+  .mag-zoomval{font-size:18px;font-weight:800;color:var(--ink);min-width:62px;text-align:right;}
+  .mag-btns{display:flex;gap:12px;margin:14px 4px 12px;}
+  .mag-btn{flex:1;font-size:18px;font-weight:800;padding:18px 8px;border-radius:16px;border:2px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;box-shadow:var(--shadow);}
+  .mag-btn:active{transform:scale(.97);}
+  .mag-btn.freeze.on{background:#0d9aa0;border-color:#0d9aa0;color:#fff;}
+  .mag-btn.torch.on{background:#d97b12;border-color:#d97b12;color:#fff;}
+  .mag-hint{font-size:14px;color:var(--sub);line-height:1.7;margin:0 4px 90px;text-align:center;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v35</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v39</div>
 
 <div class="wrap">
 
@@ -282,6 +300,7 @@
       <div class="sq t-elec"  onclick="openTool('elec')"><span class="ic">⚡</span><span class="txt"><span class="nm">電気計算機</span><span class="ds">電気工事向け計算</span></span><span class="cor">→</span></div>
       <div class="sq t-meas"  onclick="openTool('meas')"><span class="ic">📐</span><span class="txt"><span class="nm">面積計算</span><span class="ds">面積の計算と坪・㎡・畳換算</span></span><span class="cor">→</span></div>
       <div class="sq t-book" onclick="openTool('book')"><span class="ic">📖</span><span class="txt"><span class="nm">工事手帳</span><span class="ds">許容電流・接地・スリーブ早見表</span></span><span class="cor">→</span></div>
+      <div class="sq t-mag"   onclick="openTool('mag')"><span class="ic">🔍</span><span class="txt"><span class="nm">虫眼鏡</span><span class="ds">小さな文字を大きく映す</span></span><span class="cor">→</span></div>
     </div>
   </div>
 
@@ -547,6 +566,32 @@
 
   <!-- ========== ⑦ 坪・㎡・畳 換算 ========== -->
   <!-- ========== ⑤ 小黒板カメラ ========== -->
+  <!-- ========== 虫眼鏡 ========== -->
+  <div class="pane" id="p-mag">
+    <div class="thead">
+      <span class="back2" onclick="magBack()">← ツールボックス</span>
+      <h2>虫眼鏡</h2>
+    </div>
+    <div class="mag-stage" id="magStage">
+      <div class="mag-zoomer" id="magZoomer">
+        <video id="magVideo" autoplay playsinline muted></video>
+        <canvas id="magCanvas" style="display:none;"></canvas>
+      </div>
+      <div class="mag-center"></div>
+      <div class="mag-frozen-tag" id="magFrozenTag">⏸ 固定中</div>
+    </div>
+    <div class="mag-zoombar">
+      <label>大きさ</label>
+      <input type="range" id="magZoomRange" min="1" max="6" step="0.1" value="2" oninput="magSetZoom(this.value)">
+      <span class="mag-zoomval" id="magZoomVal">2.0倍</span>
+    </div>
+    <div class="mag-btns">
+      <button class="mag-btn freeze" id="magFreezeBtn" onclick="magToggleFreeze()">⏸ 止める</button>
+      <button class="mag-btn torch" id="magTorchBtn" onclick="magToggleTorch()" style="display:none;">💡 ライト</button>
+    </div>
+    <div class="mag-hint">見たい文字を画面の<b>まん中の丸</b>に合わせてください。<br>「止める」を押すと画面が固定され、ゆっくり読めます。</div>
+  </div>
+
   <div class="pane" id="p-board">
     <div class="thead">
       <span class="back2" onclick="boardBack()">← ツールボックス</span>
@@ -874,16 +919,17 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 
 /* 実装済みツール */
-var READY={memo:1,check:1,elec:1,board:1,rec:1,meas:1,mat:1,rem:1,book:1};
+var READY={memo:1,check:1,elec:1,board:1,rec:1,meas:1,mat:1,rem:1,book:1,mag:1};
 function openTool(k){
   if(!READY[k]){ toast('「'+toolName(k)+'」は順次追加していきます'); return; }
   if(k==='draw')k='memo'; if(k==='area')k='meas';
   if(k==='rem'){ renderRemList(); go('p-rem-list'); return; }
   if(k==='memo'||k==='check'||k==='mat'){ curTool=k; siteFilter=''; refreshProjects(); refreshCurList(); return; }
   if(k==='board'||k==='rec'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='board'?'小黒板カメラ':'録音機'); go('p-memo-select'); loadSites(); return; }
+  if(k==='mag'){ go('p-mag'); startMag(); return; }
   go('p-'+k);
 }
-function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'面積計算',meas:'面積計算',mat:'材料リスト',rem:'忘れ物メモ',book:'工事手帳'}[k]||k;}
+function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'面積計算',meas:'面積計算',mat:'材料リスト',rem:'忘れ物メモ',book:'工事手帳',mag:'虫眼鏡'}[k]||k;}
 
 /* ===== ④ 忘れ物メモ（リマインダー・端末ローカル保存 / GAS不使用） ===== */
 var REM_KEY='genba_reminders';
@@ -1608,6 +1654,67 @@ function aConv(from){
 
 /* ===== 共通 POST（アップロード用） ===== */
 function tbPost(obj){obj.secret=T_GENERAL;return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)});}
+
+/* ===== 虫眼鏡 ===== */
+var magStream=null, magTrack=null, magFrozen=false, magTorchOn=false;
+function startMag(){
+  magFrozen=false; magTorchOn=false;
+  var c=document.getElementById('magCanvas'), v=document.getElementById('magVideo');
+  if(c)c.style.display='none'; if(v)v.style.display='block';
+  var ft=document.getElementById('magFrozenTag'); if(ft)ft.style.display='none';
+  var fb=document.getElementById('magFreezeBtn'); if(fb){fb.classList.remove('on');fb.textContent='\u23f8 \u6b62\u3081\u308b';}
+  var tb=document.getElementById('magTorchBtn'); if(tb){tb.classList.remove('on');tb.style.display='none';}
+  var zr=document.getElementById('magZoomRange'); if(zr)magSetZoom(zr.value);
+  if(!navigator||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('\u30ab\u30e1\u30e9\u306b\u5bfe\u5fdc\u3057\u3066\u3044\u307e\u305b\u3093');return;}
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false})
+    .then(function(stream){
+      magStream=stream;
+      var vv=document.getElementById('magVideo'); vv.srcObject=stream; vv.play();
+      magTrack=stream.getVideoTracks()[0];
+      try{
+        var caps=(magTrack&&magTrack.getCapabilities)?magTrack.getCapabilities():{};
+        if(caps&&caps.torch){var t=document.getElementById('magTorchBtn');if(t)t.style.display='block';}
+      }catch(e){}
+    })
+    .catch(function(e){toast('\u30ab\u30e1\u30e9\u3092\u8d77\u52d5\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f\uff08'+e.message+'\uff09');});
+}
+function stopMag(){
+  if(magTrack&&magTorchOn){try{magTrack.applyConstraints({advanced:[{torch:false}]});}catch(e){}}
+  if(magStream){magStream.getTracks().forEach(function(t){t.stop();});magStream=null;}
+  magTrack=null; magTorchOn=false;
+  var v=document.getElementById('magVideo'); if(v)v.srcObject=null;
+}
+function magBack(){stopMag();go('p-home');}
+function magSetZoom(val){
+  var z=parseFloat(val)||1;
+  var zr=document.getElementById('magZoomer'); if(zr)zr.style.transform='scale('+z+')';
+  var lab=document.getElementById('magZoomVal'); if(lab)lab.textContent=z.toFixed(1)+'\u500d';
+}
+function magToggleFreeze(){
+  var v=document.getElementById('magVideo'), c=document.getElementById('magCanvas');
+  if(!v||!c)return;
+  if(!magFrozen){
+    var w=v.videoWidth||1280, h=v.videoHeight||720;
+    c.width=w; c.height=h;
+    try{c.getContext('2d').drawImage(v,0,0,w,h);}catch(e){toast('\u56fa\u5b9a\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f');return;}
+    c.style.display='block'; v.style.display='none';
+    magFrozen=true;
+    var ft=document.getElementById('magFrozenTag'); if(ft)ft.style.display='block';
+    var fb=document.getElementById('magFreezeBtn'); if(fb){fb.classList.add('on');fb.textContent='\u25b6 \u89e3\u9664';}
+  } else {
+    c.style.display='none'; v.style.display='block';
+    magFrozen=false;
+    var ft2=document.getElementById('magFrozenTag'); if(ft2)ft2.style.display='none';
+    var fb2=document.getElementById('magFreezeBtn'); if(fb2){fb2.classList.remove('on');fb2.textContent='\u23f8 \u6b62\u3081\u308b';}
+  }
+}
+function magToggleTorch(){
+  if(!magTrack){toast('\u30e9\u30a4\u30c8\u306b\u5bfe\u5fdc\u3057\u3066\u3044\u307e\u305b\u3093');return;}
+  magTorchOn=!magTorchOn;
+  magTrack.applyConstraints({advanced:[{torch:magTorchOn}]})
+    .then(function(){var t=document.getElementById('magTorchBtn');if(t)t.classList.toggle('on',magTorchOn);})
+    .catch(function(){magTorchOn=!magTorchOn;toast('\u30e9\u30a4\u30c8\u3092\u5207\u308a\u66ff\u3048\u3089\u308c\u307e\u305b\u3093\u3067\u3057\u305f');});
+}
 
 /* ===== ⑤ 小黒板カメラ ===== */
 var boardStream=null,boardSiteId=null,boardSiteName_='';
