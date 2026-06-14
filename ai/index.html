@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 2 ai (2026-06-14) 汎用化・回答簡潔化・候補削除・AI吹き出しID衝突バグ修正・画面にバージョン表示 -->
+<!-- version 3 ai (2026-06-14) Google検索連携（grounding）追加・出典リンク表示 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -80,6 +80,11 @@
   /* エラーバナー */
   .err-bar{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 13px;font-size:13px;color:#991b1b;margin-bottom:10px;display:none;}
   .err-bar.show{display:block;}
+  /* 出典リンク */
+  .sources{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);}
+  .src-ttl{font-size:11.5px;color:var(--sub);font-weight:700;margin-bottom:5px;}
+  .src-link{display:block;font-size:12.5px;color:var(--accent-d);text-decoration:none;padding:3px 0;word-break:break-all;}
+  .src-link:active{text-decoration:underline;}
 </style>
 </head>
 <body>
@@ -89,7 +94,7 @@
     <a class="back" href="../">← メニュー</a>
     <div class="hd-center">
       <h1>✨ AIアシスタント</h1>
-      <div class="model">Gemini 2.5 Flash（無料）　ai v2</div>
+      <div class="model">Gemini 2.5 Flash（検索対応）　ai v3</div>
     </div>
     <button class="clrbtn" onclick="clearChat()">クリア</button>
   </div>
@@ -281,7 +286,19 @@ function doStream() {
     }
     fullText = res.text || '';
     // Markdown変換して表示
-    bubble.innerHTML = renderMarkdown(fullText);
+    var html = renderMarkdown(fullText);
+    // 出典リンクを追加（あれば）
+    var sources = res.sources || [];
+    if (sources.length) {
+      html += '<div class="sources"><div class="src-ttl">📎 出典</div>';
+      sources.forEach(function(s) {
+        var t = esc(s.title || s.url);
+        if (t.length > 40) t = t.slice(0, 40) + '…';
+        html += '<a class="src-link" href="' + esc(s.url) + '" target="_blank" rel="noopener">🔗 ' + t + '</a>';
+      });
+      html += '</div>';
+    }
+    bubble.innerHTML = html;
     bubble.classList.remove('streaming');
     chatLog.push({ role: 'assistant', content: fullText });
     scrollBottom();
