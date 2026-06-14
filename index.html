@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 51 root (2026-06-14) ダッシュボード折りたたみ＋要対応件数表示 -->
+<!-- version 53 root (2026-06-14) 高齢者向けに文字を拡大（v51ベース）。ダッシュボード折りたたみ＋要対応件数表示 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -137,10 +137,46 @@
   .rem-c .bt button{flex:1;padding:11px;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;}
   .rem-ok{background:#0f766e;color:#fff;}
   .rem-del{background:#fee2e2;color:#b91c1c;}
+  /* ▼ 高齢者向け 文字拡大 v53 ▼ */
+  body{font-size:16.5px;}
+  .kicker{font-size:12px;}
+  .head h1{font-size:33px;}
+  .head .co{font-size:14px;}
+  .lbl{font-size:12.5px;}
+  .sq .nm{font-size:17px;}
+  .sq .ds{font-size:13.5px;}
+  .soon{font-size:13.5px;}
+  .dashHd{font-size:15.5px;}
+  .dashHd .cnt{font-size:13.5px;}
+  .dttl{font-size:13px;}
+  .drow{font-size:14.5px;}
+  .dtime{font-size:13px;}
+  .dname{font-size:14.5px;}
+  .dwho{font-size:12.5px;}
+  .dempty{font-size:13px;}
+  .dchip{font-size:13.5px;}
+  .dalert{font-size:14.5px;}
+  .dalert .dd{font-size:12px;}
+  .dmore{font-size:13.5px;}
+  .foot{font-size:13px;}
+  #login .lg-t{font-size:12px;}
+  #login h2{font-size:26px;}
+  #login p{font-size:14px;}
+  #login input{font-size:16.5px;}
+  #login button{font-size:17px;}
+  #login .err{font-size:14px;}
+  .lbox .txt{font-size:15px;}
+  .rem-c .tx{font-size:17px;}
+  @media (min-width:680px){
+    .sq .nm{font-size:19px;}
+    .sq .ds{font-size:13.5px;}
+    .sq .en{font-size:11px;}
+  }
+  /* ▲ 高齢者向け 文字拡大 ▲ */
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v51</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v53</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
