@@ -1,69 +1,90 @@
 <!DOCTYPE html>
-<!-- version 1 (2026-06-10) 車両管理 -->
+<!-- version 2 (2026-06-14) デザイン統一（ニューモーフィズム/Gen-Can基準・ブラウン#b45309・線画アイコン・文字拡大）。機能は不変。車検/保険/オイル交換・走行距離・サマリ -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>車両管理｜河口電機</title>
+<title>車両管理｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#e8ecf2;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#b45309;--accent-d:#92400e;
-    --radius:12px;--shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:40px;}
-  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink);padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);border-bottom:1px solid var(--line);}
-  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .hd-row h1{font-size:17px;margin:0;font-weight:700;color:var(--accent-d);}
-  .back{color:var(--accent-d);text-decoration:none;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;}
+  :root{
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
+    --accent:#b45309;--accent-d:#92400e;--accent-soft:#f3e2cf;
+    --radius:13px;
+    --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+    --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.55;padding-bottom:40px;}
+  select,input,textarea,button,a{font-family:inherit;}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);color:var(--ink);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
+  .hbar{display:flex;align-items:center;gap:11px;max-width:760px;margin:0 auto;}
+  .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11px;letter-spacing:.05em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 12px;text-decoration:none;white-space:nowrap;flex:0 0 auto;}
+  .back:active{box-shadow:var(--well);}
+  .hic{width:40px;height:40px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hic svg{width:21px;height:21px;}
+  .htxt{flex:1;min-width:0;}
+  .htxt .en{font-family:"Manrope",sans-serif;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .htxt .nm{font-weight:700;font-size:16.5px;color:var(--ink);display:block;line-height:1.2;white-space:nowrap;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:13px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
   main{padding:12px;max-width:760px;margin:0 auto;}
-  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14px;}
-  /* サマリー */
-  .total{background:linear-gradient(135deg,#b45309,#92400e);color:#fff;border-radius:14px;padding:13px 16px;margin-bottom:12px;box-shadow:var(--shadow);display:flex;gap:18px;align-items:center;}
-  .total .v{font-size:21px;font-weight:800;line-height:1.1;}
+  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14.5px;}
+  .total{background:linear-gradient(135deg,#b45309,#92400e);color:#fff;border-radius:15px;padding:14px 17px;margin-bottom:12px;box-shadow:5px 6px 16px rgba(180,83,9,.32),-4px -4px 10px #ffffff;display:flex;gap:18px;align-items:center;}
+  .total .v{font-size:22px;font-weight:800;line-height:1.1;}
   .total .k{font-size:11px;opacity:.85;}
   .total .ok .v{color:#bbf7d0;}
   .total .ng .v{color:#fecaca;}
-  /* 車両カード */
-  .car{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:13px 14px;margin-bottom:11px;border-left:5px solid #94a3b8;}
-  .car.alert{border-left-color:#dc2626;}
-  .car.warn{border-left-color:#d97706;}
+  .car{position:relative;background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:13px 15px 13px 18px;margin-bottom:11px;overflow:hidden;}
+  .car::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:#94a3b8;}
+  .car.alert::before{background:#dc2626;}
+  .car.warn::before{background:#d97706;}
   .car .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;}
-  .nm{font-weight:700;font-size:16px;}
-  .plate{font-size:12px;font-weight:700;border:1.5px solid #475569;border-radius:6px;padding:1px 8px;color:#334155;white-space:nowrap;}
+  .nm{font-weight:700;font-size:16.5px;color:var(--ink);}
+  .plate{font-size:12px;font-weight:700;border:1.5px solid #64748b;border-radius:7px;padding:1px 9px;color:#334155;white-space:nowrap;background:#eef2f7;}
   .model{font-size:12.5px;color:var(--sub);}
   .badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
-  .bdg{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;}
+  .bdg{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;}
   .bdg.red{background:#fee2e2;color:#b91c1c;}
   .bdg.yel{background:#fef3c7;color:#92400e;}
   .bdg.blu{background:#dbeafe;color:#1e40af;}
   .bdg.grn{background:#dcfce7;color:#166534;}
-  .info{margin-top:10px;border-top:1px dashed var(--line);padding-top:8px;font-size:13px;}
-  .info .row{display:flex;justify-content:space-between;gap:10px;padding:3.5px 0;}
+  .info{margin-top:10px;border-top:1px dashed var(--line);padding-top:9px;font-size:13.5px;}
+  .info .row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;}
   .info .row .k{color:var(--sub);flex:0 0 auto;}
-  .info .row .v{text-align:right;font-variant-numeric:tabular-nums;}
-  .odoBox{margin-top:10px;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px;}
-  .odoBox .lbl{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:6px;}
+  .info .row .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .odoBox{margin-top:10px;background:var(--bg);box-shadow:var(--well-soft);border-radius:11px;padding:11px 12px;}
+  .odoBox .lbl{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:7px;}
   .odoRow{display:flex;gap:8px;}
-  .odoRow input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-size:16px;background:#fff;}
-  .odoRow button{flex:0 0 auto;padding:10px 14px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;}
-  .oilBtn{margin-top:8px;width:100%;padding:10px;border:1px solid #fbd6a4;border-radius:10px;background:#fff7ed;color:#9a3412;font-size:13.5px;font-weight:700;cursor:pointer;}
-  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:60px;z-index:60;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .odoRow input{flex:1;min-width:0;padding:11px 12px;border:none;border-radius:10px;font-size:16px;background:var(--bg);box-shadow:var(--well);color:var(--ink);}
+  .odoRow button{flex:0 0 auto;padding:11px 16px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:2px 3px 8px rgba(180,83,9,.35);}
+  .odoRow button:active{transform:translateY(1px);}
+  .oilBtn{margin-top:9px;width:100%;padding:11px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--rise-sm);color:#9a3412;font-size:13.5px;font-weight:800;cursor:pointer;}
+  .oilBtn:active{box-shadow:var(--well);}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:60px;z-index:60;background:#1f3a52;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 20px rgba(31,58,82,.3);}
   .toast.show{opacity:1;}
-  .loading{position:fixed;inset:0;z-index:1000;background:rgba(240,242,245,.72);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(232,236,242,.78);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
   .loading.show{display:flex;}
-  .lbox{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(20,30,50,.18);padding:24px 32px;text-align:center;}
-  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  .lbox{background:var(--bg);border-radius:18px;box-shadow:var(--rise);padding:24px 32px;text-align:center;}
+  .spin{width:38px;height:38px;border:4px solid #d6deea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
   @keyframes sp{to{transform:rotate(360deg);}}
-  .lbox .txt{font-size:14px;font-weight:700;}
-  .note{font-size:11.5px;color:var(--sub);margin-top:6px;}
+  .lbox .txt{font-size:15px;font-weight:700;}
+  .note{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.7;}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2</div>
 <header>
-  <div class="hd-row">
-    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← 現場管理メニュー</a>
+  <div class="hbar">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h12v9H2zM14 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg></span>
+    <span class="htxt"><span class="en">Vehicles</span><span class="nm">車両管理</span></span>
+    <span class="hmark">Gen-Can</span>
   </div>
-  <div class="hd-row" style="margin-top:6px;"><h1>🚚 車両管理</h1></div>
 </header>
 
 <main>
@@ -125,14 +146,14 @@ function vState(v){
   // 車検
   var ds=daysLeft(v['車検満了日']);
   if(ds!=null){
-    if(ds<0)push('red','🚨 車検切れ（'+(-ds)+'日経過）',2);
+    if(ds<0)push('red','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3 2 20h20Z"/><path d="M12 9v5M12 17.4v.2"/></svg>車検切れ（'+(-ds)+'日経過）',2);
     else if(ds<=30)push('red','車検まで '+ds+' 日',2);
     else if(ds<=60)push('yel','車検まで '+ds+' 日',1);
   }
   // 保険
   var dh=daysLeft(v['保険満了日']);
   if(dh!=null){
-    if(dh<0)push('red','🚨 任意保険 期限切れ',2);
+    if(dh<0)push('red','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3 2 20h20Z"/><path d="M12 9v5M12 17.4v.2"/></svg>任意保険 期限切れ',2);
     else if(dh<=30)push('red','保険満了まで '+dh+' 日',2);
     else if(dh<=60)push('yel','保険満了まで '+dh+' 日',1);
   }
@@ -140,20 +161,20 @@ function vState(v){
   var cyc=num(v['オイル交換距離']),last=num(v['前回オイル交換距離']),cur=num(v['現在距離']);
   if(cyc>0&&cur>0){
     var run=cur-last;
-    if(run>=cyc)push('red','🛢 オイル交換時期（'+km(run)+'走行）',2);
+    if(run>=cyc)push('red','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3s6 7 6 11.5a6 6 0 0 1-12 0C6 10 12 3 12 3Z"/></svg>オイル交換時期（'+km(run)+'走行）',2);
     else if(run>=cyc-500)push('yel','オイル交換まであと '+km(cyc-run),1);
   }
   // オイル交換（月数）
   var mon=num(v['オイル交換月数']),od=daysAgo(v['前回オイル交換日']);
   if(mon>0&&od!=null){
-    if(od>=mon*30)push('red','🛢 オイル交換時期（前回から'+Math.floor(od/30)+'ヶ月）',2);
+    if(od>=mon*30)push('red','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3s6 7 6 11.5a6 6 0 0 1-12 0C6 10 12 3 12 3Z"/></svg>オイル交換時期（前回から'+Math.floor(od/30)+'ヶ月）',2);
     else if(od>=(mon-1)*30&&mon>1)push('yel','オイル交換が近づいています',1);
   }
   // 距離の更新催促
   var ud=daysAgo(v['距離更新日']);
-  if(cur<=0||ud==null)push('blu','📋 走行距離を入力してください',Math.max(lv,1)===lv?1:1);
-  else if(ud>=30)push('blu','📋 距離の確認から'+ud+'日（更新してください）',1);
-  if(!b.length)push('grn','✅ 異常なし',0);
+  if(cur<=0||ud==null)push('blu','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3.2h6V4M9 10h6M9 14h4"/></svg>走行距離を入力してください',Math.max(lv,1)===lv?1:1);
+  else if(ud>=30)push('blu','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3.2h6V4M9 10h6M9 14h4"/></svg>距離の確認から'+ud+'日（更新してください）',1);
+  if(!b.length)push('grn','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="m20 6-11 11-5-5"/></svg>異常なし',0);
   return {badges:b,lv:lv};
 }
 
@@ -190,7 +211,7 @@ function render(){
     h+='<div class="odoBox"><div class="lbl">走行距離の更新（メーターの数値を入力）</div>';
     h+='<div class="odoRow"><input id="odo_'+id+'" type="number" inputmode="numeric" placeholder="例）'+(num(v['現在距離'])?Math.round(num(v['現在距離'])):'52000')+'">';
     h+='<button onclick="saveOdo(\''+id+'\')">距離を更新</button></div>';
-    h+='<button class="oilBtn" onclick="doOil(\''+id+'\')">🛢 オイル交換しました（今日の日付・現在距離で記録）</button>';
+    h+='<button class="oilBtn" onclick="doOil(\''+id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3s6 7 6 11.5a6 6 0 0 1-12 0C6 10 12 3 12 3Z"/></svg>オイル交換しました（今日の日付・現在距離で記録）</button>';
     h+='</div></div>';
     return h;
   }).join('');
