@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 1 (2026-06-12) 材料リスト（独立画面）：現場ごとに記入・在庫から選ぶ・在庫確認→出庫/発注 -->
+<!-- version 2 (2026-06-14) 写真で材料をAI読み取り（materialOcr）を追加。材料リスト（独立画面）：現場ごとに記入・在庫から選ぶ・在庫確認→出庫/発注 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -77,7 +77,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2</div>
 <header>
   <a class="back" id="backBtn" href="../">← 材料管理</a>
   <h1 id="hTitle">📝 材料リスト</h1>
@@ -103,6 +103,8 @@
     <div id="items"></div>
     <button class="addbtn" onclick="addItem()">＋ 材料を追加</button>
     <button class="stkbtn" onclick="openPick()">📦 在庫から選んで追加</button>
+    <button class="stkbtn" onclick="openMatPhoto()">📷 写真で材料を読み取る（AI）</button>
+    <input type="file" id="matPhoto" accept="image/*,application/pdf" style="display:none" onchange="matPhotoSelected(this)">
     <button class="savebtn" onclick="saveNote()">保存する</button>
     <button class="stkbtn" style="margin-top:10px;" onclick="openCheck()">📦 在庫を確認（在庫から出す／発注へ）</button>
     <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="deleteNote(event)">この材料リストを削除</a></div>
@@ -156,6 +158,16 @@ function callGAS(params,silent){
     s.onerror=function(){cleanup();reject(new Error('error'));};document.head.appendChild(s);
   });
 }
+
+// base64画像をPOST送信（GASのCORS制約回避のため text/plain）。材料写真AI読み取り用
+function callGASPost(params,silent){return new Promise(function(resolve,reject){
+  if(!silent)showLoad();
+  var body=Object.assign({secret:tok()},params);
+  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
+    .then(function(r){return r.json();})
+    .then(function(res){if(!silent)hideLoad();resolve(res);})
+    .catch(function(e){if(!silent)hideLoad();reject(new Error('通信エラー: '+e.message));});
+});}
 
 function parseItems(str){try{var a=JSON.parse(str||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
 function buildMaps(){projById={};(DATA.projects||[]).forEach(function(p){projById[p['案件ID']]=p;});}
@@ -233,6 +245,41 @@ function renderItems(){
 function setItem(i,k,v){if(items[i])items[i][k]=v;if(k==='d')renderItems();}
 function delItem(i){items.splice(i,1);if(!items.length)items=[{n:'',q:'',s:'',d:false,pid:''}];renderItems();}
 function addItem(){items.push({n:'',q:'',s:'',d:false,pid:''});renderItems();var ins=document.getElementById('items').querySelectorAll('.mt-name');if(ins.length)ins[ins.length-1].focus();}
+/* ===== 材料 写真AI読み取り（materialOcr） ===== */
+function openMatPhoto(){var inp=document.getElementById('matPhoto');inp.value='';inp.click();}
+function matPhotoSelected(input){
+  var file=input.files&&input.files[0];if(!file)return;
+  if(file.size>10*1024*1024){toast('ファイルが大きすぎます（10MB以内）');return;}
+  var mime=file.type||'';
+  if(!mime||mime==='application/octet-stream'){
+    if(/\.pdf$/i.test(file.name))mime='application/pdf';
+    else if(/\.png$/i.test(file.name))mime='image/png';
+    else mime='image/jpeg';
+  }
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var b64=(String(e.target.result||'').split(',')[1])||'';
+    if(!b64){toast('画像の読み込みに失敗しました');return;}
+    showLoad();
+    callGASPost({action:'materialOcr',base64:b64,mime:mime},true).then(function(res){
+      hideLoad();
+      if(!res||!res.ok){toast('エラー: '+((res&&res.error)||'読み取れませんでした'));return;}
+      var add=(res.items||[]).filter(function(it){return String(it.n||'').trim()!=='';}).map(function(it){
+        var qn=(it.q==null||it.q==='')?'':String(it.q);
+        var u=String(it.u||'').trim();
+        var q=qn?(qn+u):'';
+        return {n:String(it.n||'').trim(),q:q,s:'',d:false,pid:''};
+      });
+      if(!add.length){toast('材料を読み取れませんでした。手で入力してください。');return;}
+      if(items.length===1&&!items[0].n&&!items[0].q&&!items[0].s&&!items[0].pid)items=[];
+      items=items.concat(add);
+      renderItems();
+      toast('✨ '+add.length+'件の材料を読み取りました。内容を確認してください。');
+    }).catch(function(e){hideLoad();toast(e.message);});
+  };
+  reader.onerror=function(){toast('画像の読み込みに失敗しました');};
+  reader.readAsDataURL(file);
+}
 function saveNote(){
   var title=document.getElementById('editTitle').value.trim();
   if(!title){toast('タイトルを入力してください');document.getElementById('editTitle').focus();return;}
