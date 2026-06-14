@@ -1,111 +1,138 @@
 <!DOCTYPE html>
-<!-- version 11 safety (2026-06-13) 役割チェックを折りたたみ表示（普段は隠してボタンで展開） -->
+<!-- version 12 safety (2026-06-14) デザイン統一（ニューモーフィズム/Gen-Can基準・グリーン#15803d・線画アイコン・文字拡大）。⚠/✓の状態記号は維持。機能は不変。名簿/施工体制台帳/下請・再下請・書類添付・PDF/Excel -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>安全書類｜河口電機</title>
+<title>安全書類｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#e8ecf2;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#15803d;--accent-d:#166534;
-    --radius:12px;--shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:90px;}
-  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);color:var(--ink);padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);border-bottom:1px solid var(--line);}
-  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .hd-row h1{font-size:17px;margin:0;font-weight:700;color:var(--accent-d);}
-  .back{color:var(--accent-d);text-decoration:none;font-size:13px;flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;}
+  :root{
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
+    --accent:#15803d;--accent-d:#166534;--accent-soft:#d6f0df;
+    --radius:13px;
+    --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+    --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.55;padding-bottom:90px;}
+  select,input,textarea,button,a{font-family:inherit;}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);color:var(--ink);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
+  .hbar{display:flex;align-items:center;gap:11px;max-width:760px;margin:0 auto;}
+  .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11px;letter-spacing:.05em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 12px;text-decoration:none;white-space:nowrap;flex:0 0 auto;}
+  .back:active{box-shadow:var(--well);}
+  .hic{width:40px;height:40px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hic svg{width:21px;height:21px;}
+  .htxt{flex:1;min-width:0;}
+  .htxt .en{font-family:"Manrope",sans-serif;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .htxt .nm{font-weight:700;font-size:16.5px;color:var(--ink);display:block;line-height:1.2;white-space:nowrap;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:13px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
   main{padding:12px;max-width:760px;margin:0 auto;}
   .gate{max-width:380px;margin:60px auto;text-align:center;padding:0 16px;}
-  .gate .lk{font-size:46px;}
-  .gate h2{font-size:18px;margin:10px 0 6px;}
-  .gate p{color:var(--sub);font-size:14px;margin:0 0 18px;}
-  .gate input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font-size:16px;text-align:center;margin-bottom:10px;}
-  .gate button{width:100%;padding:13px;border:none;border-radius:11px;background:var(--accent);color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+  .gate .lk{display:inline-flex;width:84px;height:84px;border-radius:50%;background:var(--bg);box-shadow:var(--well);align-items:center;justify-content:center;color:var(--accent);margin-bottom:6px;}
+  .gate .lk svg{width:42px;height:42px;}
+  .gate h2{font-size:19px;margin:10px 0 6px;color:var(--ink);}
+  .gate p{color:var(--sub);font-size:14.5px;margin:0 0 18px;line-height:1.7;}
+  .gate input{width:100%;padding:13px;border:none;border-radius:11px;font-size:16px;text-align:center;margin-bottom:12px;background:var(--bg);box-shadow:var(--well);color:var(--ink);}
+  .gate button{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:800;cursor:pointer;box-shadow:3px 4px 10px rgba(21,128,61,.4),-2px -2px 6px #ffffff;}
   .pane{display:none;} .pane.on{display:block;}
-  .tabs{display:flex;gap:6px;margin-bottom:12px;}
-  .tabs button{flex:1;padding:11px 5px;border-radius:11px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;}
-  .tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .tabs{display:flex;gap:7px;margin-bottom:12px;}
+  .tabs button{flex:1;padding:12px 5px;border-radius:11px;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;}
+  .tabs button:active{box-shadow:var(--well);}
+  .tabs button.on{background:var(--accent);color:#fff;box-shadow:var(--well-soft);}
   .lead{font-size:13px;color:var(--sub);margin:0 2px 12px;line-height:1.7;}
   .lbl{display:block;font-size:12.5px;font-weight:700;color:var(--sub);margin:12px 2px 5px;}
-  .inp,select.inp,textarea.inp{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;font-size:15px;background:#fff;color:var(--ink);font-family:inherit;}
+  .inp,select.inp,textarea.inp{width:100%;padding:12px;border:none;border-radius:10px;font-size:15.5px;background:var(--bg);box-shadow:var(--well);color:var(--ink);font-family:inherit;}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-  /* 名簿作成：作業員選択 */
-  .wchk{display:flex;align-items:center;gap:10px;padding:11px 13px;background:#fff;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;box-shadow:var(--shadow);cursor:pointer;}
-  .wchk input{width:20px;height:20px;flex:0 0 auto;}
-  .wchk .wn{font-weight:700;}
+  .wchk{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--bg);border-radius:11px;margin-bottom:7px;box-shadow:var(--rise-sm);cursor:pointer;}
+  .wchk input{width:20px;height:20px;flex:0 0 auto;accent-color:var(--accent);}
+  .wchk .wn{font-weight:700;color:var(--ink);}
   .wchk .ws{font-size:12px;color:var(--sub);}
-  .wchk.miss{border-color:#f0c674;background:#fffbeb;}
+  .wchk.miss{box-shadow:var(--rise-sm),inset 0 0 0 1.5px #e6b450;}
   .wchk .warn{margin-left:auto;font-size:11px;color:#b45309;font-weight:700;flex:0 0 auto;}
-.wchk-wrap{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #f0f0f0;}
-.wchk-wrap .wchk{flex:1;border:none;padding:0;}
-.role-btn{font-size:10px;padding:2px 7px;border:1px solid #d1d5db;border-radius:10px;background:#f1f5f9;color:#374151;cursor:pointer;white-space:nowrap;flex-shrink:0;}
-.role-btn.active{background:#dbeafe;border-color:#93c5fd;color:#1d4ed8;}
-.role-panel{display:none;flex-wrap:wrap;gap:3px 8px;margin-top:4px;padding:6px 8px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;}
-.role-panel.open{display:flex;}
-.role-panel label{font-size:10px;color:#374151;display:flex;align-items:center;gap:2px;white-space:nowrap;cursor:pointer;}
+  .wchk-wrap{display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px dashed var(--line);}
+  .wchk-wrap .wchk{flex:1;border:none;padding:9px 11px;}
+  .role-btn{font-size:10px;padding:3px 9px;border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);color:#374151;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+  .role-btn.active{background:#dbeafe;color:#1d4ed8;box-shadow:var(--well-soft);}
+  .role-panel{display:none;flex-wrap:wrap;gap:3px 8px;margin-top:4px;padding:8px 10px;background:var(--bg);box-shadow:var(--well-soft);border-radius:9px;}
+  .role-panel.open{display:flex;}
+  .role-panel label{font-size:10px;color:#374151;display:flex;align-items:center;gap:2px;white-space:nowrap;cursor:pointer;}
   .selall{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-  .selall button{padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--accent-d);font-size:12.5px;font-weight:700;cursor:pointer;}
-  .pdfbtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:12px;}
-  .pdflink{display:block;text-align:center;margin-top:10px;font-size:13.5px;color:var(--accent-d);}
-  /* 作業員情報編集：一覧 */
-  .wcard{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border-left:5px solid var(--accent);}
-  .wcard.miss{border-left-color:#f0c674;}
-  .wcard .nm{font-weight:700;font-size:15.5px;}
+  .selall button{padding:8px 13px;border:none;border-radius:10px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);font-size:12.5px;font-weight:700;cursor:pointer;}
+  .selall button:active{box-shadow:var(--well);}
+  .pdfbtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-top:12px;box-shadow:3px 4px 11px rgba(21,128,61,.35),-2px -2px 7px #ffffff;}
+  .pdfbtn:active{transform:translateY(1px);}
+  .pdflink{display:block;text-align:center;margin-top:10px;font-size:13.5px;color:var(--accent-d);font-weight:700;text-decoration:none;}
+  .wcard{position:relative;background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:13px 15px 13px 18px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;overflow:hidden;}
+  .wcard:active{box-shadow:var(--well);}
+  .wcard::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:var(--accent);}
+  .wcard.miss::before{background:#e6b450;}
+  .wcard .nm{font-weight:700;font-size:16px;color:var(--ink);}
   .wcard .meta{font-size:12.5px;color:var(--sub);margin-top:1px;}
   .wcard .badge{flex:0 0 auto;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;}
   .wcard .badge.ok{background:#dcfce7;color:#166534;} .wcard .badge.ng{background:#fef3c7;color:#92400e;}
-  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14px;}
-  .savebtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:700;cursor:pointer;margin-top:14px;}
+  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14.5px;}
+  .savebtn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:800;cursor:pointer;margin-top:14px;box-shadow:3px 4px 11px rgba(21,128,61,.35),-2px -2px 7px #ffffff;}
+  .savebtn:active{transform:translateY(1px);}
   .fhd{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
-  .fhd .bk{color:var(--accent-d);font-size:14px;font-weight:700;cursor:pointer;}
-  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:#1f2733;color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:88vw;text-align:center;}
+  .fhd .bk{color:var(--accent-d);font-size:14.5px;font-weight:700;cursor:pointer;}
+  .toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%) translateY(20px);background:#1f3a52;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:88vw;text-align:center;box-shadow:0 8px 20px rgba(31,58,82,.3);}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-  .doc-sec{margin-top:16px;border-top:1px solid var(--line);padding-top:14px;}
+  .doc-sec{margin-top:16px;border-top:1px dashed var(--line);padding-top:14px;}
   .doc-sec-title{font-size:12.5px;font-weight:800;color:var(--sub);margin-bottom:8px;}
   .doc-list{display:flex;flex-direction:column;gap:7px;min-height:20px;}
-  .doc-card{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid var(--line);border-radius:9px;padding:9px 12px;}
-  .doc-card .dc-ic{font-size:18px;flex:0 0 auto;}
-  .doc-card .dc-nm{flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .doc-card{display:flex;align-items:center;gap:8px;background:var(--bg);box-shadow:var(--rise-sm);border-radius:10px;padding:9px 12px;}
+  .doc-card .dc-ic{flex:0 0 auto;color:var(--accent-d);display:flex;}
+  .doc-card .dc-nm{flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);}
   .doc-card .dc-dt{font-size:11px;color:var(--sub);white-space:nowrap;}
-  .doc-card .dc-del{background:#fee2e2;color:#b91c1c;border:none;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700;cursor:pointer;flex:0 0 auto;}
+  .doc-card .dc-del{background:var(--bg);box-shadow:var(--rise-sm);color:#b91c1c;border:none;border-radius:8px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer;flex:0 0 auto;}
+  .doc-card .dc-del:active{box-shadow:var(--well);}
   .doc-card a{text-decoration:none;color:inherit;}
-  .doc-upload-btn{display:flex;align-items:center;gap:8px;background:#eff4ff;border:1px dashed #93c5fd;border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:700;color:#1d4ed8;cursor:pointer;margin-top:6px;width:100%;}
+  .doc-upload-btn{display:flex;align-items:center;gap:8px;background:var(--bg);box-shadow:var(--rise-sm);border:none;border-radius:11px;padding:11px 13px;font-size:13.5px;font-weight:800;color:#1d4ed8;cursor:pointer;margin-top:6px;width:100%;}
+  .doc-upload-btn:active{box-shadow:var(--well);}
   .doc-empty{font-size:12.5px;color:var(--sub);padding:6px 2px;}
-
   .dk-sec-hd{font-size:13px;font-weight:800;color:#2d4e7c;margin:16px 0 6px;border-left:4px solid #2d4e7c;padding-left:9px;}
-  .dk-add{background:#fff7ed;color:#92400e;border:1px dashed #d97706;border-radius:11px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;width:100%;margin-top:8px;}
-  .dk-card{background:#fff;border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:13px 14px;margin-bottom:9px;}
-  .dk-card .dknm{font-weight:700;font-size:15px;}
+  .dk-add{background:var(--bg);box-shadow:var(--rise-sm);color:#92400e;border:none;border-radius:12px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;width:100%;margin-top:8px;}
+  .dk-add:active{box-shadow:var(--well);}
+  .dk-card{background:var(--bg);border-radius:13px;box-shadow:var(--rise);padding:13px 14px;margin-bottom:9px;}
+  .dk-card .dknm{font-weight:700;font-size:15.5px;color:var(--ink);}
   .dk-card .dkmeta{font-size:12px;color:var(--sub);margin-top:3px;}
   .dk-card .dkacts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
   .dk-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;margin-left:8px;}
   .dk-b1{background:#dbeafe;color:#1d4ed8;} .dk-b2{background:#ede9fe;color:#6b21a8;}
-  .dk-edit{background:#eff4ff;color:#1d4ed8;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;}
-  .dk-sai{background:#6b21a8;color:#fff;border:none;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:700;cursor:pointer;}
-  .dk-del{background:#fee2e2;color:#b91c1c;border:none;border-radius:8px;padding:7px 12px;font-size:13px;font-weight:700;cursor:pointer;}
+  .dk-edit{background:var(--bg);box-shadow:var(--rise-sm);color:#1d4ed8;border:none;border-radius:9px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer;}
+  .dk-sai{background:#6b21a8;color:#fff;border:none;border-radius:9px;padding:8px 11px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:2px 3px 8px rgba(107,33,168,.3);}
+  .dk-edit:active{box-shadow:var(--well);}
+  .dk-del{background:var(--bg);box-shadow:var(--rise-sm);color:#b91c1c;border:none;border-radius:9px;padding:8px 13px;font-size:13px;font-weight:700;cursor:pointer;}
+  .dk-del:active{box-shadow:var(--well);}
   .dk-empty{text-align:center;color:var(--sub);padding:22px;font-size:13.5px;}
-  .loading{position:fixed;inset:0;background:rgba(244,245,247,.7);display:none;align-items:center;justify-content:center;z-index:80;}
+  .loading{position:fixed;inset:0;background:rgba(232,236,242,.78);display:none;align-items:center;justify-content:center;z-index:80;}
   .loading.show{display:flex;}
-  .lbox{background:#fff;border-radius:14px;padding:22px 30px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.12);}
-  .spin{width:38px;height:38px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  .lbox{background:var(--bg);border-radius:16px;padding:22px 30px;text-align:center;box-shadow:var(--rise);}
+  .spin{width:38px;height:38px;border:4px solid #d6deea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
   @keyframes sp{to{transform:rotate(360deg)}}
-  .lbox .txt{font-size:13.5px;color:var(--sub);}
+  .lbox .txt{font-size:14px;color:var(--sub);}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v11</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v12</div>
 <header>
-  <div class="hd-row">
-    <a class="back" href="../">← 現場管理メニュー</a>
-    <h1>📗 安全書類</h1>
-    <span style="width:30px;"></span>
+  <div class="hbar">
+    <a class="back" href="../">← メニュー</a>
+    <span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 8.6 8 11 4.6-2.4 8-6 8-11V5Z"/><path d="m8.5 12 2.5 2.5 4.5-4.5"/></svg></span>
+    <span class="htxt"><span class="en">Safety</span><span class="nm">安全書類</span></span>
+    <span class="hmark">Gen-Can</span>
   </div>
 </header>
 
 <main>
   <div class="gate" id="gate">
-    <div class="lk">🔒</div>
+    <div class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/><circle cx="12" cy="15.4" r="1.3"/></svg></div>
     <h2>管理者専用</h2>
     <p>安全書類は管理者のみ利用できます。管理者PINを入力してください。</p>
     <input id="pin" type="password" placeholder="管理者PIN" onkeydown="if(event.key==='Enter')doLogin()">
@@ -142,12 +169,12 @@
     </div>
     <div id="wlist"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <button class="pdfbtn" onclick="makeRoster('roster')">📄 作業員名簿 PDF</button>
-      <button class="pdfbtn" onclick="makeRoster('insurance')" style="background:#0e7490;">📄 社会保険加入状況 PDF</button>
-      <button class="pdfbtn" onclick="makeRosterXlsx('roster')" style="background:#15803d;">📊 作業員名簿 Excel</button>
-      <button class="pdfbtn" onclick="makeRosterXlsx('insurance')" style="background:#166534;">📊 社会保険加入状況 Excel</button>
+      <button class="pdfbtn" onclick="makeRoster('roster')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>作業員名簿 PDF</button>
+      <button class="pdfbtn" onclick="makeRoster('insurance')" style="background:#0e7490;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>社会保険加入状況 PDF</button>
+      <button class="pdfbtn" onclick="makeRosterXlsx('roster')" style="background:#15803d;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/></svg>作業員名簿 Excel</button>
+      <button class="pdfbtn" onclick="makeRosterXlsx('insurance')" style="background:#166534;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M3 15h18M9 4v16M15 4v16"/></svg>社会保険加入状況 Excel</button>
     </div>
-    <a class="pdflink" id="pdfLink" style="display:none;margin-top:12px;" target="_blank" rel="noopener">📎 作成済みファイルを開く</a>
+    <a class="pdflink" id="pdfLink" style="display:none;margin-top:12px;" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><path d="M21 11.5 12.5 20a5 5 0 0 1-7-7l8.5-8.5a3.3 3.3 0 0 1 4.7 4.7L10 12.8a1.7 1.7 0 0 1-2.4-2.4l7.6-7.6"/></svg>作成済みファイルを開く</a>
   </div>
 
   <!-- 作業員情報：一覧 -->
@@ -226,7 +253,7 @@
     <label class="lbl">退職金共済手帳（任意）</label>
     <select class="inp" id="eTaisyoku"><option value="">未入力</option><option value="建">建退共</option><option value="中">中退共</option><option value="他">その他</option><option value="無">無</option></select>
     <div class="doc-sec" id="wDocSec" style="display:none;">
-      <div class="doc-sec-title">📁 資格・免許の写し</div>
+      <div class="doc-sec-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>資格・免許の写し</div>
       <div class="doc-list" id="wDocList"><div class="doc-empty">読込中…</div></div>
       <label class="doc-upload-btn" for="wDocFile">＋ ファイルを追加（PDF・画像）
         <input type="file" id="wDocFile" accept=".pdf,image/*" style="display:none;" onchange="uploadWorkerDoc(this)">
@@ -246,7 +273,7 @@
     <label class="lbl">案件を選ぶ</label>
     <select class="inp" id="dkCaseSelect" onchange="dkSelectCase()"><option value="">（案件を選択）</option></select>
     <div id="dkCaseContent" style="display:none;">
-      <button class="pdfbtn" onclick="dkMakePdf()" style="margin-top:14px;">📄 施工体制台帳 PDFを作成</button>
+      <button class="pdfbtn" onclick="dkMakePdf()" style="margin-top:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>施工体制台帳 PDFを作成</button>
       <div class="dk-sec-hd">一次下請業者</div>
       <div id="dkList1"></div>
       <button class="dk-add" onclick="dkOpenForm(null,'一次')">＋ 一次下請業者を追加</button>
@@ -296,7 +323,7 @@
     <label class="lbl">備考</label>
     <input class="inp" id="dkNote" placeholder="">
     <div class="doc-sec" id="dkDocSec" style="display:none;">
-      <div class="doc-sec-title">📁 建設業許可証・資格書類の写し</div>
+      <div class="doc-sec-title"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>建設業許可証・資格書類の写し</div>
       <div class="doc-list" id="dkDocList"><div class="doc-empty">読込中…</div></div>
       <label class="doc-upload-btn" for="dkDocFile">＋ ファイルを追加（PDF・画像）
         <input type="file" id="dkDocFile" accept=".pdf,image/*" style="display:none;" onchange="dkUploadDoc(this)">
@@ -304,7 +331,7 @@
     </div>
     <button class="savebtn" onclick="dkSaveSub()">保存する</button>
     <div id="dkSaiRow" style="display:none;margin-top:12px;">
-      <button class="pdfbtn" style="background:#6b21a8;" onclick="dkMakeSaiteke()">📄 再下請負通知書 PDFを作成</button>
+      <button class="pdfbtn" style="background:#6b21a8;" onclick="dkMakeSaiteke()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>再下請負通知書 PDFを作成</button>
     </div>
   </div>
 
@@ -599,7 +626,7 @@ function renderWorkerDocs(){
   var el=document.getElementById('wDocList');
   if(!wCurDocs.length){el.innerHTML='<div class="doc-empty">まだ書類が登録されていません</div>';return;}
   el.innerHTML=wCurDocs.map(function(d){
-    var ic=String(d['MIME']||'').indexOf('image')>=0?'🖼️':'📄';
+    var ic=String(d['MIME']||'').indexOf('image')>=0?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m21 16-5-5-9 9"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>';
     var dt=String(d['登録日時']||'').replace('T',' ').slice(0,16);
     return '<div class="doc-card">'+
       '<span class="dc-ic">'+ic+'</span>'+
@@ -687,7 +714,7 @@ function dkCardHtml(s,isSai){
     +'<div class="dkmeta">'+esc(s['工種']||'')+(parent?' / 一次：'+esc(parent['会社名']||''):'')+(s['請負金額']?' / '+esc(s['請負金額']):'')+'</div>'
     +'<div class="dkacts">'
     +'<button class="dk-edit" onclick="dkOpenForm(&quot;'+esc(s['下請ID'])+'&quot;,&quot;'+(isSai?'二次':'一次')+'&quot;)">編集</button>'
-    +(isSai?'':'<button class="dk-sai" onclick="dkMakeSaitekeById(&quot;'+esc(s['下請ID'])+'&quot;)">📄 再下請負通知書</button>')
+    +(isSai?'':'<button class="dk-sai" onclick="dkMakeSaitekeById(&quot;'+esc(s['下請ID'])+'&quot;)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>再下請負通知書</button>')
     +'<button class="dk-del" onclick="dkDeleteSub(&quot;'+esc(s['下請ID'])+'&quot;)">削除</button>'
     +'</div></div>';
 }
@@ -789,7 +816,7 @@ function dkRenderDocs(){
   var el=document.getElementById('dkDocList');
   if(!dkCurDocs.length){el.innerHTML='<div class="doc-empty">まだ書類が登録されていません</div>';return;}
   el.innerHTML=dkCurDocs.map(function(d){
-    var ic=String(d['MIME']||'').indexOf('image')>=0?'🖼️':'📄';
+    var ic=String(d['MIME']||'').indexOf('image')>=0?'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m21 16-5-5-9 9"/></svg>':'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>';
     var dt=String(d['登録日時']||'').replace('T',' ').slice(0,16);
     return '<div class="doc-card"><span class="dc-ic">'+ic+'</span>'+
       '<a class="dc-nm" href="'+esc(d['DriveFileUrl']||'')+'" target="_blank" rel="noopener">'+esc(d['書類名']||'')+'</a>'+
