@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 39 (虫眼鏡を追加：カメラ拡大・固定・ライト) -->
+<!-- toolbox version 40 (虫眼鏡：連続オートフォーカス＋タップフォーカス対応) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -279,7 +279,7 @@
   .mag-hint{font-size:14px;color:var(--sub);line-height:1.7;margin:0 4px 90px;text-align:center;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v39</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v40</div>
 
 <div class="wrap">
 
@@ -572,7 +572,7 @@
       <span class="back2" onclick="magBack()">← ツールボックス</span>
       <h2>虫眼鏡</h2>
     </div>
-    <div class="mag-stage" id="magStage">
+    <div class="mag-stage" id="magStage" onclick="magTapFocus()">
       <div class="mag-zoomer" id="magZoomer">
         <video id="magVideo" autoplay playsinline muted></video>
         <canvas id="magCanvas" style="display:none;"></canvas>
@@ -589,7 +589,7 @@
       <button class="mag-btn freeze" id="magFreezeBtn" onclick="magToggleFreeze()">⏸ 止める</button>
       <button class="mag-btn torch" id="magTorchBtn" onclick="magToggleTorch()" style="display:none;">💡 ライト</button>
     </div>
-    <div class="mag-hint">見たい文字を画面の<b>まん中の丸</b>に合わせてください。<br>「止める」を押すと画面が固定され、ゆっくり読めます。</div>
+    <div class="mag-hint">ピントが甘いときは、カメラを<b>15〜20cm離す</b>か<b>画面をタップ</b>してください。<br>「止める」を押すと画面が固定され、ゆっくり読めます。</div>
   </div>
 
   <div class="pane" id="p-board">
@@ -1674,6 +1674,7 @@ function startMag(){
       try{
         var caps=(magTrack&&magTrack.getCapabilities)?magTrack.getCapabilities():{};
         if(caps&&caps.torch){var t=document.getElementById('magTorchBtn');if(t)t.style.display='block';}
+        if(caps&&caps.focusMode&&caps.focusMode.indexOf('continuous')>=0){magTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});}
       }catch(e){}
     })
     .catch(function(e){toast('\u30ab\u30e1\u30e9\u3092\u8d77\u52d5\u3067\u304d\u307e\u305b\u3093\u3067\u3057\u305f\uff08'+e.message+'\uff09');});
@@ -1714,6 +1715,21 @@ function magToggleTorch(){
   magTrack.applyConstraints({advanced:[{torch:magTorchOn}]})
     .then(function(){var t=document.getElementById('magTorchBtn');if(t)t.classList.toggle('on',magTorchOn);})
     .catch(function(){magTorchOn=!magTorchOn;toast('\u30e9\u30a4\u30c8\u3092\u5207\u308a\u66ff\u3048\u3089\u308c\u307e\u305b\u3093\u3067\u3057\u305f');});
+}
+function magTapFocus(){
+  if(!magTrack||magFrozen)return;
+  var caps;
+  try{caps=magTrack.getCapabilities?magTrack.getCapabilities():{};}catch(e){return;}
+  if(!caps||!caps.focusMode)return;
+  var hasSingle=caps.focusMode.indexOf('single-shot')>=0;
+  var hasCont=caps.focusMode.indexOf('continuous')>=0;
+  if(!hasSingle&&!hasCont)return;
+  toast('\u30d4\u30f3\u30c8\u3092\u5408\u308f\u305b\u3066\u3044\u307e\u3059\u2026');
+  var c={focusMode:hasSingle?'single-shot':'continuous'};
+  if(caps.pointsOfInterest)c.pointsOfInterest=[{x:0.5,y:0.5}];
+  magTrack.applyConstraints({advanced:[c]}).then(function(){
+    if(hasSingle&&hasCont)setTimeout(function(){magTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});},700);
+  }).catch(function(){});
 }
 
 /* ===== ⑤ 小黒板カメラ ===== */
