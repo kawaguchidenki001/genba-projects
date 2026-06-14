@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 9 ai (2026-06-14) ページ全体スクロール＋入力欄をsticky固定（下スワイプ更新と下部固定を両立） -->
+<!-- version 10 ai (2026-06-14) デザイン統一（ニューモーフィズム/Gen-Can基準・バイオレット#7c3aed・線画アイコン・文字拡大）。⚠/📎/🔗は維持。機能は不変。ページ全体スクロール＋入力欄sticky固定 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -8,85 +8,78 @@
 <meta name="theme-color" content="#6d28d9">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#e8ecf2;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
     --accent:#7c3aed;--accent-d:#5b21b6;--accent-soft:#ede9fe;
-    --radius:14px;--shadow:0 2px 10px rgba(40,60,100,.10);
+    --radius:14px;
+    --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+    --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
-  body{min-height:100vh;min-height:100dvh;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.6;background:var(--bg);display:flex;flex-direction:column;}
-
-  /* ヘッダー */
-  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);border-bottom:1px solid var(--line);flex:0 0 auto;}
-  .hd-row{display:flex;align-items:center;gap:10px;}
-  .back{color:var(--accent-d);text-decoration:none;font-size:13px;flex:0 0 auto;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font-weight:600;}
-  .hd-center{flex:1;text-align:center;}
-  .hd-center h1{font-size:16px;font-weight:700;color:var(--accent-d);}
-  .hd-center .model{font-size:11px;color:var(--sub);font-family:"Manrope",sans-serif;letter-spacing:.05em;}
-  .clrbtn{font-size:13px;color:var(--sub);border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;cursor:pointer;font-weight:600;}
-
-  /* メッセージエリア */
+  select,input,textarea,button,a{font-family:inherit;}
+  body{min-height:100vh;min-height:100dvh;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16px;line-height:1.6;background:var(--bg);display:flex;flex-direction:column;}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);flex:0 0 auto;}
+  .hbar{display:flex;align-items:center;gap:10px;max-width:760px;margin:0 auto;}
+  .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11px;letter-spacing:.05em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 12px;text-decoration:none;white-space:nowrap;flex:0 0 auto;}
+  .back:active{box-shadow:var(--well);}
+  .hic{width:40px;height:40px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hic svg{width:21px;height:21px;}
+  .htxt{flex:1;min-width:0;}
+  .htxt .nm{font-weight:700;font-size:16px;color:var(--ink);display:block;line-height:1.2;}
+  .htxt .model{font-size:10.5px;color:var(--sub);font-family:"Manrope",sans-serif;letter-spacing:.03em;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:13px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
+  .clrbtn{font-size:12px;color:var(--sub);border:none;background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 13px;cursor:pointer;font-weight:700;flex:0 0 auto;}
+  .clrbtn:active{box-shadow:var(--well);}
   #msgs{flex:1 0 auto;padding:16px 14px 8px;max-width:760px;width:100%;margin:0 auto;}
   .welcome{text-align:center;padding:32px 16px 20px;color:var(--sub);}
-  .welcome .wi{font-size:48px;margin-bottom:12px;}
-  .welcome h2{font-size:18px;font-weight:700;color:var(--accent-d);margin-bottom:6px;}
-  .welcome p{font-size:13px;line-height:1.7;}
-  .suggestions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px;}
-  .sug{background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-size:13px;color:var(--accent-d);cursor:pointer;font-weight:600;box-shadow:var(--shadow);}
-  .sug:active{background:var(--accent-soft);}
-
-  /* 吹き出し */
+  .welcome .wi{display:inline-flex;width:84px;height:84px;border-radius:50%;background:var(--bg);box-shadow:var(--rise);align-items:center;justify-content:center;color:var(--accent);margin-bottom:14px;}
+  .welcome .wi svg{width:42px;height:42px;}
+  .welcome h2{font-size:19px;font-weight:700;color:var(--accent-d);margin-bottom:6px;}
+  .welcome p{font-size:13.5px;line-height:1.7;}
+  .suggestions{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-top:16px;}
+  .sug{background:var(--bg);box-shadow:var(--rise-sm);border:none;border-radius:999px;padding:9px 16px;font-size:13px;color:var(--accent-d);cursor:pointer;font-weight:700;}
+  .sug:active{box-shadow:var(--well);}
   .msg{display:flex;gap:10px;margin-bottom:14px;align-items:flex-end;}
   .msg.user{flex-direction:row-reverse;}
-  .avatar{width:32px;height:32px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;}
-  .avatar.ai{background:var(--accent);color:#fff;font-size:14px;}
-  .avatar.user{background:#e5e7eb;color:var(--ink);font-size:13px;}
-  .bubble{max-width:82%;padding:11px 14px;border-radius:18px;font-size:14.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;}
-  .msg.ai .bubble{background:#fff;border:1px solid var(--line);border-radius:4px 18px 18px 18px;box-shadow:var(--shadow);}
-  .msg.user .bubble{background:var(--accent);color:#fff;border-radius:18px 4px 18px 18px;}
+  .avatar{width:34px;height:34px;border-radius:50%;flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;}
+  .avatar.ai{background:var(--accent);color:#fff;font-size:14px;box-shadow:2px 2px 6px rgba(124,58,237,.35);}
+  .avatar.user{background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);font-size:13px;}
+  .bubble{max-width:82%;padding:12px 15px;border-radius:18px;font-size:14.5px;line-height:1.7;white-space:pre-wrap;word-break:break-word;}
+  .msg.ai .bubble{background:var(--bg);box-shadow:var(--rise-sm);border-radius:4px 18px 18px 18px;color:var(--ink);}
+  .msg.user .bubble{background:var(--accent);color:#fff;border-radius:18px 4px 18px 18px;box-shadow:3px 4px 10px rgba(124,58,237,.3);}
   .msg.ai .bubble.streaming::after{content:'▋';animation:blink .8s step-end infinite;}
   @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-
-  /* Markdownっぽいスタイル */
   .bubble strong,.bubble b{font-weight:700;}
   .bubble em,.bubble i{font-style:italic;}
-  .bubble code{background:#f3f4f6;border-radius:5px;padding:1px 5px;font-family:monospace;font-size:13px;color:#374151;}
-  .bubble pre{background:#1f2733;color:#e5e7eb;border-radius:10px;padding:12px;overflow-x:auto;font-size:13px;margin:8px 0;}
-  .bubble pre code{background:none;color:inherit;padding:0;}
+  .bubble code{background:var(--bg);box-shadow:var(--well-soft);border-radius:6px;padding:2px 6px;font-family:monospace;font-size:13px;color:#5b21b6;}
+  .bubble pre{background:#1f2733;color:#e5e7eb;border-radius:11px;padding:13px;overflow-x:auto;font-size:13px;margin:8px 0;}
+  .bubble pre code{background:none;box-shadow:none;color:inherit;padding:0;}
   .bubble ul,.bubble ol{padding-left:18px;margin:6px 0;}
   .bubble li{margin-bottom:3px;}
   .bubble h3,.bubble h4{font-weight:700;margin:8px 0 4px;}
   .bubble p{margin:4px 0;}
   .bubble hr{border:none;border-top:1px solid var(--line);margin:10px 0;}
-
-  /* タイムスタンプ */
   .ts{font-size:11px;color:var(--sub);text-align:center;margin:8px 0;}
-
-  /* 入力エリア */
-  #inputWrap{background:rgba(255,255,255,.96);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 14px calc(env(safe-area-inset-bottom) + 12px);flex:0 0 auto;position:sticky;bottom:0;z-index:10;}
+  #inputWrap{background:var(--bg);border-top:1px solid var(--line);padding:11px 14px calc(env(safe-area-inset-bottom) + 12px);flex:0 0 auto;position:sticky;bottom:0;z-index:10;box-shadow:0 -6px 14px -10px rgba(31,90,168,.4);}
   .input-inner{max-width:760px;margin:0 auto;display:flex;gap:8px;align-items:flex-end;}
-  #inp{flex:1;padding:11px 14px;border:1.5px solid var(--line);border-radius:22px;font-size:15px;font-family:inherit;resize:none;line-height:1.5;max-height:140px;min-height:46px;background:#fff;color:var(--ink);outline:none;transition:border-color .15s;}
-  #inp:focus{border-color:var(--accent);}
-  #sendBtn{width:46px;height:46px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:22px;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;transition:.15s;box-shadow:0 3px 8px rgba(124,58,237,.35);}
+  #inp{flex:1;padding:12px 15px;border:none;border-radius:22px;font-size:15.5px;font-family:inherit;resize:none;line-height:1.5;max-height:140px;min-height:48px;background:var(--bg);box-shadow:var(--well);color:var(--ink);outline:none;}
+  #sendBtn{width:48px;height:48px;border-radius:50%;border:none;background:var(--accent);color:#fff;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;transition:.15s;box-shadow:3px 4px 10px rgba(124,58,237,.4),-2px -2px 6px #ffffff;}
   #sendBtn:disabled{background:#c4b5fd;box-shadow:none;cursor:default;}
   #sendBtn:active:not(:disabled){transform:scale(.94);}
-  /* マイク（音声入力）ボタン */
-  #micBtn{width:46px;height:46px;border-radius:50%;border:1.5px solid var(--line);background:#fff;color:var(--accent-d);font-size:20px;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;transition:.15s;}
-  #micBtn:active{transform:scale(.94);}
-  #micBtn.recording{background:#fee2e2;border-color:#fca5a5;color:#dc2626;animation:micpulse 1.2s ease-in-out infinite;}
+  #micBtn{width:48px;height:48px;border-radius:50%;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;transition:.15s;}
+  #micBtn:active{box-shadow:var(--well);transform:scale(.96);}
+  #micBtn.recording{background:#fee2e2;color:#dc2626;box-shadow:var(--well);animation:micpulse 1.2s ease-in-out infinite;}
   #micBtn.hidden{display:none;}
-  @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4);}50%{box-shadow:0 0 0 6px rgba(220,38,38,0);}}
-
-  /* トースト */
-  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#1f2733;color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;white-space:nowrap;}
+  @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4),var(--well);}50%{box-shadow:0 0 0 6px rgba(220,38,38,0),var(--well);}}
+  .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#1f3a52;color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;white-space:nowrap;box-shadow:0 8px 20px rgba(31,58,82,.3);}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
-
-  /* エラーバナー */
-  .err-bar{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px 13px;font-size:13px;color:#991b1b;margin-bottom:10px;display:none;}
+  .err-bar{background:#fdeaea;box-shadow:var(--rise-sm);border-radius:11px;padding:11px 14px;font-size:13px;color:#991b1b;margin-bottom:10px;display:none;}
   .err-bar.show{display:block;}
-  /* 出典リンク */
   .sources{margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);}
   .src-ttl{font-size:11.5px;color:var(--sub);font-weight:700;margin-bottom:5px;cursor:pointer;user-select:none;-webkit-user-select:none;list-style:none;display:flex;align-items:center;gap:5px;}
   .src-ttl::-webkit-details-marker{display:none;}
@@ -98,21 +91,21 @@
 </style>
 </head>
 <body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v10</div>
 
 <header>
-  <div class="hd-row">
+  <div class="hbar">
     <a class="back" href="../">← メニュー</a>
-    <div class="hd-center">
-      <h1>✨ AIアシスタント</h1>
-      <div class="model">Gemini 2.5 Flash（検索対応）　ai v9</div>
-    </div>
+    <span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
+    <span class="htxt"><span class="nm">AIアシスタント</span><span class="model">Gemini 2.5 Flash（検索対応）　ai v10</span></span>
+    <span class="hmark">Gen-Can</span>
     <button class="clrbtn" onclick="clearChat()">クリア</button>
   </div>
 </header>
 
 <div id="msgs">
   <div class="welcome" id="welcome">
-    <div class="wi">🤖</div>
+    <div class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="11" rx="3"/><circle cx="9.5" cy="13" r="1.2"/><circle cx="14.5" cy="13" r="1.2"/><path d="M12 4.5V8M12 3.2v.1M8 19v2M16 19v2M3 12.5v3M21 12.5v3"/></svg></div>
     <h2>何でも聞いてください</h2>
     <p>調べ物はなんでもお答えします。</p>
   </div>
@@ -427,7 +420,7 @@ function clearChat() {
   var w = document.createElement('div');
   w.className = 'welcome';
   w.id = 'welcome';
-  w.innerHTML = '<div class="wi">🤖</div><h2>何でも聞いてください</h2>'
+  w.innerHTML = '<div class="wi"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="11" rx="3"/><circle cx="9.5" cy="13" r="1.2"/><circle cx="14.5" cy="13" r="1.2"/><path d="M12 4.5V8M12 3.2v.1M8 19v2M16 19v2M3 12.5v3M21 12.5v3"/></svg></div><h2>何でも聞いてください</h2>'
     + '<p>調べ物はなんでもお答えします。</p>';
   msgs.appendChild(w);
   showErr('');
