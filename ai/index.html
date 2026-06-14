@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 3 ai (2026-06-14) Google検索連携（grounding）追加・出典リンク表示 -->
+<!-- version 4 ai (2026-06-14) 音声入力（Web Speech API）追加 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -72,6 +72,12 @@
   #sendBtn{width:46px;height:46px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:22px;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;transition:.15s;box-shadow:0 3px 8px rgba(124,58,237,.35);}
   #sendBtn:disabled{background:#c4b5fd;box-shadow:none;cursor:default;}
   #sendBtn:active:not(:disabled){transform:scale(.94);}
+  /* マイク（音声入力）ボタン */
+  #micBtn{width:46px;height:46px;border-radius:50%;border:1.5px solid var(--line);background:#fff;color:var(--accent-d);font-size:20px;cursor:pointer;flex:0 0 auto;display:flex;align-items:center;justify-content:center;transition:.15s;}
+  #micBtn:active{transform:scale(.94);}
+  #micBtn.recording{background:#fee2e2;border-color:#fca5a5;color:#dc2626;animation:micpulse 1.2s ease-in-out infinite;}
+  #micBtn.hidden{display:none;}
+  @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(220,38,38,.4);}50%{box-shadow:0 0 0 6px rgba(220,38,38,0);}}
 
   /* トースト */
   .toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#1f2733;color:#fff;padding:11px 18px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:.25s;z-index:99;white-space:nowrap;}
@@ -94,7 +100,7 @@
     <a class="back" href="../">← メニュー</a>
     <div class="hd-center">
       <h1>✨ AIアシスタント</h1>
-      <div class="model">Gemini 2.5 Flash（検索対応）　ai v3</div>
+      <div class="model">Gemini 2.5 Flash（検索対応）　ai v4</div>
     </div>
     <button class="clrbtn" onclick="clearChat()">クリア</button>
   </div>
@@ -111,6 +117,9 @@
 <div id="inputWrap">
   <div class="err-bar" id="errBar"></div>
   <div class="input-inner">
+    <button id="micBtn" class="hidden" onclick="toggleMic()" title="音声入力" aria-label="音声入力">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg>
+    </button>
     <textarea id="inp" placeholder="メッセージを入力…" rows="1" onkeydown="onKey(event)" oninput="autoResize(this)"></textarea>
     <button id="sendBtn" onclick="send()" disabled title="送信">
       <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
@@ -133,6 +142,72 @@ var isStreaming = false;
 var inp = document.getElementById('inp');
 var sendBtn = document.getElementById('sendBtn');
 var msgs = document.getElementById('msgs');
+var micBtn = document.getElementById('micBtn');
+
+/* ========== 音声入力（Web Speech API・ブラウザ標準） ========== */
+var recognition = null;
+var isRecording = false;
+(function initSpeech(){
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    // 非対応ブラウザではマイクボタンを表示しない（従来通りキーボード入力）
+    return;
+  }
+  recognition = new SR();
+  recognition.lang = 'ja-JP';
+  recognition.interimResults = true;   // 話している途中も表示
+  recognition.continuous = false;       // 一区切りで自動停止
+  var baseText = '';                    // 録音開始時点の入力内容
+  recognition.onresult = function(e){
+    var finalText = '', interimText = '';
+    for(var i=e.resultIndex; i<e.results.length; i++){
+      var t = e.results[i][0].transcript;
+      if(e.results[i].isFinal) finalText += t;
+      else interimText += t;
+    }
+    inp.value = baseText + finalText + interimText;
+    autoResize(inp);
+    sendBtn.disabled = inp.value.trim() === '' || isStreaming;
+  };
+  recognition.onend = function(){
+    isRecording = false;
+    micBtn.classList.remove('recording');
+    micBtn.title = '音声入力';
+  };
+  recognition.onerror = function(e){
+    isRecording = false;
+    micBtn.classList.remove('recording');
+    if(e.error === 'not-allowed' || e.error === 'service-not-allowed'){
+      showErr('マイクの使用が許可されていません。ブラウザの設定をご確認ください。');
+    } else if(e.error === 'no-speech'){
+      showToast('音声が聞き取れませんでした');
+    }
+  };
+  // 録音開始時に現在の入力内容を記憶するため、startの直前で更新
+  recognition._setBase = function(){ baseText = inp.value ? (inp.value + ' ') : ''; };
+  // マイクボタンを表示
+  micBtn.classList.remove('hidden');
+})();
+
+function toggleMic(){
+  if(!recognition) return;
+  if(isRecording){
+    recognition.stop();
+    return;
+  }
+  showErr('');
+  recognition._setBase();
+  try {
+    recognition.start();
+    isRecording = true;
+    micBtn.classList.add('recording');
+    micBtn.title = 'タップで停止';
+  } catch(e){
+    // 連続タップでstart重複した場合など
+    isRecording = false;
+    micBtn.classList.remove('recording');
+  }
+}
 
 inp.addEventListener('input', function() {
   sendBtn.disabled = inp.value.trim() === '' || isStreaming;
