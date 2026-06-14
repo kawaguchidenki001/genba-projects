@@ -99,13 +99,13 @@
   <div class="welcome" id="welcome">
     <div class="wi">🤖</div>
     <h2>何でも聞いてください</h2>
-    <p>電気工事・現場管理・書類作成・計算・調べもの<br>なんでもお答えします。</p>
+    <p>調べもの・文章作成・計算・アイデア出し<br>なんでもお答えします。</p>
     <div class="suggestions">
-      <span class="sug" onclick="sendSug(this)">電圧降下の計算方法を教えて</span>
-      <span class="sug" onclick="sendSug(this)">工事の見積書に書く注意文を考えて</span>
-      <span class="sug" onclick="sendSug(this)">低圧電気の絶縁抵抗値の基準は？</span>
-      <span class="sug" onclick="sendSug(this)">安全書類に必要な書類の一覧</span>
-      <span class="sug" onclick="sendSug(this)">工事日程のメール文面を作って</span>
+      <span class="sug" onclick="sendSug(this)">丁寧なお礼のメール文を作って</span>
+      <span class="sug" onclick="sendSug(this)">消費税の計算方法を教えて</span>
+      <span class="sug" onclick="sendSug(this)">会議の議事録のまとめ方は？</span>
+      <span class="sug" onclick="sendSug(this)">わかりやすい文章を書くコツ</span>
+      <span class="sug" onclick="sendSug(this)">明日の段取りを整理したい</span>
     </div>
   </div>
 </div>
@@ -125,10 +125,7 @@
 <script>
 /* ========== 設定 ========== */
 var API_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var SYSTEM_PROMPT = 'あなたは電気工事会社「河口電機」の現場管理アプリに組み込まれたAIアシスタントです。\n'
-  + '電気工事・現場管理・施工管理・安全書類・見積・原価管理などに詳しく、ユーザーの質問に丁寧かつ実用的に答えてください。\n'
-  + '日本語で回答し、専門用語は分かりやすく説明してください。\n'
-  + '計算問題は式と手順を示し、書類作成は具体的な文面を提示してください。';
+var SYSTEM_PROMPT = ''; // システムプロンプトはGAS側(AI_SYSTEM_PROMPT)で管理
 
 /* ========== 状態 ========== */
 var chatLog = []; // {role:'user'|'assistant', content:'...'}
@@ -329,13 +326,13 @@ function clearChat() {
   w.className = 'welcome';
   w.id = 'welcome';
   w.innerHTML = '<div class="wi">🤖</div><h2>何でも聞いてください</h2>'
-    + '<p>電気工事・現場管理・書類作成・計算・調べもの<br>なんでもお答えします。</p>'
+    + '<p>調べもの・文章作成・計算・アイデア出し<br>なんでもお答えします。</p>'
     + '<div class="suggestions">'
-    + '<span class="sug" onclick="sendSug(this)">電圧降下の計算方法を教えて</span>'
-    + '<span class="sug" onclick="sendSug(this)">工事の見積書に書く注意文を考えて</span>'
-    + '<span class="sug" onclick="sendSug(this)">低圧電気の絶縁抵抗値の基準は？</span>'
-    + '<span class="sug" onclick="sendSug(this)">安全書類に必要な書類の一覧</span>'
-    + '<span class="sug" onclick="sendSug(this)">工事日程のメール文面を作って</span>'
+    + '<span class="sug" onclick="sendSug(this)">丁寧なお礼のメール文を作って</span>'
+    + '<span class="sug" onclick="sendSug(this)">消費税の計算方法を教えて</span>'
+    + '<span class="sug" onclick="sendSug(this)">会議の議事録のまとめ方は？</span>'
+    + '<span class="sug" onclick="sendSug(this)">わかりやすい文章を書くコツ</span>'
+    + '<span class="sug" onclick="sendSug(this)">明日の段取りを整理したい</span>'
     + '</div>';
   msgs.appendChild(w);
   showErr('');
