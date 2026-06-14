@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 41 (虫眼鏡：高解像度化＋シャープ強化＋高画質キャプチャ) -->
+<!-- toolbox version 44 (録音機：起動即録音画面・現場バーで切替) -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -142,6 +142,9 @@
   .sel{width:100%;padding:13px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font-size:16px;}
   .sel:disabled{opacity:.5;}
   .sitebar{background:var(--accent-soft);border:1px solid var(--line);border-radius:11px;padding:10px 13px;margin-bottom:14px;font-size:13px;color:var(--ink);}
+  .sitebar.sb-tap{cursor:pointer;display:flex;align-items:center;gap:8px;}
+  .sitebar.sb-tap:active{background:var(--line);}
+  .sitebar .sb-arrow{margin-left:auto;font-size:11px;color:var(--accent-d);font-weight:600;white-space:nowrap;}
   .sitebar b{font-weight:700;}
   .savebtn{width:100%;padding:14px;border:none;border-radius:13px;background:var(--accent);color:#fff;font-size:16px;font-weight:800;cursor:pointer;margin-top:14px;box-shadow:var(--shadow);}
   .savebtn:active{filter:brightness(1.08);}
@@ -279,9 +282,18 @@
   .mag-btn.hq:active{background:#fef0d9;}
   .mag-btn.torch.on{background:#d97b12;border-color:#d97b12;color:#fff;}
   .mag-hint{font-size:14px;color:var(--sub);line-height:1.7;margin:0 4px 90px;text-align:center;}
+
+  /* 小黒板カメラ：ボタンとズーム */
+  .bcam-tools{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:8px;z-index:10;}
+  .bcam-tool{width:42px;height:42px;border-radius:50%;border:none;background:rgba(0,0,0,.55);color:#fff;font-size:20px;cursor:pointer;backdrop-filter:blur(4px);box-shadow:0 2px 6px rgba(0,0,0,.3);display:none;align-items:center;justify-content:center;padding:0;}
+  .bcam-tool.on{background:#d97b12;}
+  .bcam-zoominfo{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);background:rgba(0,0,0,.55);color:#fff;font-size:13px;font-weight:700;padding:4px 12px;border-radius:14px;display:none;z-index:10;pointer-events:none;}
+  .bshoot-bar.two{display:flex;gap:10px;}
+  .bshoot-bar.two .savebtn{margin:0;}
+  .bshoot-bar.two .hqbtn{flex:0 0 38%;background:#c2410c;display:none;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v41</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v44</div>
 
 <div class="wrap">
 
@@ -600,10 +612,14 @@
       <span class="back2" onclick="boardBack()">← ツールボックス</span>
       <h2>小黒板カメラ</h2>
     </div>
-    <div class="sitebar" id="boardSiteBar">現場: <b>—</b></div>
+    <div class="sitebar sb-tap" id="boardSiteBar" onclick="boardPickSite()">現場：<b>タップして選択</b><span class="sb-arrow">▼</span></div>
     <div class="bcam-wrap" id="bcamWrap">
       <video id="boardVideo" autoplay playsinline muted></video>
       <div class="bov-bd" id="boardOverlay" style="display:none;"></div>
+      <div class="bcam-tools">
+        <button class="bcam-tool" id="boardTorchBtn" onclick="boardToggleTorch()" title="ライト">💡</button>
+      </div>
+      <div class="bcam-zoominfo" id="boardZoomInfo">1.0x</div>
     </div>
     <div class="bsize-row">
       <label>黒板の大きさ</label>
@@ -620,7 +636,7 @@
       <div class="brow"><span class="blbl3">会社名</span><input class="enum binp" id="boardCompany" oninput="bov()" value="河口電機株式会社"><button class="bfs" onclick="boardFontStep('f',-0.1)">−</button><button class="bfs" onclick="boardFontStep('f',0.1)">＋</button></div>
     </div>
     <div class="enote" style="margin:12px 2px 84px;">黒板はドラッグで移動／ダブルタップで入力欄の表示切替。各行の −／＋ で文字サイズを調整できます。</div>
-    <div class="bshoot-bar"><button class="savebtn" style="background:#d97b12;width:100%;margin:0;" onclick="boardShoot()">📷 撮影してDriveに保存</button></div>
+    <div class="bshoot-bar two"><button class="savebtn hqbtn" id="boardHQBtn" onclick="boardShoot(true)">📷 最高画質</button><button class="savebtn" style="background:#d97b12;flex:1;" onclick="boardShoot(false)">📷 撮影してDriveに保存</button></div>
   </div>
 
   <!-- ========== ④ 録音機 ========== -->
@@ -629,7 +645,7 @@
       <span class="back2" onclick="recBack()">← ツールボックス</span>
       <h2>録音機</h2>
     </div>
-    <div class="sitebar" id="recSiteBar">現場: <b>—</b></div>
+    <div class="sitebar sb-tap" id="recSiteBar" onclick="recPickSite()">現場：<b>タップして選択</b><span class="sb-arrow">▼</span></div>
 
     <!-- 録音コントロール -->
     <div class="rec-center">
@@ -928,7 +944,8 @@ function openTool(k){
   if(k==='draw')k='memo'; if(k==='area')k='meas';
   if(k==='rem'){ renderRemList(); go('p-rem-list'); return; }
   if(k==='memo'||k==='check'||k==='mat'){ curTool=k; siteFilter=''; refreshProjects(); refreshCurList(); return; }
-  if(k==='board'||k==='rec'){ curTool=k; var st=document.getElementById('selTitle'); if(st)st.textContent=(k==='board'?'小黒板カメラ':'録音機'); go('p-memo-select'); loadSites(); return; }
+  if(k==='board'){ curTool=k; openBoardCamera(); return; }
+  if(k==='rec'){ curTool=k; openRecorder(); return; }
   if(k==='mag'){ go('p-mag'); startMag(); return; }
   go('p-'+k);
 }
@@ -1791,10 +1808,26 @@ function magHQCapture(){
 
 /* ===== ⑤ 小黒板カメラ ===== */
 var boardStream=null,boardSiteId=null,boardSiteName_='';
+var boardTrack=null, boardTorchOn=false;
+var boardZoom=1, boardZoomMin=1, boardZoomMax=1, boardZoomStep=0.1;
+var boardPinchDist=0, boardPinchStartZoom=1, boardPinchBound=false;
+function boardBindPinch(){
+  if(boardPinchBound)return;
+  var wrap=document.getElementById('bcamWrap'); if(!wrap)return;
+  wrap.addEventListener('touchstart',boardPinchStart,{passive:false});
+  wrap.addEventListener('touchmove',boardPinchMove,{passive:false});
+  wrap.addEventListener('touchend',boardPinchEnd,{passive:false});
+  wrap.addEventListener('touchcancel',boardPinchEnd,{passive:false});
+  boardPinchBound=true;
+}
 function openBoardCamera(){
-  if(!curSite){go('p-memo-select');return;}
-  boardSiteId=curSite.id; boardSiteName_=curSite.name||'';
-  document.getElementById('boardSiteBar').innerHTML='現場：<b>'+esc(curSite.cust||'')+(curSite.name?' ／ '+esc(curSite.name):'')+'</b>';
+  if(curSite){
+    boardSiteId=curSite.id; boardSiteName_=curSite.name||'';
+    document.getElementById('boardSiteBar').innerHTML='現場：<b>'+esc(curSite.cust||'')+(curSite.name?' ／ '+esc(curSite.name):'')+'</b><span class="sb-arrow">▼ タップで切替</span>';
+  } else {
+    boardSiteId=null; boardSiteName_='';
+    document.getElementById('boardSiteBar').innerHTML='現場：<b>タップして選択</b><span class="sb-arrow">▼</span>';
+  }
   var bsn=document.getElementById('boardProjName');
   if(pendingBoard){
     if(bsn) bsn.value=pendingBoard.name||boardSiteName_;
@@ -1802,17 +1835,99 @@ function openBoardCamera(){
     pendingBoard=null;
   } else if(bsn&&!bsn.value){ bsn.value=boardSiteName_; }
   var bf=document.getElementById('boardFormWrap');if(bf)bf.style.display='grid';
-  go('p-board'); startBoardCamera(); setTimeout(function(){bov();},50);
+  go('p-board'); startBoardCamera(); setTimeout(function(){bov(); boardBindPinch();},50);
+}
+/* 現場バーから現場を再選択 */
+function boardPickSite(){
+  curTool='board';
+  var st=document.getElementById('selTitle'); if(st)st.textContent='小黒板カメラ';
+  /* カメラを止めて選択画面へ。現場確定後 openBoardCamera が呼ばれて戻る */
+  stopBoardCamera();
+  go('p-memo-select'); loadSites();
 }
 function startBoardCamera(){
   if(!navigator||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('カメラに対応していません');return;}
-  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false})
-    .then(function(stream){boardStream=stream;var v=document.getElementById('boardVideo');v.srcObject=stream;v.play();})
+  /* 既存ストリームがあれば一旦停止 */
+  stopBoardCamera();
+  boardTorchOn=false; boardZoom=1; boardZoomMin=1; boardZoomMax=1; boardZoomStep=0.1;
+  /* UI初期化 */
+  var tb=document.getElementById('boardTorchBtn'); if(tb){tb.classList.remove('on');tb.style.display='none';}
+  var hb=document.getElementById('boardHQBtn'); if(hb)hb.style.display='none';
+  var zi=document.getElementById('boardZoomInfo'); if(zi)zi.style.display='none';
+  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false})
+    .then(function(stream){
+      boardStream=stream;
+      var v=document.getElementById('boardVideo'); v.srcObject=stream; v.play();
+      boardTrack=stream.getVideoTracks()[0];
+      try{
+        var caps=(boardTrack&&boardTrack.getCapabilities)?boardTrack.getCapabilities():{};
+        /* 連続オートフォーカス */
+        if(caps&&caps.focusMode&&caps.focusMode.indexOf('continuous')>=0){
+          boardTrack.applyConstraints({advanced:[{focusMode:'continuous'}]}).catch(function(){});
+        }
+        /* ライト対応 */
+        if(caps&&caps.torch){var t=document.getElementById('boardTorchBtn');if(t)t.style.display='flex';}
+        /* ズーム対応 */
+        if(caps&&caps.zoom){
+          boardZoomMin=caps.zoom.min||1;
+          boardZoomMax=caps.zoom.max||1;
+          boardZoomStep=caps.zoom.step||0.1;
+          var st=(boardTrack.getSettings&&boardTrack.getSettings())||{};
+          boardZoom=st.zoom||boardZoomMin;
+          if(boardZoomMax>boardZoomMin){
+            var zi2=document.getElementById('boardZoomInfo');
+            if(zi2){zi2.textContent=boardZoom.toFixed(1)+'x';zi2.style.display='block';}
+          }
+        }
+        /* 高画質キャプチャ対応 */
+        if(typeof ImageCapture!=='undefined'){
+          var hb2=document.getElementById('boardHQBtn'); if(hb2)hb2.style.display='block';
+        }
+      }catch(e){}
+    })
     .catch(function(e){toast('カメラを起動できませんでした（'+e.message+'）');});
 }
 function stopBoardCamera(){
+  if(boardTrack&&boardTorchOn){try{boardTrack.applyConstraints({advanced:[{torch:false}]});}catch(e){}}
   if(boardStream){boardStream.getTracks().forEach(function(t){t.stop();});boardStream=null;}
+  boardTrack=null; boardTorchOn=false;
   var v=document.getElementById('boardVideo');if(v)v.srcObject=null;
+}
+/* ライト ON/OFF */
+function boardToggleTorch(){
+  if(!boardTrack){toast('ライトに対応していません');return;}
+  boardTorchOn=!boardTorchOn;
+  boardTrack.applyConstraints({advanced:[{torch:boardTorchOn}]})
+    .then(function(){var t=document.getElementById('boardTorchBtn');if(t)t.classList.toggle('on',boardTorchOn);})
+    .catch(function(){boardTorchOn=!boardTorchOn;toast('ライトを切り替えられませんでした');});
+}
+/* ピンチズーム：2本指タッチ */
+function boardPinchStart(e){
+  if(!boardTrack||e.touches.length!==2)return;
+  if(boardZoomMax<=boardZoomMin)return;
+  var dx=e.touches[0].clientX-e.touches[1].clientX;
+  var dy=e.touches[0].clientY-e.touches[1].clientY;
+  boardPinchDist=Math.sqrt(dx*dx+dy*dy);
+  boardPinchStartZoom=boardZoom;
+  e.preventDefault();
+}
+function boardPinchMove(e){
+  if(!boardTrack||e.touches.length!==2||!boardPinchDist)return;
+  if(boardZoomMax<=boardZoomMin)return;
+  var dx=e.touches[0].clientX-e.touches[1].clientX;
+  var dy=e.touches[0].clientY-e.touches[1].clientY;
+  var d=Math.sqrt(dx*dx+dy*dy);
+  var ratio=d/boardPinchDist;
+  var z=boardPinchStartZoom*ratio;
+  if(z<boardZoomMin)z=boardZoomMin; if(z>boardZoomMax)z=boardZoomMax;
+  if(Math.abs(z-boardZoom)<boardZoomStep)return;
+  boardZoom=z;
+  boardTrack.applyConstraints({advanced:[{zoom:z}]}).catch(function(){});
+  var zi=document.getElementById('boardZoomInfo'); if(zi){zi.textContent=z.toFixed(1)+'x';zi.style.display='block';}
+  e.preventDefault();
+}
+function boardPinchEnd(e){
+  if(e.touches.length<2)boardPinchDist=0;
 }
 function boardBack(){stopBoardCamera();go('p-home');}
 function bov(){
@@ -1923,20 +2038,46 @@ function shutterSound(){
     burst(t+0.05, 0.06, 1500,0.6,0.85); // 「シャッ」…幕の走行音（低く長め）
   }catch(e){}
 }
-function boardShoot(){
+function boardShoot(hq){
   var vid=document.getElementById('boardVideo');
   if(!vid||!vid.videoWidth){toast('カメラが準備できていません');return;}
   if(!boardSiteId){toast('エラー：案件が未選択です。← で戻って選び直してください。');return;}
-  var vw=vid.videoWidth,vh=vid.videoHeight,sw,sh,sx,sy;
+  /* 高画質モード：ImageCapture でフル解像度静止画を取得してから描画 */
+  if(hq&&boardTrack&&typeof ImageCapture!=='undefined'){
+    toast('最高画質で撮影中…');
+    try{
+      var ic=new ImageCapture(boardTrack);
+      ic.takePhoto().then(function(blob){
+        var img=new Image();
+        img.onload=function(){boardShootCore(img,img.naturalWidth,img.naturalHeight);URL.revokeObjectURL(img.src);};
+        img.onerror=function(){toast('画像読み込みに失敗、通常撮影で続行');boardShootCore(vid,vid.videoWidth,vid.videoHeight);};
+        img.src=URL.createObjectURL(blob);
+      }).catch(function(){
+        /* takePhoto非対応：grabFrame で代替 */
+        try{
+          var ic2=new ImageCapture(boardTrack);
+          ic2.grabFrame().then(function(bmp){boardShootCore(bmp,bmp.width,bmp.height);})
+            .catch(function(){toast('最高画質に未対応、通常撮影で続行');boardShootCore(vid,vid.videoWidth,vid.videoHeight);});
+        }catch(e){boardShootCore(vid,vid.videoWidth,vid.videoHeight);}
+      });
+    }catch(e){boardShootCore(vid,vid.videoWidth,vid.videoHeight);}
+    return;
+  }
+  /* 標準撮影：video から取得 */
+  boardShootCore(vid,vid.videoWidth,vid.videoHeight);
+}
+function boardShootCore(srcEl,vw,vh){
+  if(!boardSiteId){toast('エラー：案件が未選択です。');return;}
+  var sw,sh,sx,sy;
   if(vw/vh>=4/3){ sh=vh; sw=Math.round(vh*4/3); } else { sw=vw; sh=Math.round(vw*3/4); }
   sx=Math.round((vw-sw)/2); sy=Math.round((vh-sh)/2);
   var outW=sw,outH=sh;
   var cvs=document.createElement('canvas');cvs.width=outW;cvs.height=outH;
   var ctx=cvs.getContext('2d');
-  ctx.drawImage(vid,sx,sy,sw,sh,0,0,outW,outH);
+  ctx.drawImage(srcEl,sx,sy,sw,sh,0,0,outW,outH);
   var doNoBoard=!!(document.getElementById('boardNoBoard')||{}).checked;
   shutterSound();
-  var noBoardData = doNoBoard ? cvs.toDataURL('image/jpeg',0.82).split(',')[1] : null;
+  var noBoardDataQ=(vw>=2000)?0.92:0.88; var noBoardData = doNoBoard ? cvs.toDataURL('image/jpeg',noBoardDataQ).split(',')[1] : null;
   // 黒板（プレビュー位置・サイズを反映）
   var bw=Math.floor(outW*boardRect.w),bh=Math.floor(bw*BOARD_HR);
   if(bh>outH*0.9){bh=Math.floor(outH*0.9);bw=Math.floor(bh/BOARD_HR);}
@@ -1981,7 +2122,7 @@ function boardShoot(){
   rowFree(val('boardFree2'),'d',0.18);
   rowFree(val('boardFree3'),'e',0.18);
   rowCo(val('boardCompany')||'河口電機株式会社','f',0.16);
-  var withData=cvs.toDataURL('image/jpeg',0.82).split(',')[1];
+  var jpegQ=(vw>=2000)?0.92:0.88; var withData=cvs.toDataURL('image/jpeg',jpegQ).split(',')[1];
   if(!withData||withData.length<200){toast('エラー：画像データの取得に失敗しました。');return;}
   var ts=Date.now();
   toast('Driveに保存中…');
@@ -1997,10 +2138,22 @@ var recStream=null,recRecorder=null,recChunks=[],recBlob=null;
 var recSiteId=null,recTimerInt=null,recSecs=0;
 
 function openRecorder(){
-  if(!curSite){go('p-memo-select');return;}
-  recSiteId=curSite.id;
-  document.getElementById('recSiteBar').innerHTML='現場：<b>'+esc(curSite.cust||'')+(curSite.name?' ／ '+esc(curSite.name):'')+'</b>';
+  if(curSite){
+    recSiteId=curSite.id;
+    document.getElementById('recSiteBar').innerHTML='現場：<b>'+esc(curSite.cust||'')+(curSite.name?' ／ '+esc(curSite.name):'')+'</b><span class="sb-arrow">▼ タップで切替</span>';
+  } else {
+    recSiteId=null;
+    document.getElementById('recSiteBar').innerHTML='現場：<b>タップして選択</b><span class="sb-arrow">▼</span>';
+  }
   recReset(); go('p-rec');
+}
+/* 現場バーから現場を再選択 */
+function recPickSite(){
+  curTool='rec';
+  var st=document.getElementById('selTitle'); if(st)st.textContent='録音機';
+  /* 録音中なら停止してから選択画面へ */
+  recStop2();
+  go('p-memo-select'); loadSites();
 }
 function recBack(){recStop2(); go('p-home');}
 function recStop2(){
@@ -2014,6 +2167,7 @@ function recSetState(st){
   document.getElementById('recPreview').style.display=(st==='preview')?'':'none';
 }
 function recStart(){
+  if(!recSiteId){toast('上の「現場：タップして選択」から現場を選んでください');return;}
   if(typeof MediaRecorder==='undefined'){toast('このブラウザは録音に対応していません');return;}
   if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('マイクに対応していません');return;}
   navigator.mediaDevices.getUserMedia({audio:true})
