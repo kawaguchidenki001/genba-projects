@@ -1,86 +1,151 @@
 <!DOCTYPE html>
-<!-- version 2 (2026-06-14) 写真で材料をAI読み取り（materialOcr）を追加。材料リスト（独立画面）：現場ごとに記入・在庫から選ぶ・在庫確認→出庫/発注 -->
+<!-- version 4 (2026-06-14) 高齢者向けに文字を拡大。デザイン統一（ニューモーフィズム/Gen-Can基準・材料の青#2563eb・線画アイコン）。機能は不変。写真AI読取/在庫/発注 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>材料リスト｜河口電機</title>
+<title>材料リスト｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
-  :root{ --bg:#eef0f6;--card:#fff;--line:#e3e6ea;--ink:#1f2733;--sub:#6b7280;--accent:#d97706;--accent-d:#b45309;
-    --shadow:0 1px 3px rgba(20,30,50,.08),0 1px 2px rgba(20,30,50,.04);}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic UI",sans-serif;font-size:15px;line-height:1.5;padding-bottom:40px;}
-  header{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);padding:calc(env(safe-area-inset-top) + 10px) 14px 10px;box-shadow:var(--shadow);border-bottom:1px solid var(--line);}
-  .back{color:var(--accent-d);text-decoration:none;font-size:13px;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;}
-  header h1{font-size:17px;margin:8px 0 0;font-weight:700;color:var(--accent-d);}
-  main{padding:13px;max-width:720px;margin:0 auto;}
-  .empty{text-align:center;color:var(--sub);padding:32px 10px;font-size:14px;line-height:1.9;}
-  label.lbl{display:block;font-size:11.5px;color:var(--sub);font-weight:700;margin:10px 2px 3px;}
-  select,input,textarea{font-family:inherit;}
-  .ssel{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;font-size:15px;background:#fff;}
-  .ti{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:11px;font-size:16px;background:#fff;}
-  .addbtn{width:100%;padding:12px;border:1px dashed var(--accent);background:#fff7ed;color:var(--accent-d);border-radius:11px;font-size:14px;font-weight:700;cursor:pointer;margin:12px 0 0;}
-  .listcard{background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:12px 14px;margin-bottom:9px;cursor:pointer;border-left:5px solid var(--accent);}
-  .listcard .t{font-weight:700;font-size:15.5px;}
+  :root{
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#d4e4f0;
+    --accent:#2563eb;--accent-d:#1d4ed8;
+    --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+    --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.6;padding-bottom:40px;}
+  select,input,textarea,button{font-family:inherit;}
+  /* ヘッダー */
+  header{position:sticky;top:0;z-index:20;background:var(--bg);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
+  .hbar{display:flex;align-items:center;gap:11px;max-width:720px;margin:0 auto;}
+  .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11px;letter-spacing:.06em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 13px;text-decoration:none;white-space:nowrap;}
+  .back:active{box-shadow:var(--well);}
+  .hic{width:40px;height:40px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hic svg{width:21px;height:21px;}
+  .htxt{flex:1;min-width:0;}
+  .htxt .en{font-family:"Manrope",sans-serif;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .htxt .nm{font-weight:700;font-size:17px;color:var(--ink);line-height:1.2;display:block;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:14px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
+  main{padding:14px;max-width:720px;margin:0 auto;}
+  .empty{text-align:center;color:var(--sub);padding:30px 10px;font-size:14px;line-height:1.9;}
+  /* ラベル・フォーム */
+  label.lbl{display:block;font-size:11.5px;color:var(--sub);font-weight:700;letter-spacing:.04em;margin:16px 4px 7px;}
+  .ssel,.ti{width:100%;border:none;border-radius:12px;background:var(--bg);box-shadow:var(--well-soft);padding:12px 14px;font-size:16px;color:var(--ink);}
+  .ssel:focus,.ti:focus{outline:none;box-shadow:var(--well-soft),0 0 0 2px rgba(37,99,235,.28);}
+  .ti::placeholder{color:#9fb3c6;}
+  /* ボタン共通 */
+  .savebtn,.stkbtn,.addbtn{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:13px;font-size:14.5px;font-weight:800;cursor:pointer;}
+  .savebtn svg,.stkbtn svg,.addbtn svg{width:18px;height:18px;flex:0 0 auto;}
+  .savebtn{padding:14px;margin-top:14px;background:var(--grad);color:#fff;box-shadow:var(--rise-sm);}
+  .savebtn:active{box-shadow:var(--well);}
+  .stkbtn{padding:12px;margin-top:9px;background:var(--bg);color:var(--accent-d);box-shadow:var(--rise-sm);}
+  .stkbtn:active{box-shadow:var(--well);}
+  .addbtn{padding:13px;margin-top:12px;background:var(--bg);color:var(--accent-d);box-shadow:var(--well);}
+  .addbtn:active{box-shadow:var(--rise-sm);}
+  /* 一覧カード */
+  .listcard{position:relative;background:var(--bg);border-radius:16px;box-shadow:var(--rise);padding:13px 15px 13px 18px;margin-bottom:11px;cursor:pointer;overflow:hidden;}
+  .listcard::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:var(--accent);}
+  .listcard:active{box-shadow:var(--well);}
+  .listcard .t{font-weight:700;font-size:15.5px;color:var(--ink);}
   .listcard .m{font-size:12px;color:var(--sub);margin-top:3px;}
-  /* 項目編集 */
-  .matrow{display:flex;align-items:center;gap:7px;padding:7px 0;border-top:1px solid #f0f1f4;flex-wrap:wrap;}
+  /* 材料行 */
+  #items{background:var(--bg);border-radius:16px;box-shadow:var(--rise);padding:2px 14px;margin-top:4px;}
+  .matrow{display:flex;align-items:center;gap:7px;padding:9px 0;border-top:1px dashed #dde7f0;flex-wrap:wrap;}
   .matrow:first-child{border-top:none;}
   .matrow input[type=checkbox]{width:20px;height:20px;flex:0 0 auto;accent-color:var(--accent);}
-  .mt-name{flex:1 1 100%;order:5;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;}
+  .mt-name{flex:1 1 100%;order:5;padding:9px 11px;border:none;border-radius:9px;background:var(--bg);box-shadow:var(--well-soft);font-size:15px;color:var(--ink);}
   .mt-row2{display:flex;gap:7px;flex:1 1 100%;order:6;}
-  .mt-qty{flex:0 0 90px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:14px;}
-  .mt-sup{flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:14px;}
-  .mt-link{order:2;font-size:14px;}
-  .mdel{order:3;margin-left:auto;border:none;background:#fee2e2;color:#b91c1c;border-radius:8px;font-size:16px;font-weight:800;width:34px;height:34px;cursor:pointer;}
+  .mt-qty{flex:0 0 92px;padding:9px 11px;border:none;border-radius:9px;background:var(--bg);box-shadow:var(--well-soft);font-size:14px;color:var(--ink);}
+  .mt-sup{flex:1;min-width:0;padding:9px 11px;border:none;border-radius:9px;background:var(--bg);box-shadow:var(--well-soft);font-size:14px;color:var(--ink);}
+  .mt-name:focus,.mt-qty:focus,.mt-sup:focus{outline:none;box-shadow:var(--well-soft),0 0 0 2px rgba(37,99,235,.28);}
+  .mt-link{order:2;display:inline-flex;align-items:center;color:var(--accent);}
+  .mt-link svg{width:16px;height:16px;}
+  .mdel{order:3;margin-left:auto;border:none;background:var(--bg);color:#dc2626;box-shadow:var(--rise-sm);border-radius:9px;font-size:17px;font-weight:800;width:34px;height:34px;cursor:pointer;}
+  .mdel:active{box-shadow:var(--well);}
   .matrow.done .mt-name{text-decoration:line-through;color:var(--sub);}
-  .savebtn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-top:14px;}
-  .stkbtn{width:100%;padding:12px;border:1px solid var(--line);border-radius:12px;background:#ecfeff;color:#155e75;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;}
+  /* 削除リンク */
   .row-del{margin-top:14px;text-align:center;}
-  .row-del a{color:#b91c1c;font-size:12.5px;}
+  .row-del a{color:#dc2626;font-size:12.5px;}
+  /* 注意書き */
+  .note{font-size:12.5px;color:var(--accent-d);background:#e6eefb;border:none;border-radius:13px;box-shadow:var(--rise-sm);padding:11px 14px;margin-bottom:12px;line-height:1.8;}
+  h2{font-weight:700;color:var(--accent-d);}
   /* 在庫チェック */
-  .chk-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-bottom:10px;box-shadow:var(--shadow);}
+  .chk-card{background:var(--bg);border-radius:15px;box-shadow:var(--rise);padding:12px 14px;margin-bottom:11px;}
   .chk-card.done{opacity:.6;}
   .chk-nm{font-weight:700;font-size:15px;}
   .chk-nm .qt{font-size:12px;color:var(--sub);font-weight:600;}
-  .chk-line{display:flex;align-items:center;gap:8px;margin-top:7px;}
+  .chk-line{display:flex;align-items:center;gap:8px;margin-top:8px;}
   .chk-line .cl{font-size:12px;color:var(--sub);flex:0 0 44px;}
-  .chk-line select{flex:1;min-width:0;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:#fff;}
-  .chk-line .ned{flex:0 0 66px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:14px;}
+  .chk-line select{flex:1;min-width:0;padding:9px;border:none;border-radius:9px;background:var(--bg);box-shadow:var(--well-soft);font-size:14px;color:var(--ink);}
+  .chk-line .ned{flex:0 0 66px;padding:9px;border:none;border-radius:9px;background:var(--bg);box-shadow:var(--well-soft);font-size:14px;color:var(--ink);}
   .chk-line .un{font-size:12px;color:var(--sub);}
-  .chk-st{margin-left:auto;font-size:11.5px;font-weight:800;padding:2px 9px;border-radius:999px;white-space:nowrap;}
+  .chk-st{margin-left:auto;font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap;}
   .chk-st.ok{background:#dcfce7;color:#166534;} .chk-st.warn{background:#fef3c7;color:#92400e;}
-  .chk-act{display:flex;align-items:center;gap:9px;margin-top:10px;flex-wrap:wrap;}
-  .chk-act .outb{background:#0e7490;color:#fff;border:none;border-radius:9px;padding:9px 12px;font-size:13px;font-weight:800;cursor:pointer;}
-  .chk-act .outb:disabled{background:#cbd5e1;}
-  .chk-act .regb{background:#fff;color:#155e75;border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13px;font-weight:700;cursor:pointer;}
-  .chk-act .ordb{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:#b45309;margin-left:auto;}
+  .chk-act{display:flex;align-items:center;gap:9px;margin-top:11px;flex-wrap:wrap;}
+  .chk-act .outb{background:var(--grad);color:#fff;border:none;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:var(--rise-sm);}
+  .chk-act .outb:disabled{background:#c2cdda;color:#fff;box-shadow:none;}
+  .chk-act .regb{background:var(--bg);color:var(--accent-d);border:none;box-shadow:var(--rise-sm);border-radius:10px;padding:9px 13px;font-size:13px;font-weight:700;cursor:pointer;}
+  .chk-act .ordb{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;color:var(--accent-d);margin-left:auto;}
   .chk-act .ordb input{width:18px;height:18px;accent-color:var(--accent);}
   .chk-act .doneb{color:#166534;font-weight:800;font-size:13.5px;}
-  .note{font-size:12px;color:var(--sub);background:#fff7ed;border:1px solid #fde7c8;border-radius:11px;padding:10px 12px;margin-bottom:12px;line-height:1.7;}
-  /* ピッカー */
-  .ov{position:fixed;inset:0;z-index:60;background:rgba(20,30,50,.45);display:none;align-items:flex-end;justify-content:center;}
+  /* ピッカー（ボトムシート） */
+  .ov{position:fixed;inset:0;z-index:60;background:rgba(20,40,70,.4);display:none;align-items:flex-end;justify-content:center;}
   .ov.show{display:flex;}
-  .sheet{background:#fff;width:100%;max-width:560px;border-radius:18px 18px 0 0;padding:16px 14px calc(env(safe-area-inset-bottom) + 16px);max-height:86vh;overflow:auto;}
-  .sheet .hd{display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:700;margin-bottom:10px;}
-  .sheet .x{font-size:24px;color:var(--sub);cursor:pointer;}
-  .pick{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:7px;cursor:pointer;}
+  .sheet{background:var(--bg);width:100%;max-width:560px;border-radius:22px 22px 0 0;padding:16px 14px calc(env(safe-area-inset-bottom) + 16px);max-height:86vh;overflow:auto;box-shadow:0 -10px 30px rgba(31,90,168,.18);}
+  .sheet .hd{display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:700;color:var(--accent-d);margin-bottom:12px;}
+  .sheet .x{font-size:20px;color:var(--sub);cursor:pointer;background:var(--bg);box-shadow:var(--rise-sm);width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+  .pick{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 13px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--rise-sm);margin-bottom:8px;cursor:pointer;}
+  .pick:active{box-shadow:var(--well);}
   .pick .pn{font-weight:700;font-size:14.5px;} .pick .pn small{color:var(--sub);font-weight:600;}
-  .pick .ps{font-size:12px;color:#155e75;white-space:nowrap;}
-  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:30px;z-index:90;background:#1f2733;color:#fff;padding:10px 16px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;}
+  .pick .ps{font-size:12px;color:var(--accent-d);white-space:nowrap;}
+  /* トースト・ローディング */
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:30px;z-index:90;background:#1f3a52;color:#fff;padding:11px 18px;border-radius:999px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 20px rgba(31,58,82,.3);}
   .toast.show{opacity:1;}
-  .loading{position:fixed;inset:0;z-index:1000;background:rgba(240,242,245,.72);display:none;align-items:center;justify-content:center;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(232,236,242,.78);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
   .loading.show{display:flex;}
-  .lbox{background:#fff;border-radius:16px;box-shadow:0 10px 30px rgba(20,30,50,.18);padding:22px 30px;text-align:center;}
-  .spin{width:36px;height:36px;border:4px solid #e1e5ea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 10px;animation:sp .8s linear infinite;}
+  .lbox{background:var(--bg);border-radius:18px;box-shadow:var(--rise);padding:24px 32px;text-align:center;}
+  .spin{width:36px;height:36px;border:4px solid #d6deea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 10px;animation:sp .8s linear infinite;}
   @keyframes sp{to{transform:rotate(360deg);}}
+  .lbox div{font-size:14px;font-weight:700;color:var(--ink);}
+  /* ▼ 高齢者向け 文字拡大 v4 ▼ */
+  body{font-size:16.5px;}
+  .back{font-size:12px;}
+  .htxt .nm{font-size:18px;}
+  label.lbl{font-size:12.5px;}
+  .ssel,.ti{font-size:16.5px;}
+  .savebtn,.stkbtn,.addbtn{font-size:16px;}
+  .listcard .t{font-size:16.5px;}
+  .listcard .m{font-size:13px;}
+  .empty{font-size:15px;}
+  .mt-name{font-size:16px;}
+  .mt-qty,.mt-sup{font-size:15px;}
+  .note{font-size:13.5px;}
+  h2{font-size:17px;}
+  .chk-nm{font-size:16px;}
+  .chk-line select,.chk-line .ned{font-size:15px;}
+  .chk-st{font-size:12px;}
+  .sheet .hd{font-size:17px;}
+  .pick .pn{font-size:15.5px;}
+  .pick .ps{font-size:12.5px;}
+  .toast{font-size:14px;}
+  /* ▲ 高齢者向け 文字拡大 ▲ */
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v4</div>
 <header>
-  <a class="back" id="backBtn" href="../">← 材料管理</a>
-  <h1 id="hTitle">📝 材料リスト</h1>
+  <div class="hbar">
+    <a class="back" href="../">← 材料管理</a>
+    <span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/><path d="M16 5l-8 3.5"/></svg></span>
+    <span class="htxt"><span class="en">Material list</span><span class="nm">材料リスト</span></span>
+    <span class="hmark">Gen-Can</span>
+  </div>
 </header>
 
 <main>
@@ -102,11 +167,11 @@
     <label class="lbl">材料</label>
     <div id="items"></div>
     <button class="addbtn" onclick="addItem()">＋ 材料を追加</button>
-    <button class="stkbtn" onclick="openPick()">📦 在庫から選んで追加</button>
-    <button class="stkbtn" onclick="openMatPhoto()">📷 写真で材料を読み取る（AI）</button>
+    <button class="stkbtn" onclick="openPick()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>在庫から選んで追加</button>
+    <button class="stkbtn" onclick="openMatPhoto()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8a2 2 0 0 1 2-2h2l2-3h6l2 3h2a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="13" r="4"/></svg>写真で材料を読み取る（AI）</button>
     <input type="file" id="matPhoto" accept="image/*,application/pdf" style="display:none" onchange="matPhotoSelected(this)">
     <button class="savebtn" onclick="saveNote()">保存する</button>
-    <button class="stkbtn" style="margin-top:10px;" onclick="openCheck()">📦 在庫を確認（在庫から出す／発注へ）</button>
+    <button class="stkbtn" style="margin-top:10px;" onclick="openCheck()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8.5"/><path d="m3 8 9-5 9 5"/><path d="m8.5 12.5 2 2 4-4"/></svg>在庫を確認（在庫から出す／発注へ）</button>
     <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="deleteNote(event)">この材料リストを削除</a></div>
   </section>
 
@@ -116,7 +181,7 @@
     <h2 style="font-size:16px;margin:10px 0;">在庫を確認</h2>
     <div class="note">在庫があれば〔在庫から出す〕、足りない・無い物は〔発注に回す〕を選び、最後に「発注へ」でまとめて発注画面に渡せます。</div>
     <div id="chkList"></div>
-    <button class="savebtn" id="chkOrderBtn" style="display:none;background:#4f46e5;" onclick="chkGoOrder()">発注に回した材料を発注へ（<span id="chkOrderCnt">0</span>点）</button>
+    <button class="savebtn" id="chkOrderBtn" style="display:none;" onclick="chkGoOrder()">発注に回した材料を発注へ（<span id="chkOrderCnt">0</span>点）</button>
   </section>
 </main>
 
@@ -124,7 +189,7 @@
 
 <div class="ov" id="ovPick"><div class="sheet">
   <div class="hd"><span>在庫から選ぶ</span><span class="x" onclick="closePick()">×</span></div>
-  <input class="ti" id="pickSrch" placeholder="🔍 品名・規格で検索" oninput="renderPick()" style="margin-bottom:10px;">
+  <input class="ti" id="pickSrch" placeholder="品名・規格で検索" oninput="renderPick()" style="margin-bottom:10px;">
   <div id="pickList"></div>
 </div></div>
 
@@ -233,7 +298,7 @@ function renderItems(){
   document.getElementById('items').innerHTML=items.map(function(it,i){
     return '<div class="matrow'+(it.d?' done':'')+'">'
       +'<input type="checkbox" '+(it.d?'checked':'')+' onchange="setItem('+i+',\'d\',this.checked)">'
-      +(it.pid?'<span class="mt-link" title="在庫品とリンク">📦</span>':'')
+      +(it.pid?'<span class="mt-link" title="在庫品とリンク"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>':'')
       +'<button class="mdel" onclick="delItem('+i+')">×</button>'
       +'<input class="mt-name" placeholder="材料名" value="'+esc(it.n||'')+'" oninput="setItem('+i+',\'n\',this.value)">'
       +'<div class="mt-row2">'
