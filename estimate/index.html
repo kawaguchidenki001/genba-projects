@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 3 estimate (2026-06-14) AI見積もりOCR追加（GAS内蔵Gemini） -->
+<!-- version 4 estimate (2026-06-14) AI見積もりOCRをfetch+POST方式に変更（画像URL長エラー対策） -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -308,6 +308,16 @@ function callGAS(params,secretOverride,silent){return new Promise(function(resol
   if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
   sc.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
   sc.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(sc);
+});}
+// 大きなデータ（画像など）はURLに乗らないため fetch+POST で送る
+function callGASPost(params,silent){return new Promise(function(resolve,reject){
+  if(!silent)showLoad();
+  var body=Object.assign({secret:admTok()},params);
+  // GASのCORS制約を避けるため text/plain で送る（プリフライト回避）
+  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
+    .then(function(r){return r.json();})
+    .then(function(res){if(!silent)hideLoad();resolve(res);})
+    .catch(function(e){if(!silent)hideLoad();reject(new Error('通信エラー: '+e.message));});
 });}
 function go(id){var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
 
@@ -708,7 +718,7 @@ function doAiOcr(){
   var resEl=document.getElementById('aiResult');
   resEl.style.display='none';resEl.textContent='';
   showLoad('AIが見積書を読み取り中…');
-  callGAS({action:'aiOcr',base64:_aiBase64,mime:_aiMime},null,true)
+  callGASPost({action:'aiOcr',base64:_aiBase64,mime:_aiMime},true)
     .then(function(res){
       hideLoad();
       btn.textContent='AIで読み取る';
