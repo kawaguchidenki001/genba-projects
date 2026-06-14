@@ -99,14 +99,7 @@
   <div class="welcome" id="welcome">
     <div class="wi">🤖</div>
     <h2>何でも聞いてください</h2>
-    <p>調べもの・文章作成・計算・アイデア出し<br>なんでもお答えします。</p>
-    <div class="suggestions">
-      <span class="sug" onclick="sendSug(this)">丁寧なお礼のメール文を作って</span>
-      <span class="sug" onclick="sendSug(this)">消費税の計算方法を教えて</span>
-      <span class="sug" onclick="sendSug(this)">会議の議事録のまとめ方は？</span>
-      <span class="sug" onclick="sendSug(this)">わかりやすい文章を書くコツ</span>
-      <span class="sug" onclick="sendSug(this)">明日の段取りを整理したい</span>
-    </div>
+    <p>調べ物はなんでもお答えします。</p>
   </div>
 </div>
 
@@ -326,14 +319,7 @@ function clearChat() {
   w.className = 'welcome';
   w.id = 'welcome';
   w.innerHTML = '<div class="wi">🤖</div><h2>何でも聞いてください</h2>'
-    + '<p>調べもの・文章作成・計算・アイデア出し<br>なんでもお答えします。</p>'
-    + '<div class="suggestions">'
-    + '<span class="sug" onclick="sendSug(this)">丁寧なお礼のメール文を作って</span>'
-    + '<span class="sug" onclick="sendSug(this)">消費税の計算方法を教えて</span>'
-    + '<span class="sug" onclick="sendSug(this)">会議の議事録のまとめ方は？</span>'
-    + '<span class="sug" onclick="sendSug(this)">わかりやすい文章を書くコツ</span>'
-    + '<span class="sug" onclick="sendSug(this)">明日の段取りを整理したい</span>'
-    + '</div>';
+    + '<p>調べ物はなんでもお答えします。</p>';
   msgs.appendChild(w);
   showErr('');
   showToast('会話をリセットしました');
