@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- translate version 2 (2026-06-15) 修正：①音声入力の二重加算バグ修正（処理済みresultのindex追跡）②翻訳のレスポンスキーをres.textに修正（GASの実キーに合わせる） -->
+<!-- translate version 4 (2026-06-15) 訳文の読み上げボタンを追加（Web Speech APIのspeechSynthesis・ブラウザ標準・無料）。読み上げ言語は訳文言語に追従。非対応ブラウザは自動非表示 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -86,6 +86,14 @@
   .util-btn:hover{color:var(--accent-d);}
   .util-btn:disabled{opacity:.4;cursor:not-allowed;}
 
+  /* 読み上げ（v4追加） */
+  .speak-row{display:flex;justify-content:center;margin-top:10px;}
+  .speak-btn{display:flex;align-items:center;gap:9px;padding:12px 22px;border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);font-weight:700;font-size:14.5px;cursor:pointer;}
+  .speak-btn:active{box-shadow:var(--well);}
+  .speak-btn:disabled{opacity:.45;cursor:not-allowed;}
+  .speak-btn svg{width:19px;height:19px;}
+  .speak-btn.speaking{background:#ef4444;color:#fff;animation:micpulse 1.2s ease-in-out infinite;}
+
   /* ヘルプ */
   .hint{margin-top:18px;background:var(--bg);border-radius:14px;box-shadow:var(--rise-sm);padding:13px 15px;font-size:12.5px;color:var(--sub);line-height:1.8;}
   .hint b{color:var(--accent-d);}
@@ -104,7 +112,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v4</div>
 
 <header>
   <div class="hbar">
@@ -156,6 +164,14 @@
   <div class="sec-lbl"><span>訳文（手入力で修正できます）</span><span class="cnt" id="dstCnt">0 文字</span></div>
   <div class="ta-wrap">
     <textarea id="dstText" placeholder="ここに翻訳結果が出ます"></textarea>
+  </div>
+
+  <!-- 読み上げ -->
+  <div class="speak-row">
+    <button class="speak-btn" id="speakBtn" onclick="toggleSpeak()" aria-label="訳文を読み上げ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg>
+      <span id="speakLbl">訳文を読み上げ</span>
+    </button>
   </div>
 
   <!-- 補助 -->
@@ -303,34 +319,28 @@ function setMicUI(on){
 function startMic(){
   if(!SR){toast('音声認識に非対応のブラウザです');return;}
   userStopped=false;
-  baseText = srcText.value ? (srcText.value.replace(/\s+$/,'')+' ') : '';
+  // 録音開始時点の原文を初期テキストとして保持
+  var existing = srcText.value || '';
+  var initialText = existing ? (existing.replace(/\s+$/,'') + ' ') : '';
   // 原文言語に追従（ja→ja-JP、en→en-US、…）
   var lc=srcLang.value;
   var lo=LANGS.find?LANGS.find(function(x){return x.code===lc;}):null;
   if(!lo){for(var i=0;i<LANGS.length;i++)if(LANGS[i].code===lc){lo=LANGS[i];break;}}
   rec=new SR(); rec.lang=(lo&&lo.sr)||'ja-JP'; rec.interimResults=true; rec.continuous=true;
-  // 処理済みresultのindex追跡（二重加算防止）
-  var processedFinal={};
   rec.onresult=function(e){
-    var fin='',intr='';
+    // 毎回完全置換（差分加算しない＝二重化を防ぐ）
+    var allFinal='', allInterim='';
     for(var i=0;i<e.results.length;i++){
       var t=e.results[i][0].transcript;
-      if(e.results[i].isFinal){
-        if(!processedFinal[i]){
-          fin+=t;
-          processedFinal[i]=true;
-        }
-      } else {
-        intr+=t;
-      }
+      if(e.results[i].isFinal) allFinal+=t;
+      else allInterim+=t;
     }
-    if(fin){ baseText = baseText + fin; }
-    srcText.value = baseText + intr;
+    srcText.value = initialText + allFinal + allInterim;
     updateCnt();
   };
   rec.onend=function(){
     if(!userStopped && recording){
-      processedFinal={};
+      initialText = srcText.value ? (srcText.value.replace(/\s+$/,'') + ' ') : '';
       try{ rec.start(); return; }catch(e){}
     }
     recording=false; setMicUI(false); saveLocal();
@@ -469,6 +479,64 @@ function doSms(){
   var url=/iPhone|iPad|iPod/.test(ua) ? 'sms:&body='+body : 'sms:?body='+body;
   location.href=url;
 }
+
+/* ========== 訳文の読み上げ（speechSynthesis・ブラウザ標準・無料） ========== */
+var speakBtn=document.getElementById('speakBtn');
+var speakLbl=document.getElementById('speakLbl');
+var speaking=false;
+var synth = window.speechSynthesis;
+if(!synth){
+  if(speakBtn) speakBtn.style.display='none';
+}
+function setSpeakUI(on){
+  speaking=on;
+  if(!speakBtn)return;
+  if(on){ speakBtn.classList.add('speaking'); speakLbl.textContent='読み上げ中…タップで停止'; }
+  else { speakBtn.classList.remove('speaking'); speakLbl.textContent='訳文を読み上げ'; }
+}
+function toggleSpeak(){
+  if(!synth){toast('このブラウザは読み上げに非対応です');return;}
+  if(speaking){ synth.cancel(); setSpeakUI(false); return; }
+  var t=(dstText.value||'').trim();
+  if(!t){toast('訳文がありません');return;}
+  // 録音中なら停止（マイク競合を避ける）
+  if(typeof recording!=='undefined' && recording && typeof stopMic==='function'){ stopMic(); }
+  // 訳文言語に該当する音声を探す
+  var lc=dstLang.value;
+  var lo=null;
+  for(var i=0;i<LANGS.length;i++){ if(LANGS[i].code===lc){ lo=LANGS[i]; break; } }
+  var bcp=(lo&&lo.sr)||'ja-JP';
+  var voices=synth.getVoices()||[];
+  var voice=null;
+  for(var j=0;j<voices.length;j++){ if(voices[j].lang===bcp){ voice=voices[j]; break; } }
+  if(!voice){
+    var prefix=bcp.split('-')[0];
+    for(var k=0;k<voices.length;k++){ if(voices[k].lang.toLowerCase().indexOf(prefix.toLowerCase())===0){ voice=voices[k]; break; } }
+  }
+  if(!voice && voices.length>0){
+    toast('この言語の音声が端末にありません。標準の声で読みます');
+  }
+  var u=new SpeechSynthesisUtterance(t);
+  u.lang=bcp;
+  if(voice) u.voice=voice;
+  u.rate=1.0; u.pitch=1.0; u.volume=1.0;
+  u.onend=function(){ setSpeakUI(false); };
+  u.onerror=function(e){
+    setSpeakUI(false);
+    if(e.error==='not-allowed'){ toast('読み上げが許可されていません'); }
+    else if(e.error==='language-unavailable'||e.error==='voice-unavailable'){ toast('この言語の音声に対応していません'); }
+    else { toast('読み上げに失敗しました'); }
+  };
+  synth.cancel();
+  synth.speak(u);
+  setSpeakUI(true);
+}
+// voicesは非同期読み込み（特にChrome）。先読みしておく
+if(synth && synth.getVoices){
+  try{ synth.getVoices(); }catch(e){}
+  if('onvoiceschanged' in synth){ synth.onvoiceschanged=function(){}; }
+}
+window.addEventListener('beforeunload',function(){ if(synth) synth.cancel(); });
 
 updateCnt();
 </script>
