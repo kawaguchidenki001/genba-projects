@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- admin version 48 (2026-06-15) v47で追加した会社情報フォームの入れ物が .card(display:flex)で横一列に潰れていたのを修正。普通の縦並びブロック(背景/角丸/影は維持)に変更。保存ボタンも横幅100%に。機能(estData読込/saveSettings保存)は不変・GAS変更なし。 -->
 <!-- admin version 47 (2026-06-15) 自社設定タブに会社情報(7項目:住所/電話/FAX/インボイス番号/振込先/見積有効日数/支払条件)の編集フォームを追加。既存GASの estData で読込・saveSettings で保存(GAS変更なし)。switchTab(company)初回表示時に読込。見積から会社情報を移設する第1段階。 -->
 <!-- admin version 46 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- admin version 45 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。操作行hd2は保持。更新はloadAll()。機能・id不変 -->
@@ -126,7 +127,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v47</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v48</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -195,7 +196,7 @@
   <!-- 自社設定タブ -->
   <div id="sec-company" style="display:none;">
       <div class="sec">会社情報（見積・請求書に印字されます）</div>
-      <div class="card" style="margin-bottom:14px;">
+      <div style="background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:14px 16px 12px;margin-bottom:14px;">
         <div class="fld"><label>会社住所</label><input id="ci_addr" placeholder="例）岐阜県岐阜市〇〇町1-2-3"></div>
         <div class="two">
           <div class="fld"><label>会社電話</label><input id="ci_tel" inputmode="tel" placeholder="例）058-000-0000"></div>
