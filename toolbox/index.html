@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 62 (2026-06-15) かんたん方式のUI調整：撮影前は黒いプレビュー枠(bcamWrap)を非表示にし、説明文(枠外)＋「写真を撮る」のみ表示。撮影後は枠を表示し写真＋黒板プレビュー。「撮り直す」ボタンをflex:0 0 38%に縮小し「この写真で保存」を主ボタン化。撮影後bovは枠表示後にsetTimeout(30)で描画し位置ずれ防止。 -->
+<!-- toolbox version 63 (2026-06-15) 虫眼鏡にも「撮影方式」切替を追加（ライブ／かんたん）。かんたん方式=端末標準カメラで撮影(magFileInput capture)→撮った写真をmagZoomerに表示し既存のCSS拡大(magSetZoom)で拡大。生映像が映らない機種(Galaxy A21等)でも拡大鏡が使える。選択方式はlocalStorage(magCamMode)で保持。ライブ専用UI(止める/高画質/ライト/ピント説明)はかんたんで非表示。applyMagModeはstopMag後に再起動し二重起動防止。 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -330,7 +330,7 @@
   .citem .micbtn{position:static;transform:none;width:32px;height:32px;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v62</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v63</div>
 
 <div class="wrap">
 
@@ -625,25 +625,37 @@
       <span class="back2" onclick="magBack()">← ツールボックス</span>
       <h2>虫眼鏡</h2>
     </div>
+    <div class="bmode-row" id="magModeRow" style="display:flex;gap:8px;align-items:center;padding:8px 4px 0;">
+      <span style="font-size:13px;color:#555;white-space:nowrap;">撮影方式</span>
+      <button type="button" id="magModeLive" onclick="magSetMode('live')" style="flex:1;padding:8px;border-radius:8px;border:1px solid #1a8c78;font-weight:700;cursor:pointer;background:#1a8c78;color:#fff;">ライブ</button>
+      <button type="button" id="magModeEasy" onclick="magSetMode('easy')" style="flex:1;padding:8px;border-radius:8px;border:1px solid #1a8c78;font-weight:700;cursor:pointer;background:#fff;color:#1a8c78;">かんたん</button>
+    </div>
+    <div id="magModeNote" class="enote" style="margin:6px 2px 0;"></div>
     <div class="mag-stage" id="magStage" onclick="magTapFocus()">
       <div class="mag-zoomer" id="magZoomer">
         <video id="magVideo" autoplay playsinline muted></video>
         <canvas id="magCanvas" style="display:none;"></canvas>
+        <img id="magPhoto" alt="" style="display:none;width:100%;height:100%;object-fit:contain;background:#000;">
       </div>
       <div class="mag-center"></div>
       <div class="mag-frozen-tag" id="magFrozenTag"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="7" y="5" width="3.6" height="14" rx="1.2"/><rect x="13.4" y="5" width="3.6" height="14" rx="1.2"/></svg>固定中</div>
     </div>
-    <div class="mag-zoombar">
+    <div id="magEasyPrompt" style="display:none;padding:30px 16px;text-align:center;color:#555;font-size:15px;line-height:1.7;background:#eef3f2;border-radius:14px;margin:0 0 10px;">下の<b style="color:#1a8c78;">「写真を撮る」</b>ボタンで撮影してください。<br>撮った写真を、下の大きさスライダーで拡大できます。</div>
+    <div class="mag-zoombar" id="magZoombar">
       <label>大きさ</label>
       <input type="range" id="magZoomRange" min="1" max="6" step="0.1" value="2" oninput="magSetZoom(this.value)">
       <span class="mag-zoomval" id="magZoomVal">2.0倍</span>
     </div>
-    <div class="mag-btns">
+    <div class="mag-btns" id="magLiveBtns">
       <button class="mag-btn freeze" id="magFreezeBtn" onclick="magToggleFreeze()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="7" y="5" width="3.6" height="14" rx="1.2"/><rect x="13.4" y="5" width="3.6" height="14" rx="1.2"/></svg>止める</button>
       <button class="mag-btn hq" id="magHQBtn" onclick="magHQCapture()" style="display:none;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>高画質</button>
       <button class="mag-btn torch" id="magTorchBtn" onclick="magToggleTorch()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M9.2 18h5.6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.8 10.7c.6.6.9 1 .9 2.3h5.8c0-1.3.3-1.7.9-2.3A6 6 0 0 0 12 3Z"/></svg>ライト</button>
     </div>
-    <div class="mag-hint">ピントが甘いときは、カメラを<b>15〜20cm離す</b>か<b>画面をタップ</b>してください。<br><b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>高画質</b>を押すと、内蔵カメラに近い解像度で固定できます（対応機種のみ）。</div>
+    <div class="mag-btns" id="magEasyBtns" style="display:none;">
+      <button class="mag-btn" id="magEasyShootBtn" onclick="magEasyShoot()" style="background:#d97b12;color:#fff;flex:1;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg><span id="magEasyShootLbl">写真を撮る</span></button>
+    </div>
+    <input type="file" id="magFileInput" accept="image/*" capture="environment" style="display:none;" onchange="magEasyPicked(this)">
+    <div class="mag-hint" id="magHint">ピントが甘いときは、カメラを<b>15〜20cm離す</b>か<b>画面をタップ</b>してください。<br><b><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>高画質</b>を押すと、内蔵カメラに近い解像度で固定できます（対応機種のみ）。</div>
   </div>
 
   <div class="pane" id="p-board">
@@ -2059,7 +2071,7 @@ function openTool(k){
   if(k==='memo'||k==='check'||k==='mat'){ curTool=k; siteFilter=''; refreshProjects(); refreshCurList(); return; }
   if(k==='board'){ curTool=k; openBoardCamera(); return; }
   if(k==='rec'){ curTool=k; openRecorder(); return; }
-  if(k==='mag'){ go('p-mag'); startMag(); return; }
+  if(k==='mag'){ go('p-mag'); applyMagMode(); return; }
   go('p-'+k);
 }
 function toolName(k){return {memo:'現場メモ',check:'チェックリスト',draw:'手書きメモ',rec:'録音機',board:'小黒板カメラ',elec:'電気計算機',area:'面積計算',meas:'面積計算',mat:'材料リスト',rem:'忘れ物メモ',book:'工事手帳',mag:'虫眼鏡'}[k]||k;}
@@ -2792,6 +2804,59 @@ function tbPost(obj){obj.secret=T_GENERAL;return fetch(GAS_URL,{method:'POST',mo
 
 /* ===== 虫眼鏡 ===== */
 var magStream=null, magTrack=null, magFrozen=false, magTorchOn=false;
+/* ===== 虫眼鏡 撮影方式（ライブ／かんたん）切り替え・v63追加 ===== */
+var magMode=(function(){try{return tbGet('magCamMode','live');}catch(e){return 'live';}})();
+var magEasyState='empty';
+var magEasyImg=null;
+function applyMagUI(){
+  var live=(magMode==='live'), shot=(magEasyState==='shot');
+  function show(id,on){var e=document.getElementById(id);if(e)e.style.display=on?'':'none';}
+  show('magStage', live||shot);
+  show('magZoombar', live||shot);
+  show('magHint', live);
+  show('magLiveBtns', live);
+  show('magEasyBtns', !live);
+  show('magEasyPrompt', (!live)&&(!shot));
+  var vid=document.getElementById('magVideo'); if(vid)vid.style.display=live?'block':'none';
+  var ph=document.getElementById('magPhoto'); if(ph)ph.style.display=((!live)&&shot)?'block':'none';
+  var lbl=document.getElementById('magEasyShootLbl'); if(lbl)lbl.textContent=shot?'撮り直す':'写真を撮る';
+  var ml=document.getElementById('magModeLive'),me=document.getElementById('magModeEasy');
+  if(ml){ml.style.background=live?'#1a8c78':'#fff';ml.style.color=live?'#fff':'#1a8c78';}
+  if(me){me.style.background=live?'#fff':'#1a8c78';me.style.color=live?'#1a8c78':'#fff';}
+  var note=document.getElementById('magModeNote');
+  if(note)note.textContent=live
+    ?'生映像を拡大します。一部の機種で映像が出ない場合は「かんたん」に切り替えてください。'
+    :'端末のカメラで撮影し、その写真を拡大して見ます。どの機種でも動作します。';
+}
+function magSetMode(m){
+  if(m!=='live'&&m!=='easy')m='live';
+  magMode=m; try{tbSet('magCamMode',m);}catch(e){}
+  applyMagMode();
+}
+function applyMagMode(){
+  stopMag();
+  magEasyState='empty';
+  applyMagUI();
+  if(magMode==='live'){ startMag(); }
+}
+function magEasyShoot(){ var fi=document.getElementById('magFileInput'); if(fi){fi.value='';fi.click();} }
+function magEasyPicked(input){
+  var f=input&&input.files&&input.files[0];
+  if(input)input.value='';
+  if(!f)return;
+  var img=new Image();
+  img.onload=function(){
+    magEasyImg=img;
+    var ph=document.getElementById('magPhoto');
+    if(ph)ph.src=img.src;
+    magEasyState='shot';
+    applyMagUI();
+    var zr=document.getElementById('magZoomRange');
+    magSetZoom(zr?zr.value:2);
+  };
+  img.onerror=function(){toast('写真の読み込みに失敗しました');};
+  img.src=URL.createObjectURL(f);
+}
 function startMag(){
   magFrozen=false; magTorchOn=false;
   var c=document.getElementById('magCanvas'), v=document.getElementById('magVideo');
@@ -2839,6 +2904,8 @@ function stopMag(){
   if(magStream){magStream.getTracks().forEach(function(t){t.stop();});magStream=null;}
   magTrack=null; magTorchOn=false;
   var v=document.getElementById('magVideo'); if(v)v.srcObject=null;
+  var ph=document.getElementById('magPhoto'); if(ph){ if(ph.src&&ph.src.indexOf('blob:')===0){try{URL.revokeObjectURL(ph.src);}catch(e){}} ph.removeAttribute('src'); ph.style.display='none'; }
+  magEasyImg=null;
 }
 function magBack(){stopMag();go('p-home');}
 function magSetZoom(val){
