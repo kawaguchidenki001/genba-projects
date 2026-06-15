@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- admin version 51 (2026-06-16) 会社情報に「会社名の上の行(業種・キャッチ)」「会社名の下の行(代表者・役職)」を追加。社判イメージに合わせPDFで会社名の上下に印字。save/loadに社名上段・社名下段を追加。GAS変更あり(v84)。 -->
 <!-- admin version 50 (2026-06-16) 会社情報に「会社名」「郵便番号」入力欄を追加(住所の前)。保存成功時に loadCompanyInfo(true) で実際の保存値を再表示し、保存できたか確認できるように。会社名はPDFが既に印字する作りのため保存すれば反映。GAS変更なし。 -->
 <!-- admin version 49 (2026-06-16) 会社情報の自動読み込みが、入力途中の欄を空で上書きしてしまう不具合(estData遅延とのタイミング競合)を修正。loadCompanyInfoのprefillを「空欄のみ補完(if !el.value)」に変更。これで電話/FAX等を入力中に読込が返っても消えない。機能・GAS変更なし。 -->
 <!-- admin version 48 (2026-06-15) v47で追加した会社情報フォームの入れ物が .card(display:flex)で横一列に潰れていたのを修正。普通の縦並びブロック(背景/角丸/影は維持)に変更。保存ボタンも横幅100%に。機能(estData読込/saveSettings保存)は不変・GAS変更なし。 -->
@@ -129,7 +130,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v50</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v51</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -199,7 +200,9 @@
   <div id="sec-company" style="display:none;">
       <div class="sec">会社情報（見積・請求書に印字されます）</div>
       <div style="background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:14px 16px 12px;margin-bottom:14px;">
-        <div class="fld"><label>会社名</label><input id="ci_name" placeholder="例）河口電機"></div>
+        <div class="fld"><label>会社名の上の行（業種・キャッチ等）</label><input id="ci_above" placeholder="例）電気設備工事　設計・施工"></div>
+        <div class="fld"><label>会社名</label><input id="ci_name" placeholder="例）河口電機株式会社"></div>
+        <div class="fld"><label>会社名の下の行（代表者・役職等）</label><input id="ci_below" placeholder="例）代表取締役　河口 安男"></div>
         <div class="fld"><label>郵便番号</label><input id="ci_zip" inputmode="numeric" placeholder="例）501-0000"></div>
         <div class="fld"><label>会社住所</label><input id="ci_addr" placeholder="例）岐阜県岐阜市〇〇町1-2-3"></div>
         <div class="two">
@@ -513,7 +516,7 @@ function loadCompanyInfo(force){
   callGAS({action:'estData'},null,true).then(function(d){
     if(d&&d.ok){
       var st=d.settings||{};
-      var map={ci_name:'会社名',ci_zip:'会社郵便番号',ci_addr:'会社住所',ci_tel:'会社電話',ci_fax:'会社FAX',ci_inv:'インボイス登録番号',ci_bank:'振込先',ci_valid:'見積有効日数',ci_cond:'支払条件'};
+      var map={ci_above:'社名上段',ci_name:'会社名',ci_below:'社名下段',ci_zip:'会社郵便番号',ci_addr:'会社住所',ci_tel:'会社電話',ci_fax:'会社FAX',ci_inv:'インボイス登録番号',ci_bank:'振込先',ci_valid:'見積有効日数',ci_cond:'支払条件'};
       Object.keys(map).forEach(function(id){var el=document.getElementById(id);if(el&&(force||!el.value))el.value=(st[map[id]]!=null?st[map[id]]:(id==='ci_valid'?'30':''));});
       ciLoaded=true;
     }
@@ -521,7 +524,9 @@ function loadCompanyInfo(force){
 }
 function saveCompanyInfo(){
   var data={
+    '社名上段':document.getElementById('ci_above').value.trim(),
     '会社名':document.getElementById('ci_name').value.trim(),
+    '社名下段':document.getElementById('ci_below').value.trim(),
     '会社郵便番号':document.getElementById('ci_zip').value.trim(),
     '会社住所':document.getElementById('ci_addr').value.trim(),
     '会社電話':document.getElementById('ci_tel').value.trim(),
