@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<!-- translate version 1 (2026-06-15) AI翻訳画面。日本語↔英/越/中/韓/葡/タイ。音声入力・言語切替・コピー/LINE/メール/SMS送信。GAS側変更なし（aiChat流用） -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI翻訳｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
+    --accent:#f97316;--accent-d:#ea580c;
+    --grad:linear-gradient(92deg,#fb923c 10%,#ea580c 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+    --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16px;line-height:1.55;padding-bottom:30px;}
+  a,button,select,input,textarea{font-family:inherit;}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;box-shadow:0 6px 14px -10px rgba(249,115,22,.4);}
+  .hbar{display:flex;align-items:center;gap:11px;max-width:680px;margin:0 auto;}
+  .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.06em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:9px 14px;text-decoration:none;white-space:nowrap;}
+  .back:active{box-shadow:var(--well);}
+  .hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:11px;min-width:0;}
+  .hric{width:44px;height:44px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hric svg{width:23px;height:23px;}
+  .htxt{flex:0 1 auto;min-width:0;text-align:center;}
+  .htxt .en{font-family:"Manrope",sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .htxt .nm{font-weight:700;font-size:19.5px;color:var(--ink);display:block;line-height:1.2;}
+  .hright{flex:0 0 auto;display:flex;align-items:center;gap:9px;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:15px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  main{padding:14px;max-width:680px;margin:0 auto;}
+
+  /* 言語選択行 */
+  .lang-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .lang-card{flex:1;background:var(--bg);border-radius:13px;box-shadow:var(--well-soft);padding:9px 13px;display:flex;flex-direction:column;align-items:center;gap:3px;min-width:0;}
+  .lang-card .lbl{font-size:10.5px;color:var(--sub);font-weight:700;letter-spacing:.06em;}
+  .lang-card select{border:none;background:transparent;color:var(--ink);font-weight:700;font-size:15.5px;width:100%;text-align:center;text-align-last:center;}
+  .lang-card select:focus{outline:none;}
+  .swap-btn{flex:0 0 auto;width:42px;height:42px;border-radius:50%;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .swap-btn:active{box-shadow:var(--well);transform:rotate(180deg);transition:transform .25s;}
+  .swap-btn svg{width:20px;height:20px;}
+
+  /* テキスト欄（共通） */
+  .ta-wrap{position:relative;margin-bottom:10px;}
+  .ta-wrap textarea{width:100%;min-height:22vh;padding:14px;padding-right:54px;border:none;border-radius:14px;background:var(--bg);box-shadow:var(--well);color:var(--ink);font-size:16px;line-height:1.7;resize:vertical;font-family:inherit;}
+  .ta-wrap textarea:focus{outline:none;}
+  .ta-wrap textarea[readonly]{background:var(--bg);color:var(--ink);}
+  .mic-btn{position:absolute;right:9px;bottom:10px;width:38px;height:38px;border-radius:50%;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .mic-btn:active{box-shadow:var(--well);}
+  .mic-btn svg{width:18px;height:18px;}
+  .mic-btn.recording{background:#ef4444;color:#fff;animation:micpulse 1.1s ease-in-out infinite;}
+  .mic-btn[disabled]{opacity:.4;cursor:not-allowed;}
+  @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5);}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}
+
+  /* 翻訳ボタン */
+  .go-row{display:flex;justify-content:center;margin:14px 0;}
+  .go-btn{padding:14px 38px;border:none;border-radius:999px;background:var(--accent);color:#fff;font-weight:800;font-size:15.5px;letter-spacing:.04em;box-shadow:0 6px 14px -5px rgba(249,115,22,.55);cursor:pointer;display:flex;align-items:center;gap:8px;}
+  .go-btn:active{box-shadow:var(--well);}
+  .go-btn:disabled{opacity:.55;cursor:not-allowed;}
+  .go-btn svg{width:18px;height:18px;}
+
+  /* セクション見出し */
+  .sec-lbl{font-size:13px;color:var(--sub);font-weight:700;margin:6px 4px 6px;letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between;}
+  .sec-lbl .cnt{font-size:11.5px;color:var(--sub);font-weight:600;font-variant-numeric:tabular-nums;}
+
+  /* 送信先（4分割） */
+  .send-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;}
+  .send-btn{padding:14px 6px;border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--ink);font-weight:700;font-size:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;}
+  .send-btn:active{box-shadow:var(--well);}
+  .send-btn svg{width:24px;height:24px;}
+  .send-btn .nm{font-size:12px;font-weight:700;}
+  .send-btn:disabled{opacity:.4;cursor:not-allowed;}
+  .b-cp{color:#475569;} .b-cp svg{color:#475569;}
+  .b-ln{color:#06c755;} .b-ln svg{color:#06c755;}
+  .b-ml{color:#2563eb;} .b-ml svg{color:#2563eb;}
+  .b-sm{color:#f97316;} .b-sm svg{color:#f97316;}
+
+  /* 補助 */
+  .util-row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;}
+  .util-btn{padding:7px 12px;border:none;border-radius:999px;background:transparent;color:var(--sub);font-size:12px;font-weight:700;cursor:pointer;}
+  .util-btn:hover{color:var(--accent-d);}
+  .util-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* ヘルプ */
+  .hint{margin-top:18px;background:var(--bg);border-radius:14px;box-shadow:var(--rise-sm);padding:13px 15px;font-size:12.5px;color:var(--sub);line-height:1.8;}
+  .hint b{color:var(--accent-d);}
+
+  /* AI処理中 */
+  .busy{position:fixed;inset:0;background:rgba(232,236,242,.7);backdrop-filter:blur(2px);z-index:50;display:none;align-items:center;justify-content:center;}
+  .busy.show{display:flex;}
+  .busy-box{background:var(--bg);box-shadow:var(--rise);border-radius:16px;padding:20px 26px;display:flex;align-items:center;gap:14px;color:var(--accent-d);font-weight:700;font-size:14px;}
+  .spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:sp .9s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:30px;z-index:80;background:#1f3a52;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 20px rgba(31,58,82,.3);max-width:90vw;text-align:center;}
+  .toast.show{opacity:1;}
+  .err-bar{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:10px 12px;border-radius:10px;font-size:13px;margin-top:10px;display:none;}
+  .err-bar.show{display:block;}
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1</div>
+
+<header>
+  <div class="hbar">
+    <a class="back" href="../aitools/">← AIツール</a>
+    <div class="hcenter">
+      <span class="hric"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h10M9 3v2M5 5c0 4 3 8 7 8M14 13c-2 3-5 5-9 6"/><path d="m13 21 4-10 4 10M14.5 17h5"/></svg></span>
+      <div class="htxt"><span class="en">Translate</span><span class="nm">AI翻訳</span></div>
+    </div>
+    <div class="hright"><span class="hmark">Gen-Can</span></div>
+  </div>
+</header>
+
+<main>
+  <!-- 言語選択 -->
+  <div class="lang-row">
+    <div class="lang-card">
+      <span class="lbl">原文</span>
+      <select id="srcLang"></select>
+    </div>
+    <button class="swap-btn" onclick="swapLang()" aria-label="言語入れ替え" title="言語入れ替え">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h13l-3-3M21 17H8l3 3"/></svg>
+    </button>
+    <div class="lang-card">
+      <span class="lbl">訳文</span>
+      <select id="dstLang"></select>
+    </div>
+  </div>
+
+  <!-- 原文入力 -->
+  <div class="sec-lbl"><span>原文（テキスト入力または音声入力）</span><span class="cnt" id="srcCnt">0 文字</span></div>
+  <div class="ta-wrap">
+    <textarea id="srcText" placeholder="ここに原文を入れる（または右下のマイクで話す）"></textarea>
+    <button class="mic-btn" id="micBtn" onclick="toggleMic()" aria-label="音声入力" title="音声入力">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg>
+    </button>
+  </div>
+
+  <div class="err-bar" id="errBar"></div>
+
+  <!-- 翻訳ボタン -->
+  <div class="go-row">
+    <button class="go-btn" id="goBtn" onclick="doTranslate()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      翻訳する
+    </button>
+  </div>
+
+  <!-- 訳文 -->
+  <div class="sec-lbl"><span>訳文（手入力で修正できます）</span><span class="cnt" id="dstCnt">0 文字</span></div>
+  <div class="ta-wrap">
+    <textarea id="dstText" placeholder="ここに翻訳結果が出ます"></textarea>
+  </div>
+
+  <!-- 補助 -->
+  <div class="util-row">
+    <button class="util-btn" onclick="clearAll()">クリア</button>
+  </div>
+
+  <!-- 送信先 -->
+  <div class="sec-lbl" style="margin-top:14px;">送信先（訳文を共有）</div>
+  <div class="send-row">
+    <button class="send-btn b-cp" onclick="doCopy()" aria-label="コピー">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
+      <span class="nm">コピー</span>
+    </button>
+    <button class="send-btn b-ln" onclick="doLine()" aria-label="LINE">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.7 8.7 0 0 1-4-1l-5 1 1-5a8.4 8.4 0 0 1-1-4 8.4 8.4 0 0 1 8.5-8.5 8.4 8.4 0 0 1 8.5 8.5z"/></svg>
+      <span class="nm">LINE</span>
+    </button>
+    <button class="send-btn b-ml" onclick="doMail()" aria-label="メール">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+      <span class="nm">メール</span>
+    </button>
+    <button class="send-btn b-sm" onclick="doSms()" aria-label="SMS">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-12 7l-5 2 1.6-4.6A8 8 0 1 1 21 12z"/></svg>
+      <span class="nm">SMS</span>
+    </button>
+  </div>
+
+  <div class="hint">
+    <b>使い方</b><br>
+    ① 上の言語選択で「原文」と「訳文」の言語を選ぶ（⇅で入れ替え）<br>
+    ② 原文を入力（テキスト or 右下マイクで話す）<br>
+    ③「翻訳する」をタップ → 訳文が出る（必要なら手直し可）<br>
+    ④ コピー／LINE／メール／SMS で訳文を共有
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="busy" id="busy"><div class="busy-box"><div class="spin"></div><span>翻訳中…</span></div></div>
+
+<script>
+/* ========== 設定 ========== */
+var API_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var SECRET='kawaguchi-genba-2026';
+var CACHE_KEY='genba_translate_state';
+
+/* 対応言語（codeはBCP-47 / nameは表示） */
+var LANGS=[
+  {code:'ja',name:'日本語',sr:'ja-JP'},
+  {code:'en',name:'English（英語）',sr:'en-US'},
+  {code:'vi',name:'Tiếng Việt（ベトナム語）',sr:'vi-VN'},
+  {code:'zh',name:'中文（中国語）',sr:'zh-CN'},
+  {code:'ko',name:'한국어（韓国語）',sr:'ko-KR'},
+  {code:'pt',name:'Português（ポルトガル語）',sr:'pt-BR'},
+  {code:'th',name:'ไทย（タイ語）',sr:'th-TH'},
+];
+
+/* ========== 要素 ========== */
+var srcLang=document.getElementById('srcLang');
+var dstLang=document.getElementById('dstLang');
+var srcText=document.getElementById('srcText');
+var dstText=document.getElementById('dstText');
+var srcCnt=document.getElementById('srcCnt');
+var dstCnt=document.getElementById('dstCnt');
+var micBtn=document.getElementById('micBtn');
+var goBtn=document.getElementById('goBtn');
+var errBar=document.getElementById('errBar');
+
+/* ========== 言語セレクト初期化 ========== */
+function buildLangOptions(){
+  LANGS.forEach(function(l){
+    var o1=document.createElement('option'); o1.value=l.code; o1.textContent=l.name; srcLang.appendChild(o1);
+    var o2=document.createElement('option'); o2.value=l.code; o2.textContent=l.name; dstLang.appendChild(o2);
+  });
+  // 既定：原文=日本語、訳文=英語
+  srcLang.value='ja';
+  dstLang.value='en';
+}
+buildLangOptions();
+
+/* ========== 共通UI ========== */
+var toastT;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
+function showErr(m){if(!m){errBar.classList.remove('show');errBar.textContent='';return;}errBar.textContent=m;errBar.classList.add('show');}
+function showBusy(){document.getElementById('busy').classList.add('show');}
+function hideBusy(){document.getElementById('busy').classList.remove('show');}
+function updateCnt(){srcCnt.textContent=(srcText.value||'').length+' 文字';dstCnt.textContent=(dstText.value||'').length+' 文字';}
+
+/* ========== 状態保存（言語選択・原文・訳文） ========== */
+function saveLocal(){
+  try{
+    localStorage.setItem(CACHE_KEY,JSON.stringify({
+      src:srcLang.value,dst:dstLang.value,
+      sText:srcText.value||'',dText:dstText.value||''
+    }));
+  }catch(e){}
+}
+function loadLocal(){
+  try{
+    var s=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+    if(!s)return;
+    if(s.src) srcLang.value=s.src;
+    if(s.dst) dstLang.value=s.dst;
+    if(s.sText) srcText.value=s.sText;
+    if(s.dText) dstText.value=s.dText;
+    updateCnt();
+  }catch(e){}
+}
+srcText.addEventListener('input',function(){updateCnt();saveLocal();});
+dstText.addEventListener('input',function(){updateCnt();saveLocal();});
+srcLang.addEventListener('change',saveLocal);
+dstLang.addEventListener('change',saveLocal);
+loadLocal();
+
+/* ========== 言語入れ替え ========== */
+function swapLang(){
+  var sv=srcLang.value, dv=dstLang.value;
+  if(sv===dv){toast('言語が同じです');return;}
+  srcLang.value=dv; dstLang.value=sv;
+  // テキストも入れ替え（原文→訳文へ、訳文→原文へ）
+  var sT=srcText.value, dT=dstText.value;
+  srcText.value=dT; dstText.value=sT;
+  updateCnt(); saveLocal();
+}
+
+/* ========== クリア ========== */
+function clearAll(){
+  if(!srcText.value && !dstText.value){toast('すでに空です');return;}
+  if(!confirm('原文と訳文をすべて消去しますか？'))return;
+  srcText.value=''; dstText.value=''; updateCnt(); saveLocal();
+  toast('クリアしました');
+}
+
+/* ========== 音声入力（原文欄のみ・継続録音・原文言語に追従） ========== */
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+var rec=null, recording=false, userStopped=false, baseText='';
+if(!SR){
+  micBtn.disabled=true;
+  micBtn.title='このブラウザは音声入力に非対応です';
+}
+function setMicUI(on){
+  if(on){micBtn.classList.add('recording');micBtn.title='タップで停止';}
+  else {micBtn.classList.remove('recording');micBtn.title='音声入力';}
+}
+function startMic(){
+  if(!SR){toast('音声認識に非対応のブラウザです');return;}
+  userStopped=false;
+  baseText = srcText.value ? (srcText.value.replace(/\s+$/,'')+' ') : '';
+  // 原文言語に追従（ja→ja-JP、en→en-US、…）
+  var lc=srcLang.value;
+  var lo=LANGS.find?LANGS.find(function(x){return x.code===lc;}):null;
+  if(!lo){for(var i=0;i<LANGS.length;i++)if(LANGS[i].code===lc){lo=LANGS[i];break;}}
+  rec=new SR(); rec.lang=(lo&&lo.sr)||'ja-JP'; rec.interimResults=true; rec.continuous=true;
+  rec.onresult=function(e){
+    var fin='',intr='';
+    for(var i=e.resultIndex;i<e.results.length;i++){
+      var t=e.results[i][0].transcript;
+      if(e.results[i].isFinal) fin+=t; else intr+=t;
+    }
+    if(fin){ baseText = baseText + fin; }
+    srcText.value = baseText + intr;
+    updateCnt();
+  };
+  rec.onend=function(){
+    if(!userStopped && recording){
+      try{ rec.start(); return; }catch(e){}
+    }
+    recording=false; setMicUI(false); saveLocal();
+  };
+  rec.onerror=function(e){
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+      showErr('マイクの使用が許可されていません');
+      userStopped=true; recording=false; setMicUI(false);
+    } else if(e.error==='no-speech'){
+      // 無音は無視
+    } else {
+      recording=false; setMicUI(false);
+    }
+  };
+  try{
+    rec.start(); recording=true; setMicUI(true); showErr('');
+  }catch(err){ recording=false; setMicUI(false); }
+}
+function stopMic(){ userStopped=true; if(rec){try{rec.stop();}catch(e){}} }
+function toggleMic(){
+  if(micBtn.disabled) return;
+  if(recording) stopMic(); else startMic();
+}
+
+/* ========== 翻訳実行（既存aiChat流用） ========== */
+function langName(code){
+  for(var i=0;i<LANGS.length;i++)if(LANGS[i].code===code)return LANGS[i].name;
+  return code;
+}
+function doTranslate(){
+  // 録音中は停止してから翻訳
+  if(recording) stopMic();
+  var text=(srcText.value||'').trim();
+  if(!text){toast('原文を入力してください');return;}
+  if(srcLang.value===dstLang.value){toast('原文と訳文の言語が同じです');return;}
+  if(text.length>3500){
+    if(!confirm('文字数が多いです（'+text.length+'文字）。翻訳に時間がかかります。続けますか？'))return;
+  }
+  var srcName=langName(srcLang.value);
+  var dstName=langName(dstLang.value);
+  // 翻訳プロンプト（前置きなし・訳文のみ）
+  var prompt='次の文を「'+srcName+'」から「'+dstName+'」に翻訳してください。建設業の現場で使う想定です。意味を変えずに自然な表現にしてください。前置き・補足・解説は一切不要、翻訳結果の本文だけを出力してください。\n\n--- 原文 ---\n'+text;
+  showBusy(); goBtn.disabled=true;
+  callAiChat(prompt).then(function(reply){
+    hideBusy(); goBtn.disabled=false;
+    if(!reply){toast('翻訳結果が空でした');return;}
+    dstText.value = reply.trim();
+    updateCnt(); saveLocal();
+  }).catch(function(err){
+    hideBusy(); goBtn.disabled=false;
+    showErr('翻訳に失敗しました：'+(err&&err.message||err||''));
+  });
+}
+
+function callAiChat(userMsg){
+  return new Promise(function(resolve,reject){
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6);
+    var sc=document.createElement('script');
+    var done=false;
+    function cleanup(){try{delete window[cb];}catch(e){}if(sc.parentNode)sc.parentNode.removeChild(sc);}
+    var timer=setTimeout(function(){if(done)return;done=true;cleanup();reject(new Error('タイムアウト（60秒）'));},60000);
+    window[cb]=function(res){
+      if(done)return;done=true;clearTimeout(timer);cleanup();
+      if(res && res.ok && res.reply){ resolve(res.reply); }
+      else if(res && res.error){ reject(new Error(res.error)); }
+      else { reject(new Error('応答が不正です')); }
+    };
+    sc.onerror=function(){if(done)return;done=true;clearTimeout(timer);cleanup();reject(new Error('通信エラー'));};
+    var msgs=[{role:'user',content:userMsg}];
+    var q='action=aiChat'
+      +'&secret='+encodeURIComponent(SECRET)
+      +'&messages='+encodeURIComponent(JSON.stringify(msgs))
+      +'&callback='+encodeURIComponent(cb);
+    var url=API_URL+'?'+q;
+    if(url.length>7500){
+      done=true;clearTimeout(timer);cleanup();
+      reject(new Error('文章が長すぎます。短くしてから試してください'));
+      return;
+    }
+    sc.src=url;
+    document.head.appendChild(sc);
+  });
+}
+
+/* ========== 送信先（訳文を共有） ========== */
+function getDst(){
+  var t=(dstText.value||'').trim();
+  if(!t){toast('訳文がありません');return null;}
+  return t;
+}
+function doCopy(){
+  var t=getDst(); if(!t)return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){toast('コピーしました');},function(){fallbackCopy(t);});
+  } else { fallbackCopy(t); }
+}
+function fallbackCopy(t){
+  try{
+    var ta=document.createElement('textarea');
+    ta.value=t; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('コピーしました');
+  }catch(e){ toast('コピーに失敗しました。長押しでコピーしてください'); }
+}
+function doLine(){
+  var t=getDst(); if(!t)return;
+  // LINEは内容を直接渡せない仕様のため、コピー→LINE起動
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(openLine,openLine);
+  } else { fallbackCopy(t); openLine(); }
+}
+function openLine(){
+  toast('コピー済み。LINEを開きます');
+  setTimeout(function(){
+    var t1=Date.now();
+    location.href='line://';
+    setTimeout(function(){
+      if(Date.now()-t1<1500 && !document.hidden){
+        window.open('https://line.me/','_blank');
+      }
+    },1200);
+  },400);
+}
+function doMail(){
+  var t=getDst(); if(!t)return;
+  var body=encodeURIComponent(t);
+  var subj=encodeURIComponent('翻訳メモ');
+  location.href='mailto:?subject='+subj+'&body='+body;
+}
+function doSms(){
+  var t=getDst(); if(!t)return;
+  var body=encodeURIComponent(t);
+  var ua=navigator.userAgent||'';
+  var url=/iPhone|iPad|iPod/.test(ua) ? 'sms:&body='+body : 'sms:?body='+body;
+  location.href=url;
+}
+
+updateCnt();
+</script>
+</body>
+</html>
