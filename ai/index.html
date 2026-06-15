@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 10 ai (2026-06-14) デザイン統一（ニューモーフィズム/Gen-Can基準・バイオレット#7c3aed・線画アイコン・文字拡大）。⚠/📎/🔗は維持。機能は不変。ページ全体スクロール＋入力欄sticky固定 -->
+<!-- ai version 11 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can右、少し大きく）。更新ボタンなし（B）。クリアは保持。機能・id不変 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -88,18 +88,25 @@
   .src-ttl:active{color:var(--accent-d);}
   .src-link{display:block;font-size:12.5px;color:var(--accent-d);text-decoration:none;padding:3px 0;word-break:break-all;}
   .src-link:active{text-decoration:underline;}
+  /* v11: ヘッダー統一（中央寄せ・更新なし） */
+  .hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:11px;min-width:0;}
+  .hright{flex:0 0 auto;display:flex;align-items:center;gap:9px;}
+  .hic{width:44px;height:44px;}
+  .hic svg{width:23px;height:23px;}
+  .htxt{flex:0 1 auto;min-width:0;text-align:center;}
+  .htxt .nm{font-size:18px;}
+  .hmark{font-size:15px;}
+  .back{font-size:11.5px;padding:9px 14px;}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v10</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v11</div>
 
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
-    <span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span>
-    <span class="htxt"><span class="nm">AIアシスタント</span><span class="model">Gemini 2.5 Flash（検索対応）　ai v10</span></span>
-    <span class="hmark">Gen-Can</span>
-    <button class="clrbtn" onclick="clearChat()">クリア</button>
+    <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg></span><span class="htxt"><span class="nm">AIアシスタント</span><span class="model">Gemini 2.5 Flash（検索対応）　ai v11</span></span></div>
+    <div class="hright"><span class="hmark">Gen-Can</span><button class="clrbtn" onclick="clearChat()">クリア</button></div>
   </div>
 </header>
 
