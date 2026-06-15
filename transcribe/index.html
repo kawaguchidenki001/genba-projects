@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- transcribe version 2 (2026-06-15) 修正：①音声入力の二重加算バグ修正（処理済みresultのindexを追跡、自動再開時にリセット）②AI整文/要約のレスポンスキーをres.textに修正（GASの実キーに合わせる） -->
+<!-- transcribe version 3 (2026-06-15) 音声入力の二重化を根本修正：差分加算をやめ、毎回e.results全体から確定+未確定を組み立てて完全置換する方式に変更。自動再開時はその時点のmemo内容を新しい初期テキストにする -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -97,7 +97,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v3</div>
 
 <header>
   <div class="hbar">
@@ -251,32 +251,27 @@ function setRecUI(on){
 function startRec(){
   if(!SR){toast('音声認識に非対応のブラウザです');return;}
   userStopped=false;
-  baseText = memo.value ? (memo.value.replace(/\s+$/,'')+(memo.value.length?'\n':'')) : '';
+  // 録音開始時点のメモを「初期テキスト」として保持
+  // 改行を挟むか判断：既にテキストがあれば改行を加える
+  var existing = memo.value || '';
+  var initialText = existing ? (existing.replace(/\s+$/,'') + '\n') : '';
   rec=new SR(); rec.lang='ja-JP'; rec.interimResults=true; rec.continuous=true;
-  // 処理済みresultのindexを追跡（二重加算防止）
-  var processedFinal={};
   rec.onresult=function(e){
-    var fin='',intr='';
+    // 毎回、e.results全体から確定・未確定を組み立てる（差分加算しない＝二重化を防ぐ）
+    var allFinal='', allInterim='';
     for(var i=0;i<e.results.length;i++){
       var t=e.results[i][0].transcript;
-      if(e.results[i].isFinal){
-        // まだ処理していない確定resultだけ加算
-        if(!processedFinal[i]){
-          fin+=t;
-          processedFinal[i]=true;
-        }
-      } else {
-        intr+=t;
-      }
+      if(e.results[i].isFinal) allFinal+=t;
+      else allInterim+=t;
     }
-    if(fin){ baseText = baseText + fin; }
-    memo.value = baseText + intr;
+    // 完全置換：初期テキスト＋このセッションの全確定＋未確定
+    memo.value = initialText + allFinal + allInterim;
     updateCnt();
   };
   rec.onend=function(){
     if(!userStopped && recording){
-      // 自動再開時は新セッション扱い：処理済みindexをリセット
-      processedFinal={};
+      // 自動再開：現時点のmemo内容を新しい初期テキストにする（次セッションのe.resultsはまた0から）
+      initialText = memo.value ? (memo.value.replace(/\s+$/,'') + (memo.value.length?'\n':'')) : '';
       try{ rec.start(); return; }catch(e){}
     }
     recording=false; setRecUI(false); saveLocal();
