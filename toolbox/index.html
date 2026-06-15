@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 60 (2026-06-15) 小黒板カメラ：低スペック機（Galaxy A21等）での黒画面対策。startCamFallback/camFrameOkを追加し、高画質(2560)→映像が出なければ自動で1920→1280→制約なしへ段階的に画質を下げて再起動。全段失敗時は無言で固まらず案内toastを表示。※虫眼鏡(startMag)は未対応のまま（次回適用予定） -->
+<!-- toolbox version 61 (2026-06-15) 小黒板カメラに「撮影方式」切替を追加（ライブ／かんたん）。かんたん方式=端末標準カメラで撮影(input file capture)→写真に黒板を重ねてDrive保存。生映像が映らない機種(Galaxy A21等)でも撮影可能。選択した方式はlocalStorage(boardCamMode)で保持し次回も継続。合成はboardShootCore(srcEl)を流用、ライブ方式は従来通り。 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -330,7 +330,7 @@
   .citem .micbtn{position:static;transform:none;width:32px;height:32px;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v60</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v61</div>
 
 <div class="wrap">
 
@@ -653,11 +653,20 @@
       <button class="thead-tool" id="boardTorchBtn" onclick="boardToggleTorch()" title="ライト"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 18h5.6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.8 10.7c.6.6.9 1 .9 2.3h5.8c0-1.3.3-1.7.9-2.3A6 6 0 0 0 12 3Z"/></svg></button>
     </div>
     <div class="sitebar sb-tap" id="boardSiteBar" onclick="boardPickSite()">現場：<b>タップして選択</b><span class="sb-arrow">▼</span></div>
+    <div class="bmode-row" id="boardModeRow" style="display:flex;gap:8px;align-items:center;padding:8px 4px 0;">
+      <span style="font-size:13px;color:#555;white-space:nowrap;">撮影方式</span>
+      <button type="button" id="bmodeLive" onclick="boardSetMode('live')" style="flex:1;padding:8px;border-radius:8px;border:1px solid #1a8c78;font-weight:700;cursor:pointer;background:#1a8c78;color:#fff;">ライブ</button>
+      <button type="button" id="bmodeEasy" onclick="boardSetMode('easy')" style="flex:1;padding:8px;border-radius:8px;border:1px solid #1a8c78;font-weight:700;cursor:pointer;background:#fff;color:#1a8c78;">かんたん</button>
+    </div>
+    <div id="boardModeNote" class="enote" style="margin:6px 2px 0;"></div>
     <div class="bcam-wrap" id="bcamWrap">
       <video id="boardVideo" autoplay playsinline muted></video>
+      <img id="boardPhoto" alt="" style="display:none;width:100%;height:100%;object-fit:cover;background:#000;">
       <div class="bov-bd" id="boardOverlay" style="display:none;"></div>
       <div class="bcam-zoominfo" id="boardZoomInfo">1.0x</div>
+      <div id="boardEasyPrompt" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#fff;font-size:15px;text-align:center;padding:20px;line-height:1.5;">下の<b>「写真を撮る」</b>ボタンで撮影してください</div>
     </div>
+    <input type="file" id="boardFileInput" accept="image/*" capture="environment" style="display:none;" onchange="boardEasyPicked(this)">
     <div class="bsize-row">
       <label>黒板の大きさ</label>
       <input type="range" id="boardSizeRange" min="20" max="55" value="37" oninput="boardSetSize(this.value)">
@@ -673,7 +682,9 @@
       <div class="brow"><span class="blbl3">会社名</span><input class="enum binp" id="boardCompany" oninput="bov()" value="河口電機株式会社"><button class="bfs" onclick="boardFontStep('f',-0.1)">−</button><button class="bfs" onclick="boardFontStep('f',0.1)">＋</button></div>
     </div>
     <div class="enote" style="margin:12px 2px 84px;">黒板はドラッグで移動／ダブルタップで入力欄の表示切替。各行の −／＋ で文字サイズを調整できます。</div>
-    <div class="bshoot-bar two"><button class="savebtn hqbtn" id="boardHQBtn" onclick="boardShoot(true)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>最高画質</button><button class="savebtn" style="background:#d97b12;flex:1;" onclick="boardShoot(false)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>撮影してDriveに保存</button></div>
+    <div class="bshoot-bar two" id="boardBarLive"><button class="savebtn hqbtn" id="boardHQBtn" onclick="boardShoot(true)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>最高画質</button><button class="savebtn" style="background:#d97b12;flex:1;" onclick="boardShoot(false)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>撮影してDriveに保存</button></div>
+    <div class="bshoot-bar" id="boardBarEasyEmpty" style="display:none;"><button class="savebtn" style="background:#d97b12;flex:1;" onclick="boardEasyShoot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>写真を撮る</button></div>
+    <div class="bshoot-bar two" id="boardBarEasyShot" style="display:none;"><button class="savebtn" style="background:#777;" onclick="boardEasyShoot()">撮り直す</button><button class="savebtn" style="background:#1e8e3e;flex:1;" onclick="boardEasySave()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>この写真で保存</button></div>
   </div>
 
   <!-- ========== ④ 録音機 ========== -->
@@ -2947,7 +2958,7 @@ function openBoardCamera(){
     pendingBoard=null;
   } else if(bsn&&!bsn.value){ bsn.value=boardSiteName_; }
   var bf=document.getElementById('boardFormWrap');if(bf)bf.style.display='grid';
-  go('p-board'); startBoardCamera(); setTimeout(function(){bov(); boardBindPinch();},50);
+  go('p-board'); applyBoardMode(); setTimeout(function(){ if(boardMode==='live')bov(); boardBindPinch();},50);
 }
 /* 現場バーから現場を再選択 */
 function boardPickSite(){
@@ -2997,6 +3008,73 @@ function camFrameOk(videoEl,cb){
     setTimeout(probe,450);
   }
   setTimeout(probe,400);
+}
+/* ===== 撮影方式（ライブ／かんたん）切り替え・v61追加 ===== */
+var boardMode=(function(){try{return tbGet('boardCamMode','live');}catch(e){return 'live';}})();
+var boardEasyImg=null;
+function boardSetMode(m){
+  if(m!=='live'&&m!=='easy')m='live';
+  boardMode=m; try{tbSet('boardCamMode',m);}catch(e){}
+  applyBoardMode();
+}
+function applyBoardModeUI(){
+  var live=(boardMode==='live');
+  var bl=document.getElementById('bmodeLive'),be=document.getElementById('bmodeEasy');
+  if(bl){bl.style.background=live?'#1a8c78':'#fff';bl.style.color=live?'#fff':'#1a8c78';}
+  if(be){be.style.background=live?'#fff':'#1a8c78';be.style.color=live?'#1a8c78':'#fff';}
+  var note=document.getElementById('boardModeNote');
+  if(note)note.textContent=live
+    ?'生映像を見ながら撮影します。一部の機種で映像が出ない場合は「かんたん」に切り替えてください。'
+    :'端末のカメラで撮影し、写真に黒板を重ねます。どの機種でも動作します。';
+}
+function setBoardBar(state){
+  var map={'live':'boardBarLive','easy-empty':'boardBarEasyEmpty','easy-shot':'boardBarEasyShot'};
+  for(var k in map){var el=document.getElementById(map[k]);if(el)el.style.display=(k===state)?'':'none';}
+}
+function boardShowLiveCtrls(show){
+  var t=document.getElementById('boardTorchBtn');if(t)t.style.display=show?'':'none';
+  var z=document.getElementById('boardZoomInfo');if(z&&!show)z.style.display='none';
+}
+function applyBoardMode(){
+  applyBoardModeUI();
+  var vid=document.getElementById('boardVideo'),pr=document.getElementById('boardEasyPrompt'),ov=document.getElementById('boardOverlay');
+  if(boardMode==='live'){
+    if(pr)pr.style.display='none';
+    if(vid)vid.style.display='block';
+    boardShowLiveCtrls(true);
+    setBoardBar('live');
+    startBoardCamera();
+  }else{
+    stopBoardCamera();
+    if(vid)vid.style.display='none';
+    boardShowLiveCtrls(false);
+    if(ov)ov.style.display='none';
+    if(pr)pr.style.display='flex';
+    setBoardBar('easy-empty');
+  }
+}
+function boardEasyShoot(){ var fi=document.getElementById('boardFileInput'); if(fi){fi.value='';fi.click();} }
+function boardEasyPicked(input){
+  var f=input&&input.files&&input.files[0];
+  if(input)input.value='';
+  if(!f)return;
+  var img=new Image();
+  img.onload=function(){
+    boardEasyImg=img;
+    var ph=document.getElementById('boardPhoto');
+    if(ph){ph.src=img.src;ph.style.display='block';}
+    var vid=document.getElementById('boardVideo');if(vid)vid.style.display='none';
+    var pr=document.getElementById('boardEasyPrompt');if(pr)pr.style.display='none';
+    bov();
+    setBoardBar('easy-shot');
+  };
+  img.onerror=function(){toast('写真の読み込みに失敗しました');};
+  img.src=URL.createObjectURL(f);
+}
+function boardEasySave(){
+  if(!boardEasyImg){toast('先に「写真を撮る」で撮影してください');return;}
+  if(!boardSiteId){toast('エラー：案件が未選択です。← で戻って選び直してください。');return;}
+  boardShootCore(boardEasyImg, boardEasyImg.naturalWidth, boardEasyImg.naturalHeight);
 }
 function startBoardCamera(){
   if(!navigator||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('カメラに対応していません');return;}
@@ -3050,6 +3128,10 @@ function stopBoardCamera(){
   if(boardStream){boardStream.getTracks().forEach(function(t){t.stop();});boardStream=null;}
   boardTrack=null; boardTorchOn=false;
   var v=document.getElementById('boardVideo');if(v)v.srcObject=null;
+  /* かんたん方式で読み込んだ写真の後始末 */
+  var ph=document.getElementById('boardPhoto');
+  if(ph){ if(ph.src&&ph.src.indexOf('blob:')===0){try{URL.revokeObjectURL(ph.src);}catch(e){}} ph.removeAttribute('src'); ph.style.display='none'; }
+  boardEasyImg=null;
 }
 /* ライト ON/OFF */
 function boardToggleTorch(){
