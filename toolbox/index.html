@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- toolbox version 66 (2026-06-15) ヘッダーを案A(2段)化。.head .hbar をCSSグリッドで再配置(上段=メニュー左/Gen-Can右、下段=アイコン+タイトル中央)。h1の改行禁止解除。タイルのグリッド(v64)は不変。CSSのみ・HTML/機能/id不変・GAS変更なし。 -->
 <!-- toolbox version 65 (2026-06-15) ホーム画面の道具アイコンをルートメニューと同じ意匠に変更。.sq .ic を「角丸四角＋ベタ塗りカラー＋白線」から「まん丸(border-radius:50%)＋背景var(--bg)＋凹み影var(--well)＋各色の線画」に。各タイルの .t-○○ .ic を background指定からcolor(線色)指定へ変更(12タイル)。CSSのみ・SVG/機能/id不変・GAS変更なし。 -->
 <!-- toolbox version 64 (2026-06-15) ホーム画面の道具グリッドを grid-template-columns:repeat(3,minmax(0,1fr)) に変更。細い画面(Galaxy A21等/横360px以下)で3列の正方形タイルが画面からはみ出し左右スクロールしていた不具合を修正。タイルが画面幅に合わせて縮むようになり横はみ出しが解消。CSSのみ変更・機能/id不変・GAS変更なし。 -->
 <!-- toolbox version 63 (2026-06-15) 虫眼鏡にも「撮影方式」切替を追加（ライブ／かんたん）。かんたん方式=端末標準カメラで撮影(magFileInput capture)→撮った写真をmagZoomerに表示し既存のCSS拡大(magSetZoom)で拡大。生映像が映らない機種(Galaxy A21等)でも拡大鏡が使える。選択方式はlocalStorage(magCamMode)で保持。ライブ専用UI(止める/高画質/ライト/ピント説明)はかんたんで非表示。applyMagModeはstopMag後に再起動し二重起動防止。 -->
@@ -309,7 +310,11 @@
   .bshoot-bar.two .savebtn{margin:0;}
   .bshoot-bar.two .hqbtn{flex:0 0 38%;background:#c2410c;display:none;}
   /* tb v51: ヘッダー統一（中央寄せ・更新なし） */
-  .head .hbar{display:flex;align-items:center;gap:9px;}
+  .head .hbar{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"back . right" "title title title";align-items:center;row-gap:12px;column-gap:8px;}
+  .head .hbar .back{grid-area:back;align-self:center;margin-bottom:0;}
+  .head .hbar .hright{grid-area:right;justify-self:end;}
+  .head .hbar .hcenter{grid-area:title;justify-self:center;}
+  .head .hbar h1{white-space:normal;}
   .head .back{margin-bottom:0;font-size:11.5px;padding:9px 14px;}
   .head .hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:12px;min-width:0;}
   .head .hright{flex:0 0 auto;display:flex;align-items:center;gap:9px;}
@@ -332,7 +337,7 @@
   .citem .micbtn{position:static;transform:none;width:32px;height:32px;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v65</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v66</div>
 
 <div class="wrap">
 
