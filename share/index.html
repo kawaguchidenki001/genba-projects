@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 2 share (2026-06-14) デザイン統一（Gen-Can基準・グラデヘッダー/ニューモーフィズム・線画アイコン・ブランドフォント）。顧客向け進捗 閲覧専用。機能・id不変 -->
+<!-- version 3 share (2026-06-14) ヘッダー統一の一環でGen-Canバナーを中央寄せ（少し大きく）。顧客ページのため戻る/更新ボタンは付けない（B）。機能・id不変 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -55,6 +55,10 @@
   .lb.on{display:flex;}
   .lb img{max-width:96vw;max-height:90vh;border-radius:8px;}
   .lb .x{position:absolute;top:calc(env(safe-area-inset-top) + 14px);right:18px;color:#fff;font-size:30px;cursor:pointer;line-height:1;}
+  /* v3: バナー中央寄せ（統一・更新/戻るなし） */
+  header{text-align:center;}
+  header .hbrand{font-size:14px;}
+  header h1{font-size:22px;}
 </style>
 </head>
 <body>
