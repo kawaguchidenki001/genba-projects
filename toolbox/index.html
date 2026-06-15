@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 59 (2026-06-15) 工事手帳「塗装」タブのコンテンツを追加（塗料種類・下地別仕様・塗布量・希釈率・工程・乾燥時間・気象条件・養生材・サンドペーパー番手・安全/法令）10カード。これで全5業種（電気/建築/配管/空調/塗装）が完成。 -->
+<!-- toolbox version 60 (2026-06-15) 小黒板カメラ：低スペック機（Galaxy A21等）での黒画面対策。startCamFallback/camFrameOkを追加し、高画質(2560)→映像が出なければ自動で1920→1280→制約なしへ段階的に画質を下げて再起動。全段失敗時は無言で固まらず案内toastを表示。※虫眼鏡(startMag)は未対応のまま（次回適用予定） -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -330,7 +330,7 @@
   .citem .micbtn{position:static;transform:none;width:32px;height:32px;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v59</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v60</div>
 
 <div class="wrap">
 
@@ -2957,6 +2957,47 @@ function boardPickSite(){
   stopBoardCamera();
   go('p-memo-select'); loadSites();
 }
+/* ===== カメラ起動フォールバック（低スペック機の黒画面対策・v60追加） ===== */
+/* 高画質で試し、起動失敗または映像が出ない（黒画面）なら自動で画質を下げて入れ直す */
+function startCamFallback(videoEl,onReady,onAllFail){
+  var tries=[{w:2560,h:1440},{w:1920,h:1080},{w:1280,h:720},null];
+  var i=0,settled=false;
+  function attempt(){
+    if(i>=tries.length){ if(!settled){settled=true; if(onAllFail)onAllFail();} return; }
+    var vc={facingMode:{ideal:'environment'}};
+    if(tries[i]){ vc.width={ideal:tries[i].w}; vc.height={ideal:tries[i].h}; }
+    navigator.mediaDevices.getUserMedia({video:vc,audio:false}).then(function(stream){
+      if(settled){ stream.getTracks().forEach(function(t){t.stop();}); return; }
+      try{ videoEl.srcObject=stream; var pp=videoEl.play(); if(pp&&pp.catch)pp.catch(function(){}); }catch(e){}
+      camFrameOk(videoEl,function(ok){
+        if(settled){ stream.getTracks().forEach(function(t){t.stop();}); return; }
+        if(ok){ settled=true; onReady(stream); }
+        else { stream.getTracks().forEach(function(t){t.stop();}); try{videoEl.srcObject=null;}catch(e){} i++; attempt(); }
+      });
+    }).catch(function(){ i++; attempt(); });
+  }
+  attempt();
+}
+/* 映像が実際に表示されているか（真っ黒/無映像でないか）を確認 */
+function camFrameOk(videoEl,cb){
+  var n=0,done=false;
+  function probe(){
+    if(done)return; n++;
+    var w=videoEl.videoWidth||0,h=videoEl.videoHeight||0;
+    if(w>0&&h>0){
+      try{
+        var c=document.createElement('canvas'); c.width=24; c.height=24;
+        var x=c.getContext('2d'); x.drawImage(videoEl,0,0,24,24);
+        var d=x.getImageData(0,0,24,24).data,mx=0;
+        for(var k=0;k<d.length;k+=4){var s=d[k]+d[k+1]+d[k+2]; if(s>mx)mx=s;}
+        if(mx>20){ done=true; cb(true); return; }
+      }catch(e){}
+    }
+    if(n>=7){ done=true; cb(false); return; }
+    setTimeout(probe,450);
+  }
+  setTimeout(probe,400);
+}
 function startBoardCamera(){
   if(!navigator||!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){toast('カメラに対応していません');return;}
   /* 既存ストリームがあれば一旦停止 */
@@ -2966,10 +3007,9 @@ function startBoardCamera(){
   var tb=document.getElementById('boardTorchBtn'); if(tb){tb.classList.remove('on');}
   var hb=document.getElementById('boardHQBtn'); if(hb)hb.style.display='none';
   var zi=document.getElementById('boardZoomInfo'); if(zi)zi.style.display='none';
-  navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:2560},height:{ideal:1440}},audio:false})
-    .then(function(stream){
+  var bvid=document.getElementById('boardVideo');
+  startCamFallback(bvid,function(stream){
       boardStream=stream;
-      var v=document.getElementById('boardVideo'); v.srcObject=stream; v.play();
       boardTrack=stream.getVideoTracks()[0];
       /* カメラ起動直後はgetCapabilitiesが空を返すことがあるため、映像開始後に遅延判定 */
       var boardCapsDone=false;
@@ -3001,8 +3041,9 @@ function startBoardCamera(){
       var bv=document.getElementById('boardVideo');
       if(bv)bv.addEventListener('loadedmetadata',function(){setTimeout(applyBoardCaps,500);});
       setTimeout(applyBoardCaps,1000);
-    })
-    .catch(function(e){toast('カメラを起動できませんでした（'+e.message+'）');});
+  },function(){
+      toast('この端末ではカメラ映像を表示できませんでした。Chromeで開く／端末のカメラ権限・「カメラアクセス」設定をご確認ください。');
+  });
 }
 function stopBoardCamera(){
   if(boardTrack&&boardTorchOn){try{boardTrack.applyConstraints({advanced:[{torch:false}]});}catch(e){}}
