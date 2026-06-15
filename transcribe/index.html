@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- transcribe version 1 (2026-06-15) AI文字起こし画面。音声→文字（リアルタイム・継続録音）→AI整文/要約→コピー/LINE/メール/SMSへ -->
+<!-- transcribe version 2 (2026-06-15) 修正：①音声入力の二重加算バグ修正（処理済みresultのindexを追跡、自動再開時にリセット）②AI整文/要約のレスポンスキーをres.textに修正（GASの実キーに合わせる） -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -97,7 +97,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2</div>
 
 <header>
   <div class="hbar">
@@ -253,11 +253,21 @@ function startRec(){
   userStopped=false;
   baseText = memo.value ? (memo.value.replace(/\s+$/,'')+(memo.value.length?'\n':'')) : '';
   rec=new SR(); rec.lang='ja-JP'; rec.interimResults=true; rec.continuous=true;
+  // 処理済みresultのindexを追跡（二重加算防止）
+  var processedFinal={};
   rec.onresult=function(e){
     var fin='',intr='';
-    for(var i=e.resultIndex;i<e.results.length;i++){
+    for(var i=0;i<e.results.length;i++){
       var t=e.results[i][0].transcript;
-      if(e.results[i].isFinal) fin+=t; else intr+=t;
+      if(e.results[i].isFinal){
+        // まだ処理していない確定resultだけ加算
+        if(!processedFinal[i]){
+          fin+=t;
+          processedFinal[i]=true;
+        }
+      } else {
+        intr+=t;
+      }
     }
     if(fin){ baseText = baseText + fin; }
     memo.value = baseText + intr;
@@ -265,6 +275,8 @@ function startRec(){
   };
   rec.onend=function(){
     if(!userStopped && recording){
+      // 自動再開時は新セッション扱い：処理済みindexをリセット
+      processedFinal={};
       try{ rec.start(); return; }catch(e){}
     }
     recording=false; setRecUI(false); saveLocal();
@@ -327,7 +339,7 @@ function callAiChat(userMsg){
     var timer=setTimeout(function(){if(done)return;done=true;cleanup();reject(new Error('タイムアウト（60秒）'));},60000);
     window[cb]=function(res){
       if(done)return;done=true;clearTimeout(timer);cleanup();
-      if(res && res.ok && res.reply){ resolve(res.reply); }
+      if(res && res.ok && (res.text||res.reply)){ resolve(res.text||res.reply); }
       else if(res && res.error){ reject(new Error(res.error)); }
       else { reject(new Error('応答が不正です')); }
     };
