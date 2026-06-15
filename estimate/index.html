@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- estimate version 11 (2026-06-15) 会社情報(歯車)ボタンを非表示に。会社情報の編集は管理画面の自社設定タブへ移設済み(admin v47+)。setBtnはJSがvisibilityを操作するため削除せずdisplay:none!importantで非表示(JSエラー回避)。openSettings/p-setは残置(到達不可)。CSSのみ・GAS変更なし。 -->
 <!-- estimate version 10 (2026-06-15) 【案Aサンプル】ヘッダーを2段化。CSSグリッドで .hbar を再配置し、上段=「←メニュー」(左)＋Gen-Can/更新/設定(右)、下段=アイコン＋タイトルを中央配置。タイトル領域が横幅フルなので長い名称でも重ならない・切れない。.nmの改行禁止を解除(大きい文字でも折返し)。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- estimate version 9 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はloadAll()。機能・id不変 -->
 <html lang="ja">
@@ -179,10 +180,11 @@
   .hbar .hright{grid-area:right;justify-self:end;}
   .hbar .hcenter{grid-area:title;justify-self:center;}
   .hbar .htxt .nm{white-space:normal;}
+  #setBtn{display:none!important;}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v10</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v11</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
