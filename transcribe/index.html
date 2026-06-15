@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- transcribe version 3 (2026-06-15) 音声入力の二重化を根本修正：差分加算をやめ、毎回e.results全体から確定+未確定を組み立てて完全置換する方式に変更。自動再開時はその時点のmemo内容を新しい初期テキストにする -->
+<!-- transcribe version 5 (2026-06-15) 画面再訪時に前回内容を復元しないよう変更（戻る→再訪で空白から始まる）。loadLocal呼出を廃止し、起動時に古い保存をクリア -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -97,7 +97,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v3</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v5</div>
 
 <header>
   <div class="hbar">
@@ -212,7 +212,9 @@ function updateCnt(){charCnt.textContent=(memo.value||'').length+' 文字';}
 function saveLocal(){try{localStorage.setItem(CACHE_KEY,memo.value||'');}catch(e){}}
 function loadLocal(){try{var v=localStorage.getItem(CACHE_KEY);if(v){memo.value=v;updateCnt();}}catch(e){}}
 memo.addEventListener('input',function(){updateCnt();saveLocal();});
-loadLocal();
+// 画面を開いたときは前回の内容を復元しない（戻る→再訪で空白から始める）
+// 古い保存があれば削除して、次回も確実に空白で始まるようにする
+try{ localStorage.removeItem(CACHE_KEY); }catch(e){}
 
 /* ========== Undo（AI処理前に保存） ========== */
 function pushUndo(){undoStack.push(memo.value||'');if(undoStack.length>10)undoStack.shift();btnUndo.disabled=false;}
@@ -229,7 +231,7 @@ function clearAll(){
 
 /* ========== 音声認識（Web Speech API・継続録音） ========== */
 var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-var rec=null, recording=false, userStopped=false, baseText='';
+var rec=null, recording=false, userStopped=false, baseText='', committedText='';
 if(!SR){
   unsupportedNote.classList.add('show');
   recBtn.disabled=true;
@@ -251,28 +253,34 @@ function setRecUI(on){
 function startRec(){
   if(!SR){toast('音声認識に非対応のブラウザです');return;}
   userStopped=false;
-  // 録音開始時点のメモを「初期テキスト」として保持
-  // 改行を挟むか判断：既にテキストがあれば改行を加える
+  // 録音開始時点のメモを「確定済みテキスト」の基準にする
   var existing = memo.value || '';
-  var initialText = existing ? (existing.replace(/\s+$/,'') + '\n') : '';
-  rec=new SR(); rec.lang='ja-JP'; rec.interimResults=true; rec.continuous=true;
+  committedText = existing ? (existing.replace(/\s+$/,'') + '\n') : '';
+  startSession();
+  recording=true; setRecUI(true); showErr('');
+}
+// 1回分の認識セッション（continuous=false＝単発）。終わったら自動再開する
+// ※Android Chromeのcontinuous=trueは onend直前に過去結果を連結した余分なonresultが出るバグがあるため
+//   単発認識を都度再起動する方式にして二重化を防ぐ
+function startSession(){
+  rec=new SR(); rec.lang='ja-JP'; rec.interimResults=true; rec.continuous=false;
   rec.onresult=function(e){
-    // 毎回、e.results全体から確定・未確定を組み立てる（差分加算しない＝二重化を防ぐ）
-    var allFinal='', allInterim='';
+    var fin='', intr='';
     for(var i=0;i<e.results.length;i++){
       var t=e.results[i][0].transcript;
-      if(e.results[i].isFinal) allFinal+=t;
-      else allInterim+=t;
+      if(e.results[i].isFinal) fin+=t; else intr+=t;
     }
-    // 完全置換：初期テキスト＋このセッションの全確定＋未確定
-    memo.value = initialText + allFinal + allInterim;
+    if(fin){
+      committedText = committedText + fin;
+      memo.value = committedText;
+    } else {
+      memo.value = committedText + intr;
+    }
     updateCnt();
   };
   rec.onend=function(){
     if(!userStopped && recording){
-      // 自動再開：現時点のmemo内容を新しい初期テキストにする（次セッションのe.resultsはまた0から）
-      initialText = memo.value ? (memo.value.replace(/\s+$/,'') + (memo.value.length?'\n':'')) : '';
-      try{ rec.start(); return; }catch(e){}
+      try{ startSession(); return; }catch(e){}
     }
     recording=false; setRecUI(false); saveLocal();
   };
@@ -281,14 +289,14 @@ function startRec(){
       showErr('マイクの使用が許可されていません。ブラウザの設定をご確認ください。');
       userStopped=true; recording=false; setRecUI(false);
     } else if(e.error==='no-speech'){
-      // 無音は無視（onendで自動再開）
+      // 無音は無視（onendで自動再開される）
+    } else if(e.error==='aborted'){
+      // 再起動時のabortは無視
     } else {
       recording=false; setRecUI(false);
     }
   };
-  try{
-    rec.start(); recording=true; setRecUI(true); showErr('');
-  }catch(err){ recording=false; setRecUI(false); }
+  try{ rec.start(); }catch(err){ /* 直後の再startは onend が拾う */ }
 }
 function stopRec(){ userStopped=true; if(rec){ try{rec.stop();}catch(e){} } }
 recBtn.addEventListener('click',function(){
