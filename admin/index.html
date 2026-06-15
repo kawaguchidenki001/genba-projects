@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- admin version 47 (2026-06-15) 自社設定タブに会社情報(7項目:住所/電話/FAX/インボイス番号/振込先/見積有効日数/支払条件)の編集フォームを追加。既存GASの estData で読込・saveSettings で保存(GAS変更なし)。switchTab(company)初回表示時に読込。見積から会社情報を移設する第1段階。 -->
+<!-- admin version 46 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- admin version 45 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。操作行hd2は保持。更新はloadAll()。機能・id不変 -->
 <html lang="ja">
 <head>
@@ -23,7 +25,11 @@
   body{background:var(--bg);min-height:100vh;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.55;padding-bottom:80px;}
   select,input,textarea,button,a{font-family:inherit;}
   header{position:sticky;top:0;z-index:20;background:var(--bg);color:var(--ink);padding:calc(env(safe-area-inset-top) + 12px) 14px 11px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
-  .hbar{display:flex;align-items:center;gap:10px;max-width:760px;margin:0 auto;}
+  .hbar{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"back . right" "title title title";align-items:center;row-gap:12px;column-gap:8px;max-width:760px;margin:0 auto;}
+  .hbar .back{grid-area:back;align-self:center;}
+  .hbar .hright{grid-area:right;justify-self:end;}
+  .hbar .hcenter{grid-area:title;justify-self:center;}
+  .hbar .htxt .nm{white-space:normal;}
   .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11px;letter-spacing:.05em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 12px;text-decoration:none;white-space:nowrap;flex:0 0 auto;}
   .back:active{box-shadow:var(--well);}
   .hic{width:40px;height:40px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
@@ -120,7 +126,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v45</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v47</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -188,6 +194,21 @@
 
   <!-- 自社設定タブ -->
   <div id="sec-company" style="display:none;">
+      <div class="sec">会社情報（見積・請求書に印字されます）</div>
+      <div class="card" style="margin-bottom:14px;">
+        <div class="fld"><label>会社住所</label><input id="ci_addr" placeholder="例）岐阜県岐阜市〇〇町1-2-3"></div>
+        <div class="two">
+          <div class="fld"><label>会社電話</label><input id="ci_tel" inputmode="tel" placeholder="例）058-000-0000"></div>
+          <div class="fld"><label>会社FAX</label><input id="ci_fax" inputmode="tel" placeholder="例）058-000-0001"></div>
+        </div>
+        <div class="fld"><label>インボイス登録番号</label><input id="ci_inv" placeholder="例）T1234567890123"></div>
+        <div class="fld"><label>振込先</label><input id="ci_bank" placeholder="例）〇〇銀行 〇〇支店 普通 1234567"></div>
+        <div class="two">
+          <div class="fld"><label>見積有効日数</label><input id="ci_valid" type="number" inputmode="numeric" placeholder="30"></div>
+          <div class="fld"><label>支払条件</label><input id="ci_cond" placeholder="例）月末締め翌月末払い"></div>
+        </div>
+        <button class="btn primary" style="width:100%;margin-top:4px;" onclick="saveCompanyInfo()">会社情報を保存</button>
+      </div>
     <div class="sec">自社情報・会社書類</div>
     <p style="font-size:13px;color:#64748b;margin:0 0 12px;">建退共許可票・建設業許可票などの会社書類を保管します。</p>
     <div class="card" style="margin-bottom:12px;">
@@ -482,7 +503,33 @@ function doClearAll(){
     closeClearModal();toast('全データを削除しました');loadAll();
   }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='削除する';});
 }
-function switchTab(t){ curTab=t; if(t==='company'&&!compDocs.length)loadCompDocs();
+var ciLoaded=false;
+function loadCompanyInfo(){
+  callGAS({action:'estData'},null,true).then(function(d){
+    if(d&&d.ok){
+      var st=d.settings||{};
+      var map={ci_addr:'会社住所',ci_tel:'会社電話',ci_fax:'会社FAX',ci_inv:'インボイス登録番号',ci_bank:'振込先',ci_valid:'見積有効日数',ci_cond:'支払条件'};
+      Object.keys(map).forEach(function(id){var el=document.getElementById(id);if(el)el.value=(st[map[id]]!=null?st[map[id]]:(id==='ci_valid'?'30':''));});
+      ciLoaded=true;
+    }
+  }).catch(function(e){toast('会社情報の読込に失敗：'+e.message);});
+}
+function saveCompanyInfo(){
+  var data={
+    '会社住所':document.getElementById('ci_addr').value.trim(),
+    '会社電話':document.getElementById('ci_tel').value.trim(),
+    '会社FAX':document.getElementById('ci_fax').value.trim(),
+    'インボイス登録番号':document.getElementById('ci_inv').value.trim(),
+    '振込先':document.getElementById('ci_bank').value.trim(),
+    '見積有効日数':document.getElementById('ci_valid').value.trim()||'30',
+    '支払条件':document.getElementById('ci_cond').value.trim()
+  };
+  callGAS({action:'saveSettings',data:data}).then(function(res){
+    if(res&&res.ok){ciLoaded=true;toast('会社情報を保存しました');}
+    else toast((res&&res.error)||'保存に失敗しました');
+  }).catch(function(e){toast(e.message);});
+}
+function switchTab(t){ curTab=t; if(t==='company'){if(!compDocs.length)loadCompDocs();if(!ciLoaded)loadCompanyInfo();}
   ['worker','partner','contact','vehicle','supplier','repcheck','company'].forEach(function(x){
     document.getElementById('sec-'+x).style.display=(x===t)?'block':'none';
     document.getElementById('tab-'+x).className='tab'+(x===t?' on':'');
