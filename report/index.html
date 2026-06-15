@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version 57 (2026-06-14) デザイン統一（ニューモーフィズム/Gen-Can基準・緑#0e9f6e・控えめ立体・線画アイコン・文字拡大）。機能は不変 -->
+<!-- version 58 report (2026-06-14) ヘッダー統一（メニュー左・アイコン+タイトル中央・Gen-Can+更新ボタン右、少し大きく）。同期表示は非表示化（id保持）。一覧を現場名/社員/人工に簡略化、文字拡大、車両/複製/編集/オフラインのアイコンを線画化。注意記号は維持。機能・id不変 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -20,19 +20,25 @@
     --well:inset 3px 3px 6px #ccd2db,inset -3px -3px 6px #ffffff;
     --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-  body{margin:0;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.55;padding-bottom:80px;background:var(--bg);min-height:100vh;}
+  body{margin:0;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:17px;line-height:1.55;padding-bottom:80px;background:var(--bg);min-height:100vh;}
   select,input,textarea,button{font-family:inherit;}
   header{position:sticky;top:0;z-index:20;background:var(--bg);color:var(--ink);padding:calc(env(safe-area-inset-top) + 11px) 14px 11px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
-  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .hd-top{display:flex;align-items:center;gap:11px;}
-  .hd-top .hic{width:38px;height:38px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
-  .hd-top .hic svg{width:20px;height:20px;}
-  .hd-top h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.03em;color:var(--ink);line-height:1.15;}
-  .hd-top .en{font-family:"Manrope",sans-serif;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
-  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:14px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
+  .hbar{display:flex;align-items:center;gap:9px;max-width:760px;margin:0 auto;}
+  .hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:11px;min-width:0;}
+  .hright{flex:0 0 auto;display:flex;align-items:center;gap:9px;}
+  .hrf{width:42px;height:42px;border-radius:50%;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
+  .hrf svg{width:19px;height:19px;}
+  .hrf:active{box-shadow:var(--well);}
+  .hbar .back{font-size:11.5px;letter-spacing:.05em;padding:9px 14px;}
+  .hic{width:44px;height:44px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hic svg{width:23px;height:23px;}
+  .hcenter h1{font-size:19.5px;margin:0;font-weight:700;letter-spacing:.02em;color:var(--ink);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48vw;}
+  .htxt{min-width:0;text-align:center;}
+  .htxt .en{font-family:"Manrope",sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:15px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
   .back{color:var(--accent-d);text-decoration:none;font-family:"Manrope",sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 13px;white-space:nowrap;}
   .back:active{box-shadow:var(--well);}
-  .sync{font-size:12.5px;display:flex;align-items:center;gap:5px;color:var(--sub);}
+  .sync{display:none;}
   .dot{width:8px;height:8px;border-radius:50%;background:#c2d3cb;display:inline-block;}
   .dot.ok{background:#22a06b;}.dot.busy{background:#e8910b;}.dot.off{background:#e5484d;}
   .ghost{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 12px;border:none;border-radius:11px;background:var(--bg);color:var(--accent-d);font-size:13.5px;cursor:pointer;font-weight:700;box-shadow:var(--rise-sm);}
@@ -60,24 +66,21 @@
   .pill.kyo{background:var(--kyo-soft);color:var(--kyo-d);}
   .desc{font-size:14px;color:var(--ink);}
   .empty{text-align:center;color:var(--sub);padding:38px 10px;font-size:15px;}
-  .lhead,.lrow{display:grid;grid-template-columns:46px 1.1fr .9fr .9fr 1fr 38px 26px;gap:6px;align-items:center;}
-  .lhead{font-size:11px;color:var(--sub);font-weight:700;letter-spacing:.04em;padding:2px 11px 6px;}
+  .lhead,.lrow{display:grid;grid-template-columns:1.5fr 1fr 50px 24px;gap:9px;align-items:center;}
+  .lhead{font-size:12px;color:var(--sub);font-weight:700;letter-spacing:.04em;padding:2px 11px 6px;}
   .lhead .r{text-align:right;}
-  .lrow{background:var(--bg);border-radius:11px;padding:11px;margin-bottom:7px;cursor:pointer;font-size:13px;box-shadow:var(--rise-sm);}
+  .lrow{background:var(--bg);border-radius:11px;padding:12px 11px;margin-bottom:7px;cursor:pointer;font-size:14.5px;box-shadow:var(--rise-sm);}
   .lrow:active{box-shadow:var(--well);}
   .lrow span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .lr-date{color:var(--sub);font-variant-numeric:tabular-nums;font-size:12px;}
   .lr-site{font-weight:700;color:var(--ink);}
   .lr-emp{color:var(--ink);}
-  .lr-part{color:var(--kyo-d);}
   .lr-nk{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent-d);}
-  .lr-desc{color:var(--sub);font-size:12px;}
   .lr-del{text-align:center;color:#d63a3f;font-size:16px;font-weight:800;cursor:pointer;border-radius:7px;padding:2px 0;}
   .lr-del:active{background:#fdeced;}
   .dvrow{display:flex;gap:10px;padding:9px 2px;border-bottom:1px dashed var(--line);}
   .dvrow:last-child{border-bottom:none;}
   .dvl{flex:0 0 88px;font-size:12.5px;color:var(--sub);font-weight:700;padding-top:2px;}
-  .dvv{flex:1;font-size:14.5px;white-space:pre-wrap;word-break:break-word;color:var(--ink);}
+  .dvv{flex:1;font-size:16px;white-space:pre-wrap;word-break:break-word;color:var(--ink);}
   #printArea{display:none;}
   @media print{
     body{background:#fff!important;padding:0!important;}
@@ -190,18 +193,20 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v57</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v58</div>
 <header>
-  <div class="hd-row">
+  <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
-    <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
+    <div class="hcenter">
+      <span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
+      <div class="htxt"><span class="en">Daily report</span><h1>作業日報</h1></div>
+    </div>
+    <div class="hright">
+      <span class="hmark">Gen-Can</span>
+      <button class="hrf" onclick="reload()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
+    </div>
   </div>
-  <div class="hd-row hd-top" style="margin-top:8px;">
-    <span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
-    <div style="flex:1;min-width:0;"><span class="en">Daily report</span><h1>作業日報</h1></div>
-    <span class="hmark">Gen-Can</span>
-    <button class="ghost" onclick="reload()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button>
-  </div>
+  <span class="sync"><span id="dot" class="dot"></span><span id="syncTxt"></span></span>
 </header>
 
 <div class="toolbar">
@@ -332,7 +337,7 @@ function filtered(){var pf=document.getElementById('projFilter').value,now=new D
 function projFull(pid,nm){var p=projects.filter(function(x){return String(x['案件ID'])===String(pid);})[0];return (p&&p['案件名'])?p['案件名']:(nm||'(現場未設定)');}
 function workerShort(r){var w=workers.filter(function(x){return String(x['作業員ID'])===String(r['作業員ID']);})[0];if(w&&w['略称'])return w['略称'];return r['氏名']||(w&&w['氏名'])||'';}
 var detailCtx=null;
-function dvRow(l,v){return '<div class="dvrow"><div class="dvl">'+esc(l)+'</div><div class="dvv">'+esc(v)+'</div></div>';}
+function dvRow(l,v,ic){return '<div class="dvrow"><div class="dvl">'+esc(l)+'</div><div class="dvv">'+(ic||'')+esc(v)+'</div></div>';}
 function showDetail(pid,date){
   var grp=reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
   if(!grp.length)return;
@@ -353,7 +358,7 @@ function showDetail(pid,date){
   if(t0['開始']||t0['終了'])h+=dvRow('時間',String(t0['開始']||'').slice(0,5)+' 〜 '+(String(t0['翌日'])==='1'?'翌':'')+String(t0['終了']||'').slice(0,5)+(t0['休憩分']!==''&&t0['休憩分']!=null?'（休憩 '+t0['休憩分']+'分）':''));
   h+=dvRow('人工（合計）',round2(nk)+' 人工'+(ynkSum>0?'　＋　深夜 '+round2(ynkSum)+' 人工':'')+'（'+grp.length+'名分）');
   var vh='';grp.forEach(function(r){if(!vh&&r['車両'])vh=r['車両'];});
-  if(vh)h+=dvRow('使用車両','🚚 '+vehNames(vh));
+  if(vh)h+=dvRow('使用車両',vehNames(vh),'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M2 7h12v9H2zM14 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>');
   h+=dvRow('作業内容',desc||'－');
   h+=dvRow('備考',note||'－');
   document.getElementById('dvBody').innerHTML=h;
@@ -465,14 +470,11 @@ function render(){
     if(isKyo(r['区分']))g.part.push(workerShort(r));else g.emp.push(workerShort(r));
   });
   order.sort(function(a,b){var A=gmap[a],B=gmap[b];return B.date.localeCompare(A.date)||A.name.localeCompare(B.name);});
-  var h='<div class="lhead"><span>日付</span><span>現場名</span><span>社員</span><span>協力業者</span><span>作業内容</span><span class="r">人工</span><span></span></div>';
+  var h='<div class="lhead"><span>現場名</span><span>社員</span><span class="r">人工</span><span></span></div>';
   order.forEach(function(k){var g=gmap[k];
     h+='<div class="lrow" data-pid="'+esc(g.pid)+'" data-date="'+esc(g.date)+'">'+
-      '<span class="lr-date">'+esc(g.date.slice(5).replace('-','/'))+'</span>'+
       '<span class="lr-site">'+esc(g.name)+'</span>'+
       '<span class="lr-emp">'+esc(g.emp.join('、')||'－')+'</span>'+
-      '<span class="lr-part">'+esc(g.part.join('、')||'－')+'</span>'+
-      '<span class="lr-desc">'+esc(g.desc||'－')+'</span>'+
       '<span class="lr-nk">'+round2(g.nk)+(g.ynk>0?'<span class="lr-ynk">夜'+round2(g.ynk)+'</span>':'')+'</span>'+
       '<span class="lr-del" data-pid="'+esc(g.pid)+'" data-date="'+esc(g.date)+'" title="削除">×</span></div>';
   });
@@ -659,7 +661,7 @@ function buildVehicleChecks(){var box=document.getElementById('vmList');if(!box)
   if(!vehicles.length){h+='<div class="wempty">登録なし（管理画面の「車両」タブから登録）</div>';box.innerHTML=h;return;}
   h+='<div class="wlist">';
   vehicles.forEach(function(v){var nm=esc(v['車両名']||'')+(v['ナンバー']?'（'+esc(v['ナンバー'])+'）':'');
-    h+='<label class="wchk"><input type="checkbox" class="vcb" value="'+esc(v['車両ID'])+'"> 🚚 '+nm+'</label>';});
+    h+='<label class="wchk"><input type="checkbox" class="vcb" value="'+esc(v['車両ID'])+'"> <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M2 7h12v9H2zM14 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg> '+nm+'</label>';});
   h+='</div>'; box.innerHTML=h;}
 function checkedVehicleStr(){var cbs=document.querySelectorAll('#vmList .vcb:checked'),out=[];for(var i=0;i<cbs.length;i++)out.push(cbs[i].value);return out.join(',');}
 function setVehicleChecks(str){ buildVehicleChecks();
@@ -746,11 +748,11 @@ loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadC
   <div class="sheet">
     <h2>日報の内容</h2>
     <div id="dvBody"></div>
-    <div class="acts"><button class="btn sub" onclick="closeDetail()">閉じる</button><button class="btn sub" onclick="copyFromDetail()" style="color:#1a7a4a;border-color:#1a7a4a;">📋 複製して今日の日報に</button><button class="btn primary" onclick="editFromDetail()">✏️ 編集する</button></div>
+    <div class="acts"><button class="btn sub" onclick="closeDetail()">閉じる</button><button class="btn sub" onclick="copyFromDetail()" style="color:#1a7a4a;border-color:#1a7a4a;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 10h6M9 14h4"/></svg>複製して今日の日報に</button><button class="btn primary" onclick="editFromDetail()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="m4 20 1.2-4.2L16 5l3 3L8.2 18.8Z"/><path d="m13.2 6.8 3 3"/></svg>編集する</button></div>
   </div>
 </div>
 <div id="printArea"></div>
-<div id="offlineBar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:9px 12px;box-shadow:0 2px 10px rgba(0,0,0,.3);">📡 オフラインです。電波の良い場所で再読み込みしてください。</div>
+<div id="offlineBar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:9px 12px;box-shadow:0 2px 10px rgba(0,0,0,.3);"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M4.5 10a10 10 0 0 1 15 0M7.5 13a6 6 0 0 1 9 0"/><circle cx="12" cy="16.5" r="1.4"/></svg>オフラインです。電波の良い場所で再読み込みしてください。</div>
 <script>
 (function(){
   function offUpd(){var b=document.getElementById('offlineBar');if(b)b.style.display=navigator.onLine?'none':'block';}
