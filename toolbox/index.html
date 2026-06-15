@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 54 (2026-06-15) チェックリスト音声入力を連続入力化（1項目確定→自動で次の項目追加→そのまま続けて話せる。停止ボタンで終了）。機能・id不変 -->
+<!-- toolbox version 59 (2026-06-15) 工事手帳「塗装」タブのコンテンツを追加（塗料種類・下地別仕様・塗布量・希釈率・工程・乾燥時間・気象条件・養生材・サンドペーパー番手・安全/法令）10カード。これで全5業種（電気/建築/配管/空調/塗装）が完成。 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -54,6 +54,17 @@
   .t-book .ic{background:#7c3ab4;} .t-board .ic{background:#e8910b;} .t-elec .ic{background:#bd941c;}
   .t-mag .ic{background:#4f46e5;} .t-area .ic{background:#0d9aa0;} .t-meas .ic{background:#0d9aa0;}
   .bk-srch{width:100%;padding:12px 13px;border:none;border-radius:12px;font-size:15.5px;margin-bottom:10px;background:var(--bg);box-shadow:var(--well);color:var(--ink);}
+  /* 工事手帳：業種タブ（tb v55追加） */
+  .bk-tabs{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:10px;padding-bottom:4px;scrollbar-width:none;}
+  .bk-tabs::-webkit-scrollbar{display:none;}
+  .bk-tab{flex:0 0 auto;padding:9px 16px;border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;letter-spacing:.04em;}
+  .bk-tab:active{box-shadow:var(--well);}
+  .bk-tab.on{background:var(--accent);color:#fff;box-shadow:var(--rise-sm);}
+  .bk-cat{display:none;}
+  .bk-cat.on{display:block;}
+  .bk-empty{background:var(--bg);box-shadow:var(--rise-sm);border-radius:13px;padding:30px 20px;text-align:center;color:var(--sub);font-size:14px;line-height:1.9;}
+  .bk-empty .em{font-size:34px;display:block;margin-bottom:8px;}
+  .bk-empty b{color:var(--accent-d);}
   .bkc{border:none;border-radius:13px;background:var(--bg);box-shadow:var(--rise-sm);margin-bottom:9px;overflow:hidden;}
   .bkh{display:flex;justify-content:space-between;align-items:center;padding:14px;font-weight:700;font-size:15px;cursor:pointer;user-select:none;color:var(--ink);}
   .bkb{display:none;padding:0 13px 13px;}
@@ -319,7 +330,7 @@
   .citem .micbtn{position:static;transform:none;width:32px;height:32px;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v54</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v59</div>
 
 <div class="wrap">
 
@@ -714,8 +725,18 @@
       <span class="back2" onclick="go('p-home')">← ツールボックス</span>
       <h2><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;margin-right:6px;"><path d="M12 6.5S9.2 4.5 4 4.5v14c5.2 0 8 2 8 2s2.8-2 8-2v-14c-5.2 0-8 2-8 2Z"/><path d="M12 6.5v14"/></svg>工事手帳</h2>
     </div>
-    <input class="bk-srch" id="bkQ" placeholder="🔍 検索（例：VVF・接地・スリーブ）" oninput="bkFilter()">
+    <!-- 業種タブ（v55追加） -->
+    <div class="bk-tabs" role="tablist">
+      <button type="button" class="bk-tab on" data-cat="elec" onclick="bkSwitch('elec')">電気</button>
+      <button type="button" class="bk-tab"    data-cat="bld"  onclick="bkSwitch('bld')">建築</button>
+      <button type="button" class="bk-tab"    data-cat="plb"  onclick="bkSwitch('plb')">配管</button>
+      <button type="button" class="bk-tab"    data-cat="hvac" onclick="bkSwitch('hvac')">空調</button>
+      <button type="button" class="bk-tab"    data-cat="ptg"  onclick="bkSwitch('ptg')">塗装</button>
+    </div>
+    <input class="bk-srch" id="bkQ" placeholder="🔍 検索（選択中の業種から）" oninput="bkFilter()">
 
+    <!-- ===== 電気カテゴリ ===== -->
+    <div class="bk-cat on" data-cat="elec">
     <!-- IV線許容電流 -->
     <div class="bkc" data-kw="iv 絶縁電線 許容電流 単線 より線 sq スケ 幹線">
       <div class="bkh" onclick="bkToggle(this)"><span>IV線の許容電流</span><span class="bkar">▼</span></div>
@@ -851,6 +872,1057 @@
     </div>
 
     <div class="enote" style="margin-top:16px;">数値はすべて目安・参考値です。実際の施工は内線規程・電気設備技術基準の最新版およびメーカー資料で必ず確認してください。</div>
+    </div><!-- /bk-cat elec -->
+
+    <!-- ===== 建築カテゴリ ===== -->
+    <div class="bk-cat" data-cat="bld">
+
+    <!-- 木材寸法（製材） -->
+    <div class="bkc" data-kw="木材 寸法 製材 角材 柱 間柱 垂木 母屋 桁 梁 105 120 mm">
+      <div class="bkh" onclick="bkToggle(this)"><span>木材寸法（在来工法の代表値）</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">主要部材の標準寸法</div>
+        <div class="bkx"><table class="ktbl"><tr><th>部材</th><th>標準寸法（mm）</th><th>用途</th></tr>
+        <tr><td>通し柱</td><td class="kz">120×120</td><td>1階〜2階通しの柱</td></tr>
+        <tr><td>管柱</td><td class="kz">105×105 / 120×120</td><td>各階の柱（在来）</td></tr>
+        <tr><td>間柱</td><td class="kz">30×105 / 45×105</td><td>壁内の補助柱（455mm間隔）</td></tr>
+        <tr><td>胴縁</td><td class="kz">15×45 / 18×45</td><td>外壁・内壁下地（455mm間隔）</td></tr>
+        <tr><td>垂木</td><td class="kz">45×60 / 45×75 / 60×75</td><td>屋根勾配材（455mm間隔）</td></tr>
+        <tr><td>母屋</td><td class="kz">90×90 / 105×105</td><td>垂木を受ける横架材</td></tr>
+        <tr><td>桁・梁</td><td class="kz">105×120〜120×360</td><td>スパン・荷重に応じる</td></tr>
+        <tr><td>土台</td><td class="kz">105×105 / 120×120</td><td>基礎上の横架材</td></tr>
+        <tr><td>大引</td><td class="kz">90×90 / 105×105</td><td>床下の横架材（910mm間隔）</td></tr>
+        <tr><td>根太</td><td class="kz">45×45 / 45×60</td><td>床板下地（303mm間隔）</td></tr></table></div>
+        <div class="bksub">製材の標準長さ</div>
+        <div class="bkx"><table class="ktbl"><tr><th>長さ</th><th>備考</th></tr>
+        <tr><td>3m / 4m</td><td>一般流通の主要長さ</td></tr>
+        <tr><td>6m</td><td>梁・桁の標準長</td></tr>
+        <tr><td>2m / 5m</td><td>規格外（要注文）</td></tr></table></div>
+        <div class="kn">※在来軸組工法の代表値。集成材・KD材は乾燥収縮が少ない。構造計算は許容応力度計算で確認。</div>
+      </div>
+    </div>
+
+    <!-- 構造用合板 -->
+    <div class="bkc" data-kw="合板 構造用合板 OSB 厚さ サイズ 釘 ピッチ 耐力壁">
+      <div class="bkh" onclick="bkToggle(this)"><span>構造用合板・OSBの規格</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">標準サイズ・厚さ</div>
+        <div class="bkx"><table class="ktbl"><tr><th>サイズ</th><th>厚さ</th><th>主な用途</th></tr>
+        <tr><td>910×1820（3×6尺）</td><td class="kz">9 / 12 / 15 / 24mm</td><td>耐力壁・床・屋根下地</td></tr>
+        <tr><td>910×2440（3×8尺）</td><td class="kz">9 / 12mm</td><td>天井までの大判壁</td></tr>
+        <tr><td>1000×2000（メーター）</td><td class="kz">9 / 12mm</td><td>枠組工法</td></tr></table></div>
+        <div class="bksub">耐力壁としての釘打ち（在来軸組）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>合板厚</th><th>釘種類</th><th>ピッチ</th><th>壁倍率</th></tr>
+        <tr><td>9mm以上</td><td>N50</td><td class="kz">外周100mm・中通150mm以下</td><td>2.5倍</td></tr>
+        <tr><td>9mm以上</td><td>CN50</td><td class="kz">外周100mm・中通200mm以下</td><td>3.7倍</td></tr></table></div>
+        <div class="kn">※壁倍率は告示1100号に基づく代表値。実際の仕様は構造計算と確認申請仕様書で確認。</div>
+      </div>
+    </div>
+
+    <!-- 石膏ボード -->
+    <div class="bkc" data-kw="石膏ボード PB プラスターボード 厚さ ビス ピッチ 内装下地">
+      <div class="bkh" onclick="bkToggle(this)"><span>石膏ボード（PB）の規格</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">厚さと用途</div>
+        <div class="bkx"><table class="ktbl"><tr><th>厚さ</th><th>主な用途</th></tr>
+        <tr><td class="kz">9.5mm</td><td>天井・一般壁</td></tr>
+        <tr><td class="kz">12.5mm</td><td>一般壁の標準・遮音/耐火向け</td></tr>
+        <tr><td class="kz">15mm</td><td>耐火構造・遮音壁</td></tr>
+        <tr><td class="kz">21mm</td><td>耐火被覆（柱・梁）</td></tr></table></div>
+        <div class="bksub">標準サイズ</div>
+        <div class="bkx"><table class="ktbl"><tr><th>サイズ</th><th>備考</th></tr>
+        <tr><td>910×1820</td><td>3×6尺（一般）</td></tr>
+        <tr><td>910×2420 / 910×2730</td><td>天井高対応</td></tr>
+        <tr><td>910×3030</td><td>大判（張継減）</td></tr></table></div>
+        <div class="bksub">ビス・釘ピッチ</div>
+        <div class="bkx"><table class="ktbl"><tr><th>位置</th><th>ピッチ</th></tr>
+        <tr><td>周辺部</td><td class="kz">100mm以下</td></tr>
+        <tr><td>中通部</td><td class="kz">200mm以下</td></tr>
+        <tr><td>耐火構造（強化PB）</td><td class="kz">150mm以下</td></tr></table></div>
+        <div class="kn">※ビスは皿頭付き・専用品（PBビス）を使用。ボード端から10mm以上離して打つ。</div>
+      </div>
+    </div>
+
+    <!-- 釘の規格 -->
+    <div class="bkc" data-kw="釘 N CN FN 太さ 長さ 規格 釘打ち">
+      <div class="bkh" onclick="bkToggle(this)"><span>釘の種類と寸法（JIS規格）</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">N釘（一般・JIS A 5508）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>呼称</th><th>長さ</th><th>胴径</th></tr>
+        <tr><td>N38</td><td class="kz">38mm</td><td>2.15mm</td></tr>
+        <tr><td>N50</td><td class="kz">50mm</td><td>2.75mm</td></tr>
+        <tr><td>N65</td><td class="kz">65mm</td><td>3.05mm</td></tr>
+        <tr><td>N75</td><td class="kz">75mm</td><td>3.40mm</td></tr>
+        <tr><td>N90</td><td class="kz">90mm</td><td>3.75mm</td></tr></table></div>
+        <div class="bksub">CN釘（太め・枠組工法）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>呼称</th><th>長さ</th><th>胴径</th></tr>
+        <tr><td>CN50</td><td class="kz">50.8mm</td><td>2.87mm</td></tr>
+        <tr><td>CN65</td><td class="kz">63.5mm</td><td>3.33mm</td></tr>
+        <tr><td>CN75</td><td class="kz">76.2mm</td><td>3.76mm</td></tr>
+        <tr><td>CN90</td><td class="kz">88.9mm</td><td>4.11mm</td></tr></table></div>
+        <div class="bksub">用途別の使い分け</div>
+        <div class="bkx"><table class="ktbl"><tr><th>釘</th><th>主な用途</th></tr>
+        <tr><td>N釘</td><td>在来工法・造作・一般</td></tr>
+        <tr><td>CN釘</td><td>枠組壁工法（ツーバイフォー）</td></tr>
+        <tr><td>FN釘（細め）</td><td>仕上げ・造作</td></tr>
+        <tr><td>SN釘（ステン）</td><td>外装・防腐</td></tr></table></div>
+        <div class="kn">※釘長は接合材厚さの2.5倍以上が原則（薄い側を貫通させ厚い側に2/3以上効かせる）。</div>
+      </div>
+    </div>
+
+    <!-- ビスの規格 -->
+    <div class="bkc" data-kw="ビス スクリュー 木ねじ コーススレッド 長さ 軸径">
+      <div class="bkh" onclick="bkToggle(this)"><span>ビス（木ねじ）の使い分け</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">コーススレッド（造作・下地）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>軸径×長さ</th><th>用途目安</th></tr>
+        <tr><td>3.3×25</td><td>PB・薄板</td></tr>
+        <tr><td>3.8×38</td><td>PB（厚物）・薄板</td></tr>
+        <tr><td>3.8×51</td><td>下地材・胴縁</td></tr>
+        <tr><td>3.8×65</td><td>下地・造作</td></tr>
+        <tr><td>4.2×75〜90</td><td>厚物・桟・束</td></tr>
+        <tr><td>4.5×100〜120</td><td>厚物・梁桁補強</td></tr></table></div>
+        <div class="bksub">PBビス（石膏ボード専用）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>長さ</th><th>用途</th></tr>
+        <tr><td>25mm</td><td>9.5mm PB</td></tr>
+        <tr><td>32mm</td><td>12.5mm PB</td></tr>
+        <tr><td>35〜45mm</td><td>PB二重張り・厚物</td></tr></table></div>
+        <div class="kn">※構造部にはビス止め不可（脆性破壊のため）。構造接合は釘または専用構造ビスを使う。</div>
+      </div>
+    </div>
+
+    <!-- 断熱材 -->
+    <div class="bkc" data-kw="断熱材 グラスウール ロックウール XPS EPS ウレタン 熱伝導率">
+      <div class="bkh" onclick="bkToggle(this)"><span>断熱材の種類と厚さ目安</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">主要断熱材の熱伝導率λ（W/m・K）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>断熱材</th><th>λ値</th><th>特徴</th></tr>
+        <tr><td>グラスウール10K</td><td class="kz">0.050</td><td>安価・防音</td></tr>
+        <tr><td>グラスウール16K</td><td class="kz">0.045</td><td>標準</td></tr>
+        <tr><td>高性能GW24K</td><td class="kz">0.036</td><td>密度高</td></tr>
+        <tr><td>ロックウール</td><td class="kz">0.038</td><td>耐火性◎</td></tr>
+        <tr><td>EPS（発泡PS）</td><td class="kz">0.034</td><td>軽量・吸水少</td></tr>
+        <tr><td>XPS（押出PS）</td><td class="kz">0.028</td><td>基礎・外断熱</td></tr>
+        <tr><td>硬質ウレタンフォーム</td><td class="kz">0.024</td><td>現場吹付可</td></tr>
+        <tr><td>フェノールフォーム</td><td class="kz">0.020</td><td>最高性能</td></tr></table></div>
+        <div class="bksub">省エネ基準の壁断熱厚さ目安（GW16K換算）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>地域区分</th><th>壁断熱厚さ</th></tr>
+        <tr><td>1・2地域（北海道）</td><td class="kz">120mm以上</td></tr>
+        <tr><td>3地域（東北・標高高）</td><td class="kz">105mm以上</td></tr>
+        <tr><td>4地域（東北平地）</td><td class="kz">90mm以上</td></tr>
+        <tr><td>5・6地域（関東〜九州平地）</td><td class="kz">85mm以上</td></tr>
+        <tr><td>7地域（南九州）</td><td class="kz">80mm以上</td></tr>
+        <tr><td>8地域（沖縄）</td><td>基準なし</td></tr></table></div>
+        <div class="kn">※λ値が小さいほど高断熱。実際の必要厚さはUA値計算と省エネ基準適合判定で確認。</div>
+      </div>
+    </div>
+
+    <!-- 基礎の鉄筋 -->
+    <div class="bkc" data-kw="鉄筋 D10 D13 D16 異形鉄筋 配筋 かぶり 基礎">
+      <div class="bkh" onclick="bkToggle(this)"><span>異形鉄筋とかぶり厚</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">異形鉄筋（SD295A）の寸法</div>
+        <div class="bkx"><table class="ktbl"><tr><th>呼び名</th><th>呼び径</th><th>単位重量</th></tr>
+        <tr><td>D10</td><td class="kz">9.53mm</td><td>0.56kg/m</td></tr>
+        <tr><td>D13</td><td class="kz">12.7mm</td><td>0.995kg/m</td></tr>
+        <tr><td>D16</td><td class="kz">15.9mm</td><td>1.56kg/m</td></tr>
+        <tr><td>D19</td><td class="kz">19.1mm</td><td>2.25kg/m</td></tr>
+        <tr><td>D22</td><td class="kz">22.2mm</td><td>3.04kg/m</td></tr>
+        <tr><td>D25</td><td class="kz">25.4mm</td><td>3.98kg/m</td></tr></table></div>
+        <div class="bksub">かぶり厚（最小値・建築基準法）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>部位</th><th>かぶり厚</th></tr>
+        <tr><td>耐力壁以外の壁・床</td><td class="kz">20mm以上</td></tr>
+        <tr><td>耐力壁・柱・梁</td><td class="kz">30mm以上</td></tr>
+        <tr><td>直接土に接する壁・柱・梁・床</td><td class="kz">40mm以上</td></tr>
+        <tr><td>基礎（捨てコンを除く）</td><td class="kz">60mm以上</td></tr></table></div>
+        <div class="bksub">木造住宅基礎の標準配筋</div>
+        <div class="bkx"><table class="ktbl"><tr><th>部位</th><th>標準</th></tr>
+        <tr><td>立上り 主筋</td><td>D13（上下）</td></tr>
+        <tr><td>立上り 腹筋</td><td>D10</td></tr>
+        <tr><td>底盤（耐圧版）</td><td>D13 @200mm ダブル配筋</td></tr>
+        <tr><td>あばら筋・スターラップ</td><td>D10 @200〜300mm</td></tr></table></div>
+        <div class="kn">※建築基準法施行令第79条等に基づく。実際の配筋は構造計算と地盤調査結果に従う。</div>
+      </div>
+    </div>
+
+    <!-- コンクリート強度 -->
+    <div class="bkc" data-kw="コンクリート 強度 Fc 18 21 24 スランプ 配合 セメント">
+      <div class="bkh" onclick="bkToggle(this)"><span>コンクリート強度・スランプ</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">設計基準強度Fc（N/mm²）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>Fc</th><th>主な用途</th></tr>
+        <tr><td class="kz">18</td><td>住宅基礎（最低基準）</td></tr>
+        <tr><td class="kz">21</td><td>住宅基礎標準・低層RC</td></tr>
+        <tr><td class="kz">24</td><td>低中層RC・耐久性配慮</td></tr>
+        <tr><td class="kz">27〜30</td><td>中層RC・長期優良</td></tr>
+        <tr><td class="kz">36以上</td><td>高層RC</td></tr></table></div>
+        <div class="bksub">スランプ値（mm）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>用途</th><th>スランプ</th></tr>
+        <tr><td>マスコン・無筋</td><td class="kz">8〜15cm</td></tr>
+        <tr><td>一般RC・基礎</td><td class="kz">15〜18cm</td></tr>
+        <tr><td>密配筋・流動化</td><td class="kz">18〜21cm</td></tr></table></div>
+        <div class="bksub">養生期間の目安（普通ポルトランド）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>季節</th><th>湿潤養生</th></tr>
+        <tr><td>夏（15℃以上）</td><td class="kz">5日以上</td></tr>
+        <tr><td>春秋（5〜15℃）</td><td class="kz">7日以上</td></tr>
+        <tr><td>冬（5℃未満）</td><td class="kz">9日以上＋保温</td></tr></table></div>
+        <div class="kn">※JASS5に基づく目安。実際は構造設計者・コンクリート技士の判断による。</div>
+      </div>
+    </div>
+
+    <!-- 耐震金物 -->
+    <div class="bkc" data-kw="金物 耐震 ホールダウン 羽子板 Z金物 接合 引抜き">
+      <div class="bkh" onclick="bkToggle(this)"><span>耐震金物（Z金物・告示金物）</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">主な接合金物と用途</div>
+        <div class="bkx"><table class="ktbl"><tr><th>金物</th><th>用途</th><th>許容耐力</th></tr>
+        <tr><td>かど金物（CP-L/CP-T）</td><td>柱頭・柱脚</td><td class="kz">5.1kN</td></tr>
+        <tr><td>山形プレート（VP）</td><td>柱頭・柱脚</td><td class="kz">8.5kN</td></tr>
+        <tr><td>羽子板ボルト</td><td>桁・梁の接合</td><td class="kz">9.4kN</td></tr>
+        <tr><td>短ざく金物（S）</td><td>胴差・通し柱</td><td class="kz">15kN</td></tr>
+        <tr><td>ホールダウンHD10</td><td>引抜き止め</td><td class="kz">10kN</td></tr>
+        <tr><td>ホールダウンHD15</td><td>引抜き止め（強）</td><td class="kz">15kN</td></tr>
+        <tr><td>ホールダウンHD20</td><td>引抜き止め（最強）</td><td class="kz">20kN</td></tr></table></div>
+        <div class="bksub">柱接合（N値計算の代表値）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>N値</th><th>必要金物</th></tr>
+        <tr><td>0〜0.65</td><td>無し（ほぞ差し）</td></tr>
+        <tr><td>0.65〜1.0</td><td>かど金物CP-T／山形プレート</td></tr>
+        <tr><td>1.0〜1.4</td><td>かど金物CP-L／VP金物</td></tr>
+        <tr><td>1.4〜1.6</td><td>羽子板＋ボルト</td></tr>
+        <tr><td>1.6〜1.8</td><td>HD10</td></tr>
+        <tr><td>1.8〜2.8</td><td>HD15</td></tr>
+        <tr><td>2.8〜3.7</td><td>HD20</td></tr></table></div>
+        <div class="kn">※平成12年建設省告示1460号に基づく。N値は壁倍率と隣接条件から構造計算で算出する。</div>
+      </div>
+    </div>
+
+    <!-- 建具・サッシ -->
+    <div class="bkc" data-kw="サッシ 建具 窓 寸法 mm 引違 開き">
+      <div class="bkh" onclick="bkToggle(this)"><span>窓・サッシ・建具の標準寸法</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">アルミサッシ（引違窓）の規格寸法（mm）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>記号</th><th>呼び寸法</th><th>用途</th></tr>
+        <tr><td>06003</td><td class="kz">W640×H370</td><td>小窓・浴室</td></tr>
+        <tr><td>06907</td><td class="kz">W690×H770</td><td>浴室・洗面</td></tr>
+        <tr><td>11405</td><td class="kz">W1185×H570</td><td>キッチン・地窓</td></tr>
+        <tr><td>11909</td><td class="kz">W1235×H970</td><td>居室小窓</td></tr>
+        <tr><td>16509</td><td class="kz">W1690×H970</td><td>腰窓（標準）</td></tr>
+        <tr><td>16513</td><td class="kz">W1690×H1370</td><td>掃出窓（標準）</td></tr>
+        <tr><td>16518</td><td class="kz">W1690×H1830</td><td>掃出窓・テラス</td></tr>
+        <tr><td>25618</td><td class="kz">W2600×H1830</td><td>大開口テラス</td></tr></table></div>
+        <div class="bksub">内部建具の標準寸法</div>
+        <div class="bkx"><table class="ktbl"><tr><th>建具</th><th>幅×高さ</th></tr>
+        <tr><td>片開きドア</td><td class="kz">W780×H2030</td></tr>
+        <tr><td>引戸（片引）</td><td class="kz">W780×H2030</td></tr>
+        <tr><td>クローゼット折戸</td><td class="kz">W1640×H2030</td></tr>
+        <tr><td>玄関ドア（片開）</td><td class="kz">W873×H2330</td></tr></table></div>
+        <div class="kn">※サッシ呼び寸法は外形寸法。窓開口（壁開口）は呼び＋数mm余裕が必要。メーカーカタログで確認。</div>
+      </div>
+    </div>
+
+    <div class="enote" style="margin-top:16px;">数値はすべて目安・参考値です。建築基準法・JIS規格・設計図書・メーカー資料の最新版で必ず確認してください。</div>
+    </div><!-- /bk-cat bld -->
+
+    <!-- ===== 配管カテゴリ ===== -->
+    <div class="bk-cat" data-cat="plb">
+
+    <!-- 管種一覧 -->
+    <div class="bkc" data-kw="管種 材質 VP HIVP HT SUS 銅管 鋼管 ポリ管 さや管 ヘッダー 給水 給湯 排水">
+      <div class="bkh" onclick="bkToggle(this)"><span>管種・材質の一覧と用途</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">給水・給湯・排水・ガスの代表的な管種</div>
+        <div class="bkx"><table class="ktbl"><tr><th>管種</th><th>主な用途</th><th>最高使用温度</th></tr>
+        <tr><td>VP（硬質塩ビ）</td><td>給水・排水（常温）</td><td class="kz">40℃</td></tr>
+        <tr><td>HIVP（耐衝撃塩ビ）</td><td>給水（屋外・寒冷地）</td><td class="kz">40℃</td></tr>
+        <tr><td>HT（耐熱塩ビ）</td><td>給湯・温水</td><td class="kz">90℃</td></tr>
+        <tr><td>VU（薄肉塩ビ）</td><td>排水のみ（給水不可）</td><td class="kz">40℃</td></tr>
+        <tr><td>SUS304（ステン）</td><td>給水・給湯・建物内幹線</td><td class="kz">100℃以上</td></tr>
+        <tr><td>銅管（M/L/K）</td><td>給湯・冷媒・ガス</td><td class="kz">200℃</td></tr>
+        <tr><td>白ガス管（SGP-W）</td><td>給水（屋内）</td><td class="kz">85℃</td></tr>
+        <tr><td>ポリ管（PE）</td><td>給水・さや管内</td><td class="kz">40℃</td></tr>
+        <tr><td>架橋ポリ（PEX）</td><td>給湯・床暖房</td><td class="kz">95℃</td></tr>
+        <tr><td>ポリブテン（PB）</td><td>給湯・さや管ヘッダー</td><td class="kz">90℃</td></tr>
+        <tr><td>鋳鉄管</td><td>排水（建物内主管）</td><td class="kz">—</td></tr></table></div>
+        <div class="kn">※白ガス管は名前と裏腹に給水用。ガス管としては別規格（SGP-VS/PE管）を使う。</div>
+      </div>
+    </div>
+
+    <!-- 塩ビ管の規格寸法 -->
+    <div class="bkc" data-kw="塩ビ管 VP HIVP 規格 寸法 呼び径 外径 肉厚 13 16 20 25 30 40 50 75 100 150">
+      <div class="bkh" onclick="bkToggle(this)"><span>塩ビ管（VP/VU）の規格寸法</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">VP（厚肉・JIS K6741）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>呼び径</th><th>外径</th><th>肉厚</th></tr>
+        <tr><td>13</td><td class="kz">18mm</td><td>2.2mm</td></tr>
+        <tr><td>16</td><td class="kz">22mm</td><td>2.7mm</td></tr>
+        <tr><td>20</td><td class="kz">26mm</td><td>2.7mm</td></tr>
+        <tr><td>25</td><td class="kz">32mm</td><td>3.1mm</td></tr>
+        <tr><td>30</td><td class="kz">38mm</td><td>3.1mm</td></tr>
+        <tr><td>40</td><td class="kz">48mm</td><td>3.6mm</td></tr>
+        <tr><td>50</td><td class="kz">60mm</td><td>4.1mm</td></tr>
+        <tr><td>65</td><td class="kz">76mm</td><td>4.1mm</td></tr>
+        <tr><td>75</td><td class="kz">89mm</td><td>5.5mm</td></tr>
+        <tr><td>100</td><td class="kz">114mm</td><td>6.6mm</td></tr>
+        <tr><td>125</td><td class="kz">140mm</td><td>7.0mm</td></tr>
+        <tr><td>150</td><td class="kz">165mm</td><td>8.1mm</td></tr></table></div>
+        <div class="bksub">VU（薄肉・排水専用）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>呼び径</th><th>外径</th><th>肉厚</th></tr>
+        <tr><td>40</td><td class="kz">48mm</td><td>1.8mm</td></tr>
+        <tr><td>50</td><td class="kz">60mm</td><td>1.8mm</td></tr>
+        <tr><td>75</td><td class="kz">89mm</td><td>2.7mm</td></tr>
+        <tr><td>100</td><td class="kz">114mm</td><td>3.1mm</td></tr>
+        <tr><td>125</td><td class="kz">140mm</td><td>4.1mm</td></tr>
+        <tr><td>150</td><td class="kz">165mm</td><td>5.1mm</td></tr></table></div>
+        <div class="kn">※標準長は4m。1本物・受け口付（TS）・差し口（DV）など形状違いがある。</div>
+      </div>
+    </div>
+
+    <!-- 給水管の選び方 -->
+    <div class="bkc" data-kw="給水管 給水 配管 サイズ 同時使用 戸建て マンション">
+      <div class="bkh" onclick="bkToggle(this)"><span>給水管の管径の目安</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">器具1個あたりの使用流量（L/min）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>器具</th><th>瞬時流量</th></tr>
+        <tr><td>洗面・手洗い</td><td class="kz">8</td></tr>
+        <tr><td>台所流し（混合）</td><td class="kz">12</td></tr>
+        <tr><td>浴室シャワー</td><td class="kz">10〜12</td></tr>
+        <tr><td>大便器（FV）</td><td class="kz">110</td></tr>
+        <tr><td>大便器（タンク）</td><td class="kz">15</td></tr>
+        <tr><td>洗濯機</td><td class="kz">12</td></tr>
+        <tr><td>散水栓</td><td class="kz">15</td></tr></table></div>
+        <div class="bksub">給水主管の管径目安（戸建て住宅）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>建物</th><th>引込管</th><th>水道メーター</th></tr>
+        <tr><td>戸建（〜3LDK）</td><td class="kz">20mm</td><td>20mm</td></tr>
+        <tr><td>戸建（4LDK以上）</td><td class="kz">25mm</td><td>25mm</td></tr>
+        <tr><td>2世帯住宅</td><td class="kz">25〜30mm</td><td>25mm</td></tr>
+        <tr><td>共同住宅（戸別）</td><td class="kz">13〜20mm</td><td>13mm</td></tr></table></div>
+        <div class="bksub">枝管の管径目安</div>
+        <div class="bkx"><table class="ktbl"><tr><th>用途</th><th>管径</th></tr>
+        <tr><td>洗面・手洗い・洗濯</td><td class="kz">13mm</td></tr>
+        <tr><td>台所・浴室</td><td class="kz">13〜20mm</td></tr>
+        <tr><td>給湯器一次側</td><td class="kz">20mm</td></tr>
+        <tr><td>大便器（FV）</td><td class="kz">25mm以上</td></tr></table></div>
+        <div class="kn">※実際は同時使用率・水圧・配管長から計算する。給水装置工事に該当する部分は指定給水装置工事事業者が施工。</div>
+      </div>
+    </div>
+
+    <!-- 排水管の勾配 -->
+    <div class="bkc" data-kw="排水 勾配 管径 100 75 50 配管 屋内 屋外">
+      <div class="bkh" onclick="bkToggle(this)"><span>排水管の勾配と管径</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">横走管の最小勾配（一般）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>管径</th><th>最小勾配</th></tr>
+        <tr><td>65mm以下</td><td class="kz">1/50</td></tr>
+        <tr><td>75・100mm</td><td class="kz">1/100</td></tr>
+        <tr><td>125mm</td><td class="kz">1/150</td></tr>
+        <tr><td>150mm以上</td><td class="kz">1/200</td></tr></table></div>
+        <div class="bksub">器具排水管の管径</div>
+        <div class="bkx"><table class="ktbl"><tr><th>器具</th><th>排水管径</th></tr>
+        <tr><td>洗面・手洗い</td><td class="kz">32〜40mm</td></tr>
+        <tr><td>台所流し</td><td class="kz">40〜50mm</td></tr>
+        <tr><td>洗濯機防水パン</td><td class="kz">50mm</td></tr>
+        <tr><td>浴槽・浴室排水</td><td class="kz">40〜50mm</td></tr>
+        <tr><td>大便器</td><td class="kz">75〜100mm</td></tr>
+        <tr><td>小便器</td><td class="kz">40〜50mm</td></tr>
+        <tr><td>掃除流し</td><td class="kz">65mm</td></tr></table></div>
+        <div class="bksub">屋外排水ます〜本管の管径</div>
+        <div class="bkx"><table class="ktbl"><tr><th>用途</th><th>管径</th></tr>
+        <tr><td>戸建汚水主管</td><td class="kz">100mm</td></tr>
+        <tr><td>戸建雨水主管</td><td class="kz">100〜150mm</td></tr>
+        <tr><td>合流式</td><td class="kz">150mm以上</td></tr></table></div>
+        <div class="kn">※給排水設備工事指針・SHASE-S206に基づく。実勾配は1/100でも自然流下するが、施工誤差を考慮し1/100以上を確保。</div>
+      </div>
+    </div>
+
+    <!-- 継手の種類 -->
+    <div class="bkc" data-kw="継手 エルボ チーズ ソケット レジューサ 異径 配管継手 90度 45度">
+      <div class="bkh" onclick="bkToggle(this)"><span>継手（フィッティング）の種類</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">代表的な継手</div>
+        <div class="bkx"><table class="ktbl"><tr><th>継手</th><th>用途</th></tr>
+        <tr><td>エルボ（90°/45°）</td><td>方向転換</td></tr>
+        <tr><td>大曲りエルボ（LL）</td><td>排水・流れを良くする</td></tr>
+        <tr><td>チーズ（T字）</td><td>分岐</td></tr>
+        <tr><td>クロス（十字）</td><td>4方分岐（排水では避ける）</td></tr>
+        <tr><td>レジューサ・異径ソケット</td><td>管径変更</td></tr>
+        <tr><td>ソケット（カップリング）</td><td>直線接続</td></tr>
+        <tr><td>キャップ・プラグ</td><td>管端閉塞</td></tr>
+        <tr><td>ユニオン・フランジ</td><td>取り外し可能な接続</td></tr>
+        <tr><td>掃除口（CO）</td><td>排水点検・清掃口</td></tr></table></div>
+        <div class="bksub">塩ビ排水用継手の記号（DV）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>記号</th><th>名称</th></tr>
+        <tr><td>DL</td><td>大曲りエルボ</td></tr>
+        <tr><td>DS</td><td>ソケット</td></tr>
+        <tr><td>DT</td><td>チーズ</td></tr>
+        <tr><td>DY</td><td>Y継手（45°枝）</td></tr>
+        <tr><td>DCH</td><td>掃除口チーズ</td></tr></table></div>
+        <div class="kn">※排水ではエア溜まりや詰まりを避けるため、Y継手や大曲りエルボを優先する。</div>
+      </div>
+    </div>
+
+    <!-- 接続方法 -->
+    <div class="bkc" data-kw="接続 接着 TS DV ねじ込み メカニカル ろう付け はんだ 溶接">
+      <div class="bkh" onclick="bkToggle(this)"><span>管の接続方法</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">管種別の主な接続方法</div>
+        <div class="bkx"><table class="ktbl"><tr><th>管種</th><th>接続方法</th></tr>
+        <tr><td>VP・HIVP（給水）</td><td>TS接着接合（受け口に挿入）</td></tr>
+        <tr><td>VU（排水）</td><td>DV接着接合 or ゴム輪受口</td></tr>
+        <tr><td>HT（給湯）</td><td>TS接着 ※専用接着剤</td></tr>
+        <tr><td>SUS（給水）</td><td>プレス式・メカニカル・ねじ込み</td></tr>
+        <tr><td>銅管</td><td>ろう付け（はんだ付け）・フレア</td></tr>
+        <tr><td>白ガス管</td><td>ねじ込み（テープシール）</td></tr>
+        <tr><td>架橋ポリ・ポリブテン</td><td>ワンタッチ継手・メカニカル</td></tr>
+        <tr><td>鋳鉄管</td><td>ゴムリング・メカニカル</td></tr></table></div>
+        <div class="bksub">塩ビ接着のポイント</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>内容</th></tr>
+        <tr><td>面取り</td><td>差し口外周を糸面取り（バリ取り）</td></tr>
+        <tr><td>接着剤</td><td>給水・給湯・排水で専用品を使う</td></tr>
+        <tr><td>挿入</td><td>受け口の標線まで一気に差し込む</td></tr>
+        <tr><td>保持時間</td><td>30秒〜1分（戻り防止）</td></tr>
+        <tr><td>通水まで</td><td>給水：24時間以上</td></tr></table></div>
+        <div class="kn">※接着剤の硬化時間は気温で変わる（低温で遅い）。冬期は特に保持時間を長く取る。</div>
+      </div>
+    </div>
+
+    <!-- 保温材 -->
+    <div class="bkc" data-kw="保温 ポリエチレンフォーム 凍結防止 厚さ 給湯 露付き">
+      <div class="bkh" onclick="bkToggle(this)"><span>保温材の厚さ目安</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">給湯管の保温厚さ（ポリエチレンフォーム）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>管径</th><th>保温厚さ</th></tr>
+        <tr><td>13〜20mm</td><td class="kz">10mm</td></tr>
+        <tr><td>25〜32mm</td><td class="kz">10〜20mm</td></tr>
+        <tr><td>40mm以上</td><td class="kz">20mm</td></tr></table></div>
+        <div class="bksub">給水管の保温（結露防止）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>用途</th><th>保温厚さ</th></tr>
+        <tr><td>屋内露出（一般）</td><td class="kz">10mm（結露防止）</td></tr>
+        <tr><td>天井裏・床下</td><td class="kz">10〜15mm</td></tr>
+        <tr><td>屋外露出</td><td class="kz">15〜20mm＋保護</td></tr></table></div>
+        <div class="bksub">凍結防止（寒冷地・屋外）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>対策</th><th>内容</th></tr>
+        <tr><td>保温材厚さ</td><td>20mm以上＋防湿層</td></tr>
+        <tr><td>凍結深度以下に埋設</td><td>地域による（30〜80cm以上）</td></tr>
+        <tr><td>電熱ヒーター（凍結防止帯）</td><td>長尺管・露出部</td></tr>
+        <tr><td>不凍栓・水抜き</td><td>長期不在用</td></tr></table></div>
+        <div class="kn">※省エネ基準（建築物エネルギー消費性能基準）で給湯管の保温は義務化されている部分あり。</div>
+      </div>
+    </div>
+
+    <!-- トラップ・通気 -->
+    <div class="bkc" data-kw="トラップ Sトラップ Pトラップ Uトラップ 封水 通気 ベント 排水">
+      <div class="bkh" onclick="bkToggle(this)"><span>トラップと通気管</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">トラップの種類</div>
+        <div class="bkx"><table class="ktbl"><tr><th>種類</th><th>主な用途</th></tr>
+        <tr><td>Sトラップ</td><td>洗面・台所（床下排水）</td></tr>
+        <tr><td>Pトラップ</td><td>洗面・台所（壁排水）</td></tr>
+        <tr><td>Uトラップ</td><td>横走管の中継</td></tr>
+        <tr><td>ドラムトラップ</td><td>浴室洗い場・台所流し</td></tr>
+        <tr><td>わんトラップ（ベル型）</td><td>床排水・浴室排水</td></tr>
+        <tr><td>グリーストラップ</td><td>業務用厨房（油分離）</td></tr></table></div>
+        <div class="bksub">封水深と封水損失</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>値</th></tr>
+        <tr><td>封水深（最小）</td><td class="kz">50mm</td></tr>
+        <tr><td>封水深（最大）</td><td class="kz">100mm</td></tr>
+        <tr><td>二重トラップ</td><td>禁止（流れない）</td></tr></table></div>
+        <div class="bksub">通気管の役割と種類</div>
+        <div class="bkx"><table class="ktbl"><tr><th>種類</th><th>用途</th></tr>
+        <tr><td>伸頂通気</td><td>排水立て管を屋根上に延長</td></tr>
+        <tr><td>各個通気</td><td>器具ごとに通気を取る</td></tr>
+        <tr><td>ループ通気</td><td>2個以上の器具を一括</td></tr>
+        <tr><td>ドルゴ通気弁（AAV）</td><td>機械的に空気を吸入のみ許容</td></tr></table></div>
+        <div class="kn">※通気不足は封水破壊（サイホン作用）の原因。マンション改修ではドルゴ通気弁が便利。</div>
+      </div>
+    </div>
+
+    <!-- ガス管 -->
+    <div class="bkc" data-kw="ガス管 ガス LPG 都市ガス PE管 SGP-VS フレキ 接続 ガス機器">
+      <div class="bkh" onclick="bkToggle(this)"><span>ガス管の材質と接続</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">ガス管の材質（屋外・屋内）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>管種</th><th>用途</th></tr>
+        <tr><td>PE管（ガス用ポリエチレン管）</td><td>埋設（屋外引込）</td></tr>
+        <tr><td>SGP-VS（亜鉛+被覆鋼管）</td><td>屋内幹線・露出</td></tr>
+        <tr><td>白ガス管（SGP-W）</td><td>屋内一部（最新では非推奨）</td></tr>
+        <tr><td>フレキ管（フッ素・ステン）</td><td>機器接続・メーターまわり</td></tr>
+        <tr><td>銅管</td><td>屋内（プロパン用）</td></tr></table></div>
+        <div class="bksub">ガス機器の代表的なガス消費量</div>
+        <div class="bkx"><table class="ktbl"><tr><th>機器</th><th>都市ガス（kW）</th></tr>
+        <tr><td>給湯器24号</td><td class="kz">41.9kW</td></tr>
+        <tr><td>給湯器20号</td><td class="kz">34.9kW</td></tr>
+        <tr><td>給湯器16号</td><td class="kz">27.9kW</td></tr>
+        <tr><td>ガスコンロ3口</td><td class="kz">10〜15kW</td></tr>
+        <tr><td>ガスファンヒーター</td><td class="kz">5〜7kW</td></tr>
+        <tr><td>ガス乾燥機</td><td class="kz">5kW前後</td></tr></table></div>
+        <div class="bksub">ガス工事の資格</div>
+        <div class="bkx"><table class="ktbl"><tr><th>工事区分</th><th>必要資格</th></tr>
+        <tr><td>都市ガス内管工事</td><td>ガス可とう管接続工事監督者・ガス機器設置工事監督者</td></tr>
+        <tr><td>LPガス設備工事</td><td>液化石油ガス設備士</td></tr>
+        <tr><td>ガスメーター上流（供給管）</td><td>ガス事業者の責任</td></tr></table></div>
+        <div class="kn">※ガス工事は資格が必須。施工後は気密試験（漏れ検査）を実施し、ガス会社の開栓検査を受ける。</div>
+      </div>
+    </div>
+
+    <!-- 配管支持間隔 -->
+    <div class="bkc" data-kw="支持 サドル 配管バンド 吊り 間隔 横走管 立て管">
+      <div class="bkh" onclick="bkToggle(this)"><span>配管支持間隔の目安</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">横走管の支持間隔</div>
+        <div class="bkx"><table class="ktbl"><tr><th>管種・管径</th><th>支持間隔</th></tr>
+        <tr><td>塩ビ管 20mm以下</td><td class="kz">1.0m</td></tr>
+        <tr><td>塩ビ管 25〜40mm</td><td class="kz">1.5m</td></tr>
+        <tr><td>塩ビ管 50mm以上</td><td class="kz">2.0m</td></tr>
+        <tr><td>鋼管 20mm以下</td><td class="kz">2.0m</td></tr>
+        <tr><td>鋼管 25mm以上</td><td class="kz">3.0m</td></tr>
+        <tr><td>銅管 20mm以下</td><td class="kz">1.0m</td></tr>
+        <tr><td>銅管 25〜40mm</td><td class="kz">1.5m</td></tr></table></div>
+        <div class="bksub">立て管の支持間隔</div>
+        <div class="bkx"><table class="ktbl"><tr><th>管種</th><th>支持間隔</th></tr>
+        <tr><td>塩ビ管</td><td class="kz">各階1箇所以上</td></tr>
+        <tr><td>鋼管</td><td class="kz">各階1箇所以上</td></tr>
+        <tr><td>銅管</td><td class="kz">各階1箇所＋3m以下</td></tr></table></div>
+        <div class="bksub">支持金具</div>
+        <div class="bkx"><table class="ktbl"><tr><th>金具</th><th>用途</th></tr>
+        <tr><td>サドルバンド</td><td>横走管・壁面固定</td></tr>
+        <tr><td>立てバンド</td><td>立て管固定</td></tr>
+        <tr><td>吊りバンド</td><td>天井から吊る</td></tr>
+        <tr><td>形鋼振れ止め</td><td>地震時の振れ防止</td></tr></table></div>
+        <div class="kn">※SHASE-S010等に基づく目安。耐震上必要な振れ止め支持は別途検討。</div>
+      </div>
+    </div>
+
+    <div class="enote" style="margin-top:16px;">数値はすべて目安・参考値です。給水装置工事はSHASE-S206／給水装置の構造及び材質の基準、ガス工事はガス事業法に基づく各社基準で必ず確認してください。</div>
+    </div><!-- /bk-cat plb -->
+
+    <!-- ===== 空調カテゴリ ===== -->
+    <div class="bk-cat" data-cat="hvac">
+
+    <!-- 冷媒の種類 -->
+    <div class="bkc" data-kw="冷媒 R410A R32 R22 R407C HFC HCFC エアコン">
+      <div class="bkh" onclick="bkToggle(this)"><span>冷媒の種類と特徴</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">主な冷媒</div>
+        <div class="bkx"><table class="ktbl"><tr><th>冷媒</th><th>種別</th><th>GWP</th><th>主な機器</th></tr>
+        <tr><td>R22</td><td>HCFC</td><td class="kz">1810</td><td>旧機種（新規製造禁止）</td></tr>
+        <tr><td>R407C</td><td>HFC混合</td><td class="kz">1774</td><td>業務用旧機種</td></tr>
+        <tr><td>R410A</td><td>HFC混合</td><td class="kz">2090</td><td>家庭用・業務用（前世代）</td></tr>
+        <tr><td>R32</td><td>HFC単一</td><td class="kz">675</td><td>家庭用・業務用（現行主流）</td></tr>
+        <tr><td>R454B</td><td>HFC混合</td><td class="kz">466</td><td>業務用（次世代）</td></tr>
+        <tr><td>R744（CO₂）</td><td>自然冷媒</td><td class="kz">1</td><td>エコキュート・自販機</td></tr>
+        <tr><td>R290（プロパン）</td><td>自然冷媒</td><td class="kz">3</td><td>家庭用冷蔵庫</td></tr></table></div>
+        <div class="bksub">冷媒取り扱いの注意</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>内容</th></tr>
+        <tr><td>R410AとR32</td><td>混在禁止（圧力・組成が違う）</td></tr>
+        <tr><td>大気放出</td><td>禁止（フロン排出抑制法）</td></tr>
+        <tr><td>充填量</td><td>機器銘板で確認・記録義務あり</td></tr>
+        <tr><td>R32の可燃性</td><td>微燃性（A2L）：火気付近で施工注意</td></tr></table></div>
+        <div class="kn">※フロン排出抑制法により、業務用機器の冷媒は点検・記録義務がある。家庭用エアコンも廃棄時は家電リサイクル法で回収。</div>
+      </div>
+    </div>
+
+    <!-- エアコン能力選定 -->
+    <div class="bkc" data-kw="エアコン 能力 畳数 kW 6畳 8畳 10畳 14畳 18畳 20畳">
+      <div class="bkh" onclick="bkToggle(this)"><span>エアコン能力の目安（家庭用）</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">畳数の目安と冷房能力（kW）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>畳数</th><th>冷房能力</th><th>暖房能力</th></tr>
+        <tr><td>6畳（木造）/ 9畳（鉄筋）</td><td class="kz">2.2kW</td><td>2.5kW</td></tr>
+        <tr><td>8畳 / 12畳</td><td class="kz">2.5kW</td><td>2.8kW</td></tr>
+        <tr><td>10畳 / 15畳</td><td class="kz">2.8kW</td><td>3.6kW</td></tr>
+        <tr><td>12畳 / 18畳</td><td class="kz">3.6kW</td><td>4.2kW</td></tr>
+        <tr><td>14畳 / 23畳</td><td class="kz">4.0kW</td><td>5.0kW</td></tr>
+        <tr><td>18畳 / 29畳</td><td class="kz">5.6kW</td><td>6.7kW</td></tr>
+        <tr><td>20畳 / 32畳</td><td class="kz">6.3kW</td><td>7.1kW</td></tr>
+        <tr><td>23畳 / 38畳</td><td class="kz">7.1kW</td><td>8.5kW</td></tr></table></div>
+        <div class="bksub">補正の目安</div>
+        <div class="bkx"><table class="ktbl"><tr><th>条件</th><th>能力補正</th></tr>
+        <tr><td>南向き・西日強い</td><td>+1ランク</td></tr>
+        <tr><td>最上階・屋根直下</td><td>+1ランク</td></tr>
+        <tr><td>吹き抜け</td><td>+1〜2ランク</td></tr>
+        <tr><td>断熱性能高い住宅</td><td>−1ランク可</td></tr>
+        <tr><td>キッチン併設</td><td>+1ランク</td></tr></table></div>
+        <div class="kn">※JIS C9612の畳数目安は1964年の住宅性能に基づく。現代の高断熱住宅では−1ランクで十分なケースが多い。</div>
+      </div>
+    </div>
+
+    <!-- 冷媒配管サイズ -->
+    <div class="bkc" data-kw="冷媒配管 銅管 サイズ 馬力 2分3分 2分4分 ガス管 液管">
+      <div class="bkh" onclick="bkToggle(this)"><span>冷媒配管サイズ（家庭用ルームエアコン）</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">能力別の配管サイズ（標準）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>能力</th><th>液管</th><th>ガス管</th><th>呼称</th></tr>
+        <tr><td>2.2〜2.8kW（〜10畳）</td><td class="kz">φ6.35</td><td class="kz">φ9.52</td><td>2分3分</td></tr>
+        <tr><td>3.6〜4.0kW（12〜14畳）</td><td class="kz">φ6.35</td><td class="kz">φ9.52</td><td>2分3分</td></tr>
+        <tr><td>4.5〜5.6kW（16〜18畳）</td><td class="kz">φ6.35</td><td class="kz">φ12.7</td><td>2分4分</td></tr>
+        <tr><td>6.3〜7.1kW（20〜23畳）</td><td class="kz">φ6.35</td><td class="kz">φ12.7</td><td>2分4分</td></tr>
+        <tr><td>8.0〜9.0kW（業務用5馬力）</td><td class="kz">φ9.52</td><td class="kz">φ15.88</td><td>3分5分</td></tr></table></div>
+        <div class="bksub">配管呼称の換算</div>
+        <div class="bkx"><table class="ktbl"><tr><th>呼称</th><th>外径</th></tr>
+        <tr><td>1分</td><td class="kz">φ3.18</td></tr>
+        <tr><td>2分</td><td class="kz">φ6.35</td></tr>
+        <tr><td>3分</td><td class="kz">φ9.52</td></tr>
+        <tr><td>4分</td><td class="kz">φ12.7</td></tr>
+        <tr><td>5分</td><td class="kz">φ15.88</td></tr>
+        <tr><td>6分</td><td class="kz">φ19.05</td></tr></table></div>
+        <div class="kn">※実際の配管サイズは機種ごとに違うので、必ず室外機の据付説明書（取説）で確認。</div>
+      </div>
+    </div>
+
+    <!-- 配管長・追加チャージ -->
+    <div class="bkc" data-kw="配管長 高低差 追加チャージ 冷媒 充填 真空引き">
+      <div class="bkh" onclick="bkToggle(this)"><span>冷媒配管の標準長と追加チャージ</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">家庭用ルームエアコンの代表値</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>標準</th><th>最大</th></tr>
+        <tr><td>配管長（チャージレス）</td><td class="kz">5m以下</td><td>—</td></tr>
+        <tr><td>最大配管長</td><td>—</td><td class="kz">15〜30m（機種による）</td></tr>
+        <tr><td>高低差</td><td>—</td><td class="kz">10〜15m</td></tr>
+        <tr><td>追加チャージ目安</td><td class="kz">20〜30g/m</td><td>機種で変動</td></tr></table></div>
+        <div class="bksub">業務用パッケージ（参考）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>代表値</th></tr>
+        <tr><td>最大配管長</td><td class="kz">50〜100m</td></tr>
+        <tr><td>高低差（室外機が上）</td><td class="kz">30m以下</td></tr>
+        <tr><td>高低差（室外機が下）</td><td class="kz">15m以下</td></tr></table></div>
+        <div class="bksub">配管施工のポイント</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>内容</th></tr>
+        <tr><td>曲げR</td><td>外径×3〜4倍以上</td></tr>
+        <tr><td>断熱</td><td>液・ガス管とも独立保温</td></tr>
+        <tr><td>真空引き</td><td>5分以上＋放置5分（漏れ確認）</td></tr>
+        <tr><td>真空度</td><td>−0.1MPa（−750mmHg）以下</td></tr></table></div>
+        <div class="kn">※必ず真空引きを実施。エアパージ（冷媒で空気を押し出す）は冷媒漏れになるため禁止。</div>
+      </div>
+    </div>
+
+    <!-- ドレン配管 -->
+    <div class="bkc" data-kw="ドレン 配管 勾配 凍結 結露 排水">
+      <div class="bkh" onclick="bkToggle(this)"><span>ドレン配管の施工</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">ドレン管の規格</div>
+        <div class="bkx"><table class="ktbl"><tr><th>機器</th><th>ドレン管径</th></tr>
+        <tr><td>家庭用ルームエアコン</td><td class="kz">φ14〜16（VP13相当）</td></tr>
+        <tr><td>業務用パッケージ4馬力以下</td><td class="kz">VP20〜25</td></tr>
+        <tr><td>業務用パッケージ5馬力以上</td><td class="kz">VP25〜32</td></tr></table></div>
+        <div class="bksub">勾配・施工ルール</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>基準</th></tr>
+        <tr><td>最小勾配</td><td class="kz">1/100以上（下り）</td></tr>
+        <tr><td>立ち上げ</td><td>原則禁止（ドレンアップポンプ要）</td></tr>
+        <tr><td>支持間隔</td><td class="kz">1〜1.5m</td></tr>
+        <tr><td>断熱</td><td>結露防止のため天井内は要保温</td></tr>
+        <tr><td>排水先</td><td>雨水ますか専用ますへ</td></tr></table></div>
+        <div class="bksub">よくあるトラブル</div>
+        <div class="bkx"><table class="ktbl"><tr><th>症状</th><th>原因</th></tr>
+        <tr><td>水漏れ</td><td>勾配不足・詰まり・断熱不足</td></tr>
+        <tr><td>逆流</td><td>排水先の水位高・逆勾配</td></tr>
+        <tr><td>異音（ゴボゴボ）</td><td>サイホン現象・トラップ未設置</td></tr>
+        <tr><td>凍結</td><td>外気露出・断熱不足</td></tr></table></div>
+        <div class="kn">※業務用は排水トラップ・通気を設けるとサイホン現象を防げる。家庭用でも雨水ます直結は避ける。</div>
+      </div>
+    </div>
+
+    <!-- 電源・配線 -->
+    <div class="bkc" data-kw="電源 配線 200V 100V エアコン 専用回路 ブレーカー アース 接地">
+      <div class="bkh" onclick="bkToggle(this)"><span>エアコンの電源・配線</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">能力別の電源仕様（家庭用）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>能力</th><th>電源</th><th>専用回路</th></tr>
+        <tr><td>2.2〜2.8kW</td><td>100V 15A</td><td>必要</td></tr>
+        <tr><td>3.6kW</td><td>100V 20A or 200V 15A</td><td>必要</td></tr>
+        <tr><td>4.0〜5.6kW</td><td>200V 15〜20A</td><td>必要</td></tr>
+        <tr><td>6.3〜7.1kW</td><td>200V 20A</td><td>必要</td></tr></table></div>
+        <div class="bksub">渡り線（連絡電線）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>機種</th><th>渡り線</th></tr>
+        <tr><td>家庭用一般</td><td>VVF2.0-3C＋接地</td></tr>
+        <tr><td>業務用</td><td>VVF2.0-4C（信号線含）</td></tr></table></div>
+        <div class="bksub">接地（D種）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>条件</th><th>必要性</th></tr>
+        <tr><td>湿気の多い場所（浴室等）</td><td>必須</td></tr>
+        <tr><td>200V機器</td><td>必須</td></tr>
+        <tr><td>100V 30W超の機器</td><td>原則必要</td></tr></table></div>
+        <div class="kn">※エアコンは内線規程により専用回路が原則。第二種電気工事士以上の資格者が施工する。</div>
+      </div>
+    </div>
+
+    <!-- 必要換気量 -->
+    <div class="bkc" data-kw="換気 必要換気量 24時間換気 厨房 浴室 シックハウス 居室">
+      <div class="bkh" onclick="bkToggle(this)"><span>必要換気量と24時間換気</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">居室の24時間換気（建築基準法）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>建物</th><th>換気回数</th></tr>
+        <tr><td>住宅の居室</td><td class="kz">0.5回/h以上</td></tr>
+        <tr><td>住宅以外の居室</td><td class="kz">0.3回/h以上</td></tr></table></div>
+        <div class="bksub">居室以外の換気量目安</div>
+        <div class="bkx"><table class="ktbl"><tr><th>場所</th><th>換気量</th></tr>
+        <tr><td>トイレ</td><td class="kz">50〜70m³/h</td></tr>
+        <tr><td>浴室</td><td class="kz">100〜200m³/h</td></tr>
+        <tr><td>洗面所</td><td class="kz">50m³/h</td></tr>
+        <tr><td>家庭用キッチン</td><td class="kz">300〜500m³/h（火力依存）</td></tr></table></div>
+        <div class="bksub">厨房換気（ガス消費）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>条件</th><th>換気量</th></tr>
+        <tr><td>ガスコンロ3口 標準</td><td class="kz">300〜500m³/h</td></tr>
+        <tr><td>IH（電気）</td><td class="kz">300m³/h</td></tr>
+        <tr><td>業務用ガス（kW×40）</td><td class="kz">機器kW×40m³/h</td></tr></table></div>
+        <div class="kn">※住宅の24時間換気は2003年7月以降のシックハウス対策で全居室必須。第1〜3種換気で選択。</div>
+      </div>
+    </div>
+
+    <!-- ダクトサイズ -->
+    <div class="bkc" data-kw="ダクト サイズ スパイラル 角ダクト 風量 給気 排気">
+      <div class="bkh" onclick="bkToggle(this)"><span>ダクトサイズの目安</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">スパイラル丸ダクト（風速6m/s時の風量目安）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>呼び径</th><th>風量目安</th></tr>
+        <tr><td>φ100</td><td class="kz">170m³/h</td></tr>
+        <tr><td>φ150</td><td class="kz">380m³/h</td></tr>
+        <tr><td>φ200</td><td class="kz">680m³/h</td></tr>
+        <tr><td>φ250</td><td class="kz">1060m³/h</td></tr>
+        <tr><td>φ300</td><td class="kz">1530m³/h</td></tr>
+        <tr><td>φ400</td><td class="kz">2710m³/h</td></tr>
+        <tr><td>φ500</td><td class="kz">4240m³/h</td></tr></table></div>
+        <div class="bksub">推奨風速（騒音・抵抗対策）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>用途</th><th>推奨風速</th></tr>
+        <tr><td>住宅（静音）</td><td class="kz">3〜4m/s</td></tr>
+        <tr><td>事務所</td><td class="kz">4〜6m/s</td></tr>
+        <tr><td>主ダクト（騒音許容）</td><td class="kz">6〜10m/s</td></tr>
+        <tr><td>厨房排気</td><td class="kz">8〜12m/s</td></tr></table></div>
+        <div class="bksub">フレキ・アルミダクト（簡易系統）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>呼び</th><th>主な用途</th></tr>
+        <tr><td>φ100</td><td>レンジフード排気・浴室換気</td></tr>
+        <tr><td>φ150</td><td>居室24時間換気主ダクト</td></tr></table></div>
+        <div class="kn">※住宅では低風速が静音性に重要。SMACNAやHASS-102の制限風速も参考に。</div>
+      </div>
+    </div>
+
+    <!-- 室外機の設置 -->
+    <div class="bkc" data-kw="室外機 設置 スペース 防振 メンテナンス 吹き出し 据付">
+      <div class="bkh" onclick="bkToggle(this)"><span>室外機の設置基準</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">必要離隔（家庭用）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>方向</th><th>離隔距離</th></tr>
+        <tr><td>前面（吹き出し）</td><td class="kz">200mm以上（多くは500mm推奨）</td></tr>
+        <tr><td>後面（吸込）</td><td class="kz">100mm以上</td></tr>
+        <tr><td>左右</td><td class="kz">100mm以上</td></tr>
+        <tr><td>上方</td><td class="kz">300mm以上</td></tr></table></div>
+        <div class="bksub">設置方法</div>
+        <div class="bkx"><table class="ktbl"><tr><th>場所</th><th>方法</th></tr>
+        <tr><td>地面</td><td>プラブロック＋防振ゴム</td></tr>
+        <tr><td>ベランダ</td><td>架台＋防振ゴム</td></tr>
+        <tr><td>外壁面</td><td>壁掛架台（耐荷重要確認）</td></tr>
+        <tr><td>屋根上</td><td>屋根置台＋防水処理</td></tr>
+        <tr><td>2段積み</td><td>専用2段架台</td></tr></table></div>
+        <div class="bksub">注意点</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>内容</th></tr>
+        <tr><td>ショートサーキット</td><td>吹き出しと吸込が回り込まない配置</td></tr>
+        <tr><td>積雪地域</td><td>高基礎・防雪フード</td></tr>
+        <tr><td>潮風地域</td><td>耐塩害仕様機種</td></tr>
+        <tr><td>避難経路</td><td>マンション避難ハッチ上は不可</td></tr></table></div>
+        <div class="kn">※マンションのベランダ設置は管理規約も要確認。重量超過にも注意。</div>
+      </div>
+    </div>
+
+    <!-- 試運転・気密 -->
+    <div class="bkc" data-kw="試運転 気密試験 真空引き トルク フレア 漏れ 窒素加圧">
+      <div class="bkh" onclick="bkToggle(this)"><span>試運転と気密試験</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">フレアナット締付トルク（参考値）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>配管径</th><th>締付トルク</th></tr>
+        <tr><td>φ6.35（2分）</td><td class="kz">14〜18N·m</td></tr>
+        <tr><td>φ9.52（3分）</td><td class="kz">34〜42N·m</td></tr>
+        <tr><td>φ12.7（4分）</td><td class="kz">49〜61N·m</td></tr>
+        <tr><td>φ15.88（5分）</td><td class="kz">68〜82N·m</td></tr>
+        <tr><td>φ19.05（6分）</td><td class="kz">100〜120N·m</td></tr></table></div>
+        <div class="bksub">真空引きの手順</div>
+        <div class="bkx"><table class="ktbl"><tr><th>順</th><th>内容</th></tr>
+        <tr><td>1</td><td>サービスポートに真空ポンプ接続</td></tr>
+        <tr><td>2</td><td>15分以上真空引き（−0.1MPa到達）</td></tr>
+        <tr><td>3</td><td>バルブ閉じて5分間放置（漏れ確認）</td></tr>
+        <tr><td>4</td><td>圧力上昇なければ室外機バルブ開放</td></tr></table></div>
+        <div class="bksub">業務用の気密試験（窒素加圧）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>段階</th><th>圧力</th></tr>
+        <tr><td>1次（漏れ検知）</td><td class="kz">0.3MPa × 3分</td></tr>
+        <tr><td>2次</td><td class="kz">1.5MPa × 3分</td></tr>
+        <tr><td>3次（保持）</td><td class="kz">設計圧 × 24時間</td></tr></table></div>
+        <div class="bksub">試運転チェック項目</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>判定</th></tr>
+        <tr><td>冷房 吸込/吹出温度差</td><td class="kz">8〜12℃</td></tr>
+        <tr><td>暖房 吸込/吹出温度差</td><td class="kz">15〜25℃</td></tr>
+        <tr><td>ドレン排水</td><td>流れている</td></tr>
+        <tr><td>異音・振動</td><td>無し</td></tr>
+        <tr><td>運転電流</td><td>銘板値以内</td></tr></table></div>
+        <div class="kn">※フレア面は専用フレアツールで形成。締付不足は冷媒漏れ、締付過剰はフレア破損の原因。</div>
+      </div>
+    </div>
+
+    <div class="enote" style="margin-top:16px;">数値はすべて目安・参考値です。機器ごとに据付説明書（メーカー指定値）が最優先。フロン排出抑制法・建築基準法（換気）・電気設備技術基準を遵守してください。</div>
+    </div><!-- /bk-cat hvac -->
+
+    <!-- ===== 塗装カテゴリ ===== -->
+    <div class="bk-cat" data-cat="ptg">
+
+    <!-- 塗料の種類 -->
+    <div class="bkc" data-kw="塗料 水性 油性 アクリル ウレタン シリコン フッ素 無機 耐久年数">
+      <div class="bkh" onclick="bkToggle(this)"><span>塗料の種類と耐久年数の目安</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">グレードと耐久年数（外壁用・代表値）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>樹脂</th><th>耐久年数</th><th>価格傾向</th></tr>
+        <tr><td>アクリル</td><td class="kz">5〜7年</td><td>安価</td></tr>
+        <tr><td>ウレタン</td><td class="kz">7〜10年</td><td>標準</td></tr>
+        <tr><td>シリコン</td><td class="kz">10〜13年</td><td>主流</td></tr>
+        <tr><td>ラジカル制御型</td><td class="kz">12〜15年</td><td>シリコン上位</td></tr>
+        <tr><td>フッ素</td><td class="kz">15〜20年</td><td>高価</td></tr>
+        <tr><td>無機</td><td class="kz">20〜25年</td><td>最高位</td></tr></table></div>
+        <div class="bksub">水性塗料と溶剤（油性）塗料</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>水性</th><th>溶剤（油性）</th></tr>
+        <tr><td>溶媒</td><td>水</td><td>シンナー</td></tr>
+        <tr><td>臭気</td><td>低</td><td>強</td></tr>
+        <tr><td>密着性</td><td>普通</td><td>高い</td></tr>
+        <tr><td>低温作業性</td><td>5℃以上</td><td>低温でも可</td></tr>
+        <tr><td>主用途</td><td>外壁・室内</td><td>鉄部・床・密着重視部位</td></tr></table></div>
+        <div class="kn">※耐久年数はメーカー試験値の目安。実際は下地・施工・環境で変動する。</div>
+      </div>
+    </div>
+
+    <!-- 下地別の塗装仕様 -->
+    <div class="bkc" data-kw="下地 鉄部 木部 モルタル サイディング ガルバ コンクリート プライマー シーラー">
+      <div class="bkh" onclick="bkToggle(this)"><span>下地別の塗装仕様</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">下地別の標準工程</div>
+        <div class="bkx"><table class="ktbl"><tr><th>下地</th><th>下塗</th><th>中塗・上塗</th></tr>
+        <tr><td>モルタル外壁</td><td>微弾性フィラー / シーラー</td><td>シリコン2回</td></tr>
+        <tr><td>サイディング</td><td>浸透性シーラー</td><td>シリコン2回</td></tr>
+        <tr><td>コンクリート</td><td>浸透性シーラー</td><td>シリコン2回</td></tr>
+        <tr><td>ALC</td><td>水性シーラー</td><td>シリコン2回（弾性）</td></tr>
+        <tr><td>鉄部（新規）</td><td>サビ止め（エポキシ系）</td><td>ウレタン or シリコン2回</td></tr>
+        <tr><td>鉄部（既存）</td><td>素地調整後 サビ止め</td><td>ウレタン or シリコン2回</td></tr>
+        <tr><td>ガルバ鋼板</td><td>専用エポキシプライマー</td><td>シリコン2回</td></tr>
+        <tr><td>木部（造作）</td><td>木材保護プライマー</td><td>水性ウレタン2回</td></tr>
+        <tr><td>木部（屋外）</td><td>含浸性ステイン</td><td>ステイン2回</td></tr>
+        <tr><td>PB（内装）</td><td>シーラー</td><td>水性アクリル2回</td></tr></table></div>
+        <div class="bksub">下地の素地調整（ケレン）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>種別</th><th>内容</th></tr>
+        <tr><td>1種ケレン</td><td>ブラスト・サビ完全除去</td></tr>
+        <tr><td>2種ケレン</td><td>電動工具で広範囲のサビ除去</td></tr>
+        <tr><td>3種ケレン</td><td>電動工具で活膜残し</td></tr>
+        <tr><td>4種ケレン</td><td>手工具でケレン（軽度）</td></tr></table></div>
+        <div class="kn">※住宅塗替えは3〜4種ケレンが標準。新築・大規模改修は2種以上が必要なケースが多い。</div>
+      </div>
+    </div>
+
+    <!-- 塗布量・面積 -->
+    <div class="bkc" data-kw="塗布量 面積 ㎡ kg リットル 単価">
+      <div class="bkh" onclick="bkToggle(this)"><span>塗料の塗布量と面積（標準）</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">外壁塗料の標準塗布量（1回塗り）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>塗料</th><th>塗布量</th><th>面積/缶</th></tr>
+        <tr><td>シーラー（水性）</td><td class="kz">0.10〜0.15kg/㎡</td><td>15kg缶≒約100〜150㎡</td></tr>
+        <tr><td>微弾性フィラー</td><td class="kz">0.7〜1.2kg/㎡</td><td>20kg缶≒約17〜29㎡</td></tr>
+        <tr><td>水性シリコン</td><td class="kz">0.12〜0.17kg/㎡</td><td>15kg缶≒約88〜125㎡</td></tr>
+        <tr><td>溶剤シリコン</td><td class="kz">0.14〜0.17kg/㎡</td><td>15kg缶≒約88〜107㎡</td></tr>
+        <tr><td>フッ素塗料</td><td class="kz">0.10〜0.13kg/㎡</td><td>15kg缶≒約115〜150㎡</td></tr></table></div>
+        <div class="bksub">屋根塗料の標準塗布量（1回塗り）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>塗料</th><th>塗布量</th></tr>
+        <tr><td>屋根用シーラー</td><td class="kz">0.10〜0.20kg/㎡</td></tr>
+        <tr><td>屋根用シリコン</td><td class="kz">0.16〜0.20kg/㎡</td></tr>
+        <tr><td>屋根用フッ素</td><td class="kz">0.16〜0.20kg/㎡</td></tr>
+        <tr><td>遮熱塗料</td><td class="kz">0.20〜0.25kg/㎡</td></tr></table></div>
+        <div class="bksub">床塗料の標準塗布量</div>
+        <div class="bkx"><table class="ktbl"><tr><th>塗料</th><th>塗布量</th></tr>
+        <tr><td>エポキシ床塗料</td><td class="kz">0.15〜0.20kg/㎡</td></tr>
+        <tr><td>水性アクリル床</td><td class="kz">0.10〜0.15kg/㎡</td></tr></table></div>
+        <div class="kn">※2〜3回塗りが基本。総使用量は単回×回数。実際はメーカー製品仕様書（PDS）で確認。</div>
+      </div>
+    </div>
+
+    <!-- 希釈率 -->
+    <div class="bkc" data-kw="希釈 シンナー 水 希釈率 撹拌 攪拌">
+      <div class="bkh" onclick="bkToggle(this)"><span>希釈率と希釈剤</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">塗料別の標準希釈率</div>
+        <div class="bkx"><table class="ktbl"><tr><th>塗料</th><th>希釈剤</th><th>希釈率</th></tr>
+        <tr><td>水性シーラー</td><td>水</td><td class="kz">0〜10%</td></tr>
+        <tr><td>水性シリコン（外壁）</td><td>水</td><td class="kz">5〜10%</td></tr>
+        <tr><td>水性塗料（内装）</td><td>水</td><td class="kz">5〜10%</td></tr>
+        <tr><td>微弾性フィラー</td><td>水</td><td class="kz">0〜5%</td></tr>
+        <tr><td>溶剤シリコン</td><td>塗料用シンナー</td><td class="kz">5〜10%</td></tr>
+        <tr><td>2液型ウレタン</td><td>ウレタンシンナー</td><td class="kz">5〜15%</td></tr>
+        <tr><td>2液型エポキシ</td><td>エポキシシンナー</td><td class="kz">5〜10%</td></tr>
+        <tr><td>サビ止め（油性）</td><td>塗料用シンナー</td><td class="kz">0〜5%</td></tr>
+        <tr><td>ラッカー</td><td>ラッカーシンナー</td><td class="kz">20〜40%</td></tr></table></div>
+        <div class="bksub">塗装方法別の希釈傾向</div>
+        <div class="bkx"><table class="ktbl"><tr><th>方法</th><th>希釈</th></tr>
+        <tr><td>刷毛塗り</td><td>少なめ（標準）</td></tr>
+        <tr><td>ローラー塗り</td><td>標準</td></tr>
+        <tr><td>エアスプレー</td><td>多め（10〜20%）</td></tr>
+        <tr><td>エアレススプレー</td><td>少なめ（無希釈〜5%）</td></tr></table></div>
+        <div class="kn">※2液型は主剤と硬化剤を所定比で混合後、必ず可使時間内（ポットライフ）に使い切る。</div>
+      </div>
+    </div>
+
+    <!-- 工程 -->
+    <div class="bkc" data-kw="工程 下塗 中塗 上塗 シーラー プライマー 仕上げ">
+      <div class="bkh" onclick="bkToggle(this)"><span>塗装の標準工程</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">外壁塗装の標準工程</div>
+        <div class="bkx"><table class="ktbl"><tr><th>順</th><th>工程</th><th>目的</th></tr>
+        <tr><td>1</td><td>高圧洗浄</td><td>旧塗膜・汚れ除去</td></tr>
+        <tr><td>2</td><td>下地補修</td><td>クラック・欠損補修</td></tr>
+        <tr><td>3</td><td>養生</td><td>サッシ・庇・植栽の保護</td></tr>
+        <tr><td>4</td><td>下塗（シーラー/フィラー）</td><td>密着・吸い込み止め</td></tr>
+        <tr><td>5</td><td>中塗</td><td>膜厚確保・色決め</td></tr>
+        <tr><td>6</td><td>上塗</td><td>仕上げ・耐候性</td></tr></table></div>
+        <div class="bksub">鉄部塗装の標準工程</div>
+        <div class="bkx"><table class="ktbl"><tr><th>順</th><th>工程</th></tr>
+        <tr><td>1</td><td>素地調整（ケレン）</td></tr>
+        <tr><td>2</td><td>サビ止め（下塗）</td></tr>
+        <tr><td>3</td><td>中塗</td></tr>
+        <tr><td>4</td><td>上塗</td></tr></table></div>
+        <div class="bksub">3回塗りの意味</div>
+        <div class="bkx"><table class="ktbl"><tr><th>回</th><th>役割</th></tr>
+        <tr><td>下塗</td><td>密着力・下地強化</td></tr>
+        <tr><td>中塗</td><td>規定膜厚の確保</td></tr>
+        <tr><td>上塗</td><td>耐候性・美観</td></tr></table></div>
+        <div class="kn">※中塗・上塗は同一塗料で2回塗ることが多い（メーカー指定通り）。色違いで分けると塗り残し防止になる。</div>
+      </div>
+    </div>
+
+    <!-- 乾燥時間 -->
+    <div class="bkc" data-kw="乾燥 時間 工程間 完全硬化 インターバル">
+      <div class="bkh" onclick="bkToggle(this)"><span>乾燥時間の目安（23℃）</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">塗料別 工程間隔（次工程まで）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>塗料</th><th>最低時間</th><th>最大時間</th></tr>
+        <tr><td>水性シーラー</td><td class="kz">2時間以上</td><td>7日以内</td></tr>
+        <tr><td>微弾性フィラー</td><td class="kz">3〜4時間以上</td><td>7日以内</td></tr>
+        <tr><td>水性シリコン</td><td class="kz">3〜4時間以上</td><td>7日以内</td></tr>
+        <tr><td>溶剤シリコン</td><td class="kz">3〜5時間以上</td><td>7日以内</td></tr>
+        <tr><td>2液ウレタン</td><td class="kz">5〜16時間以上</td><td>3日以内</td></tr>
+        <tr><td>サビ止め</td><td class="kz">16時間以上</td><td>5日以内</td></tr>
+        <tr><td>木部ステイン</td><td class="kz">12〜24時間</td><td>—</td></tr></table></div>
+        <div class="bksub">塗装後の硬化時間</div>
+        <div class="bkx"><table class="ktbl"><tr><th>状態</th><th>時間</th></tr>
+        <tr><td>指触乾燥</td><td class="kz">30分〜2時間</td></tr>
+        <tr><td>半硬化（触れる）</td><td class="kz">4〜8時間</td></tr>
+        <tr><td>完全硬化</td><td class="kz">7〜14日</td></tr></table></div>
+        <div class="kn">※低温・高湿度で乾燥時間は大幅に延びる。冬期は2倍以上見込む。各メーカー製品仕様書を必ず確認。</div>
+      </div>
+    </div>
+
+    <!-- 気象条件 -->
+    <div class="bkc" data-kw="気象 気温 湿度 風 雨 塗装条件 施工不可">
+      <div class="bkh" onclick="bkToggle(this)"><span>塗装可能な気象条件</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">塗装可能条件（一般）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>範囲</th></tr>
+        <tr><td>気温（水性）</td><td class="kz">5℃以上</td></tr>
+        <tr><td>気温（溶剤）</td><td class="kz">0〜5℃以上</td></tr>
+        <tr><td>湿度</td><td class="kz">85%以下</td></tr>
+        <tr><td>風速</td><td class="kz">10m/s以下推奨</td></tr></table></div>
+        <div class="bksub">塗装を中止する条件</div>
+        <div class="bkx"><table class="ktbl"><tr><th>条件</th><th>影響</th></tr>
+        <tr><td>降雨・霧雨</td><td>白化・密着不良</td></tr>
+        <tr><td>強風</td><td>飛散・乾きすぎ</td></tr>
+        <tr><td>結露</td><td>下地に水分→剥離原因</td></tr>
+        <tr><td>気温5℃以下</td><td>水性は使用不可</td></tr>
+        <tr><td>気温35℃以上</td><td>急乾・スプレーダスト</td></tr>
+        <tr><td>湿度85%超</td><td>乾燥遅延・白化</td></tr></table></div>
+        <div class="bksub">夜露・朝露の影響</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>対応</th></tr>
+        <tr><td>朝の塗装開始</td><td>露が完全に乾いてから</td></tr>
+        <tr><td>夕方の塗装終了</td><td>日没2時間前まで</td></tr></table></div>
+        <div class="kn">※鉄部のサビ止めなど特殊塗料は−5℃まで施工可な製品もある。製品ごとの仕様書で確認。</div>
+      </div>
+    </div>
+
+    <!-- 養生材 -->
+    <div class="bkc" data-kw="養生 マスカー マスキング テープ ブルーシート ノンスリップ">
+      <div class="bkh" onclick="bkToggle(this)"><span>養生材の使い分け</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">主な養生材</div>
+        <div class="bkx"><table class="ktbl"><tr><th>養生材</th><th>主な用途</th></tr>
+        <tr><td>マスキングテープ</td><td>塗装境界・サッシ周り</td></tr>
+        <tr><td>布テープ</td><td>固定・仮止め</td></tr>
+        <tr><td>マスカー（550〜2600mm）</td><td>窓・サッシのフィルム養生</td></tr>
+        <tr><td>ノンスリップ</td><td>足場・通路の滑り止め</td></tr>
+        <tr><td>ブルーシート</td><td>地面・植栽の保護</td></tr>
+        <tr><td>養生紙</td><td>床・室内塗装</td></tr>
+        <tr><td>カラーコーン・トラロープ</td><td>立入禁止区画</td></tr></table></div>
+        <div class="bksub">マスキングテープの種類</div>
+        <div class="bkx"><table class="ktbl"><tr><th>種類</th><th>用途</th></tr>
+        <tr><td>和紙テープ（一般）</td><td>水性・溶剤の境界</td></tr>
+        <tr><td>シーリング用</td><td>シーリング工事の境界</td></tr>
+        <tr><td>曲線用（曲面追従）</td><td>R部・曲線部</td></tr>
+        <tr><td>耐熱用</td><td>焼付塗装の養生</td></tr></table></div>
+        <div class="bksub">養生の貼り方ポイント</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>注意点</th></tr>
+        <tr><td>境界出し</td><td>線が真っ直ぐ・浮きなし</td></tr>
+        <tr><td>剥がしタイミング</td><td>塗料が乾く前（半乾き）</td></tr>
+        <tr><td>長期貼付け</td><td>糊残り注意（1週間以内に剥離）</td></tr></table></div>
+        <div class="kn">※養生の精度が仕上がりを左右する。雨天時は内側に水が入らないよう、上から下へ重ねる。</div>
+      </div>
+    </div>
+
+    <!-- サンドペーパー番手 -->
+    <div class="bkc" data-kw="サンドペーパー 番手 ペーパー 研磨 サンディング 木工 鉄部">
+      <div class="bkh" onclick="bkToggle(this)"><span>サンドペーパー番手の使い分け</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">番手と粗さ</div>
+        <div class="bkx"><table class="ktbl"><tr><th>番手</th><th>用途</th></tr>
+        <tr><td>#40〜#80</td><td>粗研磨・サビ落とし</td></tr>
+        <tr><td>#100〜#150</td><td>木地調整・塗膜剥離</td></tr>
+        <tr><td>#180〜#240</td><td>木部上塗前・パテ研ぎ</td></tr>
+        <tr><td>#280〜#400</td><td>サフェーサー研磨・中研ぎ</td></tr>
+        <tr><td>#600〜#800</td><td>上塗下地・仕上げ前</td></tr>
+        <tr><td>#1000〜#1500</td><td>金属磨き・コンパウンド前</td></tr>
+        <tr><td>#2000以上</td><td>鏡面仕上げ</td></tr></table></div>
+        <div class="bksub">用途別の選び方</div>
+        <div class="bkx"><table class="ktbl"><tr><th>下地</th><th>番手</th></tr>
+        <tr><td>木部（粗）</td><td class="kz">#80→#120→#180</td></tr>
+        <tr><td>木部（仕上）</td><td class="kz">#180→#240</td></tr>
+        <tr><td>鉄部 サビ取り</td><td class="kz">#80→#120</td></tr>
+        <tr><td>鉄部 塗装前</td><td class="kz">#240</td></tr>
+        <tr><td>パテ研ぎ</td><td class="kz">#180→#240→#320</td></tr>
+        <tr><td>塗膜の毛羽取り</td><td class="kz">#400</td></tr></table></div>
+        <div class="bksub">サンディング種別</div>
+        <div class="bkx"><table class="ktbl"><tr><th>形態</th><th>用途</th></tr>
+        <tr><td>紙やすり（手作業）</td><td>細部・小面積</td></tr>
+        <tr><td>布やすり</td><td>水研ぎ・耐久作業</td></tr>
+        <tr><td>スポンジペーパー</td><td>R部・曲面</td></tr>
+        <tr><td>ディスクサンダー</td><td>広面積・大量除去</td></tr>
+        <tr><td>オービタルサンダー</td><td>木工・パテ研磨</td></tr></table></div>
+        <div class="kn">※番手は徐々に細かくして仕上げる。番手を飛ばすと下の研磨痕が残る。</div>
+      </div>
+    </div>
+
+    <!-- 安全・有機溶剤 -->
+    <div class="bkc" data-kw="安全 有機溶剤 保護具 換気 MSDS SDS マスク 防毒 法令">
+      <div class="bkh" onclick="bkToggle(this)"><span>塗装の安全と法令</span><span class="bkar">▼</span></div>
+      <div class="bkb">
+        <div class="bksub">必要な保護具</div>
+        <div class="bkx"><table class="ktbl"><tr><th>作業</th><th>保護具</th></tr>
+        <tr><td>水性塗料</td><td>マスク・手袋・保護メガネ</td></tr>
+        <tr><td>溶剤塗料</td><td>有機ガス用防毒マスク・手袋</td></tr>
+        <tr><td>サンディング</td><td>防塵マスク（RL2以上）</td></tr>
+        <tr><td>高所作業</td><td>フルハーネス安全帯</td></tr>
+        <tr><td>スプレー塗装</td><td>送気マスク or 全面型防毒</td></tr></table></div>
+        <div class="bksub">有機溶剤中毒予防規則（屋内作業）</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>義務</th></tr>
+        <tr><td>有機溶剤作業主任者</td><td>選任</td></tr>
+        <tr><td>換気装置</td><td>局所排気 or 全体換気</td></tr>
+        <tr><td>表示</td><td>第1〜3種有機溶剤の区分表示</td></tr>
+        <tr><td>健康診断</td><td>6か月以内ごと</td></tr>
+        <tr><td>作業環境測定</td><td>6か月以内ごと</td></tr></table></div>
+        <div class="bksub">SDS（安全データシート）の主な確認項目</div>
+        <div class="bkx"><table class="ktbl"><tr><th>項目</th><th>確認内容</th></tr>
+        <tr><td>引火点・発火点</td><td>火気の使用可否</td></tr>
+        <tr><td>含有有機溶剤</td><td>キシレン・トルエン等の含有率</td></tr>
+        <tr><td>取扱注意</td><td>換気・防護具・保管</td></tr>
+        <tr><td>応急処置</td><td>吸入・皮膚付着時の対応</td></tr></table></div>
+        <div class="kn">※有機溶剤中毒予防規則・特定化学物質障害予防規則・労働安全衛生法を遵守。各塗料のSDSは法的に常備義務あり。</div>
+      </div>
+    </div>
+
+    <div class="enote" style="margin-top:16px;">数値はすべて目安・参考値です。塗料は必ずメーカー製品仕様書（PDS）・SDSで確認してください。労働安全衛生法・有機溶剤中毒予防規則を遵守してください。</div>
+    </div><!-- /bk-cat ptg -->
   </div>
 
   <!-- ========== ⑧ 面積計算（寸法計算＋坪・㎡・畳換算） ========== -->
@@ -2282,11 +3354,31 @@ function recLoadList(){
 }
 
 
-/* ===== ⑨ 工事手帳 ===== */
+/* ===== ⑨ 工事手帳（v55：業種タブ対応） ===== */
+var bkCurCat='elec';
 function bkToggle(hd){ hd.parentNode.classList.toggle('open'); }
+function bkSwitch(cat){
+  bkCurCat=cat;
+  // タブのアクティブ切替
+  document.querySelectorAll('.bk-tab').forEach(function(t){
+    t.classList.toggle('on', t.getAttribute('data-cat')===cat);
+  });
+  // カテゴリ表示切替
+  document.querySelectorAll('.bk-cat').forEach(function(c){
+    c.classList.toggle('on', c.getAttribute('data-cat')===cat);
+  });
+  // 検索欄をクリアしてフィルタ再適用
+  var q=document.getElementById('bkQ'); if(q){ q.value=''; }
+  bkFilter();
+  // 選択を保存（次回再訪時に復元）
+  try{ localStorage.setItem('genba_bk_cat', cat); }catch(e){}
+}
 function bkFilter(){
   var q=(document.getElementById('bkQ').value||'').trim().toLowerCase();
-  document.querySelectorAll('.bkc').forEach(function(c){
+  // 検索対象は「現在選択中のカテゴリ内のbkc」のみ
+  var scope=document.querySelector('.bk-cat[data-cat="'+bkCurCat+'"]');
+  if(!scope) return;
+  scope.querySelectorAll('.bkc').forEach(function(c){
     if(!q){ c.style.display=''; c.classList.remove('open'); return; }
     var kw=(c.getAttribute('data-kw')||'').toLowerCase();
     var hit=kw.indexOf(q)>=0;
@@ -2295,6 +3387,14 @@ function bkFilter(){
     if(!q){ c.classList.remove('open'); }
   });
 }
+// 起動時：前回選択タブを復元（あれば）
+try{
+  var _bkSaved=localStorage.getItem('genba_bk_cat');
+  if(_bkSaved && ['elec','bld','plb','hvac','ptg'].indexOf(_bkSaved)>=0){
+    // DOM準備後に切替（即時呼び出しでもOK：scriptは body 末尾）
+    setTimeout(function(){ bkSwitch(_bkSaved); },0);
+  }
+}catch(e){}
 
 /* ===== ⑧ 面積計算（寸法計算＋単位換算） ===== */
 var measItems=[],measShapeVal='rect';
