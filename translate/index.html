@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- translate version 4 (2026-06-15) 訳文の読み上げボタンを追加（Web Speech APIのspeechSynthesis・ブラウザ標準・無料）。読み上げ言語は訳文言語に追従。非対応ブラウザは自動非表示 -->
+<!-- translate version 6 (2026-06-15) 画面再訪時に前回テキストを復元しないよう変更（戻る→再訪で空白から始まる）。言語選択（原文・訳文）は引き継ぎ。読み上げ・二重化修正は維持 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -112,7 +112,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v4</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v6</div>
 
 <header>
   <div class="hbar">
@@ -284,7 +284,17 @@ srcText.addEventListener('input',function(){updateCnt();saveLocal();});
 dstText.addEventListener('input',function(){updateCnt();saveLocal();});
 srcLang.addEventListener('change',saveLocal);
 dstLang.addEventListener('change',saveLocal);
-loadLocal();
+// 画面を開いたときは前回の内容を復元しない（戻る→再訪で空白から始める）
+// ただし言語選択は引き継ぎたいので、テキストだけ消す
+try{
+  var _saved=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+  if(_saved){
+    if(_saved.src) srcLang.value=_saved.src;
+    if(_saved.dst) dstLang.value=_saved.dst;
+  }
+  // テキストは捨てて保存上書き
+  localStorage.setItem(CACHE_KEY,JSON.stringify({src:srcLang.value,dst:dstLang.value,sText:'',dText:''}));
+}catch(e){}
 
 /* ========== 言語入れ替え ========== */
 function swapLang(){
@@ -307,7 +317,7 @@ function clearAll(){
 
 /* ========== 音声入力（原文欄のみ・継続録音・原文言語に追従） ========== */
 var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-var rec=null, recording=false, userStopped=false, baseText='';
+var rec=null, recording=false, userStopped=false, baseText='', committedText='';
 if(!SR){
   micBtn.disabled=true;
   micBtn.title='このブラウザは音声入力に非対応です';
@@ -319,29 +329,36 @@ function setMicUI(on){
 function startMic(){
   if(!SR){toast('音声認識に非対応のブラウザです');return;}
   userStopped=false;
-  // 録音開始時点の原文を初期テキストとして保持
+  // 録音開始時点の原文を「確定済みテキスト」の基準にする
   var existing = srcText.value || '';
-  var initialText = existing ? (existing.replace(/\s+$/,'') + ' ') : '';
-  // 原文言語に追従（ja→ja-JP、en→en-US、…）
+  committedText = existing ? (existing.replace(/\s+$/,'') + ' ') : '';
+  startSession();
+  recording=true; setMicUI(true); showErr('');
+}
+// 単発認識セッション（continuous=false）。終わったら自動再開
+// ※Android Chromeのcontinuous=trueバグ回避のため
+function startSession(){
   var lc=srcLang.value;
-  var lo=LANGS.find?LANGS.find(function(x){return x.code===lc;}):null;
-  if(!lo){for(var i=0;i<LANGS.length;i++)if(LANGS[i].code===lc){lo=LANGS[i];break;}}
-  rec=new SR(); rec.lang=(lo&&lo.sr)||'ja-JP'; rec.interimResults=true; rec.continuous=true;
+  var lo=null;
+  for(var i=0;i<LANGS.length;i++){ if(LANGS[i].code===lc){ lo=LANGS[i]; break; } }
+  rec=new SR(); rec.lang=(lo&&lo.sr)||'ja-JP'; rec.interimResults=true; rec.continuous=false;
   rec.onresult=function(e){
-    // 毎回完全置換（差分加算しない＝二重化を防ぐ）
-    var allFinal='', allInterim='';
+    var fin='', intr='';
     for(var i=0;i<e.results.length;i++){
       var t=e.results[i][0].transcript;
-      if(e.results[i].isFinal) allFinal+=t;
-      else allInterim+=t;
+      if(e.results[i].isFinal) fin+=t; else intr+=t;
     }
-    srcText.value = initialText + allFinal + allInterim;
+    if(fin){
+      committedText = committedText + fin;
+      srcText.value = committedText;
+    } else {
+      srcText.value = committedText + intr;
+    }
     updateCnt();
   };
   rec.onend=function(){
     if(!userStopped && recording){
-      initialText = srcText.value ? (srcText.value.replace(/\s+$/,'') + ' ') : '';
-      try{ rec.start(); return; }catch(e){}
+      try{ startSession(); return; }catch(e){}
     }
     recording=false; setMicUI(false); saveLocal();
   };
@@ -351,13 +368,13 @@ function startMic(){
       userStopped=true; recording=false; setMicUI(false);
     } else if(e.error==='no-speech'){
       // 無音は無視
+    } else if(e.error==='aborted'){
+      // 再起動時のabortは無視
     } else {
       recording=false; setMicUI(false);
     }
   };
-  try{
-    rec.start(); recording=true; setMicUI(true); showErr('');
-  }catch(err){ recording=false; setMicUI(false); }
+  try{ rec.start(); }catch(err){ /* onend が拾う */ }
 }
 function stopMic(){ userStopped=true; if(rec){try{rec.stop();}catch(e){}} }
 function toggleMic(){
