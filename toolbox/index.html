@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- toolbox version 65 (2026-06-15) ホーム画面の道具アイコンをルートメニューと同じ意匠に変更。.sq .ic を「角丸四角＋ベタ塗りカラー＋白線」から「まん丸(border-radius:50%)＋背景var(--bg)＋凹み影var(--well)＋各色の線画」に。各タイルの .t-○○ .ic を background指定からcolor(線色)指定へ変更(12タイル)。CSSのみ・SVG/機能/id不変・GAS変更なし。 -->
 <!-- toolbox version 64 (2026-06-15) ホーム画面の道具グリッドを grid-template-columns:repeat(3,minmax(0,1fr)) に変更。細い画面(Galaxy A21等/横360px以下)で3列の正方形タイルが画面からはみ出し左右スクロールしていた不具合を修正。タイルが画面幅に合わせて縮むようになり横はみ出しが解消。CSSのみ変更・機能/id不変・GAS変更なし。 -->
 <!-- toolbox version 63 (2026-06-15) 虫眼鏡にも「撮影方式」切替を追加（ライブ／かんたん）。かんたん方式=端末標準カメラで撮影(magFileInput capture)→撮った写真をmagZoomerに表示し既存のCSS拡大(magSetZoom)で拡大。生映像が映らない機種(Galaxy A21等)でも拡大鏡が使える。選択方式はlocalStorage(magCamMode)で保持。ライブ専用UI(止める/高画質/ライト/ピント説明)はかんたんで非表示。applyMagModeはstopMag後に再起動し二重起動防止。 -->
 <html lang="ja">
@@ -42,7 +43,7 @@
   .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
   .sq{position:relative;display:flex;flex-direction:column;aspect-ratio:1/1;border-radius:16px;padding:13px;color:var(--ink);background:var(--bg);box-shadow:var(--rise);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;}
   .sq:active{transform:scale(.97);box-shadow:var(--well);}
-  .sq .ic{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:2px 2px 6px rgba(40,60,100,.2);}
+  .sq .ic{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg);box-shadow:var(--well);}
   .sq .ic svg{width:23px;height:23px;}
   .sq .txt{margin-top:auto;min-width:0;}
   .sq .nm{font-weight:700;font-size:13px;letter-spacing:.01em;color:var(--ink);}
@@ -50,10 +51,10 @@
   .sq .cor{position:absolute;top:10px;right:11px;font-size:14px;color:var(--sub);}
   .sq.soon{opacity:.7;}
   .sq.soon .cor{font-size:10px;letter-spacing:.08em;background:var(--bg);box-shadow:var(--well-soft);border-radius:999px;padding:2px 7px;font-family:"Manrope",sans-serif;color:var(--sub);}
-  .t-memo .ic{background:#22a06b;} .t-check .ic{background:#2d7dd2;} .t-draw .ic{background:#7c3ab4;}
-  .t-mat .ic{background:#0f766e;} .t-rec .ic{background:#d64646;} .t-rem .ic{background:#d97706;}
-  .t-book .ic{background:#7c3ab4;} .t-board .ic{background:#e8910b;} .t-elec .ic{background:#bd941c;}
-  .t-mag .ic{background:#4f46e5;} .t-area .ic{background:#0d9aa0;} .t-meas .ic{background:#0d9aa0;}
+  .t-memo .ic{color:#22a06b;} .t-check .ic{color:#2d7dd2;} .t-draw .ic{color:#7c3ab4;}
+  .t-mat .ic{color:#0f766e;} .t-rec .ic{color:#d64646;} .t-rem .ic{color:#d97706;}
+  .t-book .ic{color:#7c3ab4;} .t-board .ic{color:#e8910b;} .t-elec .ic{color:#bd941c;}
+  .t-mag .ic{color:#4f46e5;} .t-area .ic{color:#0d9aa0;} .t-meas .ic{color:#0d9aa0;}
   .bk-srch{width:100%;padding:12px 13px;border:none;border-radius:12px;font-size:15.5px;margin-bottom:10px;background:var(--bg);box-shadow:var(--well);color:var(--ink);}
   /* 工事手帳：業種タブ（tb v55追加） */
   .bk-tabs{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:10px;padding-bottom:4px;scrollbar-width:none;}
@@ -331,7 +332,7 @@
   .citem .micbtn{position:static;transform:none;width:32px;height:32px;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v64</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v65</div>
 
 <div class="wrap">
 
