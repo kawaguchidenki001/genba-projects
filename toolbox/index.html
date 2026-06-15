@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- toolbox version 61 (2026-06-15) 小黒板カメラに「撮影方式」切替を追加（ライブ／かんたん）。かんたん方式=端末標準カメラで撮影(input file capture)→写真に黒板を重ねてDrive保存。生映像が映らない機種(Galaxy A21等)でも撮影可能。選択した方式はlocalStorage(boardCamMode)で保持し次回も継続。合成はboardShootCore(srcEl)を流用、ライブ方式は従来通り。 -->
+<!-- toolbox version 62 (2026-06-15) かんたん方式のUI調整：撮影前は黒いプレビュー枠(bcamWrap)を非表示にし、説明文(枠外)＋「写真を撮る」のみ表示。撮影後は枠を表示し写真＋黒板プレビュー。「撮り直す」ボタンをflex:0 0 38%に縮小し「この写真で保存」を主ボタン化。撮影後bovは枠表示後にsetTimeout(30)で描画し位置ずれ防止。 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -330,7 +330,7 @@
   .citem .micbtn{position:static;transform:none;width:32px;height:32px;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v61</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v62</div>
 
 <div class="wrap">
 
@@ -664,8 +664,8 @@
       <img id="boardPhoto" alt="" style="display:none;width:100%;height:100%;object-fit:cover;background:#000;">
       <div class="bov-bd" id="boardOverlay" style="display:none;"></div>
       <div class="bcam-zoominfo" id="boardZoomInfo">1.0x</div>
-      <div id="boardEasyPrompt" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;color:#fff;font-size:15px;text-align:center;padding:20px;line-height:1.5;">下の<b>「写真を撮る」</b>ボタンで撮影してください</div>
     </div>
+    <div id="boardEasyPrompt" style="display:none;padding:30px 16px;text-align:center;color:#555;font-size:15px;line-height:1.7;background:#eef3f2;border-radius:14px;margin-bottom:10px;">下の<b style="color:#1a8c78;">「写真を撮る」</b>ボタンで撮影してください</div>
     <input type="file" id="boardFileInput" accept="image/*" capture="environment" style="display:none;" onchange="boardEasyPicked(this)">
     <div class="bsize-row">
       <label>黒板の大きさ</label>
@@ -684,7 +684,7 @@
     <div class="enote" style="margin:12px 2px 84px;">黒板はドラッグで移動／ダブルタップで入力欄の表示切替。各行の −／＋ で文字サイズを調整できます。</div>
     <div class="bshoot-bar two" id="boardBarLive"><button class="savebtn hqbtn" id="boardHQBtn" onclick="boardShoot(true)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>最高画質</button><button class="savebtn" style="background:#d97b12;flex:1;" onclick="boardShoot(false)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>撮影してDriveに保存</button></div>
     <div class="bshoot-bar" id="boardBarEasyEmpty" style="display:none;"><button class="savebtn" style="background:#d97b12;flex:1;" onclick="boardEasyShoot()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>写真を撮る</button></div>
-    <div class="bshoot-bar two" id="boardBarEasyShot" style="display:none;"><button class="savebtn" style="background:#777;" onclick="boardEasyShoot()">撮り直す</button><button class="savebtn" style="background:#1e8e3e;flex:1;" onclick="boardEasySave()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>この写真で保存</button></div>
+    <div class="bshoot-bar two" id="boardBarEasyShot" style="display:none;"><button class="savebtn" style="background:#777;flex:0 0 38%;" onclick="boardEasyShoot()">撮り直す</button><button class="savebtn" style="background:#1e8e3e;flex:1;" onclick="boardEasySave()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>この写真で保存</button></div>
   </div>
 
   <!-- ========== ④ 録音機 ========== -->
@@ -3037,9 +3037,10 @@ function boardShowLiveCtrls(show){
 }
 function applyBoardMode(){
   applyBoardModeUI();
-  var vid=document.getElementById('boardVideo'),pr=document.getElementById('boardEasyPrompt'),ov=document.getElementById('boardOverlay');
+  var vid=document.getElementById('boardVideo'),pr=document.getElementById('boardEasyPrompt'),ov=document.getElementById('boardOverlay'),wrap=document.getElementById('bcamWrap');
   if(boardMode==='live'){
     if(pr)pr.style.display='none';
+    if(wrap)wrap.style.display='';
     if(vid)vid.style.display='block';
     boardShowLiveCtrls(true);
     setBoardBar('live');
@@ -3049,7 +3050,8 @@ function applyBoardMode(){
     if(vid)vid.style.display='none';
     boardShowLiveCtrls(false);
     if(ov)ov.style.display='none';
-    if(pr)pr.style.display='flex';
+    if(wrap)wrap.style.display='none';
+    if(pr)pr.style.display='block';
     setBoardBar('easy-empty');
   }
 }
@@ -3061,12 +3063,13 @@ function boardEasyPicked(input){
   var img=new Image();
   img.onload=function(){
     boardEasyImg=img;
+    var wrap=document.getElementById('bcamWrap');if(wrap)wrap.style.display='';
     var ph=document.getElementById('boardPhoto');
     if(ph){ph.src=img.src;ph.style.display='block';}
     var vid=document.getElementById('boardVideo');if(vid)vid.style.display='none';
     var pr=document.getElementById('boardEasyPrompt');if(pr)pr.style.display='none';
-    bov();
     setBoardBar('easy-shot');
+    setTimeout(function(){bov();},30);
   };
   img.onerror=function(){toast('写真の読み込みに失敗しました');};
   img.src=URL.createObjectURL(f);
