@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- timecard version 42 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置)。長い名称でも重なり/切れなし。タイトル(nm/h1)の改行禁止解除。CSSのみ・HTML/機能/id不変・GAS変更なし。 -->
 <!-- timecard version 41 (2026-06-14) ヘッダー統一（メニュー左/時計アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。氏名・日付・時計はヘッダー下のカードとして保持。更新はreload()。機能・id不変 -->
 <html lang="ja">
 <head>
@@ -117,7 +118,11 @@
   .alert.bad{background:#fdeaea;color:#b3271e;box-shadow:var(--rise-sm);}
   /* v41: ヘッダー統一（中央寄せ＋更新ボタン・少し大きく） */
   header{position:sticky;top:0;z-index:20;background:var(--bg);padding:calc(env(safe-area-inset-top) + 11px) 14px 11px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
-  .hbar{display:flex;align-items:center;gap:9px;max-width:760px;margin:0 auto;}
+  .hbar{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"back . right" "title title title";align-items:center;row-gap:12px;column-gap:8px;max-width:760px;margin:0 auto;}
+  .hbar .back{grid-area:back;align-self:center;}
+  .hbar .hright{grid-area:right;justify-self:end;}
+  .hbar .hcenter{grid-area:title;justify-self:center;}
+  .hbar .htxt .nm,.hbar .htxt h1{white-space:normal;}
   .hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:11px;min-width:0;}
   .hright{flex:0 0 auto;display:flex;align-items:center;gap:9px;}
   .hrf{width:42px;height:42px;border-radius:50%;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
@@ -134,7 +139,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v41</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v42</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
