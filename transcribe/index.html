@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<!-- transcribe version 1 (2026-06-15) AI文字起こし画面。音声→文字（リアルタイム・継続録音）→AI整文/要約→コピー/LINE/メール/SMSへ -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI文字起こし｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
+    --accent:#7c3aed;--accent-d:#6d28d9;
+    --grad:linear-gradient(92deg,#06b6d4 10%,#7c3aed 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+    --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16px;line-height:1.55;padding-bottom:30px;}
+  a,button,select,input,textarea{font-family:inherit;}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;box-shadow:0 6px 14px -10px rgba(124,58,237,.4);}
+  .hbar{display:flex;align-items:center;gap:11px;max-width:680px;margin:0 auto;}
+  .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.06em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:9px 14px;text-decoration:none;white-space:nowrap;}
+  .back:active{box-shadow:var(--well);}
+  .hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:11px;min-width:0;}
+  .hric{width:44px;height:44px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hric svg{width:23px;height:23px;}
+  .htxt{flex:0 1 auto;min-width:0;text-align:center;}
+  .htxt .en{font-family:"Manrope",sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .htxt .nm{font-weight:700;font-size:19.5px;color:var(--ink);display:block;line-height:1.2;}
+  .hright{flex:0 0 auto;display:flex;align-items:center;gap:9px;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:15px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  main{padding:14px;max-width:680px;margin:0 auto;}
+
+  /* 録音ボタン（大きく目立つ） */
+  .rec-wrap{display:flex;flex-direction:column;align-items:center;margin:8px 0 16px;}
+  .rec-btn{width:118px;height:118px;border-radius:50%;border:none;background:var(--bg);box-shadow:var(--rise);color:var(--accent);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+  .rec-btn:active{box-shadow:var(--well);}
+  .rec-btn svg{width:50px;height:50px;}
+  .rec-btn.recording{background:#ef4444;color:#fff;animation:recpulse 1.2s ease-in-out infinite;}
+  @keyframes recpulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5),var(--rise);}50%{box-shadow:0 0 0 14px rgba(239,68,68,0),var(--rise);}}
+  .rec-state{margin-top:10px;font-size:13.5px;color:var(--sub);font-weight:700;letter-spacing:.04em;min-height:18px;}
+  .rec-state.on{color:#dc2626;}
+
+  /* メモ（編集可能なtextarea） */
+  .sec-lbl{font-size:13px;color:var(--sub);font-weight:700;margin:14px 4px 6px;letter-spacing:.04em;display:flex;align-items:center;justify-content:space-between;}
+  .sec-lbl .cnt{font-size:11.5px;color:var(--sub);font-weight:600;font-variant-numeric:tabular-nums;}
+  textarea#memo{width:100%;min-height:30vh;padding:14px;border:none;border-radius:14px;background:var(--bg);box-shadow:var(--well);color:var(--ink);font-size:16px;line-height:1.7;resize:vertical;font-family:inherit;}
+  textarea#memo:focus{outline:none;}
+
+  /* AI操作ボタン群 */
+  .ai-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+  .ai-btn{padding:13px 10px;border:none;border-radius:12px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);font-weight:700;font-size:14.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;}
+  .ai-btn:active{box-shadow:var(--well);}
+  .ai-btn:disabled{opacity:.45;cursor:not-allowed;}
+  .ai-btn svg{width:17px;height:17px;}
+  .ai-btn .lbl-sm{font-size:11px;font-weight:600;color:var(--sub);margin-left:3px;}
+
+  /* 補助操作（クリア・元に戻す） */
+  .util-row{display:flex;gap:8px;justify-content:flex-end;margin-top:8px;}
+  .util-btn{padding:8px 13px;border:none;border-radius:999px;background:transparent;color:var(--sub);font-size:12.5px;font-weight:700;cursor:pointer;}
+  .util-btn:hover{color:var(--accent-d);}
+  .util-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+  /* 送信先ボタン（4分割） */
+  .send-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px;}
+  .send-btn{padding:14px 6px;border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--ink);font-weight:700;font-size:12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px;text-decoration:none;}
+  .send-btn:active{box-shadow:var(--well);}
+  .send-btn svg{width:24px;height:24px;}
+  .send-btn .nm{font-size:12px;font-weight:700;}
+  .b-cp{color:#475569;} .b-cp svg{color:#475569;}
+  .b-ln{color:#06c755;} .b-ln svg{color:#06c755;}
+  .b-ml{color:#2563eb;} .b-ml svg{color:#2563eb;}
+  .b-sm{color:#f97316;} .b-sm svg{color:#f97316;}
+
+  /* ヘルプ */
+  .hint{margin-top:18px;background:var(--bg);border-radius:14px;box-shadow:var(--rise-sm);padding:13px 15px;font-size:12.5px;color:var(--sub);line-height:1.8;}
+  .hint b{color:var(--accent-d);}
+
+  /* AI処理中のオーバーレイ */
+  .busy{position:fixed;inset:0;background:rgba(232,236,242,.7);backdrop-filter:blur(2px);z-index:50;display:none;align-items:center;justify-content:center;}
+  .busy.show{display:flex;}
+  .busy-box{background:var(--bg);box-shadow:var(--rise);border-radius:16px;padding:20px 26px;display:flex;align-items:center;gap:14px;color:var(--accent-d);font-weight:700;font-size:14px;}
+  .spin{width:22px;height:22px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);animation:sp .9s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:30px;z-index:80;background:#1f3a52;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 20px rgba(31,58,82,.3);max-width:90vw;text-align:center;}
+  .toast.show{opacity:1;}
+  .err-bar{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:10px 12px;border-radius:10px;font-size:13px;margin-top:10px;display:none;}
+  .err-bar.show{display:block;}
+
+  .unsupported{margin:20px 14px;padding:14px 16px;background:#fef9c3;border:1px solid #fde68a;color:#854d0e;border-radius:12px;font-size:13.5px;line-height:1.6;display:none;}
+  .unsupported.show{display:block;}
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v1</div>
+
+<header>
+  <div class="hbar">
+    <a class="back" href="../aitools/">← AIツール</a>
+    <div class="hcenter">
+      <span class="hric"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0M12 19v3"/></svg></span>
+      <div class="htxt"><span class="en">Transcribe</span><span class="nm">AI文字起こし</span></div>
+    </div>
+    <div class="hright"><span class="hmark">Gen-Can</span></div>
+  </div>
+</header>
+
+<main>
+  <!-- 非対応ブラウザへの警告 -->
+  <div class="unsupported" id="unsupportedNote">
+    お使いのブラウザは音声認識に対応していません。<br>
+    <b>Chrome / Edge</b> でご利用ください。文字入力・AI整文・送信は使えます。
+  </div>
+
+  <!-- 録音ボタン -->
+  <div class="rec-wrap">
+    <button class="rec-btn" id="recBtn" aria-label="録音開始/停止">
+      <svg id="recIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg>
+    </button>
+    <div class="rec-state" id="recState">タップして録音開始</div>
+  </div>
+
+  <div class="err-bar" id="errBar"></div>
+
+  <!-- メモ（textarea） -->
+  <div class="sec-lbl"><span>メモ（手入力で修正できます）</span><span class="cnt" id="charCnt">0 文字</span></div>
+  <textarea id="memo" placeholder="ここに文字起こしの結果が出ます。手入力で修正もできます。"></textarea>
+
+  <!-- AI整文・要約 -->
+  <div class="ai-row">
+    <button class="ai-btn" id="btnRefine" onclick="aiProcess('refine')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 20 1.2-4.2L16 5l3 3L8.2 18.8Z"/><path d="m13.2 6.8 3 3"/></svg>
+      整える <span class="lbl-sm">読みやすく</span>
+    </button>
+    <button class="ai-btn" id="btnSummary" onclick="aiProcess('summary')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h10M4 18h13"/></svg>
+      要約する <span class="lbl-sm">要点だけ</span>
+    </button>
+  </div>
+
+  <!-- 補助操作 -->
+  <div class="util-row">
+    <button class="util-btn" id="btnUndo" onclick="undoEdit()" disabled>↩ 元に戻す</button>
+    <button class="util-btn" onclick="clearAll()">クリア</button>
+  </div>
+
+  <!-- 送信先 -->
+  <div class="sec-lbl" style="margin-top:18px;">送信先（メモの内容を共有）</div>
+  <div class="send-row">
+    <button class="send-btn b-cp" onclick="doCopy()" aria-label="コピー">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h8"/></svg>
+      <span class="nm">コピー</span>
+    </button>
+    <button class="send-btn b-ln" onclick="doLine()" aria-label="LINE">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.7 8.7 0 0 1-4-1l-5 1 1-5a8.4 8.4 0 0 1-1-4 8.4 8.4 0 0 1 8.5-8.5 8.4 8.4 0 0 1 8.5 8.5z"/></svg>
+      <span class="nm">LINE</span>
+    </button>
+    <button class="send-btn b-ml" onclick="doMail()" aria-label="メール">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+      <span class="nm">メール</span>
+    </button>
+    <button class="send-btn b-sm" onclick="doSms()" aria-label="SMS">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-12 7l-5 2 1.6-4.6A8 8 0 1 1 21 12z"/></svg>
+      <span class="nm">SMS</span>
+    </button>
+  </div>
+
+  <div class="hint">
+    <b>使い方</b><br>
+    ① 大きなマイクボタンを押して話す（黙っても止まりません）<br>
+    ② もう一度押すと停止。メモ欄で手直しも可能<br>
+    ③「整える」で読みやすく／「要約する」で要点だけに（AIが処理）<br>
+    ④ 送信先（コピー／LINE／メール／SMS）でそのまま共有
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="busy" id="busy"><div class="busy-box"><div class="spin"></div><span id="busyLbl">AIで処理中…</span></div></div>
+
+<script>
+/* ========== 設定 ========== */
+var API_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var SECRET='kawaguchi-genba-2026';
+var CACHE_KEY='genba_transcribe_memo';
+
+/* ========== 要素 ========== */
+var memo=document.getElementById('memo');
+var recBtn=document.getElementById('recBtn');
+var recState=document.getElementById('recState');
+var charCnt=document.getElementById('charCnt');
+var errBar=document.getElementById('errBar');
+var btnUndo=document.getElementById('btnUndo');
+var unsupportedNote=document.getElementById('unsupportedNote');
+
+/* ========== 状態 ========== */
+var undoStack=[]; // 直前の値スタック（AI整文の前など）
+
+/* ========== 共通UI ========== */
+var toastT;
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
+function showErr(m){if(!m){errBar.classList.remove('show');errBar.textContent='';return;}errBar.textContent=m;errBar.classList.add('show');}
+function showBusy(lbl){document.getElementById('busyLbl').textContent=lbl||'AIで処理中…';document.getElementById('busy').classList.add('show');}
+function hideBusy(){document.getElementById('busy').classList.remove('show');}
+function updateCnt(){charCnt.textContent=(memo.value||'').length+' 文字';}
+
+/* ========== ローカル保存（離脱・再訪に備える） ========== */
+function saveLocal(){try{localStorage.setItem(CACHE_KEY,memo.value||'');}catch(e){}}
+function loadLocal(){try{var v=localStorage.getItem(CACHE_KEY);if(v){memo.value=v;updateCnt();}}catch(e){}}
+memo.addEventListener('input',function(){updateCnt();saveLocal();});
+loadLocal();
+
+/* ========== Undo（AI処理前に保存） ========== */
+function pushUndo(){undoStack.push(memo.value||'');if(undoStack.length>10)undoStack.shift();btnUndo.disabled=false;}
+function undoEdit(){if(!undoStack.length)return;memo.value=undoStack.pop();updateCnt();saveLocal();if(!undoStack.length)btnUndo.disabled=true;toast('元に戻しました');}
+
+/* ========== クリア ========== */
+function clearAll(){
+  if(!memo.value){toast('メモは空です');return;}
+  if(!confirm('メモをすべて消去しますか？'))return;
+  pushUndo();
+  memo.value='';updateCnt();saveLocal();
+  toast('クリアしました');
+}
+
+/* ========== 音声認識（Web Speech API・継続録音） ========== */
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+var rec=null, recording=false, userStopped=false, baseText='';
+if(!SR){
+  unsupportedNote.classList.add('show');
+  recBtn.disabled=true;
+  recBtn.style.opacity='.45';
+  recBtn.style.cursor='not-allowed';
+  recState.textContent='音声認識は非対応（文字入力は可能）';
+}
+function setRecUI(on){
+  if(on){
+    recBtn.classList.add('recording');
+    recState.classList.add('on');
+    recState.textContent='● 録音中…もう一度タップで停止';
+  } else {
+    recBtn.classList.remove('recording');
+    recState.classList.remove('on');
+    recState.textContent='タップして録音開始';
+  }
+}
+function startRec(){
+  if(!SR){toast('音声認識に非対応のブラウザです');return;}
+  userStopped=false;
+  baseText = memo.value ? (memo.value.replace(/\s+$/,'')+(memo.value.length?'\n':'')) : '';
+  rec=new SR(); rec.lang='ja-JP'; rec.interimResults=true; rec.continuous=true;
+  rec.onresult=function(e){
+    var fin='',intr='';
+    for(var i=e.resultIndex;i<e.results.length;i++){
+      var t=e.results[i][0].transcript;
+      if(e.results[i].isFinal) fin+=t; else intr+=t;
+    }
+    if(fin){ baseText = baseText + fin; }
+    memo.value = baseText + intr;
+    updateCnt();
+  };
+  rec.onend=function(){
+    if(!userStopped && recording){
+      try{ rec.start(); return; }catch(e){}
+    }
+    recording=false; setRecUI(false); saveLocal();
+  };
+  rec.onerror=function(e){
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+      showErr('マイクの使用が許可されていません。ブラウザの設定をご確認ください。');
+      userStopped=true; recording=false; setRecUI(false);
+    } else if(e.error==='no-speech'){
+      // 無音は無視（onendで自動再開）
+    } else {
+      recording=false; setRecUI(false);
+    }
+  };
+  try{
+    rec.start(); recording=true; setRecUI(true); showErr('');
+  }catch(err){ recording=false; setRecUI(false); }
+}
+function stopRec(){ userStopped=true; if(rec){ try{rec.stop();}catch(e){} } }
+recBtn.addEventListener('click',function(){
+  if(recBtn.disabled) return;
+  if(recording) stopRec(); else startRec();
+});
+
+/* ========== AI整文・要約（既存aiChat流用・JSONP） ========== */
+function aiProcess(mode){
+  var text=(memo.value||'').trim();
+  if(!text){toast('メモが空です。先に文字を入れてください');return;}
+  if(text.length>4000){
+    if(!confirm('文字数が多いです（'+text.length+'文字）。AI処理に時間がかかります。続けますか？'))return;
+  }
+  var prompt='';
+  if(mode==='refine'){
+    prompt='次の文字起こしを、意味は変えずに「読みやすい日本語」に整えてください。話し言葉のクセ・言いよどみ・「えーと」「あの」などを取り除き、誤変換や聞き取りミスらしき箇所も自然な文に直してください。箇条書きが適切なら箇条書きに、文章が適切なら文章のまま整えてください。前置きや感想は不要。整えた本文だけを出力してください。\n\n--- 文字起こし ---\n'+text;
+    showBusy('整文中…');
+  } else if(mode==='summary'){
+    prompt='次の文字起こしの要点を、見出しなし・箇条書きでまとめてください。重要な数字・日時・固有名詞は省略しないでください。前置きは不要。\n\n--- 文字起こし ---\n'+text;
+    showBusy('要約中…');
+  } else { return; }
+
+  callAiChat(prompt).then(function(reply){
+    hideBusy();
+    if(!reply){ toast('AIから空の応答が返りました'); return; }
+    pushUndo();
+    memo.value = reply;
+    updateCnt(); saveLocal();
+    toast(mode==='refine'?'整えました':'要約しました');
+  }).catch(function(err){
+    hideBusy();
+    showErr('AI処理に失敗しました：'+(err&&err.message||err||''));
+  });
+}
+
+function callAiChat(userMsg){
+  return new Promise(function(resolve,reject){
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6);
+    var sc=document.createElement('script');
+    var done=false;
+    function cleanup(){try{delete window[cb];}catch(e){}if(sc.parentNode)sc.parentNode.removeChild(sc);}
+    var timer=setTimeout(function(){if(done)return;done=true;cleanup();reject(new Error('タイムアウト（60秒）'));},60000);
+    window[cb]=function(res){
+      if(done)return;done=true;clearTimeout(timer);cleanup();
+      if(res && res.ok && res.reply){ resolve(res.reply); }
+      else if(res && res.error){ reject(new Error(res.error)); }
+      else { reject(new Error('応答が不正です')); }
+    };
+    sc.onerror=function(){if(done)return;done=true;clearTimeout(timer);cleanup();reject(new Error('通信エラー'));};
+    // messagesは単発のuserメッセージ（履歴なし・systemはGAS側保持）
+    var msgs=[{role:'user',content:userMsg}];
+    var q='action=aiChat'
+      +'&secret='+encodeURIComponent(SECRET)
+      +'&messages='+encodeURIComponent(JSON.stringify(msgs))
+      +'&callback='+encodeURIComponent(cb);
+    var url=API_URL+'?'+q;
+    if(url.length>7500){
+      done=true;clearTimeout(timer);cleanup();
+      reject(new Error('文章が長すぎます。短くしてから試してください'));
+      return;
+    }
+    sc.src=url;
+    document.head.appendChild(sc);
+  });
+}
+
+/* ========== 送信先 ========== */
+function getText(){
+  var t=(memo.value||'').trim();
+  if(!t){toast('メモが空です');return null;}
+  return t;
+}
+function doCopy(){
+  var t=getText(); if(!t)return;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){toast('コピーしました');},function(){fallbackCopy(t);});
+  } else { fallbackCopy(t); }
+}
+function fallbackCopy(t){
+  try{
+    var ta=document.createElement('textarea');
+    ta.value=t; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    toast('コピーしました');
+  }catch(e){ toast('コピーに失敗しました。長押しでコピーしてください'); }
+}
+function doLine(){
+  var t=getText(); if(!t)return;
+  // LINEは内容パラメータを直接渡せない（公式仕様）。URLを共有するLINE共有スキームは使えるが、
+  // 任意テキストの確実な転送は「コピー→LINE起動」が最も安定
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(openLine,openLine);
+  } else { fallbackCopy(t); openLine(); }
+}
+function openLine(){
+  toast('コピー済み。LINEを開きます');
+  // LINEアプリスキーム→失敗時はLINE公式サイトを開く
+  setTimeout(function(){
+    var t1=Date.now();
+    location.href='line://';
+    setTimeout(function(){
+      // 戻ってきた場合（=アプリ起動失敗）はブラウザでLINEを開く
+      if(Date.now()-t1<1500 && !document.hidden){
+        window.open('https://line.me/','_blank');
+      }
+    },1200);
+  },400);
+}
+function doMail(){
+  var t=getText(); if(!t)return;
+  var body=encodeURIComponent(t);
+  var subj=encodeURIComponent('文字起こしメモ');
+  // mailto:はOSの規定メールアプリ（Gmail/メール/Outlook等）を起動
+  location.href='mailto:?subject='+subj+'&body='+body;
+}
+function doSms(){
+  var t=getText(); if(!t)return;
+  var body=encodeURIComponent(t);
+  // iOS/Androidでmessage本文を渡す方式（端末の標準SMSアプリが起動）
+  var ua=navigator.userAgent||'';
+  // iOSとAndroidで?body=と&body=の扱いに微妙な差があるためどちらでも動く形に
+  var url=/iPhone|iPad|iPod/.test(ua) ? 'sms:&body='+body : 'sms:?body='+body;
+  location.href=url;
+}
+
+updateCnt();
+</script>
+</body>
+</html>
