@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- order version 5 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- order version 4 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はrefresh()。機能・id不変 -->
 <html lang="ja">
 <head>
@@ -23,7 +24,11 @@
   body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.55;padding-bottom:90px;}
   select,input,textarea,button,a{font-family:inherit;}
   header{position:sticky;top:0;z-index:20;background:var(--bg);color:var(--ink);padding:calc(env(safe-area-inset-top) + 12px) 14px 0;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
-  .hbar{display:flex;align-items:center;gap:11px;max-width:760px;margin:0 auto;}
+  .hbar{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"back . right" "title title title";align-items:center;row-gap:12px;column-gap:8px;max-width:760px;margin:0 auto;}
+  .hbar .back{grid-area:back;align-self:center;}
+  .hbar .hright{grid-area:right;justify-self:end;}
+  .hbar .hcenter{grid-area:title;justify-self:center;}
+  .hbar .htxt .nm{white-space:normal;}
   .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11px;letter-spacing:.06em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 13px;text-decoration:none;white-space:nowrap;}
   .back:active{box-shadow:var(--well);}
   .hic{width:40px;height:40px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
@@ -144,7 +149,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v4</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v5</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
