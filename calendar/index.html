@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- calendar version 53 (2026-06-16) スマホ月表示を横スクロール対応(min-width:700px・セル拡大)。PDF/JPEG出力時はoverflow一時visible化で見切れ防止。CSS追加とcaptureCanvas微修正・id/HTML構造不変・GAS変更なし。 -->
 <!-- calendar version 52 (2026-06-15) ヘッダー案A化(2段・CSSグリッド)。ごみ箱(クリア)を更新ボタンの下に配置。 CSSのみ・HTML/JS/id不変・GAS変更なし。 -->
 <!-- calendar version 51 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。同期表示は非表示化（id保持）。更新はreload()・期間クリアボタンは保持。天気アイコンは維持。 機能・id不変 -->
 <html lang="ja">
@@ -77,6 +78,17 @@
   @media (max-width:767px){
     #monthView .ev-tm{display:none;}
     #monthView .ev-sub{white-space:normal;overflow:visible;word-break:break-word;line-height:1.3;}
+    /* v53追加：月表示を横スクロール対応(幅拡張で見やすく) */
+    #monthView{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;}
+    #monthView .wk,#monthView .grid{min-width:700px;}
+    #monthView .cell{min-height:82px;padding:5px 6px;}
+    #monthView .dnum{font-size:14.5px;}
+    #monthView .wk div{font-size:12.5px;padding:5px 0;}
+    #monthView .ev-proj{font-size:11.5px;padding:2px 6px;}
+    #monthView .ev-sub{font-size:11px;}
+    #monthView .wx img,#monthView .wx .wi{width:22px;height:22px;}
+    #monthView .wx .wt{font-size:11px;}
+    #monthView .holname{font-size:10px;}
   }
   @media (min-width:768px){
     .cal{max-width:1400px;margin:0 auto;padding:0 4px;}
@@ -768,9 +780,11 @@ function delSchedule(id){ id=String(id||''); if(!id)return; if(!confirm('この�
   }).catch(function(err){toast('失敗：'+err.message);});}
 
 function captureCanvas(){ var cap=document.querySelector('.cap-head'); if(cap)cap.classList.add('show');
+  var mv=document.getElementById('monthView'); var prevOv=mv?mv.style.overflowX:'';
+  if(mv)mv.style.overflowX='visible';
   return html2canvas(document.getElementById('capture'),{scale:2,backgroundColor:'#ffffff',useCORS:true})
-    .then(function(c){ if(cap)cap.classList.remove('show'); return c; })
-    .catch(function(e){ if(cap)cap.classList.remove('show'); throw e; }); }
+    .then(function(c){ if(cap)cap.classList.remove('show'); if(mv)mv.style.overflowX=prevOv; return c; })
+    .catch(function(e){ if(cap)cap.classList.remove('show'); if(mv)mv.style.overflowX=prevOv; throw e; }); }
 function fileStamp(){ if(viewMode==='month')return cur.getFullYear()+'-'+('0'+(cur.getMonth()+1)).slice(-2); var s=weekStart(cur);return ymd(s)+(viewMode==='week2'?'_2週':'_1週'); }
 function exportJpeg(){ if(typeof html2canvas==='undefined'){toast('出力の準備中です。少し待って再度お試しください');return;}
   toast('画像を作成中…'); captureCanvas().then(function(c){var a=document.createElement('a');a.href=c.toDataURL('image/jpeg',0.95);a.download='スケジュール_'+fileStamp()+'.jpg';document.body.appendChild(a);a.click();a.remove();toast('JPEGを保存しました');}).catch(function(){toast('画像の作成に失敗しました');}); }
