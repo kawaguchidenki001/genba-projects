@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- calendar version 54 (2026-06-16) スマホ月表示にピンチ操作で拡縮機能を追加(0.7倍〜2.0倍・localStorage保存)。CSS変数--cal-sで全要素連動・既存のタップ/ドラッグ選択は影響なし・PDF/JPEG出力時はスケール一時リセット・GAS変更なし。 -->
 <!-- calendar version 53 (2026-06-16) スマホ月表示を横スクロール対応(min-width:700px・セル拡大)。PDF/JPEG出力時はoverflow一時visible化で見切れ防止。CSS追加とcaptureCanvas微修正・id/HTML構造不変・GAS変更なし。 -->
 <!-- calendar version 52 (2026-06-15) ヘッダー案A化(2段・CSSグリッド)。ごみ箱(クリア)を更新ボタンの下に配置。 CSSのみ・HTML/JS/id不変・GAS変更なし。 -->
 <!-- calendar version 51 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。同期表示は非表示化（id保持）。更新はreload()・期間クリアボタンは保持。天気アイコンは維持。 機能・id不変 -->
@@ -79,16 +80,17 @@
     #monthView .ev-tm{display:none;}
     #monthView .ev-sub{white-space:normal;overflow:visible;word-break:break-word;line-height:1.3;}
     /* v53追加：月表示を横スクロール対応(幅拡張で見やすく) */
-    #monthView{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;}
-    #monthView .wk,#monthView .grid{min-width:700px;}
-    #monthView .cell{min-height:82px;padding:5px 6px;}
-    #monthView .dnum{font-size:14.5px;}
-    #monthView .wk div{font-size:12.5px;padding:5px 0;}
-    #monthView .ev-proj{font-size:11.5px;padding:2px 6px;}
-    #monthView .ev-sub{font-size:11px;}
-    #monthView .wx img,#monthView .wx .wi{width:22px;height:22px;}
-    #monthView .wx .wt{font-size:11px;}
-    #monthView .holname{font-size:10px;}
+    /* v54追加：ピンチでスケール変更(--cal-s で全要素を連動拡縮) */
+    #monthView{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;--cal-s:1;touch-action:pan-x pan-y;}
+    #monthView .wk,#monthView .grid{min-width:calc(700px * var(--cal-s));}
+    #monthView .cell{min-height:calc(82px * var(--cal-s));padding:calc(5px * var(--cal-s)) calc(6px * var(--cal-s));}
+    #monthView .dnum{font-size:calc(14.5px * var(--cal-s));}
+    #monthView .wk div{font-size:calc(12.5px * var(--cal-s));padding:calc(5px * var(--cal-s)) 0;}
+    #monthView .ev-proj{font-size:calc(11.5px * var(--cal-s));padding:calc(2px * var(--cal-s)) calc(6px * var(--cal-s));}
+    #monthView .ev-sub{font-size:calc(11px * var(--cal-s));}
+    #monthView .wx img,#monthView .wx .wi{width:calc(22px * var(--cal-s));height:calc(22px * var(--cal-s));}
+    #monthView .wx .wt{font-size:calc(11px * var(--cal-s));}
+    #monthView .holname{font-size:calc(10px * var(--cal-s));}
   }
   @media (min-width:768px){
     .cal{max-width:1400px;margin:0 auto;padding:0 4px;}
@@ -206,7 +208,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v52</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v54</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -780,11 +782,12 @@ function delSchedule(id){ id=String(id||''); if(!id)return; if(!confirm('この�
   }).catch(function(err){toast('失敗：'+err.message);});}
 
 function captureCanvas(){ var cap=document.querySelector('.cap-head'); if(cap)cap.classList.add('show');
-  var mv=document.getElementById('monthView'); var prevOv=mv?mv.style.overflowX:'';
-  if(mv)mv.style.overflowX='visible';
+  var mv=document.getElementById('monthView'); var prevOv=mv?mv.style.overflowX:''; var prevS=mv?mv.style.getPropertyValue('--cal-s'):'';
+  if(mv){mv.style.overflowX='visible'; mv.style.setProperty('--cal-s','1');}
+  function restore(){ if(mv){mv.style.overflowX=prevOv; if(prevS)mv.style.setProperty('--cal-s',prevS); else mv.style.removeProperty('--cal-s');} }
   return html2canvas(document.getElementById('capture'),{scale:2,backgroundColor:'#ffffff',useCORS:true})
-    .then(function(c){ if(cap)cap.classList.remove('show'); if(mv)mv.style.overflowX=prevOv; return c; })
-    .catch(function(e){ if(cap)cap.classList.remove('show'); if(mv)mv.style.overflowX=prevOv; throw e; }); }
+    .then(function(c){ if(cap)cap.classList.remove('show'); restore(); return c; })
+    .catch(function(e){ if(cap)cap.classList.remove('show'); restore(); throw e; }); }
 function fileStamp(){ if(viewMode==='month')return cur.getFullYear()+'-'+('0'+(cur.getMonth()+1)).slice(-2); var s=weekStart(cur);return ymd(s)+(viewMode==='week2'?'_2週':'_1週'); }
 function exportJpeg(){ if(typeof html2canvas==='undefined'){toast('出力の準備中です。少し待って再度お試しください');return;}
   toast('画像を作成中…'); captureCanvas().then(function(c){var a=document.createElement('a');a.href=c.toDataURL('image/jpeg',0.95);a.download='スケジュール_'+fileStamp()+'.jpg';document.body.appendChild(a);a.click();a.remove();toast('JPEGを保存しました');}).catch(function(){toast('画像の作成に失敗しました');}); }
@@ -798,6 +801,32 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)relo
 (function(){try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];workers=c.workers||[];customers=c.customers||[];vehicles=c.vehicles||[];}catch(e){}})();
 var hadCache=(schedules&&schedules.length>0)||(projects&&projects.length>0);
 render();reload(hadCache);
+/* v54: 月表示のピンチ拡縮 */
+(function(){
+  var mv=document.getElementById('monthView'); if(!mv)return;
+  var MIN=0.7, MAX=2.0, KEY='cal_pinch_scale_v1';
+  var pinching=false, initialDist=0, startScale=1, currentScale=1;
+  try{ var sv=parseFloat(localStorage.getItem(KEY)||'1');
+    if(!isNaN(sv)&&sv>=MIN&&sv<=MAX){ currentScale=sv; mv.style.setProperty('--cal-s', String(sv)); }
+  }catch(e){}
+  function dist2(e){ var t1=e.touches[0],t2=e.touches[1]; var dx=t1.clientX-t2.clientX,dy=t1.clientY-t2.clientY; return Math.sqrt(dx*dx+dy*dy); }
+  mv.addEventListener('touchstart',function(e){
+    if(e.touches.length===2){ pinching=true; initialDist=dist2(e); startScale=currentScale; }
+  },{passive:true});
+  mv.addEventListener('touchmove',function(e){
+    if(pinching && e.touches.length===2){
+      e.preventDefault();
+      if(initialDist<=0)return;
+      var s=startScale*(dist2(e)/initialDist);
+      if(s<MIN)s=MIN; if(s>MAX)s=MAX;
+      currentScale=s;
+      mv.style.setProperty('--cal-s', String(s));
+    }
+  },{passive:false});
+  function endPinch(){ if(pinching){ pinching=false; try{ localStorage.setItem(KEY, String(currentScale)); }catch(e){} } }
+  mv.addEventListener('touchend',function(e){ if(e.touches.length<2) endPinch(); });
+  mv.addEventListener('touchcancel',endPinch);
+})();
 </script>
 <div id="offlineBar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:9px 12px;box-shadow:0 2px 10px rgba(0,0,0,.3);">📡 オフラインです。電波の良い場所で再読み込みしてください。</div>
 <script>
