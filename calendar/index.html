@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- calendar version 58 (2026-06-17) ヘッダー隠し時に月バー・曜日バーを確実に最上部へ移動。updatePositionsをピンチ後に即時実行・DOMContentLoadedでinitTopsを早期実行・offsetHeight取得タイミングを修正。GAS変更なし。 -->
 <!-- calendar version 57 (2026-06-17) スマホ月表示：下スクロールでヘッダー隠す・上スクロールで再表示、ピンチ拡大でもヘッダー隠す。曜日バー(.wk)をmonthView外に移動しstickyで上部固定。navbar/viewbar/wkのtopをJSで連動更新。スマホのみ(max-width:767px)・GAS変更なし。 -->
 <!-- calendar version 56 (2026-06-16) ヘッダーのクリア(ごみ箱)ボタンをHTMLから削除し、ヘッダーを上に詰める(.hbar row-gap 12→6px・hright 2段→1段化・header padding縮小)。clearPeriod関数とCSSルールは残置(将来再利用可)。HTML/JS関数/GAS不変。 -->
 <!-- calendar version 55 (2026-06-16) ピンチ拡縮の挙動を変更：文字・アイコン・余白は固定サイズ維持し、セル幅(min-width)・高さ(min-height)のみ拡縮する。これで拡大時に省略されていた案件名・業務名の続きが見える。GAS変更なし・JS構造不変。 -->
@@ -86,6 +87,7 @@
     /* v54追加：ピンチでスケール変更(--cal-s で全要素を連動拡縮) */
     /* v55変更：文字・アイコン・余白は固定。セル幅と高さのみピンチで拡縮し、省略文字を見やすく */
     /* v57追加：曜日バーをstickyで上部固定・ヘッダー隠し時にtopを連動 */
+    /* v58変更：クラスベースで位置制御に変更 */
     #monthView{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;--cal-s:1;touch-action:pan-x pan-y;}
     #monthView .grid{min-width:calc(700px * var(--cal-s));}
     #monthView .cell{min-height:calc(82px * var(--cal-s));padding:5px 6px;}
@@ -95,9 +97,18 @@
     #monthView .wx img,#monthView .wx .wi{width:22px;height:22px;}
     #monthView .wx .wt{font-size:11px;}
     #monthView .holname{font-size:10px;}
-    #wkRow{position:sticky;top:0;z-index:9;min-width:calc(700px * var(--cal-s));padding:0 8px;margin-bottom:0;box-shadow:0 2px 6px -4px rgba(31,90,168,.25);transition:top .25s ease;}
+    #wkRow{position:sticky;z-index:9;min-width:calc(700px * var(--cal-s));padding:0 8px;margin-bottom:0;box-shadow:0 2px 6px -4px rgba(31,90,168,.25);transition:top .25s ease;}
     #wkRow div{font-size:12.5px;padding:5px 0;}
-    .viewbar{transition:top .25s ease;position:sticky;top:0;z-index:8;background:var(--bg);}
+    .viewbar{transition:top .25s ease;position:sticky;z-index:8;background:var(--bg);}
+    /* ヘッダー表示時のtop値（JSでheight取得後に上書き） */
+    .navbar{top:var(--hdr-h,48px) !important;}
+    .viewbar{top:var(--hdr-h-nb,84px) !important;}
+    #wkRow{top:var(--hdr-h-nb-vb,120px) !important;}
+    /* hdr-hiddenクラス付与時：全バーを最上部へ */
+    body.hdr-hidden header{transform:translateY(calc(-1 * var(--hdr-h,48px)));}
+    body.hdr-hidden .navbar{top:0 !important;}
+    body.hdr-hidden .viewbar{top:var(--nb-h,36px) !important;}
+    body.hdr-hidden #wkRow{top:var(--nb-vb-h,72px) !important;}
   }
   @media (min-width:768px){
     .cal{max-width:1400px;margin:0 auto;padding:0 4px;}
@@ -215,7 +226,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v57</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v58</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -836,58 +847,48 @@ render();reload(hadCache);
   mv.addEventListener('touchend',function(e){ if(e.touches.length<2) endPinch(); });
   mv.addEventListener('touchcancel',endPinch);
 })();
-/* v57: スクロール連動ヘッダー隠し（スマホのみ） */
+/* v58: スクロール連動ヘッダー隠し（スマホのみ）CSSカスタムプロパティ+クラス方式に変更 */
 (function(){
-  if(typeof window==='undefined')return;
+  if(window.innerWidth>767)return;
   var hdr=document.querySelector('header');
   var nb=document.querySelector('.navbar');
   var vb=document.querySelector('.viewbar');
   var wk=document.getElementById('wkRow');
   if(!hdr||!nb||!wk)return;
+  function measureAndSet(){
+    if(window.innerWidth>767)return;
+    var hh=hdr.offsetHeight;
+    var nbh=nb.offsetHeight;
+    var vbh=vb?vb.offsetHeight:0;
+    document.body.style.setProperty('--hdr-h', hh+'px');
+    document.body.style.setProperty('--nb-h', nbh+'px');
+    document.body.style.setProperty('--hdr-h-nb', (hh+nbh)+'px');
+    document.body.style.setProperty('--nb-vb-h', (nbh+vbh)+'px');
+    document.body.style.setProperty('--hdr-h-nb-vb', (hh+nbh+vbh)+'px');
+  }
   var hidden=false;
   window.setHdrHidden=function(hide){
     if(hide===hidden)return;
     hidden=hide;
-    updatePositions();
+    if(hide){ document.body.classList.add('hdr-hidden'); }
+    else { document.body.classList.remove('hdr-hidden'); }
   };
-  function updatePositions(){
-    if(window.innerWidth>767){ /* PC時はリセット */
-      hdr.style.transform='';
-      nb.style.top=''; if(vb)vb.style.top=''; wk.style.top='';
-      return;
-    }
-    var hh=hdr.offsetHeight;
-    if(hidden){
-      hdr.style.transform='translateY(-'+hh+'px)';
-      nb.style.top='0px';
-      if(vb)vb.style.top=nb.offsetHeight+'px';
-      wk.style.top=(nb.offsetHeight+(vb?vb.offsetHeight:0))+'px';
-    } else {
-      hdr.style.transform='translateY(0)';
-      nb.style.top=hh+'px';
-      if(vb)vb.style.top=(hh+nb.offsetHeight)+'px';
-      wk.style.top=(hh+nb.offsetHeight+(vb?vb.offsetHeight:0))+'px';
-    }
-  }
-  /* 初期top値をセット */
-  function initTops(){
-    if(window.innerWidth>767)return;
-    var hh=hdr.offsetHeight;
-    nb.style.top=hh+'px';
-    if(vb)vb.style.top=(hh+nb.offsetHeight)+'px';
-    wk.style.top=(hh+nb.offsetHeight+(vb?vb.offsetHeight:0))+'px';
-  }
-  window.addEventListener('load',initTops);
-  window.addEventListener('resize',function(){ hidden=false; updatePositions(); initTops(); });
-  /* スクロール検知 */
+  function init(){ measureAndSet(); }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',init);
+  } else { init(); }
+  window.addEventListener('load', measureAndSet);
+  window.addEventListener('resize',function(){
+    hidden=false; document.body.classList.remove('hdr-hidden'); measureAndSet();
+  });
   var lastY=0, ticking=false;
   window.addEventListener('scroll',function(){
     if(window.innerWidth>767)return;
     var y=window.scrollY||window.pageYOffset;
     if(!ticking){ ticking=true; requestAnimationFrame(function(){
       var dy=y-lastY;
-      if(dy>6) setHdrHidden(true);
-      else if(dy<-6) setHdrHidden(false);
+      if(dy>6) window.setHdrHidden(true);
+      else if(dy<-6) window.setHdrHidden(false);
       lastY=y; ticking=false;
     }); }
   },{passive:true});
