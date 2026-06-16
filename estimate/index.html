@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- estimate version 12 (2026-06-16) PDFの税抜/税込スイッチを追加。金額表示エリア上にtaxSeg配置、curTax変数、setTax関数、見積=税抜/請求=税込を初期値に、openEstでも初期化、estPdf呼び出しにtax:curTaxを渡す。GAS v92以上＋テンプレ リンク版3が必要。 -->
+<!-- estimate version 13 (2026-06-16) 項目の役割変更：案件→工事名／場所(旧件名)→工事場所。ラベル変更・件名選択時の自動入力廃止・検索/バリデーション文言を場所に。PDF反映はGAS v94が必要。 -->
 <!-- estimate version 10 (2026-06-15) 【案Aサンプル】ヘッダーを2段化。CSSグリッドで .hbar を再配置し、上段=「←メニュー」(左)＋Gen-Can/更新/設定(右)、下段=アイコン＋タイトルを中央配置。タイトル領域が横幅フルなので長い名称でも重ならない・切れない。.nmの改行禁止を解除(大きい文字でも折返し)。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- estimate version 9 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はloadAll()。機能・id不変 -->
 <html lang="ja">
@@ -187,7 +187,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v12</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v13</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
@@ -215,7 +215,7 @@
       <span class="chip" data-k="請求">請求</span>
       <span class="chip" data-k="未入金">未入金のみ</span>
     </div>
-    <input class="search" id="q" placeholder="宛名・件名・番号で検索" oninput="renderList()">
+    <input class="search" id="q" placeholder="宛名・場所・番号で検索" oninput="renderList()">
     <button class="addbtn" onclick="newEst()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> 新しい見積書・請求書を作る</button>
     <div id="list"></div>
   </div>
@@ -237,14 +237,14 @@
         <select class="inp" id="fCust" onchange="custChanged()"></select>
       </div>
       <div>
-        <label class="lbl">案件（任意）</label>
+        <label class="lbl">案件（これが工事名になります）</label>
         <select class="inp" id="fCase" onchange="caseChanged()"></select>
       </div>
     </div>
     <label class="lbl">宛名（書類に印字されます）</label>
     <input class="inp" id="fAtena" placeholder="例：○○株式会社 御中">
-    <label class="lbl">件名</label>
-    <input class="inp" id="fSubj" placeholder="例：○○邸 電気設備改修工事">
+    <label class="lbl">場所（これが工事場所になります）</label>
+    <input class="inp" id="fSubj" placeholder="例：○○市○○町1-2-3">
     <div class="grid2">
       <div>
         <label class="lbl">発行日</label>
@@ -544,9 +544,7 @@ function custChanged(){
   if(c)document.getElementById('fAtena').value=c+' 御中';
 }
 function caseChanged(){
-  var id=document.getElementById('fCase').value;
-  var p=DB.projects.filter(function(x){return String(x['案件ID'])===id;})[0];
-  if(p&&!document.getElementById('fSubj').value)document.getElementById('fSubj').value=p['案件名']||'';
+  /* 案件選択時の自動入力は廃止（案件=工事名／場所=工事場所に役割変更したため） */
 }
 function newEst(){
   curId=null;curKind='見積';items=[{n:'',q:1,u:'式',p:''}];
@@ -636,7 +634,7 @@ function collectForm(){
 }
 function validate(d){
   if(!d['宛名']){toast('宛名を入力してください');return false;}
-  if(!d['件名']){toast('件名を入力してください');return false;}
+  if(!d['件名']){toast('場所を入力してください');return false;}
   var its=JSON.parse(d['明細']);
   if(!its.length){toast('明細を1行以上入力してください');return false;}
   return true;
