@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- estimate version 11 (2026-06-15) 会社情報(歯車)ボタンを非表示に。会社情報の編集は管理画面の自社設定タブへ移設済み(admin v47+)。setBtnはJSがvisibilityを操作するため削除せずdisplay:none!importantで非表示(JSエラー回避)。openSettings/p-setは残置(到達不可)。CSSのみ・GAS変更なし。 -->
+<!-- estimate version 12 (2026-06-16) PDFの税抜/税込スイッチを追加。金額表示エリア上にtaxSeg配置、curTax変数、setTax関数、見積=税抜/請求=税込を初期値に、openEstでも初期化、estPdf呼び出しにtax:curTaxを渡す。GAS v92以上＋テンプレ リンク版3が必要。 -->
 <!-- estimate version 10 (2026-06-15) 【案Aサンプル】ヘッダーを2段化。CSSグリッドで .hbar を再配置し、上段=「←メニュー」(左)＋Gen-Can/更新/設定(右)、下段=アイコン＋タイトルを中央配置。タイトル領域が横幅フルなので長い名称でも重ならない・切れない。.nmの改行禁止を解除(大きい文字でも折返し)。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- estimate version 9 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はloadAll()。機能・id不変 -->
 <html lang="ja">
@@ -113,6 +113,9 @@
   .additem:active{box-shadow:var(--well);}
   .additem svg{width:16px;height:16px;}
   .totals{background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:11px 15px;margin-top:11px;}
+  .taxseg{display:flex;gap:8px;margin-top:11px;}
+  .taxseg button{flex:1;padding:11px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--ink-l,#888);font-size:14px;font-weight:700;cursor:pointer;}
+  .taxseg button.on{box-shadow:var(--press,inset 2px 2px 5px rgba(0,0,0,.12),inset -2px -2px 5px rgba(255,255,255,.7));color:var(--accent-d);}
   .totals .tr{display:flex;justify-content:space-between;padding:6px 0;font-size:15px;border-bottom:1px dashed var(--line);}
   .totals .tr:last-child{border-bottom:none;font-size:17px;font-weight:800;color:var(--ink);}
   .totals b{font-variant-numeric:tabular-nums;}
@@ -184,7 +187,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v11</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v12</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
@@ -266,6 +269,11 @@
     <div id="items"></div>
     <button class="additem" onclick="addItem()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> 行を追加</button>
 
+    <label class="lbl">PDFの金額表示</label>
+    <div class="taxseg" id="taxSeg">
+      <button data-t="out" onclick="setTax('out')">税抜で出す</button>
+      <button data-t="in" onclick="setTax('in')">税込で出す</button>
+    </div>
     <div class="totals">
       <div class="tr"><span>小計</span><b class="yen" id="tSub">¥0</b></div>
       <div class="tr"><span>消費税（10%）</span><b class="yen" id="tTax">¥0</b></div>
@@ -476,7 +484,7 @@ function updateLocal(saved){
 }
 
 /* ===== 編集 ===== */
-var curId=null, curKind='見積', items=[];
+var curId=null, curKind='見積', curTax='out', items=[];
 function todayStr(d){d=d||new Date();var p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
 function defaultLimit(kind){
   var d=new Date();
@@ -495,7 +503,13 @@ function setKind(k){
   document.getElementById('limitLbl').textContent=(k==='請求')?'お支払期限':'有効期限';
   fillStatus(k,statusOptions(k)[0]);
   document.getElementById('fLimit').value=defaultLimit(k);
+  setTax(k==='請求'?'in':'out');
   togglePayRow();
+}
+function setTax(t){
+  curTax=t;
+  var bs=document.querySelectorAll('#taxSeg button');
+  for(var i=0;i<bs.length;i++)bs[i].classList.toggle('on',bs[i].getAttribute('data-t')===t);
 }
 function statusChanged(){togglePayRow();}
 function togglePayRow(){
@@ -561,6 +575,7 @@ function openEst(id){
   document.getElementById('fNote').value=o['備考']||'';
   var bs=document.querySelectorAll('#kindSeg button');
   for(var i=0;i<bs.length;i++)bs[i].classList.toggle('on',bs[i].getAttribute('data-k')===curKind);
+  setTax(curKind==='請求'?'in':'out');
   document.getElementById('limitLbl').textContent=(curKind==='請求')?'お支払期限':'有効期限';
   fillStatus(curKind,o['状態']||'');
   document.getElementById('fLimit').value=o['期限']||'';
@@ -640,7 +655,7 @@ function saveEst(makePdf){
     updateLocal(saved);
     if(!makePdf){hideLoad();toast('保存しました');renderAR();renderList();return;}
     document.getElementById('ltxt').textContent='PDFを作成中…（10秒ほどかかります）';
-    callGAS({action:'estPdf',id:saved['伝票ID']},null,true).then(function(r2){
+    callGAS({action:'estPdf',id:saved['伝票ID'],tax:curTax},null,true).then(function(r2){
       hideLoad();
       if(r2&&r2.ok&&r2.pdfUrl){
         saved['PDF']=r2.pdfUrl;
