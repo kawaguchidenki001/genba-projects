@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- admin version 52 (2026-06-16) 会社設定に「あいさつ文(2行・自由入力・書類に印字)」欄を追加。save/loadにキー『あいさつ文』を追加。textareaをinput同等にCSS追加。保存はGASのsaveSettings_が任意キー対応のためGAS変更なし。PDF印字は別途GASで対応。 -->
 <!-- admin version 51 (2026-06-16) 会社情報に「会社名の上の行(業種・キャッチ)」「会社名の下の行(代表者・役職)」を追加。社判イメージに合わせPDFで会社名の上下に印字。save/loadに社名上段・社名下段を追加。GAS変更あり(v84)。 -->
 <!-- admin version 50 (2026-06-16) 会社情報に「会社名」「郵便番号」入力欄を追加(住所の前)。保存成功時に loadCompanyInfo(true) で実際の保存値を再表示し、保存できたか確認できるように。会社名はPDFが既に印字する作りのため保存すれば反映。GAS変更なし。 -->
 <!-- admin version 49 (2026-06-16) 会社情報の自動読み込みが、入力途中の欄を空で上書きしてしまう不具合(estData遅延とのタイミング競合)を修正。loadCompanyInfoのprefillを「空欄のみ補完(if !el.value)」に変更。これで電話/FAX等を入力中に読込が返っても消えない。機能・GAS変更なし。 -->
@@ -93,7 +94,7 @@
   .sheet{background:var(--bg);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);max-height:90vh;overflow-y:auto;box-shadow:0 -10px 30px rgba(20,30,50,.2);}
   .sheet h2{font-size:17px;margin:2px 0 12px;color:var(--ink);}
   .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:700;}
-  .fld input,.fld select{width:100%;padding:11px 12px;border:none;border-radius:10px;font-size:15.5px;background:var(--bg);box-shadow:var(--well);color:var(--ink);font-family:inherit;}
+  .fld input,.fld select,.fld textarea{width:100%;padding:11px 12px;border:none;border-radius:10px;font-size:15.5px;background:var(--bg);box-shadow:var(--well);color:var(--ink);font-family:inherit;}
   .two{display:flex;gap:8px;} .two>.fld{flex:1;}
   .acts{display:flex;gap:8px;margin-top:6px;} .btn{flex:1;padding:13px;border-radius:12px;border:none;font-size:15px;font-weight:800;cursor:pointer;}
   .btn.primary{background:var(--accent);color:#fff;box-shadow:3px 4px 10px rgba(71,85,105,.4),-2px -2px 6px #ffffff;} .btn.primary:active{transform:translateY(1px);}
@@ -130,7 +131,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v51</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v52</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -215,6 +216,7 @@
           <div class="fld"><label>見積有効日数</label><input id="ci_valid" type="number" inputmode="numeric" placeholder="30"></div>
           <div class="fld"><label>支払条件</label><input id="ci_cond" placeholder="例）月末締め翌月末払い"></div>
         </div>
+        <div class="fld"><label>あいさつ文（書類に印字／2行まで）</label><textarea id="ci_greet" rows="2" placeholder="下記の通り御見積申し上げます。&#10;何卒ご用命賜ります様お願い申し上げます。" style="resize:vertical;line-height:1.5;"></textarea></div>
         <button class="btn primary" style="width:100%;margin-top:4px;" onclick="saveCompanyInfo()">会社情報を保存</button>
       </div>
     <div class="sec">自社情報・会社書類</div>
@@ -516,7 +518,7 @@ function loadCompanyInfo(force){
   callGAS({action:'estData'},null,true).then(function(d){
     if(d&&d.ok){
       var st=d.settings||{};
-      var map={ci_above:'社名上段',ci_name:'会社名',ci_below:'社名下段',ci_zip:'会社郵便番号',ci_addr:'会社住所',ci_tel:'会社電話',ci_fax:'会社FAX',ci_inv:'インボイス登録番号',ci_bank:'振込先',ci_valid:'見積有効日数',ci_cond:'支払条件'};
+      var map={ci_above:'社名上段',ci_name:'会社名',ci_below:'社名下段',ci_zip:'会社郵便番号',ci_addr:'会社住所',ci_tel:'会社電話',ci_fax:'会社FAX',ci_inv:'インボイス登録番号',ci_bank:'振込先',ci_valid:'見積有効日数',ci_cond:'支払条件',ci_greet:'あいさつ文'};
       Object.keys(map).forEach(function(id){var el=document.getElementById(id);if(el&&(force||!el.value))el.value=(st[map[id]]!=null?st[map[id]]:(id==='ci_valid'?'30':''));});
       ciLoaded=true;
     }
@@ -534,7 +536,8 @@ function saveCompanyInfo(){
     'インボイス登録番号':document.getElementById('ci_inv').value.trim(),
     '振込先':document.getElementById('ci_bank').value.trim(),
     '見積有効日数':document.getElementById('ci_valid').value.trim()||'30',
-    '支払条件':document.getElementById('ci_cond').value.trim()
+    '支払条件':document.getElementById('ci_cond').value.trim(),
+    'あいさつ文':document.getElementById('ci_greet').value.trim()
   };
   callGAS({action:'saveSettings',data:data}).then(function(res){
     if(res&&res.ok){ciLoaded=true;toast('会社情報を保存しました');loadCompanyInfo(true);}
