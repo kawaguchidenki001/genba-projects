@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- calendar version 55 (2026-06-16) ピンチ拡縮の挙動を変更：文字・アイコン・余白は固定サイズ維持し、セル幅(min-width)・高さ(min-height)のみ拡縮する。これで拡大時に省略されていた案件名・業務名の続きが見える。GAS変更なし・JS構造不変。 -->
 <!-- calendar version 54 (2026-06-16) スマホ月表示にピンチ操作で拡縮機能を追加(0.7倍〜2.0倍・localStorage保存)。CSS変数--cal-sで全要素連動・既存のタップ/ドラッグ選択は影響なし・PDF/JPEG出力時はスケール一時リセット・GAS変更なし。 -->
 <!-- calendar version 53 (2026-06-16) スマホ月表示を横スクロール対応(min-width:700px・セル拡大)。PDF/JPEG出力時はoverflow一時visible化で見切れ防止。CSS追加とcaptureCanvas微修正・id/HTML構造不変・GAS変更なし。 -->
 <!-- calendar version 52 (2026-06-15) ヘッダー案A化(2段・CSSグリッド)。ごみ箱(クリア)を更新ボタンの下に配置。 CSSのみ・HTML/JS/id不変・GAS変更なし。 -->
@@ -81,16 +82,17 @@
     #monthView .ev-sub{white-space:normal;overflow:visible;word-break:break-word;line-height:1.3;}
     /* v53追加：月表示を横スクロール対応(幅拡張で見やすく) */
     /* v54追加：ピンチでスケール変更(--cal-s で全要素を連動拡縮) */
+    /* v55変更：文字・アイコン・余白は固定。セル幅と高さのみピンチで拡縮し、省略文字を見やすく */
     #monthView{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;--cal-s:1;touch-action:pan-x pan-y;}
     #monthView .wk,#monthView .grid{min-width:calc(700px * var(--cal-s));}
-    #monthView .cell{min-height:calc(82px * var(--cal-s));padding:calc(5px * var(--cal-s)) calc(6px * var(--cal-s));}
-    #monthView .dnum{font-size:calc(14.5px * var(--cal-s));}
-    #monthView .wk div{font-size:calc(12.5px * var(--cal-s));padding:calc(5px * var(--cal-s)) 0;}
-    #monthView .ev-proj{font-size:calc(11.5px * var(--cal-s));padding:calc(2px * var(--cal-s)) calc(6px * var(--cal-s));}
-    #monthView .ev-sub{font-size:calc(11px * var(--cal-s));}
-    #monthView .wx img,#monthView .wx .wi{width:calc(22px * var(--cal-s));height:calc(22px * var(--cal-s));}
-    #monthView .wx .wt{font-size:calc(11px * var(--cal-s));}
-    #monthView .holname{font-size:calc(10px * var(--cal-s));}
+    #monthView .cell{min-height:calc(82px * var(--cal-s));padding:5px 6px;}
+    #monthView .dnum{font-size:14.5px;}
+    #monthView .wk div{font-size:12.5px;padding:5px 0;}
+    #monthView .ev-proj{font-size:11.5px;padding:2px 6px;}
+    #monthView .ev-sub{font-size:11px;}
+    #monthView .wx img,#monthView .wx .wi{width:22px;height:22px;}
+    #monthView .wx .wt{font-size:11px;}
+    #monthView .holname{font-size:10px;}
   }
   @media (min-width:768px){
     .cal{max-width:1400px;margin:0 auto;padding:0 4px;}
@@ -208,7 +210,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v54</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v55</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
