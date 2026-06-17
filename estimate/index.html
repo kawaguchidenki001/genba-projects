@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- estimate version 15.3 (2026-06-17) 見積保存をPOST送信に変更：大量明細（AI読取の100行超）で保存時の通信エラーを解消。estSaveの3呼び出し箇所(saveEst/saveAndExport/convertToInvoice)を callGASPost に切替。 -->
 <!-- estimate version 15.2 (2026-06-17) AI読取のデバッグ強化：callGASPostでJSON解析失敗時に詳細エラーを表示。コンソールに応答内容を出力。doAiOcrの0件時メッセージを詳細化。 -->
 <!-- estimate version 15.1 (2026-06-17) AI見積読取の起動を確実化：checkRole完了を待たず即時にモーダルを開く。URLSearchParams非対応端末にも対応。DOM準備を待って確実に表示。 -->
 <!-- estimate version 15 (2026-06-17) AI見積読取の起動を改善：?ai=1 のときは見積画面を出さず、最初に読取モーダルだけ表示。読取成功時に新規見積を作って明細を流し込む。キャンセル時は一覧に戻る。 -->
@@ -191,7 +192,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v15.2</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v15.3</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
@@ -688,7 +689,7 @@ function saveEst(makePdf){
   var d=collectForm();if(!validate(d))return;
   if(!d['伝票ID'])delete d['伝票ID'];
   showLoad('保存中…');
-  callGAS({action:'estSave',data:d},null,true).then(function(res){
+  callGASPost({action:'estSave',data:d},true).then(function(res){
     if(!(res&&res.ok)){hideLoad();toast((res&&res.error)||'保存に失敗しました');return;}
     var saved=res.est;curId=saved['伝票ID'];
     document.getElementById('edTitle').textContent=saved['伝票番号'];
@@ -713,7 +714,7 @@ function saveAndExport(fmt){
   var d=collectForm();if(!validate(d))return;
   if(!d['伝票ID'])delete d['伝票ID'];
   showLoad('保存中…');
-  callGAS({action:'estSave',data:d},null,true).then(function(res){
+  callGASPost({action:'estSave',data:d},true).then(function(res){
     if(!(res&&res.ok)){hideLoad();toast((res&&res.error)||'保存に失敗しました');return;}
     var saved=res.est;curId=saved['伝票ID'];
     document.getElementById('edTitle').textContent=saved['伝票番号'];
@@ -752,7 +753,7 @@ function convertToInvoice(){
   var e=new Date();var le=new Date(e.getFullYear(),e.getMonth()+2,0);
   d['期限']=todayStr(le);
   showLoad('請求書を作成中…');
-  callGAS({action:'estSave',data:d},null,true).then(function(res){
+  callGASPost({action:'estSave',data:d},true).then(function(res){
     hideLoad();
     if(res&&res.ok){DB.estimates.unshift(res.est);toast('請求書 '+res.est['伝票番号']+' を作成しました');openEst(res.est['伝票ID']);}
     else toast((res&&res.error)||'作成に失敗しました');
