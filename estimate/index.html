@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- estimate version 15.1 (2026-06-17) AI見積読取の起動を確実化：checkRole完了を待たず即時にモーダルを開く。URLSearchParams非対応端末にも対応。DOM準備を待って確実に表示。 -->
 <!-- estimate version 15 (2026-06-17) AI見積読取の起動を改善：?ai=1 のときは見積画面を出さず、最初に読取モーダルだけ表示。読取成功時に新規見積を作って明細を流し込む。キャンセル時は一覧に戻る。 -->
 <!-- estimate version 14 (2026-06-17) AIツールから ?ai=1 で来たとき、新規見積＋AI見積読取モーダルを自動で開く（起動IIFEの末尾とdoLogin後に処理）。 -->
 <!-- estimate version 13 (2026-06-16) 項目の役割変更：案件→工事名／場所(旧件名)→工事場所。ラベル変更・件名選択時の自動入力廃止・検索/バリデーション文言を場所に。PDF反映はGAS v94が必要。 -->
@@ -189,7 +190,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v15</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v15.1</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
@@ -410,22 +411,29 @@ function boot(){
   if(c){ applyData(c); loadAll(true); } else loadAll(false);
   maybeAutoAiOcr();
 }
-// AIツールから ?ai=1 で来たとき、見積画面は出さず読取モーダルだけを最初に開く（v15）
+// AIツールから ?ai=1 で来たとき、見積画面は出さず読取モーダルだけを最初に開く（v15.1）
 var _aiAutoOpened=false;
 var _aiFromTool=false; // 読取モーダルがAIツール起点で開かれたか
+function _hasAiParam(){
+  // URLSearchParams非対応端末も考慮し、URL文字列でも判定
+  try{ if(new URLSearchParams(location.search).get('ai')==='1') return true; }catch(e){}
+  return /[?&]ai=1(&|$)/.test(location.search||'');
+}
 function maybeAutoAiOcr(){
   if(_aiAutoOpened) return;
-  try{
-    var p=new URLSearchParams(location.search);
-    if(p.get('ai')==='1'){
-      _aiAutoOpened=true;
-      _aiFromTool=true;
-      // 一覧(p-list)を表示したまま、その上に読取モーダルだけを出す（見積編集画面は作らない）
-      setTimeout(function(){
-        if(typeof openAiModal==='function') openAiModal();
-      }, 450);
+  if(!_hasAiParam()) return;
+  _aiAutoOpened=true;
+  _aiFromTool=true;
+  // 一覧(p-list)を表示したまま、その上に読取モーダルだけを出す（見積編集画面は作らない）
+  var tries=0;
+  (function openWhenReady(){
+    tries++;
+    if(typeof openAiModal==='function' && document.getElementById('aiModal')){
+      openAiModal();
+    }else if(tries<30){
+      setTimeout(openWhenReady,100); // DOM/関数の準備を待って確実に開く
     }
-  }catch(e){}
+  })();
 }
 function doLogin(){
   var pin=document.getElementById('pin').value;if(!pin){toast('PINを入力してください');return;}
@@ -772,6 +780,8 @@ function saveSettings(){
     document.getElementById('gate').style.display='none';
     document.getElementById('setBtn').style.visibility='visible';
     go('p-list');
+    // ?ai=1（AIツール起点）のときは、checkRoleの完了を待たず即座に読取モーダルを開く v15.1
+    maybeAutoAiOcr();
     callGAS({action:'checkRole'},pin,true).then(function(res){
       if(res&&res.ok&&res.role==='admin'){ boot(); }
       else { // PINが無効になっていた場合のみゲートに戻す
