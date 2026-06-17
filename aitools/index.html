@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- aitools version 5 (2026-06-17) AI見積読取タイルを追加（見積書・発注書PDFから見積明細を自動作成。リンク先 ../estimate/?ai=1 で見積請求を開きAI読取モーダルを自動表示）。 -->
 <!-- aitools version 4 (2026-06-17) AI案件読取タイルを追加（見積書・発注書PDFから案件を自動登録。リンク先 ../projects/?ocr=1 で案件管理を開きOCRモーダルを自動表示）。 -->
 <!-- aitools version 3 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- aitools version 2 (2026-06-15) AI翻訳タイルを追加（外国人作業員とのやり取り用、日本語↔英/越/中等）。リンク先は ../translate/（画面は次工程で作成）。 -->
@@ -54,13 +55,14 @@
   .e-tr::before{background:#7c3aed;} .e-tr .ic{color:#7c3aed;}
   .e-tl::before{background:#f97316;} .e-tl .ic{color:#f97316;}
   .e-pj::before{background:#4444b8;} .e-pj .ic{color:#4444b8;}
+  .e-es::before{background:#a8851f;} .e-es .ic{color:#a8851f;}
   .e-new{background:#fef3c7;color:#92400e;font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;letter-spacing:.04em;vertical-align:2px;}
   .flow{margin-top:18px;background:var(--bg);border-radius:14px;box-shadow:var(--rise-sm);padding:14px 15px;font-size:13px;color:var(--accent-d);line-height:1.9;}
   .flow b{color:var(--accent);}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v4</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v5</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -99,11 +101,16 @@
       <span class="tx"><span class="nm">AI案件読取<span class="e-new">NEW</span></span><span class="ds">見積書・発注書PDFから案件を自動登録</span></span>
       <span class="cor">→</span>
     </a>
+    <a class="entry e-es" href="../estimate/?ai=1">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h7l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h3z"/><path d="M9 13h6M9 17h6M9 9h2"/></svg></span>
+      <span class="tx"><span class="nm">AI見積読取<span class="e-new">NEW</span></span><span class="ds">見積書・発注書PDFから見積明細を自動作成</span></span>
+      <span class="cor">→</span>
+    </a>
   </div>
 
   <div class="flow">
     <b>AIツールの使いどころ</b><br>
-    調べもの・文章作成 → <b>AIアシスタント</b>／型番から材料を探す → <b>材料AI検索</b>／長い打合せや指示を文字に → <b>AI文字起こし</b>／外国人作業員と話す → <b>AI翻訳</b>／見積書・発注書から案件登録 → <b>AI案件読取</b>
+    調べもの・文章作成 → <b>AIアシスタント</b>／型番から材料を探す → <b>材料AI検索</b>／長い打合せや指示を文字に → <b>AI文字起こし</b>／外国人作業員と話す → <b>AI翻訳</b>／PDFから案件登録 → <b>AI案件読取</b>／PDFから見積明細を作成 → <b>AI見積読取</b>
   </div>
 </main>
 
