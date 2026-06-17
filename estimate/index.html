@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- estimate version 15 (2026-06-17) AI見積読取の起動を改善：?ai=1 のときは見積画面を出さず、最初に読取モーダルだけ表示。読取成功時に新規見積を作って明細を流し込む。キャンセル時は一覧に戻る。 -->
 <!-- estimate version 14 (2026-06-17) AIツールから ?ai=1 で来たとき、新規見積＋AI見積読取モーダルを自動で開く（起動IIFEの末尾とdoLogin後に処理）。 -->
 <!-- estimate version 13 (2026-06-16) 項目の役割変更：案件→工事名／場所(旧件名)→工事場所。ラベル変更・件名選択時の自動入力廃止・検索/バリデーション文言を場所に。PDF反映はGAS v94が必要。 -->
 <!-- estimate version 10 (2026-06-15) 【案Aサンプル】ヘッダーを2段化。CSSグリッドで .hbar を再配置し、上段=「←メニュー」(左)＋Gen-Can/更新/設定(右)、下段=アイコン＋タイトルを中央配置。タイトル領域が横幅フルなので長い名称でも重ならない・切れない。.nmの改行禁止を解除(大きい文字でも折返し)。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
@@ -188,7 +189,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v14</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v15</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
@@ -409,16 +410,18 @@ function boot(){
   if(c){ applyData(c); loadAll(true); } else loadAll(false);
   maybeAutoAiOcr();
 }
-// AIツールから ?ai=1 で来たとき、新規見積＋AI見積読取モーダルを自動で開く（v14）
+// AIツールから ?ai=1 で来たとき、見積画面は出さず読取モーダルだけを最初に開く（v15）
 var _aiAutoOpened=false;
+var _aiFromTool=false; // 読取モーダルがAIツール起点で開かれたか
 function maybeAutoAiOcr(){
   if(_aiAutoOpened) return;
   try{
     var p=new URLSearchParams(location.search);
     if(p.get('ai')==='1'){
       _aiAutoOpened=true;
+      _aiFromTool=true;
+      // 一覧(p-list)を表示したまま、その上に読取モーダルだけを出す（見積編集画面は作らない）
       setTimeout(function(){
-        if(typeof newEst==='function') newEst();
         if(typeof openAiModal==='function') openAiModal();
       }, 450);
     }
@@ -813,6 +816,11 @@ function openAiModal(){
 }
 function closeAiModal(){
   document.getElementById('aiModal').style.display='none';
+  // AIツールから来てキャンセルした場合は一覧に戻す（見積編集画面は作らない）
+  if(_aiFromTool){
+    _aiFromTool=false;
+    if(typeof go==='function') go('p-list');
+  }
 }
 function aiFileSelected(input){
   if(input.files&&input.files[0]) handleAiFile(input.files[0]);
@@ -873,6 +881,11 @@ function doAiOcr(){
         btn.disabled=false;
         return;
       }
+      // AIツール起点で読取モーダルから始めた場合は、ここで新規見積を用意してから流し込む
+      if(_aiFromTool){
+        _aiFromTool=false; // 成功したのでキャンセル扱いを解除（closeAiModalで一覧に戻さない）
+        if(typeof newEst==='function') newEst(); // フォーム初期化＋p-edit表示
+      }
       items=newItems;
       // 件名・宛名が空なら補完
       if(res.subject&&!document.getElementById('fSubj').value.trim())
@@ -880,7 +893,9 @@ function doAiOcr(){
       if(res.atena&&!document.getElementById('fAtena').value.trim())
         document.getElementById('fAtena').value=res.atena;
       renderItems();
-      closeAiModal();
+      // 確実に見積編集画面を表示
+      if(typeof go==='function') go('p-edit');
+      document.getElementById('aiModal').style.display='none';
       toast('✨ '+newItems.length+'行の明細を読み取りました！内容を確認してください。');
     })
     .catch(function(e){
