@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- estimate version 14 (2026-06-17) AIツールから ?ai=1 で来たとき、新規見積＋AI見積読取モーダルを自動で開く（起動IIFEの末尾とdoLogin後に処理）。 -->
 <!-- estimate version 13 (2026-06-16) 項目の役割変更：案件→工事名／場所(旧件名)→工事場所。ラベル変更・件名選択時の自動入力廃止・検索/バリデーション文言を場所に。PDF反映はGAS v94が必要。 -->
 <!-- estimate version 10 (2026-06-15) 【案Aサンプル】ヘッダーを2段化。CSSグリッドで .hbar を再配置し、上段=「←メニュー」(左)＋Gen-Can/更新/設定(右)、下段=アイコン＋タイトルを中央配置。タイトル領域が横幅フルなので長い名称でも重ならない・切れない。.nmの改行禁止を解除(大きい文字でも折返し)。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- estimate version 9 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はloadAll()。機能・id不変 -->
@@ -187,7 +188,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v13</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v14</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
@@ -406,6 +407,22 @@ function boot(){
   go('p-list');
   var c=null;try{c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');}catch(e){}
   if(c){ applyData(c); loadAll(true); } else loadAll(false);
+  maybeAutoAiOcr();
+}
+// AIツールから ?ai=1 で来たとき、新規見積＋AI見積読取モーダルを自動で開く（v14）
+var _aiAutoOpened=false;
+function maybeAutoAiOcr(){
+  if(_aiAutoOpened) return;
+  try{
+    var p=new URLSearchParams(location.search);
+    if(p.get('ai')==='1'){
+      _aiAutoOpened=true;
+      setTimeout(function(){
+        if(typeof newEst==='function') newEst();
+        if(typeof openAiModal==='function') openAiModal();
+      }, 450);
+    }
+  }catch(e){}
 }
 function doLogin(){
   var pin=document.getElementById('pin').value;if(!pin){toast('PINを入力してください');return;}
