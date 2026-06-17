@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- estimate version 15.2 (2026-06-17) AI読取のデバッグ強化：callGASPostでJSON解析失敗時に詳細エラーを表示。コンソールに応答内容を出力。doAiOcrの0件時メッセージを詳細化。 -->
 <!-- estimate version 15.1 (2026-06-17) AI見積読取の起動を確実化：checkRole完了を待たず即時にモーダルを開く。URLSearchParams非対応端末にも対応。DOM準備を待って確実に表示。 -->
 <!-- estimate version 15 (2026-06-17) AI見積読取の起動を改善：?ai=1 のときは見積画面を出さず、最初に読取モーダルだけ表示。読取成功時に新規見積を作って明細を流し込む。キャンセル時は一覧に戻る。 -->
 <!-- estimate version 14 (2026-06-17) AIツールから ?ai=1 で来たとき、新規見積＋AI見積読取モーダルを自動で開く（起動IIFEの末尾とdoLogin後に処理）。 -->
@@ -190,7 +191,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v15.1</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v15.2</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
@@ -378,14 +379,30 @@ function callGAS(params,secretOverride,silent){return new Promise(function(resol
   sc.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
   sc.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(sc);
 });}
-// 大きなデータ（画像など）はURLに乗らないため fetch+POST で送る
+// 大きなデータ（画像など）はURLに乗らないため fetch+POST で送る（v15.2 デバッグ強化）
 function callGASPost(params,silent){return new Promise(function(resolve,reject){
   if(!silent)showLoad();
   var body=Object.assign({secret:admTok()},params);
   // GASのCORS制約を避けるため text/plain で送る（プリフライト回避）
   fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
-    .then(function(r){return r.json();})
-    .then(function(res){if(!silent)hideLoad();resolve(res);})
+    .then(function(r){
+      // 一度テキストで受けてからJSON.parse（解析失敗時の原因究明のため）
+      return r.text().then(function(t){
+        try{ return JSON.parse(t); }
+        catch(e){
+          console.error('JSON parse failed. Response head:', t.slice(0,500));
+          console.error('Response tail:', t.slice(-500));
+          console.error('Total length:', t.length);
+          throw new Error('応答の解析に失敗（'+t.length+'文字。先頭:'+t.slice(0,80)+'）');
+        }
+      });
+    })
+    .then(function(res){
+      if(!silent)hideLoad();
+      // デバッグ：受け取った内容をコンソールに出す（F12で確認可）
+      try{ console.log('callGASPost response:', {ok:res&&res.ok, error:res&&res.error, itemsLen:res&&res.items&&res.items.length, hasData:!!(res&&res.data)}); }catch(e){}
+      resolve(res);
+    })
     .catch(function(e){if(!silent)hideLoad();reject(new Error('通信エラー: '+e.message));});
 });}
 function go(id){var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');document.getElementById(id).classList.add('on');window.scrollTo(0,0);}
@@ -882,10 +899,17 @@ function doAiOcr(){
         return;
       }
       // 明細を上書き（空行を除外）
-      var newItems=(res.items||[]).filter(function(it){return String(it.n||'').trim()!=='';})
+      var rawItems = res.items;
+      var rawLen = Array.isArray(rawItems) ? rawItems.length : -1; // -1=配列でない
+      var newItems = (rawItems||[]).filter(function(it){return String(it.n||'').trim()!=='';})
         .map(function(it){return {n:String(it.n||''),q:Number(it.q)||1,u:String(it.u||'式'),p:Number(it.p)||0};});
+      try{ console.log('doAiOcr items:', {rawLen:rawLen, filteredLen:newItems.length, first:rawItems&&rawItems[0]}); }catch(e){}
       if(!newItems.length){
-        resEl.textContent='明細を読み取れませんでした。手動で入力してください。';
+        // どこで0になったかを表示（原因究明のため）
+        var reason = (rawLen<0) ? ('items配列ではありません（型: '+typeof rawItems+'）')
+                  : (rawLen===0) ? '読み取り結果が0件でした'
+                  : '読み取った'+rawLen+'件すべて品名が空でした';
+        resEl.textContent='明細を読み取れませんでした：'+reason+'。手動で入力してください。';
         resEl.style.display='block';
         resEl.style.background='#fffbeb';resEl.style.borderColor='#fde68a';resEl.style.color='#92400e';
         btn.disabled=false;
