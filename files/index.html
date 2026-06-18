@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- files version 45 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
+<!-- files version 46 (2026-06-18) 写真台帳フロー改善：工種/写真区分快速ボタン・台帳候補・候補自動選択・アップロード後アクション追加。GAS変更なし。 -->
 <!-- files version 44 (2026-06-15) 音声入力を継続録音化（黙っても止まらず、停止ボタンを押すまで録音継続。確定分を累積保持）。機能・id不変 -->
 <html lang="ja">
 <head>
@@ -84,6 +84,17 @@
   .bdrow{display:flex;align-items:center;gap:10px;margin-top:8px;}
   .bdrow label{font-size:13px;color:var(--sub);width:84px;flex:0 0 auto;}
   .bdrow input{flex:1;padding:10px 11px;border:none;border-radius:9px;font-size:16px;background:var(--bg);box-shadow:var(--well-soft);color:var(--ink);}
+  .quickPanel{margin-top:10px;padding:10px;border-radius:12px;background:rgba(255,255,255,.28);box-shadow:var(--well-soft);} 
+  .quickTitle{font-size:12.5px;font-weight:800;color:var(--accent-d);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .chipgrid{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:8px 11px;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer;line-height:1;}
+  .chip:active,.chip.on{box-shadow:var(--well);color:var(--accent-d);} 
+  .chip.small{font-size:12.5px;padding:7px 10px;}
+  .ledgerHint{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.5;}
+  .afterActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .afterActions button,.afterActions a{border:none;border-radius:10px;background:var(--bg);box-shadow:var(--rise-sm);padding:10px 12px;font-size:13px;font-weight:800;color:var(--ink);text-decoration:none;cursor:pointer;}
+  .candidateBadge{position:absolute;left:4px;top:4px;background:rgba(232,145,11,.95);color:#fff;border-radius:999px;padding:2px 6px;font-size:10px;font-weight:800;z-index:2;box-shadow:0 1px 3px rgba(0,0,0,.18);} 
+  .filterNote{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.5;}
   .loading{position:fixed;inset:0;z-index:1000;background:rgba(232,236,242,.78);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
   .loading.show{display:flex;}
   .lbox{background:var(--bg);border-radius:18px;box-shadow:var(--rise);padding:24px 32px;text-align:center;}
@@ -121,7 +132,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v45</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v46</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -147,12 +158,14 @@
 
     <div class="board" id="board" style="display:none">
       <div class="bdrow"><label>工種<br><span style="font-size:10.5px;color:var(--sub);font-weight:400;">（写真フォルダ内で工種別に自動整理）</span></label><div class="micwrap"><input id="bdKind" type="text" list="kindList" placeholder="例：電気配線工事"><button type="button" class="micbtn" data-mic="bdKind" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div></div>
+      <div class="quickPanel"><div class="quickTitle">工種クイック選択</div><div class="chipgrid" id="kindChips"></div></div>
       <label class="bdtog"><input type="checkbox" id="bdOn" checked onchange="toggleBoard()"><span>小黒板を写真に焼き込んで保存</span></label>
       <div id="bdFields">
         <div class="bdrow"><label>内容・状況</label><div class="micwrap"><input id="bdMemo" type="text" placeholder="例：施工後"><button type="button" class="micbtn" data-mic="bdMemo" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div></div>
+        <div class="quickPanel"><div class="quickTitle">写真区分</div><div class="chipgrid" id="statusChips"></div><label class="bdtog" style="margin-top:10px;"><input type="checkbox" id="ledgerCandidate" checked><span>この写真を台帳候補にする</span></label><div class="ledgerHint">ONにすると、ファイル名に「台帳候補」が付き、台帳作成画面で候補だけを自動表示・選択できます。</div></div>
         <div class="bdrow"><label>日付</label><input id="bdDate" type="date"></div>
       </div>
-      <datalist id="kindList"><option value="電気配線工事"></option><option value="盤・分電盤設置"></option><option value="照明器具取付"></option><option value="コンセント・スイッチ"></option><option value="配管・配線工事"></option><option value="接地工事"></option><option value="受変電設備"></option><option value="撤去・改修"></option></datalist>
+      <datalist id="kindList"><option value="配線工事"></option><option value="配管工事"></option><option value="入線作業"></option><option value="照明器具"></option><option value="盤・分電盤"></option><option value="コンセント"></option><option value="スイッチ"></option><option value="接地工事"></option><option value="受変電設備"></option><option value="撤去工事"></option><option value="試験・測定"></option></datalist>
     </div>
     <div class="btnrow">
       <button class="btn primary" id="addBtn" onclick="pickFiles()">写真・ファイルの追加</button>
@@ -167,7 +180,7 @@
     <div id="gridArea" style="display:none;">
     <div id="folderRow" style="display:none;margin-bottom:8px;"><label style="font-size:13px;color:var(--sub);margin-right:6px;">フォルダ</label><select class="f" id="folderSel" onchange="loadCurFolderPhotos()" style="display:inline-block;width:auto;min-width:60%;"></select></div>
     <div class="sec">写真一覧 <span id="phCount" style="color:var(--sub);font-weight:400;"></span></div>
-    <div id="selBar"><span id="selCount"></span><button onclick="delSelected()" style="color:#c0392b;border-color:#e3b7b0;">削除</button><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div>
+    <div id="selBar"><span id="selCount"></span><button onclick="showCandidateOnly()">候補のみ</button><button onclick="showAllPhotoCandidates()">すべて表示</button><button onclick="selCandidates()">候補選択</button><button onclick="delSelected()" style="color:#c0392b;border-color:#e3b7b0;">削除</button><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div><div class="filterNote" id="filterNote"></div>
     <div id="photos"><div class="empty">読込中…</div></div>
     <div id="outBar" style="display:none;position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(0,0,0,.10);padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);z-index:50;"><div id="ledgerResult" style="display:none;margin-bottom:8px;font-size:14px;line-height:1.6;"></div><div style="display:flex;gap:10px;max-width:760px;margin:0 auto;"><button class="btn primary" onclick="buildLedgerFiles('pdf')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5M9 13h6M9 17h6"/></svg>PDFで作成</button><button class="btn excel" onclick="buildLedgerFiles('xlsx')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg>エクセルで作成</button></div></div>
     </div>
@@ -197,6 +210,7 @@ var SECRET='';
 var MAXPX = 800, QUALITY = 0.80;
 
 var projects=[], customers=[], curId='', folderReady=false;
+var photoCache=[], ledgerMode=false, ledgerCandidateOnly=false;
 var CACHE='genba_projects_cache_files';
 // 案件管理からタップで来たとき用：?case=案件ID（id / proj でも可）
 var INIT_CASE=(function(){try{var p=new URLSearchParams(location.search);return p.get('case')||p.get('id')||p.get('proj')||'';}catch(e){return '';}})();
@@ -285,8 +299,9 @@ function buildLedgerFiles(fmt){
     toast('台帳を作成しました');
   }).catch(function(err){hideLoad();if(lt) lt.textContent='読み込み中…';toast('作成に失敗：'+err.message);});
 }
-function showPhotos(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;} document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='none'; loadPhotos(); }
+function showPhotos(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;} ledgerMode=false; ledgerCandidateOnly=false; document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='none'; loadPhotos(); }
 function showLedger(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;}
+  ledgerMode=true; ledgerCandidateOnly=true;
   document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='block';
   document.getElementById('photos').innerHTML='<div class="empty">読込中…</div>';
   callGAS({action:'photoFolders',id:curId}).then(function(res){
@@ -312,28 +327,53 @@ function loadPhotos(){
     renderPhotos(res.photos||[]);
   }).catch(function(err){toast('一覧：'+err.message);});
 }
-function renderPhotos(arr){
-  document.getElementById('phCount').textContent=arr.length?('（'+arr.length+'枚）'):'';
+function isLedgerCandidate(f){var n=String((f&&f.name)||'');return /台帳候補|施工前|施工中|施工後|材料検収|試験状況|完成|是正前|是正後/.test(n);} 
+function updateSelCount(){var n=document.querySelectorAll('#photos .ph.selected').length,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}
+function showCandidateOnly(){ledgerCandidateOnly=true;renderPhotoCache();}
+function showAllPhotoCandidates(){ledgerCandidateOnly=false;renderPhotoCache();}
+function selCandidates(){document.querySelectorAll('#photos .ph').forEach(function(e){e.classList.toggle('selected',e.dataset.candidate==='1');});updateSelCount();}
+function renderPhotos(arr){photoCache=arr||[];renderPhotoCache();}
+function renderPhotoCache(){
+  var arr=photoCache||[], list=arr;
+  if(ledgerMode&&ledgerCandidateOnly){list=arr.filter(isLedgerCandidate);} 
+  document.getElementById('phCount').textContent=arr.length?('（'+list.length+' / '+arr.length+'枚）'):'';
+  var fn=document.getElementById('filterNote');
+  if(fn){fn.textContent=(ledgerMode&&ledgerCandidateOnly)?'台帳候補のみ表示中です。全写真を見る場合は「すべて表示」を押してください。':'';}
   var el=document.getElementById('photos');
   if(!arr.length){el.innerHTML='<div class="empty">まだ写真がありません。<br>「＋写真を追加」から登録できます。</div>';return;}
-  el.innerHTML='';el.className='grid';
-  arr.forEach(function(f){
-    var a=document.createElement('div');a.className='ph';a.id='ph_'+f.id;a.dataset.id=f.id;a.onclick=function(){togglePhSel(this);};
-    var img=document.createElement('img');img.loading='lazy';
-    img.src='https://drive.google.com/thumbnail?id='+f.id+'&sz=w220';
-    img.onerror=function(){a.innerHTML='<span class="fallback">🖼</span><span class="cap">'+esc(f.name)+'</span>';};
-    a.appendChild(img);
-    var cap=document.createElement('span');cap.className='cap';cap.textContent=f.name;a.appendChild(cap);
-    el.appendChild(a);
+  if(!list.length){el.innerHTML='<div class="empty">台帳候補の写真がありません。<br>「すべて表示」で写真を確認できます。</div>';return;}
+  el.innerHTML=''; var g=document.createElement('div');g.className='grid';el.appendChild(g);
+  list.forEach(function(f){
+    var cand=isLedgerCandidate(f);
+    var a=document.createElement('div');a.className='ph'+(ledgerMode&&cand?' selected':'');a.id='ph_'+f.id;a.dataset.id=f.id;a.dataset.candidate=cand?'1':'0';a.onclick=function(){togglePhSel(this);};
+    if(cand){var bd=document.createElement('span');bd.className='candidateBadge';bd.textContent='台帳候補';a.appendChild(bd);} 
+    var img=document.createElement('img');img.loading='lazy';img.src='https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w400';
+    img.onerror=function(){a.innerHTML=(cand?'<span class="candidateBadge">台帳候補</span>':'')+'<span class="fallback">🖼</span><span class="cap">'+esc(f.name)+'</span>';};
+    a.appendChild(img);var cap=document.createElement('span');cap.className='cap';cap.textContent=f.name||'';a.appendChild(cap);g.appendChild(a);
   });
+  updateSelCount();
 }
-
+var PHOTO_KIND_TEMPLATES=['配線工事','配管工事','入線作業','照明器具','盤・分電盤','コンセント','スイッチ','接地工事','受変電設備','撤去工事','試験・測定'];
+var PHOTO_STATUS_TEMPLATES=['施工前','施工中','施工後','材料検収','試験状況','完成','是正前','是正後'];
+function setFieldChip(id,val){var el=document.getElementById(id);if(!el)return;el.value=val;try{el.dispatchEvent(new Event('input'));}catch(e){}}
+function initPhotoQuickControls(){
+  var kc=document.getElementById('kindChips'), sc=document.getElementById('statusChips');
+  if(kc&&!kc.childNodes.length){PHOTO_KIND_TEMPLATES.forEach(function(v){var b=document.createElement('button');b.type='button';b.className='chip';b.textContent=v;b.onclick=function(){setFieldChip('bdKind',v);};kc.appendChild(b);});}
+  if(sc&&!sc.childNodes.length){PHOTO_STATUS_TEMPLATES.forEach(function(v){var b=document.createElement('button');b.type='button';b.className='chip small';b.textContent=v;b.onclick=function(){setFieldChip('bdMemo',v);};sc.appendChild(b);});}
+}
+function openLedgerCandidates(){showLedger();setTimeout(selCandidates,800);} 
+function goReportFromFiles(){if(!curId){location.href='https://kawaguchidenki001.github.io/genba-projects/report/';return;}location.href='https://kawaguchidenki001.github.io/genba-projects/report/?case='+encodeURIComponent(curId);}
 function bdToday(){var d=new Date();function z(n){return(n<10?'0':'')+n;}return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate());}
 function bdSan(s){return String(s||'').replace(/[\\\/:*?"<>|]/g,'').replace(/\s+/g,'').slice(0,40);}
 function toggleBoard(){var f=document.getElementById('bdFields');if(f)f.style.display=document.getElementById('bdOn').checked?'block':'none';}
-function bdFileName(file){var on=document.getElementById('bdOn')&&document.getElementById('bdOn').checked;
- if(on){var kd=bdSan(document.getElementById('bdKind').value);var dv=(document.getElementById('bdDate').value||bdToday()).replace(/-/g,'');return [kd||'写真',dv,(''+Date.now()).slice(-6)].join('_')+'.jpg';}
- return (file.name||('photo_'+Date.now())).replace(/\.[^.]+$/,'')+'.jpg';}
+function bdFileName(file){
+ var kd=bdSan(document.getElementById('bdKind')&&document.getElementById('bdKind').value);
+ var st=bdSan(document.getElementById('bdMemo')&&document.getElementById('bdMemo').value);
+ var dv=(document.getElementById('bdDate').value||bdToday()).replace(/-/g,'');
+ var cand=document.getElementById('ledgerCandidate')&&document.getElementById('ledgerCandidate').checked;
+ var base=[cand?'台帳候補':'',kd||'写真',st,dv,(''+Date.now()).slice(-6)].filter(function(x){return x;}).join('_');
+ return base+'.jpg';
+}
 function drawBoard(ctx,cw,ch){
  var pj=(projects.filter(function(x){return x['案件ID']===curId;})[0]||{});
  var v=function(id){return (document.getElementById(id).value||'').trim();};
@@ -437,7 +477,7 @@ function uploadAll(files){
     var st='<span class="upst">⏳</span>';
     if((file.type||'').indexOf('image')===0){
       var u='';try{u=URL.createObjectURL(file);}catch(e){}
-      d.innerHTML=(u?'<img src="'+u+'">':'<div class="upfile">🖼</div>')+st+'<div class="upnm">'+esc(file.name)+'</div>';
+      d.innerHTML=(u?'<img src="'+u+'">':'<div class="upfile">🖼</div>')+st+'<div class="upnm">'+esc(bdFileName(file))+'</div>';
     }else{
       d.innerHTML='<div class="upfile">📄</div>'+st+'<div class="upnm">'+esc(file.name)+'</div>';
     }
@@ -449,6 +489,9 @@ function uploadAll(files){
       prog.textContent='アップロード完了（'+done+'件'+(fail?'／失敗'+fail:'')+'）';
       var tt=document.getElementById('upTtl');
       if(tt)tt.textContent='今回アップロードした写真・ファイル（'+done+'件'+(fail?'／失敗'+fail:'')+'）— ドライブに保存済み';
+      var act=document.createElement('div');act.className='afterActions';
+      act.innerHTML='<button type="button" onclick="pickFiles()">続けて写真を追加</button><button type="button" onclick="openLedgerCandidates()">台帳候補を見る</button><button type="button" onclick="goReportFromFiles()">日報に戻る</button>';
+      box.appendChild(act);
       setTimeout(function(){prog.style.display='none';},4000);
       toast('ドライブに保存しました（'+done+'件）');
       return;
@@ -457,7 +500,7 @@ function uploadAll(files){
     prog.textContent='送信中… '+i+'/'+arr.length;
     if((file.type||'').indexOf('image')===0){
       resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
-        return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',kind:(document.getElementById('bdKind').value||'').trim(),name:file.name,mime:'image/jpeg',data:dataUrl.split(',')[1]});
+        return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',kind:(document.getElementById('bdKind').value||'').trim(),name:bdFileName(file),mime:'image/jpeg',data:dataUrl.split(',')[1]});
       }).then(function(){done++;mark(idx,true);next();}).catch(function(){fail++;mark(idx,false);next();});
     }else{
       readB64(file).then(function(b64){
@@ -545,7 +588,7 @@ var toastT;function toast(m){var t=document.getElementById('toast');t.textConten
   });
 })();
 
-try{document.getElementById('bdDate').value=bdToday();}catch(e){}
+try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();}catch(e){}
 var hadCache=false;
 try{ var _cc=JSON.parse(localStorage.getItem(CACHE)||'{}'); if(_cc&&_cc.p){ projects=_cc.p||[]; customers=_cc.c||[]; buildSel(); hadCache=(projects.length>0); } }catch(e){}
 loadProjects(hadCache);
