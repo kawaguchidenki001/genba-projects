@@ -1,4 +1,4 @@
-<!-- toolbox version 44 (2026-06-19) 工事写真メニューから ?tool=board で小黒板カメラを直接起動する不具合修正。 -->
+<!-- toolbox version 45 (2026-06-19) 工事写真メニューから小黒板カメラを直接起動。ツールボックスの一瞬表示・戻る先・黒板非表示を修正。 -->
 <!-- toolbox version 43 (2026-06-19) 小黒板カメラを工事写真メニューへ移動し、ツールボックスの入口から削除。 -->
 <!DOCTYPE html>
 <!-- toolbox version 66 (2026-06-15) ヘッダーを案A(2段)化。.head .hbar をCSSグリッドで再配置(上段=メニュー左/Gen-Can右、下段=アイコン+タイトル中央)。h1の改行禁止解除。タイルのグリッド(v64)は不変。CSSのみ・HTML/機能/id不変・GAS変更なし。 -->
@@ -16,6 +16,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<script>
+(function(){
+  try{
+    if(/[?&]tool=board/.test(location.search)||/[?&]from=photos/.test(location.search)){
+      document.documentElement.classList.add('tb-direct-board');
+    }
+  }catch(e){}
+})();
+</script>
 <style>
   :root{
     --bg:#e8ecf2;--bg1:#e3f7f7;--bg2:#f3fcfc;--ink:#173a3c;--sub:#5a8284;
@@ -43,6 +52,8 @@
   .head h1{font-weight:700;font-size:26px;letter-spacing:.04em;margin-top:3px;color:var(--accent-d);}
   .head .co{color:var(--sub);font-size:13px;margin-top:9px;}
   .pane{display:none;} .pane.on{display:block;}
+  .tb-direct-board #p-home.pane.on{display:none!important;}
+  .tb-direct-board body::before{content:"小黒板カメラを起動中…";position:fixed;left:50%;top:46%;transform:translate(-50%,-50%);z-index:1;color:var(--sub);font-weight:800;font-size:14px;letter-spacing:.04em;}
   .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
   .sq{position:relative;display:flex;flex-direction:column;aspect-ratio:1/1;border-radius:16px;padding:13px;color:var(--ink);background:var(--bg);box-shadow:var(--rise);cursor:pointer;transition:transform .12s ease,box-shadow .12s ease;}
   .sq:active{transform:scale(.97);box-shadow:var(--well);}
@@ -2031,21 +2042,22 @@ function go(id){
 window.addEventListener('popstate',function(e){
   var cur=document.querySelector('.pane.on');
   var curId=cur?cur.id:'';
+  if(curId==='p-board' && isBoardDirectLaunch()){
+    exitBoardDirect();
+    return;
+  }
   if(curId==='p-home'){
     // すでにp-homeならページ外へ出る（ルートメニューへ）
-    // → 何もしない（デフォルトのhistory.back()で前ページへ）
     return;
   }
   // カメラ・マイクを使うペインから離れる場合は確実に停止（起動しっぱなし防止）
   if(curId==='p-board'){ try{stopBoardCamera();}catch(e2){} }
   if(curId==='p-mag'){ try{stopMag();}catch(e2){} }
   if(curId==='p-rec'){ try{recStop2();}catch(e2){} }
-  // それ以外のペインならp-homeに戻る（ページ遷移はキャンセル）
-  // go()はpushStateするのでここでは直接DOMだけ操作
+  // それ以外のペインならp-homeに戻る
   var ps=document.querySelectorAll('.pane');for(var i=0;i<ps.length;i++)ps[i].classList.remove('on');
   var h=document.getElementById('p-home');if(h)h.classList.add('on');
   window.scrollTo(0,0);
-  // 戻られたのでstackを再度積んでおく（p-homeでの次の遷移に備える）
   history.pushState({tb:'p-home'},'');
 });
 // 初期stateを設定（ページ読み込み直後）
@@ -2085,6 +2097,13 @@ function callGAS(params,silent){return new Promise(function(resolve,reject){
 function tbGet(k,d){try{var v=JSON.parse(localStorage.getItem(k));return v==null?d:v;}catch(e){return d;}}
 function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
+function isBoardDirectLaunch(){return /[?&]tool=board/.test(location.search)||/[?&]from=photos/.test(location.search);}
+function boardReturnUrl(){
+  if(/[?&]from=photos/.test(location.search))return '../photos/';
+  try{if(document.referrer&&/\/photos\/?(?:[?#].*)?$/.test(new URL(document.referrer).pathname))return '../photos/';}catch(e){}
+  return '../photos/';
+}
+function exitBoardDirect(){try{stopBoardCamera();}catch(e){} location.href=boardReturnUrl();}
 
 /* 実装済みツール */
 var READY={memo:1,check:1,elec:1,board:1,rec:1,meas:1,mat:1,rem:1,book:1,mag:1};
@@ -3049,7 +3068,7 @@ function openBoardCamera(){
     pendingBoard=null;
   } else if(bsn&&!bsn.value){ bsn.value=boardSiteName_; }
   var bf=document.getElementById('boardFormWrap');if(bf)bf.style.display='grid';
-  go('p-board'); applyBoardMode(); setTimeout(function(){ if(boardMode==='live')bov(); boardBindPinch();},50);
+  go('p-board'); applyBoardMode(); setTimeout(function(){ if(boardMode==='live'){bov(); boardLayout();} boardBindPinch();},50); setTimeout(function(){ if(boardMode==='live'){bov(); boardLayout();}},450);
 }
 /* 現場バーから現場を再選択 */
 function boardPickSite(){
@@ -3101,7 +3120,7 @@ function camFrameOk(videoEl,cb){
   setTimeout(probe,400);
 }
 /* ===== 撮影方式（ライブ／かんたん）切り替え・v61追加 ===== */
-var boardMode=(function(){try{return tbGet('boardCamMode','live');}catch(e){return 'live';}})();
+var boardMode=(function(){try{if(/[?&](mode=live|boardMode=live|tool=board)/.test(location.search))return 'live';return tbGet('boardCamMode','live');}catch(e){return 'live';}})();
 var boardEasyImg=null;
 function boardSetMode(m){
   if(m!=='live'&&m!=='easy')m='live';
@@ -3160,7 +3179,7 @@ function boardEasyPicked(input){
     var vid=document.getElementById('boardVideo');if(vid)vid.style.display='none';
     var pr=document.getElementById('boardEasyPrompt');if(pr)pr.style.display='none';
     setBoardBar('easy-shot');
-    setTimeout(function(){bov();},30);
+    setTimeout(function(){bov(); boardLayout();},30);
   };
   img.onerror=function(){toast('写真の読み込みに失敗しました');};
   img.src=URL.createObjectURL(f);
@@ -3211,8 +3230,9 @@ function startBoardCamera(){
         }catch(e){}
       }
       var bv=document.getElementById('boardVideo');
-      if(bv)bv.addEventListener('loadedmetadata',function(){setTimeout(applyBoardCaps,500);});
+      if(bv)bv.addEventListener('loadedmetadata',function(){setTimeout(applyBoardCaps,500);setTimeout(function(){bov(); boardLayout();},120);});
       setTimeout(applyBoardCaps,1000);
+      setTimeout(function(){bov(); boardLayout();},500);
   },function(){
       toast('この端末ではカメラ映像を表示できませんでした。Chromeで開く／端末のカメラ権限・「カメラアクセス」設定をご確認ください。');
   });
@@ -3265,7 +3285,7 @@ function boardPinchMove(e){
 function boardPinchEnd(e){
   if(e.touches.length<2)boardPinchDist=0;
 }
-function boardBack(){stopBoardCamera();go('p-home');}
+function boardBack(){ if(isBoardDirectLaunch()){exitBoardDirect();return;} stopBoardCamera();go('p-home');}
 function bov(){
   var ov=document.getElementById('boardOverlay');if(!ov)return;
   var v=function(id){var e=document.getElementById(id);return e?e.value:'';};
@@ -4036,7 +4056,7 @@ function openBoardForCase(id){
 })();
 
 /* 材料管理ハブからの直リンク（?tool=mat 等）でツールを開く */
-(function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ openTool(m[1]); }catch(e){} } })();
+(function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
 </body>
 </html>
