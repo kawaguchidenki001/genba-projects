@@ -308,13 +308,27 @@
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var T_GENERAL='kawaguchi-genba-2026';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var T_GENERAL='';
 var me=null,workers=[],todayK=[],monthK=[],mCur=new Date(),tab='home',brk={am:30,noon:60,pm:30},manualRows=[];
 var _monthLoaded=false,_mLoaded=false,_appLoaded=false;
 var S={},adminOK=false,myApps=[],pendApps=[];
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
-function tok(){return admTok()||T_GENERAL;}
+function tok(){return admTok()||genbaSessionTok();}
 function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
 
 function callGAS(params){return new Promise(function(res,rej){
@@ -609,9 +623,9 @@ function fillKruleForm(){ var g=function(id){return document.getElementById(id);
   g('s_otmax').value=gset('残業上限月','45'); g('s_otwarn').value=gset('残業警告率','80');
   g('s_leaveday').value=gset('有給付与日','04-01'); g('s_leavemust').value=gset('有給義務日数','5'); g('s_leavewarn').value=gset('有給警告日','180'); }
 function krUnlock(){ var pin=document.getElementById('krPin').value; if(!pin){toast('管理者PINを入力してください');return;}
-  var prev=localStorage.getItem('genba_admin'); localStorage.setItem('genba_admin',pin); showLoad();
-  callGAS({action:'checkRole'}).then(function(res){
-    if(res&&res.ok&&res.role==='admin'){ adminOK=true; fillKruleForm();
+  var prev=localStorage.getItem('genba_admin'); showLoad();
+  callGAS({action:'checkRole',secret:pin}).then(function(res){
+    if(res&&res.ok&&res.role==='admin'){ if(res.token)localStorage.setItem('genba_admin',res.token); adminOK=true; fillKruleForm();
       document.getElementById('krGate').style.display='none'; document.getElementById('krForm').style.display='block'; toast('編集できます'); }
     else { if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('管理者PINが違います'); }
   }).catch(function(e){ if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('通信エラー：'+e.message); }).then(hideLoad);
@@ -624,7 +638,7 @@ function saveKrule(){ var g=function(id){return document.getElementById(id).valu
   }).catch(function(e){toast('失敗：'+e.message);}).then(hideLoad);
 }
 
-function logout(){localStorage.removeItem('genba_user');location.href='https://kawaguchidenki001.github.io/genba-projects/';}
+function logout(){genbaClearSession();localStorage.removeItem('genba_user');location.href='https://kawaguchidenki001.github.io/genba-projects/';}
 
 /* ===== 申請・承認 ===== */
 function loadApp(silent){ if(!me)return; if(!silent)showLoad();
@@ -712,8 +726,8 @@ function cancelApp(id){ if(!confirm('この申請を取り消しますか？'))r
 function decideApp(id,dec){ showLoad();
   callGAS({action:'applicationDecide',id:id,decision:dec}).then(function(res){ if(!res.ok)throw new Error(res.error||'処理失敗'); toast(dec+'しました'); loadApp(); reload(); }).catch(function(e){toast('失敗：'+e.message);}).then(hideLoad); }
 function apUnlock(){ var pin=document.getElementById('apPin').value; if(!pin){toast('管理者PINを入力してください');return;}
-  var prev=localStorage.getItem('genba_admin'); localStorage.setItem('genba_admin',pin); showLoad();
-  callGAS({action:'checkRole'}).then(function(res){ if(res&&res.ok&&res.role==='admin'){ adminOK=true; toast('承認できます'); loadApp(); }
+  var prev=localStorage.getItem('genba_admin'); showLoad();
+  callGAS({action:'checkRole',secret:pin}).then(function(res){ if(res&&res.ok&&res.role==='admin'){ if(res.token)localStorage.setItem('genba_admin',res.token); adminOK=true; toast('承認できます'); loadApp(); }
     else { if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('管理者PINが違います'); }
   }).catch(function(e){ if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('通信エラー：'+e.message); }).then(hideLoad); }
 
