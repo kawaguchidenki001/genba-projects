@@ -396,6 +396,20 @@
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
 var workers=[],customers=[],contacts=[],vehicles=[],suppliers=[],curTab='worker',sLoaded=false;
 var ADMCACHE='genba_admin_cache';
 function admLoadCache(){try{var c=JSON.parse(localStorage.getItem(ADMCACHE)||'{}');workers=c.workers||[];customers=c.customers||[];contacts=c.contacts||[];vehicles=c.vehicles||[];}catch(e){}}
@@ -434,7 +448,7 @@ function init(){
 function doLogin(){
   var pin=document.getElementById('pin').value;if(!pin){toast('PINを入力してください');return;}
   callGAS({action:'checkRole'},pin).then(function(res){
-    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',pin);document.getElementById('pin').value='';showContent();loadAll();}
+    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',(res&&res.token)||pin);document.getElementById('pin').value='';showContent();loadAll();}
     else toast('管理者PINが違います');
   }).catch(function(err){toast('通信エラー：'+err.message);});
 }
