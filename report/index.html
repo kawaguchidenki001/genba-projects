@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- report version 62 (2026-06-18) 日報30秒化：前回日報コピー、前回メンバー選択、作業内容定型文、保存して写真追加。GAS変更なし。 -->
+<!-- report version 63 (2026-06-18) 日報30秒化＋作業内容定型文の追加・削除・初期化に対応。GAS変更なし。 -->
 <!-- report version 61 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置)。長い名称でも重なり/切れなし。タイトル(nm/h1)の改行禁止解除。CSSのみ・HTML/機能/id不変・GAS変更なし。 -->
 <!-- version 60 report (2026-06-15) 音声入力を継続録音化（黙っても止まらず、停止ボタンを押すまで録音継続。確定分を累積保持）。機能・id不変 -->
 <html lang="ja">
@@ -211,8 +211,16 @@
   .quickbtn:active{box-shadow:var(--well);}
   .quickbtn.main{color:#0b7d57;background:#e5f4ee;}
   .tplchips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
-  .tplchip{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:7px 10px;font-weight:800;font-size:13px;color:#31536b;cursor:pointer;}
+  .tplchip{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:7px 10px;font-weight:800;font-size:13px;color:#31536b;cursor:pointer;display:inline-flex;align-items:center;gap:6px;max-width:100%;}
+  .tplchip .txt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:210px;}
   .tplchip:active{box-shadow:var(--well);}
+  .tpldel{border:none;background:rgba(49,83,107,.12);color:#31536b;border-radius:999px;width:20px;height:20px;line-height:20px;font-size:14px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;padding:0;margin:-2px -3px -2px 1px;cursor:pointer;}
+  .tpltools{display:grid;grid-template-columns:1fr auto;gap:7px;margin-top:9px;align-items:center;}
+  .tpltools input{height:38px;border:none;border-radius:12px;background:#f7fbff;box-shadow:var(--well);padding:8px 10px;font-size:14px;}
+  .tpladd{height:38px;border:none;border-radius:12px;background:#e5f4ee;color:#0b7d57;font-weight:900;padding:0 12px;box-shadow:var(--rise-sm);cursor:pointer;}
+  .tplsubtools{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px;}
+  .tplsmall{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);color:#557084;font-weight:800;font-size:12px;padding:7px 10px;cursor:pointer;}
+  .tplsmall:active,.tpladd:active,.tpldel:active{box-shadow:var(--well);}
   .minihelp{font-size:12px;color:var(--sub);margin-top:6px;}
   #savePhotoBtn{background:#2563eb;}
   @media(max-width:430px){.quickbar{grid-template-columns:1fr;}.tplchip{font-size:12.5px;padding:7px 9px;}}
@@ -288,7 +296,7 @@
     <div class="fld" id="vmFld"><label>使用車両（工事台帳に反映されます）</label>
       <div id="vmList" class="wgroup"></div>
     </div>
-    <div class="fld"><label>作業内容</label><div class="micwrap"><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea><button type="button" class="micbtn" data-mic="f_desc" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div><div class="tplchips" id="descTpls"></div><div class="minihelp">よく使う作業をタップすると作業内容に追加されます。</div></div>
+    <div class="fld"><label>作業内容</label><div class="micwrap"><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea><button type="button" class="micbtn" data-mic="f_desc" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div><div class="tplchips" id="descTpls"></div><div class="tpltools"><input id="descTplInput" placeholder="定型文を追加 例）墨出し、入線作業"><button type="button" class="tpladd" onclick="addCustomDescTemplate()">追加</button></div><div class="tplsubtools"><button type="button" class="tplsmall" onclick="addDescTextAsTemplate()">入力中の作業内容を定型文に登録</button><button type="button" class="tplsmall" onclick="resetDescTemplates()">初期値に戻す</button></div><div class="minihelp">定型文をタップすると作業内容に追加されます。×で不要な定型文を削除できます。登録内容はこの端末のブラウザに保存されます。</div></div>
     <div class="fld"><label>備考</label><div class="micwrap"><textarea id="f_note"></textarea><button type="button" class="micbtn" data-mic="f_note" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div></div>
     <div class="acts">
       <button class="btn sub" onclick="closeOv()">キャンセル</button>
@@ -490,8 +498,19 @@ function fillLastWorkersForCurrentProject(silent){var pid=document.getElementByI
   var gp=latestGroupForProject(pid);if(!gp){if(!silent)toast('この現場の過去日報がありません');return;}
   setWorkersFromGroup(gp.grp);setVehicleChecks(commonTextFromGroup(gp.grp,'車両'));if(!silent)toast('前回メンバーと車両を選択しました');
 }
-var DESC_TPLS=['配線工事','配管工事','器具取付','照明取付','コンセント取付','スイッチ取付','盤結線','撤去作業','試験・測定','現場調査','材料搬入','高所作業','停電作業','清掃・片付け'];
-function renderDescTemplates(){var box=document.getElementById('descTpls');if(!box||box.dataset.ready)return;box.dataset.ready='1';box.innerHTML='';DESC_TPLS.forEach(function(t){var b=document.createElement('button');b.type='button';b.className='tplchip';b.textContent=t;b.onclick=function(){addDescTpl(t);};box.appendChild(b);});}
+var DESC_TPL_STORAGE_KEY='genba_desc_templates_v63';
+var DEFAULT_DESC_TPLS=['配線工事','配管工事','入線作業','器具取付','照明取付','コンセント取付','スイッチ取付','盤結線','分電盤取付','撤去作業','試験・測定','絶縁測定','接地抵抗測定','現場調査','材料搬入','高所作業','停電作業','清掃・片付け'];
+var DESC_TPLS=loadDescTemplates();
+function uniqueDescTemplates(arr){var seen={},out=[];(arr||[]).forEach(function(v){v=String(v||'').trim();if(!v)return;if(v.length>40)v=v.slice(0,40);var k=v.toLowerCase();if(!seen[k]){seen[k]=1;out.push(v);}});return out.slice(0,80);}
+function loadDescTemplates(){try{var a=JSON.parse(localStorage.getItem(DESC_TPL_STORAGE_KEY)||'null');if(Array.isArray(a)&&a.length)return uniqueDescTemplates(a);}catch(e){}return DEFAULT_DESC_TPLS.slice();}
+function saveDescTemplates(){try{localStorage.setItem(DESC_TPL_STORAGE_KEY,JSON.stringify(uniqueDescTemplates(DESC_TPLS)));}catch(e){}}
+function renderDescTemplates(){var box=document.getElementById('descTpls');if(!box)return;DESC_TPLS=uniqueDescTemplates(DESC_TPLS);box.innerHTML='';DESC_TPLS.forEach(function(t,idx){var b=document.createElement('button');b.type='button';b.className='tplchip';b.title=t+' を追加';var sp=document.createElement('span');sp.className='txt';sp.textContent=t;b.appendChild(sp);b.onclick=function(){addDescTpl(t);};var del=document.createElement('button');del.type='button';del.className='tpldel';del.textContent='×';del.title=t+' を削除';del.onclick=function(ev){ev.stopPropagation();deleteDescTemplate(idx);};b.appendChild(del);box.appendChild(b);});}
+function splitDescTemplateInput(v){return String(v||'').split(/[\n、,，]+/).map(function(x){return x.trim();}).filter(Boolean);}
+function addTemplates(arr){var before=DESC_TPLS.length;DESC_TPLS=uniqueDescTemplates(DESC_TPLS.concat(arr));saveDescTemplates();renderDescTemplates();return DESC_TPLS.length-before;}
+function addCustomDescTemplate(){var inp=document.getElementById('descTplInput');var vals=splitDescTemplateInput(inp?inp.value:'');if(!vals.length){toast('追加する定型文を入力してください');if(inp)inp.focus();return;}var n=addTemplates(vals);if(inp)inp.value='';toast(n?('定型文を追加しました：'+n+'件'):'同じ定型文は登録済みです');}
+function addDescTextAsTemplate(){var vals=splitDescTemplateInput(document.getElementById('f_desc').value);if(!vals.length){toast('作業内容に文字を入力してから押してください');return;}var n=addTemplates(vals);toast(n?('入力中の内容を定型文に登録しました：'+n+'件'):'同じ定型文は登録済みです');}
+function deleteDescTemplate(idx){var t=DESC_TPLS[idx];if(t==null)return;if(!confirm('「'+t+'」を定型文から削除しますか？'))return;DESC_TPLS.splice(idx,1);saveDescTemplates();renderDescTemplates();toast('定型文を削除しました');}
+function resetDescTemplates(){if(!confirm('作業内容の定型文を初期値に戻しますか？\n自分で追加した定型文もこの端末から削除されます。'))return;DESC_TPLS=DEFAULT_DESC_TPLS.slice();saveDescTemplates();renderDescTemplates();toast('定型文を初期値に戻しました');}
 function addDescTpl(t){var el=document.getElementById('f_desc'),cur=el.value.trim();if(!cur){el.value=t;}else if(cur.indexOf(t)<0){el.value=cur.replace(/[、,\s]+$/,'')+'、'+t;}el.focus();}
 function goPhotoPage(pid){location.href='https://kawaguchidenki001.github.io/genba-projects/files/?case='+encodeURIComponent(pid||'');}
 function copyFromDetail(){if(!detailCtx)return;var pid=detailCtx.pid,date=detailCtx.date;closeDetail();
@@ -893,6 +912,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)relo
   });
 })();
 
+try{document.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&ev.target&&ev.target.id==='descTplInput'){ev.preventDefault();addCustomDescTemplate();}});}catch(e){}
 loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadCache=(projects&&projects.length>0)||(reports&&reports.length>0);trySchedPre();reload(hadCache);
 </script>
 <div class="ov" id="dov" onclick="if(event.target===this)closeDetail()">
