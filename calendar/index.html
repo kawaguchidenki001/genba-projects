@@ -1,6 +1,4 @@
 <!DOCTYPE html>
-<!-- calendar version 60 (2026-06-17) 曜日バーをmonthView内(横スクロールコンテナ内)に戻し、グリッドと同じ--cal-s拡縮・同じ横スクロールに追従させてズレを解消。monthView内でsticky top:0し縦スクロール時は上部固定。ヘッダー隠し時のtopは外側monthViewに適用。GAS変更なし。 -->
-<!-- calendar version 59 (2026-06-17) ヘッダー隠しを負マージン方式に修正：sticky要素はページ最上部ではtopが効かないため、hdr-hidden時にheaderをposition:absolute化＋navbarにmargin-topの負値を与えて固まり全体を物理的に上へ引き上げる。これで月・曜日バーが画面最上部に詰まる。GAS変更なし。 -->
 <!-- calendar version 58 (2026-06-17) ヘッダー隠し時に月バー・曜日バーを確実に最上部へ移動。updatePositionsをピンチ後に即時実行・DOMContentLoadedでinitTopsを早期実行・offsetHeight取得タイミングを修正。GAS変更なし。 -->
 <!-- calendar version 57 (2026-06-17) スマホ月表示：下スクロールでヘッダー隠す・上スクロールで再表示、ピンチ拡大でもヘッダー隠す。曜日バー(.wk)をmonthView外に移動しstickyで上部固定。navbar/viewbar/wkのtopをJSで連動更新。スマホのみ(max-width:767px)・GAS変更なし。 -->
 <!-- calendar version 56 (2026-06-16) ヘッダーのクリア(ごみ箱)ボタンをHTMLから削除し、ヘッダーを上に詰める(.hbar row-gap 12→6px・hright 2段→1段化・header padding縮小)。clearPeriod関数とCSSルールは残置(将来再利用可)。HTML/JS関数/GAS不変。 -->
@@ -90,8 +88,8 @@
     /* v55変更：文字・アイコン・余白は固定。セル幅と高さのみピンチで拡縮し、省略文字を見やすく */
     /* v57追加：曜日バーをstickyで上部固定・ヘッダー隠し時にtopを連動 */
     /* v58変更：クラスベースで位置制御に変更 */
-    #monthView{overflow-x:auto;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;--cal-s:1;touch-action:pan-x pan-y;}
-    #monthView .wk,#monthView .grid{min-width:calc(700px * var(--cal-s));}
+    #monthView{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;--cal-s:1;touch-action:pan-x pan-y;}
+    #monthView .grid{min-width:calc(700px * var(--cal-s));}
     #monthView .cell{min-height:calc(82px * var(--cal-s));padding:5px 6px;}
     #monthView .dnum{font-size:14.5px;}
     #monthView .ev-proj{font-size:11.5px;padding:2px 6px;}
@@ -99,21 +97,18 @@
     #monthView .wx img,#monthView .wx .wi{width:22px;height:22px;}
     #monthView .wx .wt{font-size:11px;}
     #monthView .holname{font-size:10px;}
-    #monthView #wkRow{position:sticky;top:0;z-index:9;margin-bottom:4px;background:var(--bg);box-shadow:0 2px 6px -4px rgba(31,90,168,.25);}
-    #monthView #wkRow div{font-size:12.5px;padding:5px 0;}
-    .viewbar{position:sticky;z-index:8;background:var(--bg);transition:top .25s ease;}
-    /* v60: 月表示エリアを画面残り高さに収め内部スクロール化→内部の曜日バーが上部固定 */
-    #monthView{position:sticky;transition:top .25s ease,max-height .25s ease;max-height:calc(100dvh - var(--fixed-h,200px));}
-    body.hdr-hidden #monthView{max-height:calc(100dvh - var(--fixed-h-hidden,140px));}
-    /* v59/60: sticky貼り付き位置。ヘッダー高さをCSS変数で受け取り順に積む */
-    .navbar{top:var(--hdr-h,56px);}
-    .viewbar{top:var(--hdr-nb-h,98px);}
-    #monthView{top:var(--hdr-nb-vb-h,138px);}
-    /* v59/60: ヘッダー隠し → headerをフローから抜き、各バーを上へ詰める */
-    body.hdr-hidden header{position:fixed;top:0;left:0;right:0;transform:translateY(-100%);pointer-events:none;}
-    body.hdr-hidden .navbar{top:0;}
-    body.hdr-hidden .viewbar{top:var(--nb-h,40px);}
-    body.hdr-hidden #monthView{top:var(--nb-vb-h,80px);}
+    #wkRow{position:sticky;z-index:9;min-width:calc(700px * var(--cal-s));padding:0 8px;margin-bottom:0;box-shadow:0 2px 6px -4px rgba(31,90,168,.25);transition:top .25s ease;}
+    #wkRow div{font-size:12.5px;padding:5px 0;}
+    .viewbar{transition:top .25s ease;position:sticky;z-index:8;background:var(--bg);}
+    /* ヘッダー表示時のtop値（JSでheight取得後に上書き） */
+    .navbar{top:var(--hdr-h,48px) !important;}
+    .viewbar{top:var(--hdr-h-nb,84px) !important;}
+    #wkRow{top:var(--hdr-h-nb-vb,120px) !important;}
+    /* hdr-hiddenクラス付与時：全バーを最上部へ */
+    body.hdr-hidden header{transform:translateY(calc(-1 * var(--hdr-h,48px)));}
+    body.hdr-hidden .navbar{top:0 !important;}
+    body.hdr-hidden .viewbar{top:var(--nb-h,36px) !important;}
+    body.hdr-hidden #wkRow{top:var(--nb-vb-h,72px) !important;}
   }
   @media (min-width:768px){
     .cal{max-width:1400px;margin:0 auto;padding:0 4px;}
@@ -231,7 +226,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v60</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v58</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -259,8 +254,8 @@
 <div class="cal">
   <div id="capture">
     <div class="cap-head"><span class="cap-co">河口電機 スケジュール</span><span class="cap-period" id="capPeriod"></span></div>
+    <div class="wk" id="wkRow"><div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div></div>
     <div id="monthView">
-      <div class="wk" id="wkRow"><div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div></div>
       <div class="grid" id="grid"></div>
     </div>
     <div id="agendaView" style="display:none;"></div>
@@ -340,12 +335,26 @@
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var T_GENERAL='kawaguchi-genba-2026';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var T_GENERAL='';
 var projects=[],schedules=[],workers=[],customers=[],vehicles=[],cur=new Date(),viewMode='month';
 var holidays={},holLoaded={};
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
-function tok(){return admTok()||T_GENERAL;}
+function tok(){return admTok()||genbaSessionTok();}
 
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
@@ -867,27 +876,16 @@ render();reload(hadCache);
     var vbh=vb?vb.offsetHeight:0;
     document.body.style.setProperty('--hdr-h', hh+'px');
     document.body.style.setProperty('--nb-h', nbh+'px');
-    document.body.style.setProperty('--hdr-nb-h', (hh+nbh)+'px');
+    document.body.style.setProperty('--hdr-h-nb', (hh+nbh)+'px');
     document.body.style.setProperty('--nb-vb-h', (nbh+vbh)+'px');
-    document.body.style.setProperty('--hdr-nb-vb-h', (hh+nbh+vbh)+'px');
-    /* v60: 月表示の内部スクロール用の高さ＝画面 - 固定バー */
-    document.body.style.setProperty('--fixed-h', (hh+nbh+vbh+8)+'px');
-    document.body.style.setProperty('--fixed-h-hidden', (nbh+vbh+8)+'px');
+    document.body.style.setProperty('--hdr-h-nb-vb', (hh+nbh+vbh)+'px');
   }
   var hidden=false;
-  var lastHdrChange=0;
   window.setHdrHidden=function(hide){
     if(hide===hidden)return;
     hidden=hide;
-    lastHdrChange=Date.now();
     if(hide){ document.body.classList.add('hdr-hidden'); }
     else { document.body.classList.remove('hdr-hidden'); }
-    /* レイアウト変動後にlastY再同期（誤判定の打ち消し合い防止） */
-    setTimeout(function(){
-      var mv=document.getElementById('monthView');
-      if(mv) lastY=mv.scrollTop;
-      else lastY=window.scrollY||window.pageYOffset||0;
-    }, 350);
   };
   function init(){ measureAndSet(); }
   if(document.readyState==='loading'){
@@ -898,22 +896,16 @@ render();reload(hadCache);
     hidden=false; document.body.classList.remove('hdr-hidden'); measureAndSet();
   });
   var lastY=0, ticking=false;
-  function onScroll(getY){
+  window.addEventListener('scroll',function(){
     if(window.innerWidth>767)return;
-    if(Date.now()-lastHdrChange<400)return; /* ヘッダー切替直後の振動を無視 */
-    var y=getY();
+    var y=window.scrollY||window.pageYOffset;
     if(!ticking){ ticking=true; requestAnimationFrame(function(){
       var dy=y-lastY;
       if(dy>6) window.setHdrHidden(true);
       else if(dy<-6) window.setHdrHidden(false);
       lastY=y; ticking=false;
     }); }
-  }
-  /* monthViewは内部スクロールなので、その縦スクロールを監視 */
-  var mvEl=document.getElementById('monthView');
-  if(mvEl) mvEl.addEventListener('scroll',function(){ onScroll(function(){return mvEl.scrollTop;}); },{passive:true});
-  /* 念のためページ全体スクロールも監視 */
-  window.addEventListener('scroll',function(){ onScroll(function(){return window.scrollY||window.pageYOffset;}); },{passive:true});
+  },{passive:true});
 })();
 </script>
 <div id="offlineBar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:99999;background:#c0392b;color:#fff;text-align:center;font-size:13px;font-weight:700;padding:9px 12px;box-shadow:0 2px 10px rgba(0,0,0,.3);">📡 オフラインです。電波の良い場所で再読み込みしてください。</div>
