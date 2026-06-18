@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- version 56 root config.js共通化 -->
+<!-- version 55 root (2026-06-18) 今日やることカード追加：予定・日報未提出・車両アラート・未入金などをトップ上部に表示。 -->
 <!-- version 54 root (2026-06-15) AIアシスタントタイルをAIツール（./aitools/）に変更（AIアシスタント・材料AI検索・AI文字起こしを統合するハブへの入口）。 -->
 <html lang="ja">
 <head>
@@ -173,6 +175,26 @@
     .sq .en{font-size:11px;}
   }
   /* ▲ 高齢者向け 文字拡大 ▲ */
+
+  /* v104 今日やることカード */
+  .todoPanel{background:#ffffff;border:1px solid #dbe8f5;border-radius:22px;box-shadow:0 8px 24px rgba(31,90,168,.12);padding:16px;margin:0 0 18px;display:none;}
+  .todoPanel.show{display:block;}
+  .todoTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;}
+  .todoTitle{font-size:18px;font-weight:900;color:#173b5d;display:flex;align-items:center;gap:8px;}
+  .todoBadge{font-size:12px;font-weight:900;border-radius:999px;padding:5px 10px;background:#e8f7ee;color:#16703b;white-space:nowrap;}
+  .todoBadge.warn{background:#fff2dc;color:#a15c00;}
+  .todoList{display:grid;gap:9px;margin-bottom:13px;}
+  .todoItem{display:flex;align-items:flex-start;gap:10px;border-radius:14px;background:#f7fbff;border:1px solid #e0ecf7;padding:10px 12px;color:#23465f;}
+  .todoIcon{width:28px;height:28px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#e3f0fb;flex:0 0 28px;}
+  .todoMain{flex:1;min-width:0;}
+  .todoMain b{display:block;font-size:13.5px;color:#163b5c;margin-bottom:2px;}
+  .todoMain span{display:block;font-size:12px;color:#607d96;line-height:1.45;}
+  .todoLink{font-size:12px;font-weight:900;color:#2563eb;text-decoration:none;white-space:nowrap;padding-top:3px;}
+  .todoActions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+  .todoActions a{display:flex;align-items:center;justify-content:center;min-height:42px;border-radius:13px;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);color:#fff;text-decoration:none;font-size:13px;font-weight:900;box-shadow:0 6px 14px rgba(37,99,235,.18);}
+  .todoActions a.sub{background:#eef6ff;color:#1f5fa8;box-shadow:none;border:1px solid #d8e8f7;}
+  @media(max-width:560px){.todoActions{grid-template-columns:repeat(2,1fr)}.todoPanel{padding:14px}.todoTitle{font-size:17px}}
+
 </style>
 </head>
 <body>
@@ -220,6 +242,23 @@
     </div>
   </div>
 
+
+  <div class="todoPanel" id="todayTodoPanel">
+    <div class="todoTop">
+      <div class="todoTitle">✅ 今日やること</div>
+      <div class="todoBadge" id="todayTodoBadge">確認中</div>
+    </div>
+    <div class="todoList" id="todayTodoList">
+      <div class="todoItem"><div class="todoIcon">⏳</div><div class="todoMain"><b>読み込み中</b><span>今日の予定・日報・車両アラートを確認しています。</span></div></div>
+    </div>
+    <div class="todoActions">
+      <a href="./report/">日報を書く</a>
+      <a href="./files/" class="sub">写真追加</a>
+      <a href="./calendar/" class="sub">予定確認</a>
+      <a href="./timecard/" class="sub">打刻</a>
+    </div>
+  </div>
+
   <div class="lbl">現場用</div>
   <div class="grid">
     <a class="sq t-proj" href="./projects/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span><span class="txt"><span class="en">Projects</span><span class="nm">案件管理</span><span class="ds">現場の一覧・詳細・写真・ファイルはこちら</span></span><span class="cor">→</span></a>
@@ -246,8 +285,9 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
+<script src="./config.js"></script>
 <script>
-var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
 function genbaSessionTok(){
   try{
@@ -303,8 +343,43 @@ function jsonpGet(action,onOk,extra){
 }
 function escD(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function hm5(v){var t=String(v||'').slice(0,5);return t;}
+
+function renderTodayTodo(d){
+  var panel=document.getElementById('todayTodoPanel'), list=document.getElementById('todayTodoList'), badge=document.getElementById('todayTodoBadge');
+  if(!panel||!list||!badge||!d)return;
+  var items=[];
+  var schedules=d.schedules||[];
+  if(schedules.length){
+    var first=schedules[0]||{};
+    var t=hm5(first['開始'])?(hm5(first['開始'])+(hm5(first['終了'])?'〜'+hm5(first['終了']):'')):'終日';
+    items.push({icon:'🗓',title:'今日の予定 '+schedules.length+'件',text:t+'　'+(first['案件名']||first['予定内容']||'予定を確認'),url:'./calendar/'});
+  }else{
+    items.push({icon:'🗓',title:'今日の予定はありません',text:'予定がある場合はカレンダーから追加できます。',url:'./calendar/'});
+  }
+  var ws=d.workers||[], miss=ws.filter(function(w){return !w['提出'];});
+  if(ws.length){
+    if(miss.length){
+      items.push({icon:'📝',title:'日報未提出 '+miss.length+'名',text:miss.slice(0,4).map(function(w){return w['略称']||w['氏名'];}).join('・')+(miss.length>4?' ほか':''),url:'./report/'});
+    }else{
+      items.push({icon:'📝',title:'日報は全員提出済み',text:'今日の日報提出状況は順調です。',url:'./report/'});
+    }
+  }
+  var va=d.vehicleAlerts||[];
+  if(va.length){items.push({icon:'🚚',title:'車両アラート '+va.length+'件',text:(va[0]['車両名']||'車両')+'　'+(va[0]['種類']||'期限')+'を確認してください。',url:'./vehicles/'});}
+  var ar=d.ar||{};
+  if((ar['期限超過']||0)>0){items.push({icon:'💴',title:'入金期限超過 '+ar['期限超過']+'件',text:'未入金の請求を確認してください。',url:'./estimate/'});}
+  var due=d.dueProjects||[];
+  if(due.length){items.push({icon:'⏳',title:'工期間近 '+due.length+'件',text:(due[0]['案件名']||'案件')+' の工期を確認してください。',url:'./projects/'});}
+  var warn=(miss.length)+(va.length)+(ar['期限超過']||0)+(due.length);
+  badge.textContent=warn?('要確認 '+warn+'件'):'順調です';
+  badge.className='todoBadge'+(warn?' warn':'');
+  list.innerHTML=items.slice(0,5).map(function(x){return '<div class="todoItem"><div class="todoIcon">'+escD(x.icon)+'</div><div class="todoMain"><b>'+escD(x.title)+'</b><span>'+escD(x.text)+'</span></div><a class="todoLink" href="'+escD(x.url)+'">開く →</a></div>';}).join('');
+  panel.classList.add('show');
+}
+
 function renderDash(d){
   if(!d)return;
+  renderTodayTodo(d);
   var dash=document.getElementById('dash');var any=false;
   // 今日の予定
   var sc=document.getElementById('dSched'),list=d.schedules||[];
