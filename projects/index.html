@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- projects version 50 (2026-06-17) 案件PDF読取OCR：見積書・発注書PDFから案件名・顧客・工期・金額を自動入力（aiOcrProjectをPOST送信）。GAS v95と対応。 -->
 <!-- projects version 49 (2026-06-15) ヘッダー案A化(2段・CSSグリッド)。管理者ボタン(admBtn)を非表示(管理者状態は全画面共有)。 CSSのみ・HTML/JS/id不変・GAS変更なし。 -->
 <!-- projects version 48 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。操作行hd2は同期表示を非表示化・管理者🔑保持。更新はreload()。 機能・id不変 -->
 <html lang="ja">
@@ -182,31 +181,10 @@
   .htxt .nm{font-size:19.5px;}
   .hmark{font-size:15px;}
   .back{font-size:11.5px;padding:9px 14px;}
-  /* 案件PDF読取OCR (v50) */
-  .proj-ocrbtn{width:100%;padding:13px;border:none;border-radius:13px;background:linear-gradient(135deg,#4444b8,#5b5bd6);color:#fff;font-size:14.5px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;box-shadow:3px 4px 11px rgba(91,91,214,.35);}
-  .proj-ocrbtn:active{transform:translateY(1px);}
-  .proj-ocrbtn svg{width:18px;height:18px;flex:0 0 auto;}
-  .pocr-modal{display:none;position:fixed;inset:0;z-index:300;background:rgba(30,30,60,.55);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);align-items:flex-end;justify-content:center;}
-  .pocr-modal.show{display:flex;}
-  .pocr-inner{background:var(--bg);border-radius:22px 22px 0 0;padding:22px 18px calc(env(safe-area-inset-bottom) + 28px);width:100%;max-width:560px;max-height:82vh;overflow-y:auto;}
-  .pocr-inner h3{font-size:17px;font-weight:800;margin:0 0 6px;color:var(--ink);display:flex;align-items:center;gap:8px;}
-  .pocr-inner h3 svg{width:20px;height:20px;color:var(--accent);flex:0 0 auto;}
-  .pocr-desc{font-size:13px;color:var(--sub);margin:0 0 14px;line-height:1.6;}
-  .pocr-drop{border:2px dashed var(--line);border-radius:14px;padding:26px 16px;text-align:center;cursor:pointer;margin-bottom:10px;background:var(--bg);box-shadow:var(--well-soft);}
-  .pocr-drop.dragover{border-color:var(--accent);background:var(--accent-soft);}
-  .pocr-drop svg{width:34px;height:34px;color:var(--sub);margin-bottom:8px;}
-  .pocr-drop .pocr-dtxt{font-size:14px;font-weight:700;color:var(--ink);}
-  .pocr-drop .pocr-dsub{font-size:12px;color:var(--sub);margin-top:3px;}
-  .pocr-drop input[type=file]{display:none;}
-  .pocr-prev{display:none;padding:9px 12px;background:var(--accent-soft);border-radius:10px;margin-bottom:10px;font-size:13px;color:var(--accent-d);font-weight:700;}
-  .pocr-result{display:none;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:13px;margin-bottom:12px;white-space:pre-line;line-height:1.7;}
-  .pocr-readbtn{width:100%;padding:13px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15px;font-weight:800;cursor:pointer;margin-bottom:8px;}
-  .pocr-readbtn:disabled{opacity:.45;cursor:not-allowed;}
-  .pocr-cancelbtn{width:100%;padding:12px;border:none;border-radius:12px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);font-size:14px;font-weight:700;cursor:pointer;}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v50</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v49</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -250,7 +228,6 @@
 <div class="ov" id="ov">
   <div class="sheet">
     <h2 id="mTitle">新規案件</h2>
-    <button class="proj-ocrbtn" id="pocrOpenBtn" onclick="openPOcrModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/><path d="M9 12h6M9 16h4"/></svg>見積書・発注書PDFから自動入力</button>
     <input type="hidden" id="f_id">
     <div class="fld"><label>案件名 ／ 現場名 *</label><input id="f_name" placeholder="例）不破高等学校空調設備更新工事"></div>
     <div class="fld"><label>略称（日報・予定表に表示）</label><input id="f_short" placeholder="例）不破高 空調"></div>
@@ -289,24 +266,6 @@
       <button class="btn primary" id="saveBtn" onclick="saveProject()">保存</button>
     </div>
     <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="delProject(event)">この案件を削除</a></div>
-  </div>
-</div>
-
-<!-- 案件PDF読取モーダル (v50) -->
-<div class="pocr-modal" id="pocrModal" onclick="if(event.target===this)closePOcrModal()">
-  <div class="pocr-inner">
-    <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.7 4.8L18.5 9l-4.8 1.7L12 15.5l-1.7-4.8L5.5 9l4.8-1.2L12 3Z"/></svg>AIで書類を読み取る</h3>
-    <p class="pocr-desc">取引先からもらった見積書・発注書・注文書などのPDFや写真をアップロードすると、案件名・顧客・工期・金額を自動で入力します。読み取り後、内容を必ず確認してください。</p>
-    <div class="pocr-drop" id="pocrDrop" onclick="document.getElementById('pocrFile').click()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>
-      <div class="pocr-dtxt">タップして選択 ／ ドラッグ&amp;ドロップ</div>
-      <div class="pocr-dsub">PDF / JPG / PNG / HEIC 対応（10MB以内）</div>
-      <input type="file" id="pocrFile" accept=".pdf,.jpg,.jpeg,.png,.heic,.webp,image/*,application/pdf" onchange="pocrFileSelected(this)">
-    </div>
-    <div class="pocr-prev" id="pocrPrev"></div>
-    <div class="pocr-result" id="pocrResult"></div>
-    <button class="pocr-readbtn" id="pocrReadBtn" disabled onclick="doPocrOcr()">AIで読み取る</button>
-    <button class="pocr-cancelbtn" onclick="closePOcrModal()">キャンセル</button>
   </div>
 </div>
 
@@ -391,10 +350,24 @@
 <script>
 /* ===== 設定（★ここを埋める）===== */
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var T_GENERAL = 'kawaguchi-genba-2026';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var T_GENERAL='';
 var ROLE = '';
 function admTok(){return localStorage.getItem('genba_admin')||'';}
-function tok(){return admTok()||T_GENERAL;}
+function tok(){return admTok()||genbaSessionTok();}
 
 var STATUSES = ['見積中','受注','段取済','施工中','完了','請求済'];
 var projects = [], customers = [], contacts = [], filterStatus = 'すべて';
@@ -418,18 +391,6 @@ function callGAS(params,secretOverride,silent){
     var url=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
     s.src=url; s.onerror=function(){cleanup();reject(new Error('通信エラー'));};
     document.head.appendChild(s);
-  });
-}
-// 大きなデータ（PDF・画像など）はURLに乗らないため fetch+POST で送る（v50）
-function callGASPost(params,silent){
-  return new Promise(function(resolve,reject){
-    if(!GAS_URL){ reject(new Error('GAS_URL が未設定です')); return; }
-    if(!silent) showLoad();
-    var body=Object.assign({secret:admTok()},params);
-    fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
-      .then(function(r){return r.json();})
-      .then(function(res){if(!silent)hideLoad();resolve(res);})
-      .catch(function(e){if(!silent)hideLoad();reject(new Error('通信エラー: '+e.message));});
   });
 }
 
@@ -922,147 +883,9 @@ function toggleAdmin(){
   if(admTok()){ if(confirm('管理者ログアウトしますか？')){localStorage.removeItem('genba_admin');location.reload();} return; }
   var pin=prompt('管理者PINを入力してください');if(!pin)return;
   callGAS({action:'checkRole'},pin).then(function(res){
-    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',pin);location.reload();}
+    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',(res&&res.token)||pin);location.reload();}
     else toast('管理者PINが違います');
   }).catch(function(err){toast('通信エラー：'+err.message);});
-}
-
-/* ===== 案件PDF読取OCR (v50) ===== */
-var _pocr64 = '', _pocrMime = '', _pocrDropInit = false;
-function openPOcrModal(){
-  var modal = document.getElementById('pocrModal');
-  if(!modal) return;
-  if(!_pocrDropInit){
-    _pocrDropInit = true;
-    var drop = document.getElementById('pocrDrop');
-    ['dragenter','dragover'].forEach(function(ev){
-      drop.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); drop.classList.add('dragover'); });
-    });
-    ['dragleave','drop'].forEach(function(ev){
-      drop.addEventListener(ev, function(e){ e.preventDefault(); e.stopPropagation(); drop.classList.remove('dragover'); });
-    });
-    drop.addEventListener('drop', function(e){
-      var f = e.dataTransfer && e.dataTransfer.files;
-      if(f && f[0]) handlePocrFile(f[0]);
-    });
-  }
-  _pocr64 = ''; _pocrMime = '';
-  document.getElementById('pocrFile').value = '';
-  document.getElementById('pocrPrev').style.display = 'none';
-  document.getElementById('pocrPrev').textContent = '';
-  document.getElementById('pocrResult').style.display = 'none';
-  document.getElementById('pocrResult').textContent = '';
-  document.getElementById('pocrReadBtn').disabled = true;
-  document.getElementById('pocrReadBtn').textContent = 'AIで読み取る';
-  modal.classList.add('show');
-}
-function closePOcrModal(){
-  document.getElementById('pocrModal').classList.remove('show');
-}
-function pocrFileSelected(inp){
-  if(inp.files && inp.files[0]) handlePocrFile(inp.files[0]);
-}
-function handlePocrFile(file){
-  if(!file) return;
-  if(file.size > 10 * 1024 * 1024){ toast('ファイルが大きすぎます（10MB以内）'); return; }
-  var mime = file.type || 'application/pdf';
-  if(!mime || mime === 'application/octet-stream'){
-    if(/\.pdf$/i.test(file.name)) mime = 'application/pdf';
-    else if(/\.(jpg|jpeg)$/i.test(file.name)) mime = 'image/jpeg';
-    else if(/\.png$/i.test(file.name)) mime = 'image/png';
-    else if(/\.heic$/i.test(file.name)) mime = 'image/heic';
-    else mime = 'image/jpeg';
-  }
-  _pocrMime = mime;
-  var pr = document.getElementById('pocrPrev');
-  pr.textContent = '選択中：' + file.name + '（' + Math.round(file.size / 1024) + 'KB）';
-  pr.style.display = 'block';
-  document.getElementById('pocrResult').style.display = 'none';
-  document.getElementById('pocrReadBtn').disabled = true;
-  var reader = new FileReader();
-  reader.onload = function(e){
-    var dataUrl = e.target.result;
-    _pocr64 = (dataUrl.split(',')[1]) || '';
-    if(_pocr64) document.getElementById('pocrReadBtn').disabled = false;
-  };
-  reader.onerror = function(){ toast('ファイルの読み込みに失敗しました'); };
-  reader.readAsDataURL(file);
-}
-function doPocrOcr(){
-  if(!_pocr64){ toast('ファイルを選択してください'); return; }
-  if(!isAdmin()){ toast('読み取りは管理者のみ利用できます'); return; }
-  var btn = document.getElementById('pocrReadBtn');
-  btn.disabled = true; btn.textContent = '読み取り中…';
-  var resEl = document.getElementById('pocrResult');
-  resEl.style.display = 'none'; resEl.textContent = '';
-  showLoad();
-  callGASPost({ action: 'aiOcrProject', base64: _pocr64, mime: _pocrMime }, true)
-    .then(function(res){
-      hideLoad();
-      btn.textContent = 'AIで読み取る';
-      if(!res || !res.ok){
-        resEl.textContent = 'エラー：' + ((res && res.error) || '不明なエラーが発生しました');
-        resEl.style.background = '#fff1f2'; resEl.style.borderColor = '#fecdd3'; resEl.style.color = '#9f1239';
-        resEl.style.display = 'block';
-        btn.disabled = false;
-        return;
-      }
-      var d = res.data || {};
-      applyOcrToForm(d);
-      var lines = [];
-      if(d['案件名']) lines.push('案件名：' + d['案件名']);
-      if(d['顧客名']) lines.push('顧客：' + d['顧客名']);
-      if(d['場所']) lines.push('場所：' + d['場所']);
-      if(d['工期開始'] || d['工期完了']) lines.push('工期：' + (d['工期開始'] || '？') + ' 〜 ' + (d['工期完了'] || '？'));
-      if(d['受注金額税込']) lines.push('金額（税込）：¥' + Number(d['受注金額税込']).toLocaleString('ja-JP'));
-      if(!lines.length){
-        resEl.textContent = '内容を読み取れませんでした。手動で入力してください。';
-        resEl.style.background = '#fffbeb'; resEl.style.borderColor = '#fde68a'; resEl.style.color = '#92400e';
-        resEl.style.display = 'block';
-        btn.disabled = false;
-        return;
-      }
-      resEl.textContent = '読み取り完了。下記を入力しました：\n' + lines.join('\n');
-      resEl.style.background = '#f0fdf4'; resEl.style.borderColor = '#86efac'; resEl.style.color = '#166534';
-      resEl.style.display = 'block';
-      setTimeout(function(){ closePOcrModal(); toast('書類の内容を入力しました。確認して保存してください'); }, 1800);
-    })
-    .catch(function(e){
-      hideLoad();
-      btn.disabled = false; btn.textContent = 'AIで読み取る';
-      toast('通信エラー：' + e.message);
-    });
-}
-// 読み取り結果を案件フォームへ反映（空欄のみ補完。案件名は上書き）
-function applyOcrToForm(d){
-  function setIfEmpty(id, val){ var el = document.getElementById(id); if(el && val && !el.value) el.value = val; }
-  function setForce(id, val){ var el = document.getElementById(id); if(el && val) el.value = val; }
-  setForce('f_name', d['案件名'] || '');
-  setIfEmpty('f_place', d['場所'] || '');
-  setIfEmpty('f_start', d['工期開始'] || '');
-  setIfEmpty('f_end', d['工期完了'] || '');
-  if(d['受注金額税抜']) setIfEmpty('f_price_ex', d['受注金額税抜']);
-  if(d['受注金額税込']) setIfEmpty('f_price_in', d['受注金額税込']);
-  setIfEmpty('f_note', d['備考'] || '');
-  // 顧客名：セレクトに一致があれば選択、なければ直接入力欄へ
-  var custName = String(d['顧客名'] || '').trim();
-  if(custName){
-    var sel = document.getElementById('f_cust');
-    var matched = false;
-    if(sel){
-      for(var i = 0; i < sel.options.length; i++){
-        if(sel.options[i].value === custName || sel.options[i].text === custName){
-          sel.value = sel.options[i].value; matched = true; break;
-        }
-      }
-    }
-    if(!matched){
-      var other = document.getElementById('f_cust_other');
-      if(other){ other.style.display = 'block'; if(!other.value) other.value = custName; }
-      if(sel){ sel.value = ''; }
-      if(typeof onCustChange === 'function'){ try{ onCustChange(); }catch(e){} }
-    }
-  }
 }
 
 /* 起動：全員が閲覧可。管理者のみ追加・編集ができる */
@@ -1075,20 +898,6 @@ callGAS({action:'checkRole'},null,hadCacheP).then(function(res){
   if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin');
   hideGate(); applyAdminUI(); buildChips(); buildCustList(); render(); reload(hadCacheP);
 }).catch(function(){ setSync('off','オフライン'); });
-
-/* AIツールから ?ocr=1 で来たとき：新規案件モーダル＋PDF読取モーダルを自動で開く (v50) */
-(function(){
-  try{
-    var p = new URLSearchParams(location.search);
-    if(p.get('ocr') === '1'){
-      // 管理者状態の確定を少し待ってから開く
-      setTimeout(function(){
-        if(typeof openProject === 'function') openProject();
-        if(typeof openPOcrModal === 'function') openPOcrModal();
-      }, 400);
-    }
-  }catch(e){}
-})();
 </script>
 </body>
 </html>
