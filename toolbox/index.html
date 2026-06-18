@@ -2013,6 +2013,8 @@
 <div class="tload" id="tload"><div class="tlbox"><div class="tspin"></div><div class="tltxt" id="tltxt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="../config.js"></script>
+<script src="./config.js"></script>
 <script>
 /* ===== 共通 ===== */
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -2048,7 +2050,7 @@ window.addEventListener('popstate',function(e){
 // 初期stateを設定（ページ読み込み直後）
 history.replaceState({tb:'p-home'},'');
 /* ===== サーバー通信 ===== */
-var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
 function genbaSessionTok(){
   try{
