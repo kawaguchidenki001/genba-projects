@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<!-- admin version 53 (2026-06-18) 初期設定ウィザード追加。会社情報・作業員一括追加・車両一括追加・取引先一括追加を管理画面内で案内。既存GAS actionのみ使用・GAS変更なし。 -->
+<!-- admin version 55 config.js共通化 -->
+<!-- admin version 54 (2026-06-18) 削除済みデータ復元タブ追加。v103 GAS の deletedList / restoreDeleted を使用。 -->
 <!-- admin version 52 (2026-06-16) 会社設定に「あいさつ文(2行・自由入力・書類に印字)」欄を追加。save/loadにキー『あいさつ文』を追加。textareaをinput同等にCSS追加。保存はGASのsaveSettings_が任意キー対応のためGAS変更なし。PDF印字は別途GASで対応。 -->
 <!-- admin version 51 (2026-06-16) 会社情報に「会社名の上の行(業種・キャッチ)」「会社名の下の行(代表者・役職)」を追加。社判イメージに合わせPDFで会社名の上下に印字。save/loadに社名上段・社名下段を追加。GAS変更あり(v84)。 -->
 <!-- admin version 50 (2026-06-16) 会社情報に「会社名」「郵便番号」入力欄を追加(住所の前)。保存成功時に loadCompanyInfo(true) で実際の保存値を再表示し、保存できたか確認できるように。会社名はPDFが既に印字する作りのため保存すれば反映。GAS変更なし。 -->
@@ -188,6 +189,7 @@
     <button class="tab" id="tab-vehicle" onclick="switchTab('vehicle')">車両</button>
     <button class="tab" id="tab-supplier" onclick="switchTab('supplier')">仕入先</button>
     <button class="tab" id="tab-repcheck" onclick="switchTab('repcheck')">日報チェック</button>
+    <button class="tab" id="tab-restore" onclick="switchTab('restore')">復元</button>
     <button class="tab" id="tab-company" onclick="switchTab('company')">自社設定</button>
   </div>
   <div id="sec-setup" style="display:none;">
@@ -299,6 +301,22 @@
       <button class="rcseg" data-d="30" onclick="rcRange(30)">直近30日</button>
     </div>
     <div id="rcList"><div class="empty">「日報チェック」を開くと集計します。</div></div>
+  </div>
+
+  <div id="sec-restore" style="display:none;">
+    <div class="sec">削除済みデータの復元</div>
+    <p style="font-size:13px;color:#64748b;margin:0 0 12px;line-height:1.6;">v103以降で削除した案件・日報・予定・マスタなどは完全削除せず、ここから復元できます。写真はGoogleドライブのゴミ箱から復元してください。</p>
+    <div class="rcbar" style="margin-bottom:10px;">
+      <button class="rcseg on" data-rtype="" onclick="restoreFilter('')">すべて</button>
+      <button class="rcseg" data-rtype="projects" onclick="restoreFilter('projects')">案件</button>
+      <button class="rcseg" data-rtype="reports" onclick="restoreFilter('reports')">日報</button>
+      <button class="rcseg" data-rtype="schedules" onclick="restoreFilter('schedules')">予定</button>
+      <button class="rcseg" data-rtype="workers" onclick="restoreFilter('workers')">作業員</button>
+      <button class="rcseg" data-rtype="vehicles" onclick="restoreFilter('vehicles')">車両</button>
+      <button class="rcseg" data-rtype="customers" onclick="restoreFilter('customers')">取引先</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;"><button class="btn sub" onclick="loadDeletedRows()">再読み込み</button></div>
+    <div id="restoreList"><div class="empty">「復元」を開くと削除済みデータを読み込みます。</div></div>
   </div>
 
 
@@ -499,8 +517,9 @@
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="../config.js"></script>
 <script>
-var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
 function genbaSessionTok(){
   try{
@@ -666,7 +685,7 @@ function saveCompanyInfo(){
 function switchTab(t){ curTab=t;
   if(t==='company'){if(!compDocs.length)loadCompDocs();if(!ciLoaded)loadCompanyInfo();}
   if(t==='setup'){setupOpen();}
-  ['worker','setup','partner','contact','vehicle','supplier','repcheck','company'].forEach(function(x){
+  ['worker','setup','partner','contact','vehicle','supplier','repcheck','restore','company'].forEach(function(x){
     document.getElementById('sec-'+x).style.display=(x===t)?'block':'none';
     document.getElementById('tab-'+x).className='tab'+(x===t?' on':'');
   });
@@ -675,7 +694,52 @@ function switchTab(t){ curTab=t;
   document.getElementById('fab').textContent= t==='worker'?'＋ 作業員' : t==='partner'?'＋ 取引先' : t==='contact'?'＋ 担当者' : t==='vehicle'?'＋ 車両' : '＋ 仕入先';
   if(t==='supplier'&&!sLoaded){loadSuppliers();sLoaded=true;}
   if(t==='repcheck'&&!rcLoaded){rcRange(7);rcLoaded=true;}
+  if(t==='restore'){loadDeletedRows();}
 }
+
+
+/* ===== 削除済みデータの復元 v54 ===== */
+var restoreType='';
+function restoreFilter(type){
+  restoreType=type||'';
+  var btns=document.querySelectorAll('[data-rtype]');
+  for(var i=0;i<btns.length;i++){btns[i].className='rcseg'+(btns[i].getAttribute('data-rtype')===restoreType?' on':'');}
+  loadDeletedRows();
+}
+function loadDeletedRows(){
+  var el=document.getElementById('restoreList');
+  if(!el)return;
+  el.innerHTML='<div class="empty">読込中…</div>';
+  callGAS({action:'deletedList',sheet:restoreType}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'読込失敗');
+    renderDeletedRows(res.rows||[]);
+  }).catch(function(err){el.innerHTML='<div class="empty">読込失敗：'+esc(err.message)+'</div>';});
+}
+function renderDeletedRows(rows){
+  var el=document.getElementById('restoreList');
+  if(!rows.length){el.innerHTML='<div class="empty">削除済みデータはありません。</div>';return;}
+  var html='';
+  rows.forEach(function(r){
+    html+='<div class="card" style="margin-bottom:8px;">'+
+      '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">'+
+        '<div><div class="nm">'+esc(r['名称']||'(名称なし)')+' <span class="tag">'+esc(r['種別']||'')+'</span></div>'+
+        '<div class="meta">ID：'+esc(r['ID']||'')+' ／ 削除：'+esc(r['削除日時']||'')+' ／ '+esc(r['削除者名']||'')+'</div></div>'+
+        '<button class="btn primary" style="width:auto;white-space:nowrap;" onclick="restoreDeletedRow(\''+escAttr(r.sheetKey||'')+'\',\''+escAttr(r['ID']||'')+'\')">復元</button>'+
+      '</div></div>';
+  });
+  el.innerHTML=html;
+}
+function restoreDeletedRow(key,id){
+  if(!key||!id)return;
+  if(!confirm('このデータを復元します。よろしいですか？'))return;
+  callGAS({action:'restoreDeleted',sheet:key,id:id}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'復元失敗');
+    toast(res.restored?'復元しました':'復元対象が見つかりません');
+    loadDeletedRows();
+    loadAll(true);
+  }).catch(function(err){toast('復元失敗：'+err.message);});
+}
+function escAttr(s){return String(s||'').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
 /* ===== 初期設定ウィザード v53 ===== */
 function setupOpen(){
