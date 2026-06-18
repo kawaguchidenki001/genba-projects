@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- files version 49 (2026-06-18) ドライブ風＋サムネイルカード型：アプリ内でフォルダを開いて写真を確認できる画面を追加。 -->
 <!-- files version 48 config.js共通化 -->
 <!-- files version 47 (2026-06-18) 写真アップロード成功確認：送信後にDrive保存完了を確認し、失敗時は×表示。 --> -->
 <!-- files version 46 (2026-06-18) 写真台帳フロー改善：工種/写真区分快速ボタン・台帳候補・候補自動選択・アップロード後アクション追加。GAS変更なし。 -->
@@ -64,13 +65,28 @@
   .upfile{width:74px;height:74px;border-radius:9px;background:var(--bg);box-shadow:var(--well-soft);display:flex;align-items:center;justify-content:center;font-size:24px;}
   .upnm{font-size:9.5px;color:var(--sub);word-break:break-all;line-height:1.3;margin-top:2px;max-height:24px;overflow:hidden;}
   .upst{position:absolute;top:3px;right:3px;background:rgba(255,255,255,.95);border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.2);}
-  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px;}
-  .ph{position:relative;border-radius:10px;overflow:hidden;background:var(--bg);box-shadow:var(--rise-sm);display:flex;align-items:center;justify-content:center;text-decoration:none;cursor:pointer;}
-  .ph img{width:100%;height:auto;display:block;}
-  .ph .fallback{font-size:26px;color:#9aa1ab;}
-  .ph .cap{position:absolute;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);color:#fff;font-size:10.5px;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .drivebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 10px;padding:10px;border-radius:12px;background:var(--bg);box-shadow:var(--well-soft);}
+  .crumbBtn{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:8px 12px;font-size:12.5px;font-weight:800;color:var(--accent-d);cursor:pointer;}
+  .crumbBtn:active{box-shadow:var(--well);}
+  .crumbText{font-size:13px;color:var(--sub);font-weight:700;flex:1;min-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .driveOpen{font-size:12px;color:var(--accent-d);text-decoration:none;font-weight:800;}
+  .folderCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:8px 0 12px;}
+  .folderCard{border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);padding:12px;display:flex;align-items:center;gap:11px;text-align:left;color:var(--ink);cursor:pointer;min-height:66px;}
+  .folderCard:active{box-shadow:var(--well);}
+  .folderIcon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#fff8e8,#f4b84a);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:var(--rise-sm);flex:0 0 auto;}
+  .folderName{font-weight:800;font-size:14.5px;line-height:1.35;word-break:break-word;}
+  .folderMeta{font-size:11px;color:var(--sub);margin-top:2px;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
+  .ph{position:relative;border-radius:14px;overflow:hidden;background:var(--bg);box-shadow:var(--rise-sm);display:flex;flex-direction:column;align-items:stretch;text-decoration:none;cursor:pointer;min-height:168px;}
+  .ph .thumbWrap{position:relative;background:#dfe5ee;aspect-ratio:1/1;width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .ph img{width:100%;height:100%;object-fit:cover;display:block;}
+  .ph .fallback{font-size:34px;color:#9aa1ab;}
+  .ph .meta{padding:8px 8px 9px;background:rgba(255,255,255,.24);min-height:58px;}
+  .ph .cap{display:block;color:var(--ink);font-size:11.5px;font-weight:800;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ph .tagline{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;min-height:17px;}
+  .ph .ptag{font-size:9.8px;line-height:1;border-radius:999px;padding:4px 6px;background:var(--accent-soft);color:var(--accent-d);font-weight:800;}
   .ph.selected{outline:3px solid var(--accent);outline-offset:-3px;}
-  .ph.selected::after{content:'✓';position:absolute;top:4px;right:4px;background:var(--accent);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+  .ph.selected::after{content:'✓';position:absolute;top:7px;right:7px;background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;z-index:3;box-shadow:0 2px 6px rgba(0,0,0,.25);}
   #selBar{display:flex;align-items:center;gap:8px;margin-top:8px;}
   #selBar button{font-size:12.5px;padding:7px 12px;border:none;border-radius:9px;background:var(--bg);box-shadow:var(--rise-sm);cursor:pointer;color:var(--ink);}
   #selBar button:active{box-shadow:var(--well);}
@@ -131,10 +147,16 @@
   .micbtn svg{width:16px;height:16px;}
   .micbtn.recording{background:#ef4444;color:#fff;animation:micpulse 1.1s ease-in-out infinite;}
   @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5);}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}
+
+  @media (max-width:520px){
+    .folderCards{grid-template-columns:1fr;}
+    .grid{grid-template-columns:repeat(2,1fr);}
+    .ph{min-height:156px;}
+  }
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v46</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v49</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -171,7 +193,8 @@
     </div>
     <div class="btnrow">
       <button class="btn primary" id="addBtn" onclick="pickFiles()">写真・ファイルの追加</button>
-      <a class="btn open" id="openBtn" target="_blank">写真・ファイルの閲覧</a>
+      <button class="btn open" id="browseBtn" onclick="showDriveBrowser()">写真・ファイルの閲覧</button>
+      <a class="btn open" id="openBtn" target="_blank">Driveで開く</a>
       <button class="btn ledger" id="ledgerBtn" onclick="showLedger()">工事写真台帳作成</button>
     </div>
     <input type="file" id="file" multiple>
@@ -181,6 +204,12 @@
 
     <div id="gridArea" style="display:none;">
     <div id="folderRow" style="display:none;margin-bottom:8px;"><label style="font-size:13px;color:var(--sub);margin-right:6px;">フォルダ</label><select class="f" id="folderSel" onchange="loadCurFolderPhotos()" style="display:inline-block;width:auto;min-width:60%;"></select></div>
+    <div class="drivebar" id="driveBar" style="display:none;">
+      <button class="crumbBtn" type="button" onclick="showDriveRoot()">📁 写真フォルダ</button>
+      <span class="crumbText" id="driveCrumb">写真フォルダ</span>
+      <a class="driveOpen" id="driveOpenCurrent" target="_blank" style="display:none;">Driveで開く</a>
+    </div>
+    <div class="folderCards" id="folderCards" style="display:none;"></div>
     <div class="sec">写真一覧 <span id="phCount" style="color:var(--sub);font-weight:400;"></span></div>
     <div id="selBar"><span id="selCount"></span><button onclick="showCandidateOnly()">候補のみ</button><button onclick="showAllPhotoCandidates()">すべて表示</button><button onclick="selCandidates()">候補選択</button><button onclick="delSelected()" style="color:#c0392b;border-color:#e3b7b0;">削除</button><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div><div class="filterNote" id="filterNote"></div>
     <div id="photos"><div class="empty">読込中…</div></div>
@@ -214,6 +243,7 @@ var MAXPX = 800, QUALITY = 0.80;
 
 var projects=[], customers=[], curId='', folderReady=false;
 var photoCache=[], ledgerMode=false, ledgerCandidateOnly=false;
+var driveRootId='', driveCurrentId='', driveCurrentName='写真フォルダ', driveFolders=[];
 var CACHE='genba_projects_cache_files';
 // 案件管理からタップで来たとき用：?case=案件ID（id / proj でも可）
 var INIT_CASE=(function(){try{var p=new URLSearchParams(location.search);return p.get('case')||p.get('id')||p.get('proj')||'';}catch(e){return '';}})();
@@ -264,6 +294,7 @@ function onCand(){ buildProj(); }
 
 function onSelect(){
   curId=document.getElementById('projSel').value;
+  driveRootId=''; driveCurrentId=''; driveCurrentName='写真フォルダ'; driveFolders=[];
   var ut=document.getElementById('upThumbs');if(ut){ut.style.display='none';ut.innerHTML='';}
   var panel=document.getElementById('panel');
   if(!curId){panel.style.display='none';return;}
@@ -276,7 +307,7 @@ function onSelect(){
   // フォルダを用意（無ければ作成）してから一覧
   callGAS({action:'ensureFolder',id:curId}).then(function(res){
     if(!res.ok)throw new Error(res.error||'フォルダ準備失敗');
-    document.getElementById('openBtn').href=res.url; folderReady=true; document.getElementById('gridArea').style.display='none'; document.getElementById('outBar').style.display='none';
+    document.getElementById('openBtn').href=res.url; folderReady=true; document.getElementById('gridArea').style.display='none'; document.getElementById('outBar').style.display='none'; var db=document.getElementById('driveBar'); if(db)db.style.display='none'; var fc=document.getElementById('folderCards'); if(fc){fc.style.display='none';fc.innerHTML='';}
   }).catch(function(err){ document.getElementById('photos').innerHTML='<div class="empty">フォルダ準備に失敗しました。<br>↻でやり直すか、少し待って再選択してください。</div>'; toast(err.message); });
 }
 
@@ -302,29 +333,92 @@ function buildLedgerFiles(fmt){
     toast('台帳を作成しました');
   }).catch(function(err){hideLoad();if(lt) lt.textContent='読み込み中…';toast('作成に失敗：'+err.message);});
 }
-function showPhotos(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;} ledgerMode=false; ledgerCandidateOnly=false; document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='none'; loadPhotos(); }
-function showLedger(){ if(!curId){toast('案件を選んでください');return;} if(!folderReady){toast('準備中です。少し待ってください');return;}
+function showPhotos(){showDriveBrowser();}
+function showDriveBrowser(){
+  if(!curId){toast('案件を選んでください');return;}
+  if(!folderReady){toast('準備中です。少し待ってください');return;}
+  ledgerMode=false; ledgerCandidateOnly=false;
+  document.getElementById('gridArea').style.display='block';
+  document.getElementById('outBar').style.display='none';
+  document.getElementById('photos').innerHTML='<div class="empty">フォルダを読込中…</div>';
+  loadDriveFolders(false);
+}
+function showLedger(){
+  if(!curId){toast('案件を選んでください');return;}
+  if(!folderReady){toast('準備中です。少し待ってください');return;}
   ledgerMode=true; ledgerCandidateOnly=true;
-  document.getElementById('gridArea').style.display='block'; document.getElementById('outBar').style.display='block';
-  document.getElementById('photos').innerHTML='<div class="empty">読込中…</div>';
+  document.getElementById('gridArea').style.display='block';
+  document.getElementById('outBar').style.display='block';
+  document.getElementById('photos').innerHTML='<div class="empty">フォルダを読込中…</div>';
+  loadDriveFolders(true);
+}
+function loadDriveFolders(forLedger){
   callGAS({action:'photoFolders',id:curId}).then(function(res){
-    var fr=document.getElementById('folderRow'), fs=document.getElementById('folderSel');
-    var folders=(res&&res.folders)||[], rootId=res&&res.rootId;
-    fs.innerHTML='';
-    var o0=document.createElement('option'); o0.value=rootId||''; o0.textContent='写真フォルダ全体'; fs.appendChild(o0);
-    folders.forEach(function(x){var o=document.createElement('option');o.value=x.id;o.textContent=x.name;fs.appendChild(o);});
-    fr.style.display=folders.length?'block':'none';
-    loadCurFolderPhotos();
+    var folders=(res&&res.folders)||[], rootId=(res&&res.rootId)||'';
+    driveRootId=rootId; driveFolders=folders;
+    var fs=document.getElementById('folderSel');
+    if(fs){
+      fs.innerHTML='';
+      var o0=document.createElement('option');o0.value=rootId||'';o0.textContent='写真フォルダ全体';fs.appendChild(o0);
+      folders.forEach(function(x){var o=document.createElement('option');o.value=x.id;o.textContent=x.name;fs.appendChild(o);});
+    }
+    var fr=document.getElementById('folderRow'); if(fr)fr.style.display='none';
+    openDriveFolder(rootId||'root','写真フォルダ',true);
   }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">フォルダの取得に失敗しました</div>';toast(err.message);});
+}
+function showDriveRoot(){
+  if(!driveRootId){showDriveBrowser();return;}
+  openDriveFolder(driveRootId,'写真フォルダ',true);
+}
+function driveUrl(fid){return fid?('https://drive.google.com/drive/folders/'+encodeURIComponent(fid)):'';}
+function setDriveHeader(name,fid,isRoot){
+  driveCurrentId=fid||driveRootId; driveCurrentName=name||'写真フォルダ';
+  var bar=document.getElementById('driveBar'), crumb=document.getElementById('driveCrumb'), op=document.getElementById('driveOpenCurrent');
+  if(bar)bar.style.display='flex';
+  if(crumb)crumb.textContent=isRoot?'写真フォルダ':'写真フォルダ ＞ '+driveCurrentName;
+  if(op&&fid){op.href=driveUrl(fid);op.style.display='inline';}
+}
+function renderFolderCards(isRoot){
+  var box=document.getElementById('folderCards'); if(!box)return;
+  box.innerHTML='';
+  if(!isRoot){
+    var b=document.createElement('button');b.type='button';b.className='folderCard';b.onclick=function(){showDriveRoot();};
+    b.innerHTML='<span class="folderIcon">↩</span><span><div class="folderName">上のフォルダへ戻る</div><div class="folderMeta">写真フォルダ</div></span>';
+    box.appendChild(b); box.style.display='grid'; return;
+  }
+  if(!driveFolders.length){box.style.display='none';return;}
+  driveFolders.forEach(function(f){
+    var b=document.createElement('button');b.type='button';b.className='folderCard';
+    b.onclick=function(){openDriveFolder(f.id,f.name,false);};
+    b.innerHTML='<span class="folderIcon">📁</span><span><div class="folderName">'+esc(f.name||'フォルダ')+'</div><div class="folderMeta">タップして開く</div></span>';
+    box.appendChild(b);
+  });
+  box.style.display='grid';
+}
+function openDriveFolder(fid,name,isRoot){
+  setDriveHeader(name,fid,isRoot);
+  renderFolderCards(isRoot);
+  var fs=document.getElementById('folderSel'); if(fs&&fid)fs.value=fid;
+  document.getElementById('photos').innerHTML='<div class="empty">写真を読込中…</div>';
+  if(isRoot){
+    callGAS({action:'listPhotos',id:curId}).then(function(res){
+      if(!res.ok)throw new Error(res.error||'一覧取得失敗');
+      renderPhotos(res.photos||[]);
+    }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">写真の取得に失敗しました</div>';toast('一覧：'+err.message);});
+  }else{
+    callGAS({action:'photosByFolder',fid:fid}).then(function(res){renderPhotos((res&&res.photos)||[]);}).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">写真の取得に失敗しました</div>';toast(err.message);});
+  }
 }
 function loadCurFolderPhotos(){
   var fs=document.getElementById('folderSel'), fid=fs&&fs.value;
   if(!fid){toast('フォルダがありません');return;}
-  document.getElementById('photos').innerHTML='<div class="empty">読込中…</div>';
-  callGAS({action:'photosByFolder',fid:fid}).then(function(res){ renderPhotos((res&&res.photos)||[]); }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">写真の取得に失敗しました</div>';toast(err.message);});
+  var nm='写真フォルダ';
+  (driveFolders||[]).forEach(function(x){if(x.id===fid)nm=x.name||nm;});
+  openDriveFolder(fid,nm,fid===driveRootId);
 }
 function loadPhotos(){
   if(!curId)return;
+  if(driveCurrentId){openDriveFolder(driveCurrentId,driveCurrentName,driveCurrentId===driveRootId);return;}
   callGAS({action:'listPhotos',id:curId}).then(function(res){
     if(!res.ok)throw new Error(res.error||'一覧取得失敗');
     renderPhotos(res.photos||[]);
@@ -338,23 +432,38 @@ function selCandidates(){document.querySelectorAll('#photos .ph').forEach(functi
 function renderPhotos(arr){photoCache=arr||[];renderPhotoCache();}
 function renderPhotoCache(){
   var arr=photoCache||[], list=arr;
-  if(ledgerMode&&ledgerCandidateOnly){list=arr.filter(isLedgerCandidate);} 
-  document.getElementById('phCount').textContent=arr.length?('（'+list.length+' / '+arr.length+'枚）'):'';
+  if(ledgerMode&&ledgerCandidateOnly){list=arr.filter(isLedgerCandidate);}
+  var label=(driveCurrentId&&driveCurrentId!==driveRootId)?'（このフォルダ '+list.length+'枚）':(arr.length?('（'+list.length+' / '+arr.length+'枚）'):'');
+  document.getElementById('phCount').textContent=label;
   var fn=document.getElementById('filterNote');
   if(fn){fn.textContent=(ledgerMode&&ledgerCandidateOnly)?'台帳候補のみ表示中です。全写真を見る場合は「すべて表示」を押してください。':'';}
   var el=document.getElementById('photos');
-  if(!arr.length){el.innerHTML='<div class="empty">まだ写真がありません。<br>「＋写真を追加」から登録できます。</div>';return;}
+  if(!arr.length){el.innerHTML='<div class="empty">まだ写真がありません。<br>「写真・ファイルの追加」から登録できます。</div>';return;}
   if(!list.length){el.innerHTML='<div class="empty">台帳候補の写真がありません。<br>「すべて表示」で写真を確認できます。</div>';return;}
   el.innerHTML=''; var g=document.createElement('div');g.className='grid';el.appendChild(g);
   list.forEach(function(f){
     var cand=isLedgerCandidate(f);
     var a=document.createElement('div');a.className='ph'+(ledgerMode&&cand?' selected':'');a.id='ph_'+f.id;a.dataset.id=f.id;a.dataset.candidate=cand?'1':'0';a.onclick=function(){togglePhSel(this);};
-    if(cand){var bd=document.createElement('span');bd.className='candidateBadge';bd.textContent='台帳候補';a.appendChild(bd);} 
-    var img=document.createElement('img');img.loading='lazy';img.src='https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w400';
-    img.onerror=function(){a.innerHTML=(cand?'<span class="candidateBadge">台帳候補</span>':'')+'<span class="fallback">🖼</span><span class="cap">'+esc(f.name)+'</span>';};
-    a.appendChild(img);var cap=document.createElement('span');cap.className='cap';cap.textContent=f.name||'';a.appendChild(cap);g.appendChild(a);
+    var tw=document.createElement('div');tw.className='thumbWrap';
+    if(cand){var bd=document.createElement('span');bd.className='candidateBadge';bd.textContent='台帳候補';tw.appendChild(bd);}
+    var img=document.createElement('img');img.loading='lazy';img.src='https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w500';
+    img.onerror=function(){tw.innerHTML=(cand?'<span class="candidateBadge">台帳候補</span>':'')+'<span class="fallback">🖼</span>';};
+    tw.appendChild(img);a.appendChild(tw);
+    var meta=document.createElement('div');meta.className='meta';
+    var cap=document.createElement('span');cap.className='cap';cap.textContent=f.name||'';meta.appendChild(cap);
+    var tags=photoTagsFromName(f.name||'');
+    var tl=document.createElement('div');tl.className='tagline';
+    tags.slice(0,3).forEach(function(t){var s=document.createElement('span');s.className='ptag';s.textContent=t;tl.appendChild(s);});
+    meta.appendChild(tl);a.appendChild(meta);g.appendChild(a);
   });
   updateSelCount();
+}
+function photoTagsFromName(n){
+  var s=String(n||''), tags=[];
+  ['施工前','施工中','施工後','材料検収','試験状況','完成','是正前','是正後'].forEach(function(x){if(s.indexOf(x)>=0)tags.push(x);});
+  ['配線工事','配管工事','入線作業','照明器具','盤・分電盤','コンセント','スイッチ','接地工事','受変電設備','撤去工事','試験・測定'].forEach(function(x){if(s.indexOf(x)>=0)tags.push(x);});
+  if(/台帳候補/.test(s)&&tags.indexOf('台帳候補')<0)tags.unshift('台帳候補');
+  return tags;
 }
 var PHOTO_KIND_TEMPLATES=['配線工事','配管工事','入線作業','照明器具','盤・分電盤','コンセント','スイッチ','接地工事','受変電設備','撤去工事','試験・測定'];
 var PHOTO_STATUS_TEMPLATES=['施工前','施工中','施工後','材料検収','試験状況','完成','是正前','是正後'];
