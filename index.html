@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- version 57 root 今日の状況・今日やることカード削除 -->
 <!-- version 56 root config.js共通化 -->
 <!-- version 55 root (2026-06-18) 今日やることカード追加：予定・日報未提出・車両アラート・未入金などをトップ上部に表示。 -->
 <!-- version 54 root (2026-06-15) AIアシスタントタイルをAIツール（./aitools/）に変更（AIアシスタント・材料AI検索・AI文字起こしを統合するハブへの入口）。 -->
@@ -198,7 +199,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v55</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v57</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -227,36 +228,6 @@
       </div>
     </div>
     <div class="co">河口電機株式会社</div>
-  </div>
-
-  <div class="dash" id="dash">
-    <div class="dashHd" id="dashHd" onclick="toggleDash()"><span>📊 今日の状況</span><span class="cnt ok" id="dashCnt"></span><span class="arw">▼</span></div>
-    <div class="dbody">
-    <div class="dcard" id="dSched" style="display:none;"></div>
-    <div class="dcard" id="dMe" style="display:none;"></div>
-    <div class="dcard" id="dRep" style="display:none;"></div>
-    <div class="dcard" id="dAR" style="display:none;"></div>
-    <div class="dcard" id="dDue" style="display:none;"></div>
-    <div class="dcard" id="dCheck" style="display:none;"></div>
-    <div class="dcard" id="dAlert" style="display:none;"></div>
-    </div>
-  </div>
-
-
-  <div class="todoPanel" id="todayTodoPanel">
-    <div class="todoTop">
-      <div class="todoTitle">✅ 今日やること</div>
-      <div class="todoBadge" id="todayTodoBadge">確認中</div>
-    </div>
-    <div class="todoList" id="todayTodoList">
-      <div class="todoItem"><div class="todoIcon">⏳</div><div class="todoMain"><b>読み込み中</b><span>今日の予定・日報・車両アラートを確認しています。</span></div></div>
-    </div>
-    <div class="todoActions">
-      <a href="./report/">日報を書く</a>
-      <a href="./files/" class="sub">写真追加</a>
-      <a href="./calendar/" class="sub">予定確認</a>
-      <a href="./timecard/" class="sub">打刻</a>
-    </div>
   </div>
 
   <div class="lbl">現場用</div>
@@ -326,7 +297,7 @@ function doLogin(){
   var timer=setTimeout(function(){cleanup();setErr('通信できませんでした。電波を確認してください');},20000);
   function cleanup(){hideLoad();btn.disabled=false;btn.textContent='ログイン';try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
   window[cb]=function(res){cleanup();
-    if(res&&res.ok&&res.worker){maybeStorePasswordCredential(id,pw);genbaSaveSession(res);localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);loadDash();}
+    if(res&&res.ok&&res.worker){maybeStorePasswordCredential(id,pw);genbaSaveSession(res);localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);}
     else setErr((res&&res.error)||'ログインできませんでした');};
   s.src=GAS_URL+'?action=login&id='+encodeURIComponent(id)+'&pw='+encodeURIComponent(pw)+'&callback='+cb;
   s.onerror=function(){cleanup();setErr('通信エラー');};document.head.appendChild(s);
@@ -380,7 +351,7 @@ function renderTodayTodo(d){
 function renderDash(d){
   if(!d)return;
   renderTodayTodo(d);
-  var dash=document.getElementById('dash');var any=false;
+  var dash=document.getElementById('dash'); if(!dash)return; var any=false;
   // 今日の予定
   var sc=document.getElementById('dSched'),list=d.schedules||[];
   var h='<div class="dttl">🗓 今日の予定（'+list.length+'件）</div>';
@@ -503,7 +474,7 @@ function remOK(id){remAddDismiss(id);renderRemPopup();}
 function remDel(id){remSaveArr(remLoad().filter(function(x){return x.id!==id;}));renderRemPopup();}
 
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
-(function(){var u=gUser();if(u&&u['作業員ID']){showMenu(u);loadDash();renderRemPopup();}})();
+(function(){var u=gUser();if(u&&u['作業員ID']){showMenu(u);renderRemPopup();}})();
 </script>
 
 <div class="rem-ov" id="remOv"><div class="rem-box">
