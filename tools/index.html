@@ -206,7 +206,21 @@
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var T_GENERAL='kawaguchi-genba-2026';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var T_GENERAL='';
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
 function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -223,7 +237,7 @@ function callGAS(params,silent){return new Promise(function(resolve,reject){
   window[cb]=function(res){cleanup();resolve(res);};
   // 編集系は管理者トークン（params._adm=1）、それ以外は一般トークン
   var p=Object.assign({},params);
-  var secret=(p._adm?admTok():T_GENERAL); delete p._adm;
+  var secret=(p._adm?admTok():genbaSessionTok()); delete p._adm;
   var q=Object.assign({},p,{secret:secret,callback:cb});
   if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
   sc.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
