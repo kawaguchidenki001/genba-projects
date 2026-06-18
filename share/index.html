@@ -97,6 +97,20 @@
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
 function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function qp(k){var m=new RegExp('[?&]'+k+'=([^&]+)').exec(location.search);return m?decodeURIComponent(m[1]):'';}
 function statusColor(s){var m={'見積中':'#6b7280','受注':'#2563eb','段取済':'#9333ea','施工中':'#ea580c','完了':'#16a34a','請求済':'#7c3aed'};return m[s]||'#6b7280';}
