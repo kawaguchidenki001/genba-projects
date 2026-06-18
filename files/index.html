@@ -179,7 +179,21 @@
 
 <script>
 var GAS_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var SECRET  = 'kawaguchi-genba-2026';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var SECRET='';
 var MAXPX = 800, QUALITY = 0.80;
 
 var projects=[], customers=[], curId='', folderReady=false;
@@ -200,12 +214,12 @@ function callGAS(params,timeoutMs,silent){
     var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},timeoutMs||30000);
     function cleanup(){if(!silent) hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
     window[cb]=function(res){cleanup();resolve(res);};
-    var q=Object.assign({secret:SECRET,callback:cb},params);
+    var q=Object.assign({secret:genbaSessionTok(),callback:cb},params);
     s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
     s.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(s);
   });
 }
-function postNoCors(obj){ obj.secret=SECRET; return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)}); }
+function postNoCors(obj){ obj.secret=genbaSessionTok(); return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)}); }
 function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
 
 function loadProjects(silent){
