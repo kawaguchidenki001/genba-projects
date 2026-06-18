@@ -1,3 +1,4 @@
+<!-- toolbox version 44 (2026-06-19) 工事写真メニューから ?tool=board で小黒板カメラを直接起動する不具合修正。 -->
 <!-- toolbox version 43 (2026-06-19) 小黒板カメラを工事写真メニューへ移動し、ツールボックスの入口から削除。 -->
 <!DOCTYPE html>
 <!-- toolbox version 66 (2026-06-15) ヘッダーを案A(2段)化。.head .hbar をCSSグリッドで再配置(上段=メニュー左/Gen-Can右、下段=アイコン+タイトル中央)。h1の改行禁止解除。タイルのグリッド(v64)は不変。CSSのみ・HTML/機能/id不変・GAS変更なし。 -->
@@ -4018,6 +4019,7 @@ function openBoardForCase(id){
 })();
 
 (function(){
+  var q=location.search||'';
   var dm=q.match(/[?&]draw=([^&]+)/),cm=q.match(/[?&]check=([^&]+)/),mm=q.match(/[?&]memo=([^&]+)/),nm=q.match(/[?&]note=([^&]+)/);
   var mat=q.match(/[?&]mat=([^&]+)/),bd=q.match(/[?&]board=([^&]+)/);
   var bnm=q.match(/[?&]name=([^&]+)/),blc=q.match(/[?&]loc=([^&]+)/);

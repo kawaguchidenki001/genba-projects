@@ -1,3 +1,4 @@
+<!-- version 56 files project tap opens drive directly + file add only buttons -->
 <!-- version 55 files renamed to file drive + generic Google Drive style folder browser + ledger moved to 工事写真 -->
 <!-- version 54 files drive open robustness + recursive photo list fix -->
 <!-- version 53 files drive home project open fix -->
@@ -198,7 +199,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v55</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v56</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -247,8 +248,8 @@
     </div>
     <div class="btnrow">
       <button class="btn primary" id="addBtn" onclick="pickFiles()">ファイルを追加</button>
-      <button class="btn open" id="browseBtn" onclick="showDriveBrowser()">ファイルを閲覧</button>
-      <a class="btn open" id="openBtn" target="_blank">Driveで開く</a>
+      <button class="btn open" id="browseBtn" onclick="showDriveBrowser()" style="display:none;">ファイルを閲覧</button>
+      <a class="btn open" id="openBtn" target="_blank" style="display:none;">Driveで開く</a>
     </div>
     <input type="file" id="file" multiple>
     <div class="hint" id="hint">「ファイルを追加」で、スマホやPCのファイルをこの現場のドライブに保存できます。フォルダを開くと、Googleドライブのように現場フォルダ内を閲覧できます。</div>
@@ -537,8 +538,16 @@ function onSelect(){
   // フォルダを用意（無ければ作成）してから一覧
   callGAS({action:'ensureFolder',id:curId}).then(function(res){
     if(!res.ok)throw new Error(res.error||'フォルダ準備失敗');
-    document.getElementById('openBtn').href=res.url; folderReady=true; document.getElementById('gridArea').style.display='none'; document.getElementById('outBar').style.display='none'; var db=document.getElementById('driveBar'); if(db)db.style.display='none'; var fc=document.getElementById('folderCards'); if(fc){fc.style.display='none';fc.innerHTML='';}
-    if(autoOpenDriveAfterFolder){autoOpenDriveAfterFolder=false; setTimeout(function(){ if(initialMode==='ledger')showLedger(); else showDriveBrowser(); },80);}
+    var openBtn=document.getElementById('openBtn');
+    if(openBtn)openBtn.href=res.url||'#';
+    folderReady=true;
+    document.getElementById('gridArea').style.display='none';
+    document.getElementById('outBar').style.display='none';
+    var db=document.getElementById('driveBar'); if(db)db.style.display='none';
+    var fc=document.getElementById('folderCards'); if(fc){fc.style.display='none';fc.innerHTML='';}
+    autoOpenDriveAfterFolder=false;
+    // 現場フォルダを押したら、Googleドライブのようにすぐ中身を表示する
+    setTimeout(function(){ if(initialMode==='ledger')showLedger(); else showDriveBrowser(); },80);
   }).catch(function(err){ document.getElementById('photos').innerHTML='<div class="empty">フォルダ準備に失敗しました。<br>↻でやり直すか、少し待って再選択してください。</div>'; toast(err.message); });
 }
 
@@ -944,7 +953,7 @@ function uploadAll(files){
       var tt=document.getElementById('upTtl');
       if(tt)tt.textContent='今回アップロードしたファイル（'+done+'件'+(fail?'／失敗'+fail:'')+'）— Drive保存確認済み';
       var act=document.createElement('div');act.className='afterActions';
-      act.innerHTML='<button type="button" onclick="pickFiles()">続けて写真を追加</button><button type="button" onclick="openLedgerCandidates()">台帳候補を見る</button><button type="button" onclick="goReportFromFiles()">日報に戻る</button>';
+      act.innerHTML='<button type="button" onclick="pickFiles()">続けてファイルを追加</button><button type="button" onclick="showDriveBrowser()">フォルダを更新</button>'; setTimeout(function(){try{showDriveBrowser();}catch(e){}},600);
       box.appendChild(act);
       setTimeout(function(){prog.style.display='none';},4000);
       toast(fail?('保存確認：成功'+done+'件／失敗'+fail+'件'):('Drive保存を確認しました（'+done+'件）'));
