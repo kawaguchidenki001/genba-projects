@@ -176,7 +176,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v54</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v55</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -185,9 +185,12 @@
     </div>
     <h2>現場管理ログイン</h2>
     <p>IDとパスワードを入力してください</p>
-    <input id="lgid" autocapitalize="off" autocomplete="username" placeholder="ID" onkeydown="if(event.key==='Enter')doLogin()">
-    <input id="lgpw" type="password" autocomplete="current-password" placeholder="パスワード" onkeydown="if(event.key==='Enter')doLogin()">
-    <button id="lgbtn" onclick="doLogin()">ログイン</button>
+    <form id="loginForm" autocomplete="on" onsubmit="event.preventDefault();doLogin();return false;">
+      <input id="lgid" name="username" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text" autocomplete="username" placeholder="ID" enterkeyhint="next">
+      <input id="lgpw" name="password" type="password" autocomplete="current-password" placeholder="パスワード" enterkeyhint="go">
+      <button id="lgbtn" type="submit">ログイン</button>
+    </form>
+    <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.55;">Chrome・Edge等で保存すると、次回から指紋・顔認証で自動入力できます。</div>
     <div class="err" id="lgerr"></div>
   </div>
 </div>
@@ -267,6 +270,14 @@ function showMenu(u){document.getElementById('login').style.display='none';docum
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
 function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+function maybeStorePasswordCredential(id,pw){
+  // ブラウザのパスワード保存機能に渡すだけです。アプリ側にはパスワードを保存しません。
+  try{
+    if(!id||!pw||!('credentials' in navigator)||!window.PasswordCredential)return;
+    var cred=new PasswordCredential({id:id,name:id,password:pw});
+    navigator.credentials.store(cred).catch(function(){});
+  }catch(e){}
+}
 function doLogin(){
   var id=document.getElementById('lgid').value.trim(),pw=document.getElementById('lgpw').value;
   if(!id){setErr('IDを入力してください');return;}
@@ -275,7 +286,7 @@ function doLogin(){
   var timer=setTimeout(function(){cleanup();setErr('通信できませんでした。電波を確認してください');},20000);
   function cleanup(){hideLoad();btn.disabled=false;btn.textContent='ログイン';try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
   window[cb]=function(res){cleanup();
-    if(res&&res.ok&&res.worker){genbaSaveSession(res);localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);loadDash();}
+    if(res&&res.ok&&res.worker){maybeStorePasswordCredential(id,pw);genbaSaveSession(res);localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);loadDash();}
     else setErr((res&&res.error)||'ログインできませんでした');};
   s.src=GAS_URL+'?action=login&id='+encodeURIComponent(id)+'&pw='+encodeURIComponent(pw)+'&callback='+cb;
   s.onerror=function(){cleanup();setErr('通信エラー');};document.head.appendChild(s);
@@ -417,7 +428,7 @@ function remOK(id){remAddDismiss(id);renderRemPopup();}
 function remDel(id){remSaveArr(remLoad().filter(function(x){return x.id!==id;}));renderRemPopup();}
 
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
-(function(){var u=gUser();if(u&&u['作業員ID']&&genbaSessionTok()){showMenu(u);loadDash();renderRemPopup();}else{genbaClearSession();localStorage.removeItem('genba_user');document.getElementById('login').style.display='block';}})();
+(function(){var u=gUser();if(u&&u['作業員ID']){showMenu(u);loadDash();renderRemPopup();}})();
 </script>
 
 <div class="rem-ov" id="remOv"><div class="rem-box">
