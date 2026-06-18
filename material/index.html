@@ -126,9 +126,23 @@
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var T_GENERAL='kawaguchi-genba-2026';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var T_GENERAL='';
 var CACHE='genba_material_hub';
-function tok(){return localStorage.getItem('genba_admin')||T_GENERAL;}
+function tok(){return localStorage.getItem('genba_admin')||genbaSessionTok();}
 function num(v){if(v==null||v==='')return 0;var n=Number(String(v).replace(/[,，]/g,''));return isNaN(n)?0:n;}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},2400);}
 
