@@ -2049,7 +2049,21 @@ window.addEventListener('popstate',function(e){
 history.replaceState({tb:'p-home'},'');
 /* ===== サーバー通信 ===== */
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var T_GENERAL='kawaguchi-genba-2026';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var T_GENERAL='';
 function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
 var loadCnt=0;
 function showLoad(t){loadCnt++;if(t)document.getElementById('tltxt').textContent=t;if(loadCnt===1)document.getElementById('tload').classList.add('show');}
@@ -2060,7 +2074,7 @@ function callGAS(params,silent){return new Promise(function(resolve,reject){
   var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
   function cleanup(){if(!silent)hideLoad();try{delete window[cb];}catch(e){}if(sc.parentNode)sc.parentNode.removeChild(sc);clearTimeout(timer);}
   window[cb]=function(res){cleanup();resolve(res);};
-  var q=Object.assign({secret:T_GENERAL,callback:cb},params);
+  var q=Object.assign({secret:genbaSessionTok(),callback:cb},params);
   if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
   sc.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
   sc.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(sc);
@@ -2807,7 +2821,7 @@ function aConv(from){
 
 
 /* ===== 共通 POST（アップロード用） ===== */
-function tbPost(obj){obj.secret=T_GENERAL;return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)});}
+function tbPost(obj){obj.secret=genbaSessionTok();return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)});}
 
 /* ===== 虫眼鏡 ===== */
 var magStream=null, magTrack=null, magFrozen=false, magTorchOn=false;
