@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- files version 48 config.js共通化 -->
+<!-- files version 47 (2026-06-18) 写真アップロード成功確認：送信後にDrive保存完了を確認し、失敗時は×表示。 --> -->
 <!-- files version 46 (2026-06-18) 写真台帳フロー改善：工種/写真区分快速ボタン・台帳候補・候補自動選択・アップロード後アクション追加。GAS変更なし。 -->
 <!-- files version 44 (2026-06-15) 音声入力を継続録音化（黙っても止まらず、停止ボタンを押すまで録音継続。確定分を累積保持）。機能・id不変 -->
 <html lang="ja">
@@ -190,8 +192,9 @@
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="../config.js"></script>
 <script>
-var GAS_URL = 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
 function genbaSessionTok(){
   try{
@@ -465,6 +468,25 @@ function makeLedger(){
 function delSelected(){var ids=[];document.querySelectorAll('#photos .ph.selected').forEach(function(el){ids.push(el.dataset.id);});if(!ids.length){toast('写真を選択してください');return;}if(!confirm('選択した'+ids.length+'枚をゴミ箱に移動します。よろしいですか？'))return;callGAS({action:'deletePhotos',ids:ids.join(',')}).then(function(res){toast(((res&&res.deleted)||0)+'枚をゴミ箱に移動しました');loadPhotos();}).catch(function(){toast('削除に失敗しました');});}function togglePhSel(e){e.classList.toggle('selected');var n=document.querySelectorAll('#photos .ph.selected').length,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function selAll(b){document.querySelectorAll('#photos .ph').forEach(function(e){b?e.classList.add('selected'):e.classList.remove('selected');});var n=b?document.querySelectorAll('#photos .ph').length:0,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function pickFiles(){ if(!folderReady){toast('フォルダ準備中です。少し待ってください');return;} document.getElementById('file').click(); }
 document.getElementById('file').addEventListener('change',function(e){ var fs=e.target.files; if(fs&&fs.length)uploadAll(fs); this.value=''; });
 
+
+function confirmUploadedName(dest,name,tries,delay){
+  tries=tries||8; delay=delay||900;
+  return new Promise(function(resolve,reject){
+    function poll(n){
+      setTimeout(function(){
+        callGAS({action:'confirmUpload',id:curId,dest:dest,name:name},30000,true).then(function(res){
+          if(res&&res.ok&&res.found){ resolve(res); }
+          else if(n>1){ poll(n-1); }
+          else{ reject(new Error('Drive保存を確認できませんでした')); }
+        }).catch(function(){
+          if(n>1) poll(n-1); else reject(new Error('保存確認に失敗しました'));
+        });
+      },delay);
+    }
+    poll(tries);
+  });
+}
+
 function uploadAll(files){
   var arr=Array.prototype.slice.call(files),done=0,fail=0,i=0;
   var prog=document.getElementById('prog');prog.style.display='block';
@@ -472,40 +494,47 @@ function uploadAll(files){
   box.style.display='block';
   box.innerHTML='<div class="upttl" id="upTtl">アップロード中…</div><div class="upgrid" id="upGrid"></div>';
   var grid=document.getElementById('upGrid');
-  var items=arr.map(function(file){
+  var uploadNames=arr.map(function(file){return ((file.type||'').indexOf('image')===0)?bdFileName(file):file.name;});
+  var items=arr.map(function(file,idx){
     var d=document.createElement('div');d.className='upitem';
     var st='<span class="upst">⏳</span>';
     if((file.type||'').indexOf('image')===0){
       var u='';try{u=URL.createObjectURL(file);}catch(e){}
-      d.innerHTML=(u?'<img src="'+u+'">':'<div class="upfile">🖼</div>')+st+'<div class="upnm">'+esc(bdFileName(file))+'</div>';
+      d.innerHTML=(u?'<img src="'+u+'">':'<div class="upfile">🖼</div>')+st+'<div class="upnm">'+esc(uploadNames[idx])+'</div>';
     }else{
-      d.innerHTML='<div class="upfile">📄</div>'+st+'<div class="upnm">'+esc(file.name)+'</div>';
+      d.innerHTML='<div class="upfile">📄</div>'+st+'<div class="upnm">'+esc(uploadNames[idx])+'</div>';
     }
     grid.appendChild(d);return d;
   });
-  function mark(idx,ok){var b=items[idx]&&items[idx].querySelector('.upst');if(b)b.textContent=ok?'✅':'❌';}
+  function mark(idx,ok,msg){var b=items[idx]&&items[idx].querySelector('.upst');if(b)b.textContent=ok?'✅':'❌'; if(msg){var n=items[idx]&&items[idx].querySelector('.upnm'); if(n)n.title=msg;}}
   function next(){
     if(i>=arr.length){
       prog.textContent='アップロード完了（'+done+'件'+(fail?'／失敗'+fail:'')+'）';
       var tt=document.getElementById('upTtl');
-      if(tt)tt.textContent='今回アップロードした写真・ファイル（'+done+'件'+(fail?'／失敗'+fail:'')+'）— ドライブに保存済み';
+      if(tt)tt.textContent='今回アップロードした写真・ファイル（'+done+'件'+(fail?'／失敗'+fail:'')+'）— Drive保存確認済み';
       var act=document.createElement('div');act.className='afterActions';
       act.innerHTML='<button type="button" onclick="pickFiles()">続けて写真を追加</button><button type="button" onclick="openLedgerCandidates()">台帳候補を見る</button><button type="button" onclick="goReportFromFiles()">日報に戻る</button>';
       box.appendChild(act);
       setTimeout(function(){prog.style.display='none';},4000);
-      toast('ドライブに保存しました（'+done+'件）');
+      toast(fail?('保存確認：成功'+done+'件／失敗'+fail+'件'):('Drive保存を確認しました（'+done+'件）'));
       return;
     }
-    var idx=i, file=arr[i++];
+    var idx=i, file=arr[i++], expectedName=uploadNames[idx];
     prog.textContent='送信中… '+i+'/'+arr.length;
     if((file.type||'').indexOf('image')===0){
       resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
-        return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',kind:(document.getElementById('bdKind').value||'').trim(),name:bdFileName(file),mime:'image/jpeg',data:dataUrl.split(',')[1]});
-      }).then(function(){done++;mark(idx,true);next();}).catch(function(){fail++;mark(idx,false);next();});
+        return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',kind:(document.getElementById('bdKind').value||'').trim(),name:expectedName,mime:'image/jpeg',data:dataUrl.split(',')[1]});
+      }).then(function(){
+        prog.textContent='Drive保存確認中… '+i+'/'+arr.length;
+        return confirmUploadedName('photo',expectedName,8,900);
+      }).then(function(){done++;mark(idx,true);next();}).catch(function(err){fail++;mark(idx,false,err&&err.message);next();});
     }else{
       readB64(file).then(function(b64){
-        return postNoCors({action:'uploadPhoto',id:curId,dest:'file',name:file.name,mime:file.type||'application/octet-stream',data:b64});
-      }).then(function(){done++;mark(idx,true);next();}).catch(function(){fail++;mark(idx,false);next();});
+        return postNoCors({action:'uploadPhoto',id:curId,dest:'file',name:expectedName,mime:file.type||'application/octet-stream',data:b64});
+      }).then(function(){
+        prog.textContent='Drive保存確認中… '+i+'/'+arr.length;
+        return confirmUploadedName('file',expectedName,8,900);
+      }).then(function(){done++;mark(idx,true);next();}).catch(function(err){fail++;mark(idx,false,err&&err.message);next();});
     }
   }
   next();
