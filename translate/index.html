@@ -220,7 +220,21 @@
 <script>
 /* ========== 設定 ========== */
 var API_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var SECRET='kawaguchi-genba-2026';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var SECRET='';
 var CACHE_KEY='genba_translate_state';
 
 /* 対応言語（codeはBCP-47 / nameは表示） */
@@ -433,7 +447,7 @@ function callAiChat(userMsg){
     sc.onerror=function(){if(done)return;done=true;clearTimeout(timer);cleanup();reject(new Error('通信エラー'));};
     var msgs=[{role:'user',content:userMsg}];
     var q='action=aiChat'
-      +'&secret='+encodeURIComponent(SECRET)
+      +'&secret='+encodeURIComponent(genbaSessionTok())
       +'&messages='+encodeURIComponent(JSON.stringify(msgs))
       +'&callback='+encodeURIComponent(cb);
     var url=API_URL+'?'+q;
