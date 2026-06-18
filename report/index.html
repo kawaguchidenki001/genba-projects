@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- report version 62 (2026-06-18) 日報30秒化：前回日報コピー、前回メンバー選択、作業内容定型文、保存して写真追加。GAS変更なし。 -->
 <!-- report version 61 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置)。長い名称でも重なり/切れなし。タイトル(nm/h1)の改行禁止解除。CSSのみ・HTML/機能/id不変・GAS変更なし。 -->
 <!-- version 60 report (2026-06-15) 音声入力を継続録音化（黙っても止まらず、停止ボタンを押すまで録音継続。確定分を累積保持）。機能・id不変 -->
 <html lang="ja">
@@ -203,10 +204,22 @@
   .micbtn svg{width:17px;height:17px;}
   .micbtn.recording{background:#ef4444;color:#fff;animation:micpulse 1.1s ease-in-out infinite;}
   @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5);}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}
+
+  /* v62 日報30秒化 */
+  .quickbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 14px;}
+  .quickbtn{border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);padding:11px 10px;color:var(--ink);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;}
+  .quickbtn:active{box-shadow:var(--well);}
+  .quickbtn.main{color:#0b7d57;background:#e5f4ee;}
+  .tplchips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
+  .tplchip{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:7px 10px;font-weight:800;font-size:13px;color:#31536b;cursor:pointer;}
+  .tplchip:active{box-shadow:var(--well);}
+  .minihelp{font-size:12px;color:var(--sub);margin-top:6px;}
+  #savePhotoBtn{background:#2563eb;}
+  @media(max-width:430px){.quickbar{grid-template-columns:1fr;}.tplchip{font-size:12.5px;padding:7px 9px;}}
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v61</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v62</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -243,6 +256,10 @@
 <div class="ov" id="ov">
   <div class="sheet">
     <h2 id="mTitle">日報の入力</h2>
+    <div class="quickbar" id="quickBar">
+      <button type="button" class="quickbtn main" onclick="copyLatestReportToForm()">前回の日報をコピー</button>
+      <button type="button" class="quickbtn" onclick="fillLastWorkersForCurrentProject()">前回メンバー</button>
+    </div>
     <input type="hidden" id="f_id">
     <!-- 日付・時間グリッド（2行・列1が自動同幅） -->
     <div class="ftgrid">
@@ -271,10 +288,11 @@
     <div class="fld" id="vmFld"><label>使用車両（工事台帳に反映されます）</label>
       <div id="vmList" class="wgroup"></div>
     </div>
-    <div class="fld"><label>作業内容</label><div class="micwrap"><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea><button type="button" class="micbtn" data-mic="f_desc" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div></div>
+    <div class="fld"><label>作業内容</label><div class="micwrap"><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea><button type="button" class="micbtn" data-mic="f_desc" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div><div class="tplchips" id="descTpls"></div><div class="minihelp">よく使う作業をタップすると作業内容に追加されます。</div></div>
     <div class="fld"><label>備考</label><div class="micwrap"><textarea id="f_note"></textarea><button type="button" class="micbtn" data-mic="f_note" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div></div>
     <div class="acts">
       <button class="btn sub" onclick="closeOv()">キャンセル</button>
+      <button class="btn primary" id="savePhotoBtn" onclick="saveReport('photo')">保存して写真追加</button>
       <button class="btn primary" id="saveNextBtn" onclick="saveReport(true)" style="background:#1a7a4a;">保存して次へ</button>
       <button class="btn primary" id="saveBtn" onclick="saveReport()">保存</button>
     </div>
@@ -440,14 +458,49 @@ function renderRecents(){var row=document.getElementById('recentRow'),box=docume
 function pickRecent(pid){var g=function(id){return document.getElementById(id);};
   var k=kindOfProj(pid);g('f_kind').value=k||'';
   buildCustomerOptions();g('f_customer').value=customerOfProj(pid);
-  onCustomer();g('f_proj').value=pid;onProj();}
+  onCustomer();g('f_proj').value=pid;onProj();
+  if(!editGroup)fillLastWorkersForCurrentProject(true);
+}
+function rDate(r){return String(r['日付']||'').slice(0,10);}
+function todayStr(){return new Date().toISOString().slice(0,10);}
+function reportGroups(filterFn){var map={},out=[];
+  reports.forEach(function(r){if(filterFn&&!filterFn(r))return;var pid=String(r['案件ID']||'__none__'),d=rDate(r);if(!d)return;var key=pid+'__'+d;if(!map[key]){map[key]={pid:pid,date:d,grp:[]};out.push(map[key]);}map[key].grp.push(r);});
+  out.sort(function(a,b){return String(b.date).localeCompare(String(a.date));});return out;
+}
+function latestGroupBeforeToday(){var t=todayStr();var gs=reportGroups(function(r){return rDate(r)<t;});if(gs.length)return gs[0];gs=reportGroups();return gs[0]||null;}
+function latestGroupForProject(pid){if(!pid)return null;var t=todayStr();var gs=reportGroups(function(r){return String(r['案件ID']||'')===String(pid)&&rDate(r)<t;});if(gs.length)return gs[0];gs=reportGroups(function(r){return String(r['案件ID']||'')===String(pid);});return gs[0]||null;}
+function setWorkersFromGroup(grp){var ids={};(grp||[]).forEach(function(r){ids[String(r['作業員ID'])]=1;});var cbs=document.querySelectorAll('#wmFld .wcb');for(var i=0;i<cbs.length;i++){cbs[i].checked=!!ids[String(cbs[i].value)];}updateNkDisp();}
+function commonTextFromGroup(grp,field){var v='';(grp||[]).forEach(function(r){if(!v&&r[field])v=r[field];});return v;}
+function applyGroupToForm(gp,copyText){if(!gp||!gp.grp||!gp.grp.length){toast('コピーできる過去の日報がありません');return;}
+  var g=function(id){return document.getElementById(id);},g0=gp.grp[0]||{},pid=(gp.pid==='__none__'?'':gp.pid);
+  g('f_date').value=todayStr();
+  if(g0['開始'])g('f_st').value=String(g0['開始']).slice(0,5);else g('f_st').value='08:00';
+  if(g0['終了'])g('f_et').value=String(g0['終了']).slice(0,5);else g('f_et').value='17:00';
+  var brMin=(g0['休憩分']!==''&&g0['休憩分']!=null)?(parseInt(g0['休憩分'],10)||0):60;
+  g('f_break').value=('0'+Math.floor(brMin/60)).slice(-2)+':'+('0'+(brMin%60)).slice(-2);
+  nextDay=String(g0['翌日'])==='1';g('ndChk').checked=nextDay;g('nextDayBtn').classList.toggle('on',nextDay);
+  if(pid&&projects.some(function(p){return String(p['案件ID'])===String(pid);})){pickRecent(pid);}else{buildWorkerChecks();}
+  setWorkersFromGroup(gp.grp);
+  setVehicleChecks(commonTextFromGroup(gp.grp,'車両'));
+  if(copyText){g('f_desc').value=commonTextFromGroup(gp.grp,'作業内容');g('f_note').value=commonTextFromGroup(gp.grp,'備考');}
+  timeCalc();g('mTitle').textContent='日報の入力（前回の日報をコピー）';toast(gp.date+' の日報を今日用にコピーしました');
+}
+function copyLatestReportToForm(){applyGroupToForm(latestGroupBeforeToday(),true);}
+function fillLastWorkersForCurrentProject(silent){var pid=document.getElementById('f_proj').value;if(!pid){if(!silent)toast('先に現場を選んでください');return;}
+  var gp=latestGroupForProject(pid);if(!gp){if(!silent)toast('この現場の過去日報がありません');return;}
+  setWorkersFromGroup(gp.grp);setVehicleChecks(commonTextFromGroup(gp.grp,'車両'));if(!silent)toast('前回メンバーと車両を選択しました');
+}
+var DESC_TPLS=['配線工事','配管工事','器具取付','照明取付','コンセント取付','スイッチ取付','盤結線','撤去作業','試験・測定','現場調査','材料搬入','高所作業','停電作業','清掃・片付け'];
+function renderDescTemplates(){var box=document.getElementById('descTpls');if(!box||box.dataset.ready)return;box.dataset.ready='1';box.innerHTML='';DESC_TPLS.forEach(function(t){var b=document.createElement('button');b.type='button';b.className='tplchip';b.textContent=t;b.onclick=function(){addDescTpl(t);};box.appendChild(b);});}
+function addDescTpl(t){var el=document.getElementById('f_desc'),cur=el.value.trim();if(!cur){el.value=t;}else if(cur.indexOf(t)<0){el.value=cur.replace(/[、,\s]+$/,'')+'、'+t;}el.focus();}
+function goPhotoPage(pid){location.href='https://kawaguchidenki001.github.io/genba-projects/files/?case='+encodeURIComponent(pid||'');}
 function copyFromDetail(){if(!detailCtx)return;var pid=detailCtx.pid,date=detailCtx.date;closeDetail();
   openForm(pid,date);editGroup=null;
   var g=function(id){return document.getElementById(id);};
   g('f_date').value=new Date().toISOString().slice(0,10);
   g('mTitle').textContent='日報の入力（複製・日付は今日になっています）';
   g('grpDelRow').style.display='none';
-  g('saveNextBtn').style.display='';renderRecents();}
+  g('saveNextBtn').style.display='';g('savePhotoBtn').style.display='';g('quickBar').style.display='grid';renderRecents();}
 
 /* ===== 出力（Excel CSV / PDF印刷） ===== */
 function csvq(v){v=String(v==null?'':v);return '"'+v.replace(/"/g,'""')+'"';}
@@ -636,6 +689,9 @@ function openForm(pid,date){   // pid・date 指定で編集、未指定で新�
   g('f_desc').value=editing?desc:'';
   g('f_note').value=editing?note:'';
   document.getElementById('saveNextBtn').style.display=editing?'none':'';
+  document.getElementById('savePhotoBtn').style.display=editing?'none':'';
+  document.getElementById('quickBar').style.display=editing?'none':'grid';
+  renderDescTemplates();
   if(editing){document.getElementById('recentRow').style.display='none';}else{renderRecents();}
   calc();g('ov').classList.add('show');
 }
@@ -741,18 +797,20 @@ function saveReport(keepOpen){
   var existing=isEditing?sameGrp:[];
   var data={};for(var k in c)data[k]=c[k];
   data['_workers']=ws.map(function(w){return {'作業員ID':w['作業員ID'],'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||''};});
-  var btn=document.getElementById('saveBtn'),btn2=document.getElementById('saveNextBtn');btn.disabled=true;btn2.disabled=true;btn.textContent='保存中…';
+  var btn=document.getElementById('saveBtn'),btn2=document.getElementById('saveNextBtn'),btn3=document.getElementById('savePhotoBtn');btn.disabled=true;btn2.disabled=true;if(btn3)btn3.disabled=true;btn.textContent='保存中…';
   Promise.all(existing.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
     .then(function(){return callGAS({action:'addReportMulti',data:data});})
     .then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
       pushRecent(pid);
-      if(keepOpen===true&&!isEditing){
+      if(keepOpen==='photo'&&!isEditing){
+        closeOv();toast(ws.length+'名分を保存しました。写真画面を開きます');reload(true);setTimeout(function(){goPhotoPage(pid);},450);
+      }else if(keepOpen===true&&!isEditing){
         toast(ws.length+'名分を保存しました。続けて入力できます');
         resetForNext();reload(true);
       }else{
         closeOv();toast(ws.length+'名分を保存しました');reload();
       }
-    }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn2.disabled=false;btn.textContent='保存';});
+    }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn2.disabled=false;if(btn3)btn3.disabled=false;btn.textContent='保存';});
 }
 function resetForNext(){
   document.getElementById('f_desc').value='';document.getElementById('f_note').value='';
