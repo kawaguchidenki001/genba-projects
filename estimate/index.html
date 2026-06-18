@@ -362,6 +362,20 @@
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 var toastT;
@@ -456,7 +470,7 @@ function maybeAutoAiOcr(){
 function doLogin(){
   var pin=document.getElementById('pin').value;if(!pin){toast('PINを入力してください');return;}
   callGAS({action:'checkRole'},pin).then(function(res){
-    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',pin);document.getElementById('pin').value='';boot();}
+    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',(res&&res.token)||pin);document.getElementById('pin').value='';boot();}
     else toast('管理者PINが違います');
   }).catch(function(e){toast(e.message);});
 }
