@@ -245,7 +245,21 @@
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var T_GENERAL='kawaguchi-genba-2026';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var T_GENERAL='';
 function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
 function setErr(m){document.getElementById('lgerr').textContent=m||'';}
 function showMenu(u){document.getElementById('login').style.display='none';document.querySelector('.wrap').style.display='block';
@@ -261,18 +275,18 @@ function doLogin(){
   var timer=setTimeout(function(){cleanup();setErr('通信できませんでした。電波を確認してください');},20000);
   function cleanup(){hideLoad();btn.disabled=false;btn.textContent='ログイン';try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
   window[cb]=function(res){cleanup();
-    if(res&&res.ok&&res.worker){localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);loadDash();}
+    if(res&&res.ok&&res.worker){genbaSaveSession(res);localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);loadDash();}
     else setErr((res&&res.error)||'ログインできませんでした');};
-  s.src=GAS_URL+'?action=login&secret='+encodeURIComponent(T_GENERAL)+'&id='+encodeURIComponent(id)+'&pw='+encodeURIComponent(pw)+'&callback='+cb;
+  s.src=GAS_URL+'?action=login&id='+encodeURIComponent(id)+'&pw='+encodeURIComponent(pw)+'&callback='+cb;
   s.onerror=function(){cleanup();setErr('通信エラー');};document.head.appendChild(s);
 }
-function logout(){localStorage.removeItem('genba_user');location.reload();}
+function logout(){genbaClearSession();localStorage.removeItem('genba_user');location.reload();}
 function jsonpGet(action,onOk,extra){
   var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
   var timer=setTimeout(function(){cleanup();},25000);
   function cleanup(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
   window[cb]=function(res){cleanup();if(res&&res.ok)onOk(res);};
-  s.src=GAS_URL+'?action='+encodeURIComponent(action)+'&secret='+encodeURIComponent(T_GENERAL)+'&callback='+cb+(extra||'');
+  s.src=GAS_URL+'?action='+encodeURIComponent(action)+'&secret='+encodeURIComponent(genbaSessionTok())+'&callback='+cb+(extra||'');
   s.onerror=function(){cleanup();};
   document.head.appendChild(s);
 }
@@ -403,7 +417,7 @@ function remOK(id){remAddDismiss(id);renderRemPopup();}
 function remDel(id){remSaveArr(remLoad().filter(function(x){return x.id!==id;}));renderRemPopup();}
 
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
-(function(){var u=gUser();if(u&&u['作業員ID']){showMenu(u);loadDash();renderRemPopup();}})();
+(function(){var u=gUser();if(u&&u['作業員ID']&&genbaSessionTok()){showMenu(u);loadDash();renderRemPopup();}else{genbaClearSession();localStorage.removeItem('genba_user');document.getElementById('login').style.display='block';}})();
 </script>
 
 <div class="rem-ov" id="remOv"><div class="rem-box">
