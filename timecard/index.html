@@ -306,8 +306,9 @@
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
+<script src="../config.js"></script>
 <script>
-var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
 function genbaSessionTok(){
   try{
@@ -623,8 +624,8 @@ function fillKruleForm(){ var g=function(id){return document.getElementById(id);
   g('s_otmax').value=gset('残業上限月','45'); g('s_otwarn').value=gset('残業警告率','80');
   g('s_leaveday').value=gset('有給付与日','04-01'); g('s_leavemust').value=gset('有給義務日数','5'); g('s_leavewarn').value=gset('有給警告日','180'); }
 function krUnlock(){ var pin=document.getElementById('krPin').value; if(!pin){toast('管理者PINを入力してください');return;}
-  var prev=localStorage.getItem('genba_admin'); showLoad();
-  callGAS({action:'checkRole',secret:pin}).then(function(res){
+  var prev=localStorage.getItem('genba_admin'); localStorage.setItem('genba_admin',pin); showLoad();
+  callGAS({action:'checkRole'}).then(function(res){
     if(res&&res.ok&&res.role==='admin'){ if(res.token)localStorage.setItem('genba_admin',res.token); adminOK=true; fillKruleForm();
       document.getElementById('krGate').style.display='none'; document.getElementById('krForm').style.display='block'; toast('編集できます'); }
     else { if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('管理者PINが違います'); }
@@ -726,8 +727,8 @@ function cancelApp(id){ if(!confirm('この申請を取り消しますか？'))r
 function decideApp(id,dec){ showLoad();
   callGAS({action:'applicationDecide',id:id,decision:dec}).then(function(res){ if(!res.ok)throw new Error(res.error||'処理失敗'); toast(dec+'しました'); loadApp(); reload(); }).catch(function(e){toast('失敗：'+e.message);}).then(hideLoad); }
 function apUnlock(){ var pin=document.getElementById('apPin').value; if(!pin){toast('管理者PINを入力してください');return;}
-  var prev=localStorage.getItem('genba_admin'); showLoad();
-  callGAS({action:'checkRole',secret:pin}).then(function(res){ if(res&&res.ok&&res.role==='admin'){ if(res.token)localStorage.setItem('genba_admin',res.token); adminOK=true; toast('承認できます'); loadApp(); }
+  var prev=localStorage.getItem('genba_admin'); localStorage.setItem('genba_admin',pin); showLoad();
+  callGAS({action:'checkRole'}).then(function(res){ if(res&&res.ok&&res.role==='admin'){ if(res.token)localStorage.setItem('genba_admin',res.token); adminOK=true; toast('承認できます'); loadApp(); }
     else { if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('管理者PINが違います'); }
   }).catch(function(e){ if(prev)localStorage.setItem('genba_admin',prev); else localStorage.removeItem('genba_admin'); toast('通信エラー：'+e.message); }).then(hideLoad); }
 
