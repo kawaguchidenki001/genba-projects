@@ -249,7 +249,21 @@
 
 <script>
 var GAS_URL='https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var T_GENERAL='kawaguchi-genba-2026';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var T_GENERAL='';
 var CACHE='genba_order_cache', SENDERK='genba_order_sender';
 var DATA={suppliers:[],products:[],matLists:[],projects:[]};
 var ORDERS=[]; var cart=[]; var curSrc='mat'; var curTab='make';
@@ -257,7 +271,7 @@ var supById={}, supByName={}, projById={};
 var matCand={}, prodCand={};
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
-function tok(){return admTok()||T_GENERAL;}
+function tok(){return admTok()||genbaSessionTok();}
 function getSender(){return localStorage.getItem(SENDERK)||'河口電機';}
 function saveSender(){var v=document.getElementById('senderName').value.trim()||'河口電機';localStorage.setItem(SENDERK,v);toast('差出人を保存しました');renderCards();}
 
