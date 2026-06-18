@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- admin version 53 (2026-06-18) 初期設定ウィザード追加。会社情報・作業員一括追加・車両一括追加・取引先一括追加を管理画面内で案内。既存GAS actionのみ使用・GAS変更なし。 -->
 <!-- admin version 52 (2026-06-16) 会社設定に「あいさつ文(2行・自由入力・書類に印字)」欄を追加。save/loadにキー『あいさつ文』を追加。textareaをinput同等にCSS追加。保存はGASのsaveSettings_が任意キー対応のためGAS変更なし。PDF印字は別途GASで対応。 -->
 <!-- admin version 51 (2026-06-16) 会社情報に「会社名の上の行(業種・キャッチ)」「会社名の下の行(代表者・役職)」を追加。社判イメージに合わせPDFで会社名の上下に印字。save/loadに社名上段・社名下段を追加。GAS変更あり(v84)。 -->
 <!-- admin version 50 (2026-06-16) 会社情報に「会社名」「郵便番号」入力欄を追加(住所の前)。保存成功時に loadCompanyInfo(true) で実際の保存値を再表示し、保存できたか確認できるように。会社名はPDFが既に印字する作りのため保存すれば反映。GAS変更なし。 -->
@@ -128,10 +129,32 @@
   .htxt .nm{font-size:19.5px;}
   .hmark{font-size:15px;}
   .back{font-size:11.5px;padding:9px 14px;}
+  /* 初期設定ウィザード v53 */
+  .setup-hero{background:linear-gradient(135deg,#f8fafc,#e0f2fe);border:1px solid #dbeafe;border-radius:16px;box-shadow:var(--rise);padding:16px;margin-bottom:14px;}
+  .setup-hero h2{margin:0 0 6px;font-size:18px;color:#17324a;}
+  .setup-hero p{margin:0;color:#64748b;font-size:13px;line-height:1.55;}
+  .setup-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:13px 0 0;}
+  .setup-step{background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:9px 8px;text-align:center;font-size:12px;font-weight:800;color:#64748b;box-shadow:var(--rise-sm);}
+  .setup-step.done{background:#ecfdf5;border-color:#86efac;color:#166534;}
+  .setup-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+  .setup-card{background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:14px 16px;}
+  .setup-card h3{margin:0 0 8px;font-size:15px;color:#1f3a52;display:flex;align-items:center;gap:7px;}
+  .setup-card .hint{font-size:12.5px;color:#64748b;line-height:1.55;margin:0 0 10px;}
+  .setup-card textarea{min-height:96px;font-family:inherit;}
+  .setup-mini{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px;}
+  .setup-pill{background:#fff;border:1px solid #dbe2ea;color:#334155;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800;box-shadow:var(--rise-sm);}
+  .setup-pill b{color:#0f766e;}
+  .setup-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .setup-actions .btn{flex:1;min-width:130px;}
+  .setup-finish{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:12px;padding:12px;font-size:13px;line-height:1.6;margin-top:10px;}
+  .setup-links{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+  .setup-link{display:block;text-align:center;text-decoration:none;background:#fff;border:1px solid #dbe2ea;border-radius:10px;padding:10px 6px;font-size:13px;font-weight:800;color:#334155;box-shadow:var(--rise-sm);}
+  @media(max-width:620px){.setup-progress{grid-template-columns:1fr 1fr}.setup-links{grid-template-columns:1fr}.setup-actions .btn{min-width:100%;}}
+
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v52</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v53</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -159,6 +182,7 @@
 <main id="content" style="display:none;">
   <div class="tabs">
     <button class="tab on" id="tab-worker" onclick="switchTab('worker')">作業員</button>
+    <button class="tab" id="tab-setup" onclick="switchTab('setup')">初期設定</button>
     <button class="tab" id="tab-partner" onclick="switchTab('partner')">取引先</button>
     <button class="tab" id="tab-contact" onclick="switchTab('contact')">先方担当者</button>
     <button class="tab" id="tab-vehicle" onclick="switchTab('vehicle')">車両</button>
@@ -166,6 +190,87 @@
     <button class="tab" id="tab-repcheck" onclick="switchTab('repcheck')">日報チェック</button>
     <button class="tab" id="tab-company" onclick="switchTab('company')">自社設定</button>
   </div>
+  <div id="sec-setup" style="display:none;">
+    <div class="setup-hero">
+      <h2>初期設定ウィザード</h2>
+      <p>導入時に最低限必要な「会社情報・作業員・車両・取引先」を順番に登録します。あとから各マスタ画面で編集できます。</p>
+      <div class="setup-progress" id="setupProgress">
+        <div class="setup-step" id="sp-company">1 会社情報</div>
+        <div class="setup-step" id="sp-worker">2 作業員</div>
+        <div class="setup-step" id="sp-vehicle">3 車両</div>
+        <div class="setup-step" id="sp-partner">4 取引先</div>
+        <div class="setup-step" id="sp-finish">5 完了</div>
+      </div>
+    </div>
+    <div class="setup-grid">
+      <div class="setup-card" id="setup-company-card">
+        <h3>1. 会社情報を登録</h3>
+        <p class="hint">見積書・請求書に印字される基本情報です。分かる範囲だけ入れて保存できます。</p>
+        <div class="fld"><label>会社名</label><input id="su_ci_name" placeholder="例）河口電機株式会社"></div>
+        <div class="fld"><label>郵便番号</label><input id="su_ci_zip" inputmode="numeric" placeholder="例）501-0000"></div>
+        <div class="fld"><label>会社住所</label><input id="su_ci_addr" placeholder="例）岐阜県岐阜市〇〇町1-2-3"></div>
+        <div class="two">
+          <div class="fld"><label>会社電話</label><input id="su_ci_tel" inputmode="tel" placeholder="例）058-000-0000"></div>
+          <div class="fld"><label>会社FAX</label><input id="su_ci_fax" inputmode="tel" placeholder="例）058-000-0001"></div>
+        </div>
+        <div class="fld"><label>インボイス登録番号</label><input id="su_ci_inv" placeholder="例）T1234567890123"></div>
+        <div class="fld"><label>振込先</label><input id="su_ci_bank" placeholder="例）〇〇銀行 〇〇支店 普通 1234567"></div>
+        <div class="setup-actions">
+          <button class="btn sub" onclick="setupLoadCompany()">会社情報を読み込み</button>
+          <button class="btn primary" id="setupCompanyBtn" onclick="setupSaveCompany()">会社情報を保存</button>
+        </div>
+      </div>
+
+      <div class="setup-card" id="setup-worker-card">
+        <h3>2. 作業員をまとめて追加</h3>
+        <p class="hint">1行に1人ずつ入力します。名前だけでも登録できます。ログインID・パスワードを入れる場合はカンマ区切りにしてください。</p>
+        <div class="setup-mini"><span class="setup-pill">現在 <b id="suWorkerCount">0</b> 人</span><span class="setup-pill">形式：氏名, 略称, 区分, ログインID, パスワード, 単価</span></div>
+        <textarea id="su_workers" placeholder="山田 太郎, 山田, 社員, yamada, 1234, 20000&#10;佐藤 一郎&#10;ナンカイ 花子, 花子, 常用, hanako, 1234, 18000"></textarea>
+        <div class="setup-actions">
+          <button class="btn sub" onclick="setupSample('workers')">入力例を入れる</button>
+          <button class="btn primary" id="setupWorkerBtn" onclick="setupBulkWorkers()">作業員を追加</button>
+        </div>
+      </div>
+
+      <div class="setup-card" id="setup-vehicle-card">
+        <h3>3. 車両をまとめて追加</h3>
+        <p class="hint">車両名だけでも登録できます。車検・保険満了日は分かる範囲で入れてください。</p>
+        <div class="setup-mini"><span class="setup-pill">現在 <b id="suVehicleCount">0</b> 台</span><span class="setup-pill">形式：車両名, ナンバー, 車検満了日, 保険満了日, メモ</span></div>
+        <textarea id="su_vehicles" placeholder="ハイエース1号, 岐阜 400 あ 12-34, 2027-06-30, 2027-06-30, 工事用&#10;軽バン&#10;高所作業車"></textarea>
+        <div class="setup-actions">
+          <button class="btn sub" onclick="setupSample('vehicles')">入力例を入れる</button>
+          <button class="btn primary" id="setupVehicleBtn" onclick="setupBulkVehicles()">車両を追加</button>
+        </div>
+      </div>
+
+      <div class="setup-card" id="setup-partner-card">
+        <h3>4. 取引先をまとめて追加</h3>
+        <p class="hint">取引先名だけでも登録できます。区分は「官公庁・法人・個人」のいずれかを入れてください。未入力時は法人になります。</p>
+        <div class="setup-mini"><span class="setup-pill">現在 <b id="suPartnerCount">0</b> 件</span><span class="setup-pill">形式：取引先名, 区分, 電話, 住所, 備考</span></div>
+        <textarea id="su_partners" placeholder="岐阜市役所, 官公庁, 058-000-0000, 岐阜県岐阜市〇〇町, 公共工事&#10;〇〇建設株式会社, 法人&#10;△△工場, 法人"></textarea>
+        <div class="setup-actions">
+          <button class="btn sub" onclick="setupSample('partners')">入力例を入れる</button>
+          <button class="btn primary" id="setupPartnerBtn" onclick="setupBulkPartners()">取引先を追加</button>
+        </div>
+      </div>
+
+      <div class="setup-card" id="setup-finish-card">
+        <h3>5. 使い始める</h3>
+        <p class="hint">最低限の登録ができたら、現場登録・予定登録・日報入力へ進めます。</p>
+        <div class="setup-finish" id="setupFinishText">登録状況を確認中…</div>
+        <div class="setup-links">
+          <a class="setup-link" href="https://kawaguchidenki001.github.io/genba-projects/projects/">案件管理へ</a>
+          <a class="setup-link" href="https://kawaguchidenki001.github.io/genba-projects/calendar/">予定表へ</a>
+          <a class="setup-link" href="https://kawaguchidenki001.github.io/genba-projects/report/">日報へ</a>
+        </div>
+        <div class="setup-actions">
+          <button class="btn sub" onclick="setupRefreshProgress()">登録状況を更新</button>
+          <button class="btn primary" onclick="setupMarkDone()">初期設定を完了にする</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="sec-worker">
     <div class="sec">作業員マスタ（単価はここで設定）</div>
     <div id="list"><div class="empty">読込中…</div></div>
@@ -410,7 +515,7 @@ function genbaSaveSession(res){
   }catch(e){}
 }
 function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
-var workers=[],customers=[],contacts=[],vehicles=[],suppliers=[],curTab='worker',sLoaded=false;
+var workers=[],customers=[],contacts=[],vehicles=[],suppliers=[],curTab='worker',sLoaded=false,setupLoaded=false;
 var ADMCACHE='genba_admin_cache';
 function admLoadCache(){try{var c=JSON.parse(localStorage.getItem(ADMCACHE)||'{}');workers=c.workers||[];customers=c.customers||[];contacts=c.contacts||[];vehicles=c.vehicles||[];}catch(e){}}
 function admSaveCache(){try{localStorage.setItem(ADMCACHE,JSON.stringify({workers:workers,customers:customers,contacts:contacts,vehicles:vehicles}));}catch(e){}}
@@ -558,16 +663,121 @@ function saveCompanyInfo(){
     else toast((res&&res.error)||'保存に失敗しました');
   }).catch(function(e){toast(e.message);});
 }
-function switchTab(t){ curTab=t; if(t==='company'){if(!compDocs.length)loadCompDocs();if(!ciLoaded)loadCompanyInfo();}
-  ['worker','partner','contact','vehicle','supplier','repcheck','company'].forEach(function(x){
+function switchTab(t){ curTab=t;
+  if(t==='company'){if(!compDocs.length)loadCompDocs();if(!ciLoaded)loadCompanyInfo();}
+  if(t==='setup'){setupOpen();}
+  ['worker','setup','partner','contact','vehicle','supplier','repcheck','company'].forEach(function(x){
     document.getElementById('sec-'+x).style.display=(x===t)?'block':'none';
     document.getElementById('tab-'+x).className='tab'+(x===t?' on':'');
   });
-  document.getElementById('fab').style.display=(t==='repcheck')?'none':'block';
+  var canAdd=(t==='worker'||t==='partner'||t==='contact'||t==='vehicle'||t==='supplier');
+  document.getElementById('fab').style.display=canAdd?'block':'none';
   document.getElementById('fab').textContent= t==='worker'?'＋ 作業員' : t==='partner'?'＋ 取引先' : t==='contact'?'＋ 担当者' : t==='vehicle'?'＋ 車両' : '＋ 仕入先';
   if(t==='supplier'&&!sLoaded){loadSuppliers();sLoaded=true;}
   if(t==='repcheck'&&!rcLoaded){rcRange(7);rcLoaded=true;}
 }
+
+/* ===== 初期設定ウィザード v53 ===== */
+function setupOpen(){
+  setupRefreshProgress();
+  if(!setupLoaded){setupLoadCompany(true);setupLoaded=true;}
+}
+function setupLines(id){
+  var v=(document.getElementById(id).value||'').trim();
+  if(!v)return[];
+  return v.split(/\r?\n/).map(function(line){return line.trim();}).filter(Boolean);
+}
+function setupParts(line){return line.split(',').map(function(x){return x.trim();});}
+function setupSetBusy(id,busy,label){var b=document.getElementById(id);if(!b)return;b.disabled=!!busy;b.textContent=busy?'保存中…':label;}
+function setupSample(type){
+  if(type==='workers')document.getElementById('su_workers').value='山田 太郎, 山田, 社員, yamada, 1234, 20000\n佐藤 一郎, 佐藤, 社員, sato, 1234, 20000\nナンカイ 花子, 花子, 常用, hanako, 1234, 18000';
+  if(type==='vehicles')document.getElementById('su_vehicles').value='ハイエース1号, 岐阜 400 あ 12-34, 2027-06-30, 2027-06-30, 工事用\n軽バン, 岐阜 580 あ 56-78\n高所作業車';
+  if(type==='partners')document.getElementById('su_partners').value='岐阜市役所, 官公庁, 058-000-0000, 岐阜県岐阜市〇〇町, 公共工事\n〇〇建設株式会社, 法人\n△△工場, 法人';
+}
+function setupRefreshProgress(){
+  var wc=workers.length||0,vc=vehicles.length||0,pc=customers.length||0;
+  var companyName=(document.getElementById('su_ci_name')&&document.getElementById('su_ci_name').value.trim())||(document.getElementById('ci_name')&&document.getElementById('ci_name').value.trim())||'';
+  var doneCompany=!!companyName, doneWorker=wc>0, doneVehicle=vc>0, donePartner=pc>0;
+  [['sp-company',doneCompany],['sp-worker',doneWorker],['sp-vehicle',doneVehicle],['sp-partner',donePartner],['sp-finish',doneCompany&&doneWorker&&donePartner]].forEach(function(x){var el=document.getElementById(x[0]);if(el)el.className='setup-step'+(x[1]?' done':'');});
+  var sw=document.getElementById('suWorkerCount'),sv=document.getElementById('suVehicleCount'),sp=document.getElementById('suPartnerCount');
+  if(sw)sw.textContent=wc;if(sv)sv.textContent=vc;if(sp)sp.textContent=pc;
+  var msg=[];
+  msg.push(doneCompany?'会社情報：登録済み':'会社情報：未登録');
+  msg.push('作業員：'+wc+'人');msg.push('車両：'+vc+'台');msg.push('取引先：'+pc+'件');
+  var ft=document.getElementById('setupFinishText');
+  if(ft)ft.innerHTML=msg.map(esc).join('<br>')+'<br><b>'+(doneCompany&&doneWorker&&donePartner?'最低限の初期設定は完了できます。':'会社情報・作業員・取引先を登録すると使い始めやすくなります。')+'</b>';
+}
+function setupLoadCompany(silent){
+  callGAS({action:'estData'},null,true).then(function(d){
+    if(d&&d.ok){
+      var st=d.settings||{};
+      var map={su_ci_name:'会社名',su_ci_zip:'会社郵便番号',su_ci_addr:'会社住所',su_ci_tel:'会社電話',su_ci_fax:'会社FAX',su_ci_inv:'インボイス登録番号',su_ci_bank:'振込先'};
+      Object.keys(map).forEach(function(id){var el=document.getElementById(id);if(el)el.value=st[map[id]]||'';});
+      setupRefreshProgress(); if(!silent)toast('会社情報を読み込みました');
+    }
+  }).catch(function(e){if(!silent)toast('会社情報の読込に失敗：'+e.message);});
+}
+function setupSaveCompany(){
+  var data={
+    '会社名':document.getElementById('su_ci_name').value.trim(),
+    '会社郵便番号':document.getElementById('su_ci_zip').value.trim(),
+    '会社住所':document.getElementById('su_ci_addr').value.trim(),
+    '会社電話':document.getElementById('su_ci_tel').value.trim(),
+    '会社FAX':document.getElementById('su_ci_fax').value.trim(),
+    'インボイス登録番号':document.getElementById('su_ci_inv').value.trim(),
+    '振込先':document.getElementById('su_ci_bank').value.trim()
+  };
+  if(!data['会社名']){toast('会社名を入力してください');return;}
+  setupSetBusy('setupCompanyBtn',true,'会社情報を保存');
+  callGAS({action:'saveSettings',data:data}).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'保存に失敗しました');
+    toast('会社情報を保存しました');ciLoaded=false;setupRefreshProgress();
+  }).catch(function(e){toast('失敗：'+e.message);}).then(function(){setupSetBusy('setupCompanyBtn',false,'会社情報を保存');});
+}
+function setupBulkWorkers(){
+  var lines=setupLines('su_workers'); if(!lines.length){toast('追加する作業員を入力してください');return;}
+  setupSetBusy('setupWorkerBtn',true,'作業員を追加');
+  var added=0,failed=0;
+  lines.reduce(function(p,line){return p.then(function(){
+    var a=setupParts(line),name=a[0]||''; if(!name){failed++;return;}
+    var sp=name.split(/[\s　]+/),sei=sp[0]||name,mei=sp.slice(1).join(' ');
+    var d={'氏名':name,'氏':sei,'名':mei,'略称':a[1]||sei,'区分':a[2]||'社員','所属':(a[2]==='常用'?'':'') ,'標準単価':a[5]||'','ログインID':a[3]||'','パスワード':a[4]||''};
+    return callGAS({action:'addWorker',data:d},null,true).then(function(res){if(res&&res.ok){workers.push(res.worker);added++;}else failed++;}).catch(function(){failed++;});
+  });},Promise.resolve()).then(function(){
+    admSaveCache();render();document.getElementById('su_workers').value='';setupRefreshProgress();toast('作業員を追加：'+added+'件'+(failed?' / 失敗 '+failed+'件':''));
+  }).then(function(){setupSetBusy('setupWorkerBtn',false,'作業員を追加');});
+}
+function setupBulkVehicles(){
+  var lines=setupLines('su_vehicles'); if(!lines.length){toast('追加する車両を入力してください');return;}
+  setupSetBusy('setupVehicleBtn',true,'車両を追加');
+  var added=0,failed=0;
+  lines.reduce(function(p,line){return p.then(function(){
+    var a=setupParts(line),name=a[0]||''; if(!name){failed++;return;}
+    var d={'車両名':name,'ナンバー':a[1]||'','車検満了日':a[2]||'','保険満了日':a[3]||'','備考':a[4]||'','オイル交換距離':'5000','オイル交換月数':'6'};
+    return callGAS({action:'vehicleSave',data:d},null,true).then(function(res){if(res&&res.ok){vehicles.push(res.vehicle);added++;}else failed++;}).catch(function(){failed++;});
+  });},Promise.resolve()).then(function(){
+    admSaveCache();renderVehicles();document.getElementById('su_vehicles').value='';setupRefreshProgress();toast('車両を追加：'+added+'件'+(failed?' / 失敗 '+failed+'件':''));
+  }).then(function(){setupSetBusy('setupVehicleBtn',false,'車両を追加');});
+}
+function setupBulkPartners(){
+  var lines=setupLines('su_partners'); if(!lines.length){toast('追加する取引先を入力してください');return;}
+  setupSetBusy('setupPartnerBtn',true,'取引先を追加');
+  var added=0,failed=0;
+  lines.reduce(function(p,line){return p.then(function(){
+    var a=setupParts(line),name=a[0]||''; if(!name){failed++;return;}
+    var kind=a[1]||'法人'; if(['官公庁','法人','個人'].indexOf(kind)<0)kind='法人';
+    var d={'顧客名':name,'区分':kind,'電話':a[2]||'','住所':a[3]||'','備考':a[4]||''};
+    return callGAS({action:'addCustomer',data:d},null,true).then(function(res){if(res&&res.ok){customers.push(res.customer);added++;}else failed++;}).catch(function(){failed++;});
+  });},Promise.resolve()).then(function(){
+    admSaveCache();renderCustomers();document.getElementById('su_partners').value='';setupRefreshProgress();toast('取引先を追加：'+added+'件'+(failed?' / 失敗 '+failed+'件':''));
+  }).then(function(){setupSetBusy('setupPartnerBtn',false,'取引先を追加');});
+}
+function setupMarkDone(){
+  localStorage.setItem('genba_setup_done','1');
+  setupRefreshProgress();
+  toast('初期設定を完了にしました');
+}
+
 var rcLoaded=false,rcDays=7;
 function rcRange(days){
   rcDays=days;
@@ -602,7 +812,7 @@ function renderRc(res){
   });
   el.innerHTML=h;
 }
-function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner')openPartner(); else if(curTab==='contact')openContact(); else if(curTab==='vehicle')openVehicle(); else openSupplier(''); }
+function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner')openPartner(); else if(curTab==='contact')openContact(); else if(curTab==='vehicle')openVehicle(); else if(curTab==='supplier')openSupplier(''); }
 
 /* ===== 取引先（区分つき）===== */
 function custKind(c){ return String(c['区分']||'').trim()||'法人'; }   // 空は法人として扱う
