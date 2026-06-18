@@ -1,3 +1,4 @@
+<!-- version 53 files drive home project open fix -->
 <!DOCTYPE html>
 <!-- files version 51 (2026-06-18) 写真ドライブを階層型に変更：官公庁/民間など → 顧客 → 現場 → 写真フォルダの順に開く。 -->
 <!-- files version 50 (2026-06-18) 初期画面からGoogleドライブ風：現場フォルダをカード表示し、タップで写真フォルダを開く。 -->
@@ -465,6 +466,22 @@ function renderDriveHome(){
   }
 }
 function renderProjectFolders(){renderDriveHome();}
+
+function openProjectFolderFromDrive(id){
+  id=String(id||'').trim();
+  if(!id){toast('現場IDが取得できません');return;}
+  var s=document.getElementById('projSel');
+  if(s){s.value=id;}
+  autoOpenDriveAfterFolder=true;
+  onSelect();
+  setTimeout(function(){
+    var panel=document.getElementById('panel');
+    if(panel){
+      panel.style.display='block';
+      try{panel.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){panel.scrollIntoView();}
+    }
+  },50);
+}
 function onCType(){ buildCand(); buildProj(); driveHomeLevel='category'; renderDriveHome(); }
 function onCand(){ buildProj(); renderDriveHome(); }
 
