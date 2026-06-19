@@ -1,20 +1,4 @@
-<!-- version 89 files app version v2026.06.19-41 common UI + Code_v141 -->
-<!-- version 74 files app version v2026.06.19-41 ledger folder fallback + Code_v141 -->
-<!-- version 71 files app version v2026.06.19-22 version history + Code_v122 -->
-<!-- version 68 files ledger output history and ledger folder opener -->
-<!-- version 67 files ledger template output style -->
-<!-- version 66 files ledger photo info fields for photo ledger -->
-<!-- version 65 files ledger photo zoom preview -->
-<!-- version 64 files ledger preview and reorder before output -->
-<!-- version 63 files ledger selection order + persistent selection across folders -->
-<!-- version 62 files ledger open without ensureFolder + fallback -->
-<!-- version 59 files ledger project open fix + hide file dock in ledger -->
-<!-- version 58 files drive folder speed cache + silent hierarchy loading -->
-<!-- version 57 files inline Google Drive hierarchy + fixed file add dock -->
-<!-- version 56 files project tap opens drive directly + file add only buttons -->
-<!-- version 55 files renamed to file drive + generic Google Drive style folder browser + ledger moved to 工事写真 -->
-<!-- version 54 files drive open robustness + recursive photo list fix -->
-<!-- version 53 files drive home project open fix -->
+<!-- Gen-Can files app v2026.06.19-42 / file badge v90 / Code_v142 -->
 <!DOCTYPE html>
 <!-- files version 51 (2026-06-18) 写真ドライブを階層型に変更：官公庁/民間など → 顧客 → 現場 → 写真フォルダの順に開く。 -->
 <!-- files version 50 (2026-06-18) 初期画面からGoogleドライブ風：現場フォルダをカード表示し、タップで写真フォルダを開く。 -->
@@ -321,7 +305,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v89</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v90</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -460,11 +444,11 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260619-rollout-check-41"></script>
+<script src="../config.js?v=20260619-material-action-fix-42"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-41';
-var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-rollout-check-41';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-42';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-material-action-fix-42';
 try{localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}
 
 function genbaSessionTok(){
@@ -965,7 +949,7 @@ function loadHomeGenericDriveRoot(forceRefresh){
       }).catch(function(e){showHomeDriveLoading('フォルダ準備に失敗しました。更新ボタンを押すか、少し待ってから再選択してください。');toast((err&&err.message)||e.message);});
       return;
     }
-    showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v141.gs を確認してください。');toast(err.message);
+    showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v142.gs を確認してください。');toast(err.message);
   });
 }
 
@@ -1321,7 +1305,7 @@ function loadGenericDriveRoot(){
     driveRootId=res.rootId||''; driveCurrentId=driveRootId; driveCurrentName='現場フォルダ';
     genericDriveStack=[{id:driveRootId,name:'現場フォルダ'}];
     renderGenericDriveItems(res.folders||[],res.files||[]);
-  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">現場フォルダの取得に失敗しました。<br>GAS側の Code_v141.gs を貼り替えて再デプロイしてください。</div>';toast(err.message);});
+  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">現場フォルダの取得に失敗しました。<br>GAS側の Code_v142.gs を貼り替えて再デプロイしてください。</div>';toast(err.message);});
 }
 function openGenericFolder(fid,name,keepStack){
   if(!fid){toast('フォルダIDがありません');return;}
@@ -1833,6 +1817,6 @@ if(!genbaSessionTok()){
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="../common_ui.js?v=20260619-rollout-check-41"></script>
+<script src="../common_ui.js?v=20260619-material-action-fix-42"></script>
 </body>
 </html>

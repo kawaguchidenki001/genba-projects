@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- version page app v2026.06.19-41 Code_v141 ops center -->
+<!-- version page app v2026.06.19-42 Code_v142 ops center -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -37,14 +37,14 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
 .err{background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:800;display:none;}
 @media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr);} h1{font-size:22px;}}
 </style>
-<script src="../config.js?v=20260619-rollout-check-41"></script>
+<script src="../config.js?v=20260619-material-action-fix-42"></script>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <button class="back" onclick="location.href='../'">←</button>
     <div class="head"><div class="kicker">Gen-Can Version</div><h1>更新履歴・バージョン確認</h1></div>
-    <span class="badge" id="appBadge">v2026.06.19-41</span>
+    <span class="badge" id="appBadge">v2026.06.19-42</span>
   </div>
 
   <div class="card">
@@ -64,7 +64,7 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
   <div class="card">
     <h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">今回の更新</h2>
     <ul>
-      <li><b>Code_v141.gs</b> に変更しました。</li>
+      <li><b>Code_v142.gs</b> に変更しました。</li>
       <li><b>導入チェック</b> 画面を追加しました。</li>
       <li>販売前・お客様引き渡し前の確認項目をチェックリスト化しました。</li>
       <li>進捗表示、引き渡しメモコピー、印刷に対応しました。</li>
@@ -74,9 +74,9 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
   <div class="card">
     <h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">更新履歴</h2>
     <div class="list">
-      <div class="item"><div class="date">2026.06.19 / v41</div><h3>導入チェックリスト追加</h3><ul><li>Code_v141化</li><li>販売前・引き渡し前の確認項目を追加</li><li>チェック進捗・引き渡しメモコピー・印刷に対応</li></ul></div>
-      <div class="item"><div class="date">2026.06.19 / v40</div><h3>利用開始ガイド追加</h3><ul><li>Code_v141化</li><li>初めて使う人向けのスタート画面を追加</li><li>現場担当者に渡せる説明文コピー機能を追加</li></ul></div>
-      <div class="item"><div class="date">2026.06.19 / v36</div><h3>運用センター追加</h3><ul><li>Code_v141化</li><li>運用センター画面を追加</li><li>販売前・運用前に必要な確認メニューを集約</li><li>GAS/画面バージョンの簡易照合を追加</li></ul></div>
+      <div class="item"><div class="date">2026.06.19 / v42</div><h3>材料系AI action不足修正</h3><ul><li>Code_v142化</li><li>materialOcr / materialSearch / materialIdentifyをGAS側に追加</li><li>古いコメント内のバージョン表記を整理</li></ul></div><div class="item"><div class="date">2026.06.19 / v41</div><h3>導入チェックリスト追加</h3><ul><li>Code_v141化</li><li>販売前・引き渡し前の確認項目を追加</li><li>チェック進捗・引き渡しメモコピー・印刷に対応</li></ul></div>
+      <div class="item"><div class="date">2026.06.19 / v40</div><h3>利用開始ガイド追加</h3><ul><li>Code_v142化</li><li>初めて使う人向けのスタート画面を追加</li><li>現場担当者に渡せる説明文コピー機能を追加</li></ul></div>
+      <div class="item"><div class="date">2026.06.19 / v36</div><h3>運用センター追加</h3><ul><li>Code_v142化</li><li>運用センター画面を追加</li><li>販売前・運用前に必要な確認メニューを集約</li><li>GAS/画面バージョンの簡易照合を追加</li></ul></div>
       <div class="item"><div class="date">2026.06.19 / v35</div><h3>最終チェック・軽量化</h3><ul><li>Code_v135化</li><li>最終チェック画面を追加</li><li>主要画面・GAS接続・バージョン反映を一括確認</li></ul></div>
       <div class="item"><div class="date">2026.06.19 / v34</div><h3>販売設定・規約リンク追加</h3><ul><li>Code_v134化</li><li>販売設定画面を追加</li><li>利用規約・プライバシーポリシー・特商法表示のたたき台を追加</li></ul></div>
       <div class="item"><div class="date">2026.06.19 / v33</div><h3>バックアップ・復元強化</h3><ul><li>Code_v133化</li><li>手動バックアップ・自動バックアップ・一覧表示を追加</li><li>オフラインビューワー作成を追加</li></ul></div>
@@ -96,8 +96,8 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
 </div>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-41';
-var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-rollout-check-41';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-42';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-material-action-fix-42';
 document.getElementById('appBadge').textContent=APP_VERSION;
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function metric(nm,val){return '<div class="metric"><b>'+esc(val)+'</b><span>'+esc(nm)+'</span></div>';}
@@ -117,12 +117,12 @@ function checkGas(){
   setErr(''); var st=document.getElementById('gasStatus'); st.className='status warn'; st.textContent='確認中...';
   jsonp({action:'versionInfo'}).then(function(res){
     st.className='status '+(res&&res.ok?'ok':'ng'); st.textContent=(res&&res.ok)?'GAS接続OK':'GAS確認NG'; render({},res||{});
-  }).catch(function(e){st.className='status ng';st.textContent='GAS接続NG';setErr(e.message+'。Code_v141.gsをGAS側に貼り替え、既存デプロイを新バージョンで更新してください。');render({},null);});
+  }).catch(function(e){st.className='status ng';st.textContent='GAS接続NG';setErr(e.message+'。Code_v142.gsをGAS側に貼り替え、既存デプロイを新バージョンで更新してください。');render({},null);});
 }
 render({},null);checkGas();
 </script>
-<script src="../common_ui.js?v=20260619-rollout-check-41"></script>
+<script src="../common_ui.js?v=20260619-material-action-fix-42"></script>
 
-<section class="card" style="margin-top:14px"><h3>v2026.06.19-41</h3><p>FAQ・困った時画面を追加しました。問い合わせ前に自己確認できる導線を追加しました。</p><div class="links"><a href="../faq/">FAQ・困った時を開く →</a></div></section>
+<section class="card" style="margin-top:14px"><h3>v2026.06.19-42</h3><p>FAQ・困った時画面を追加しました。問い合わせ前に自己確認できる導線を追加しました。</p><div class="links"><a href="../faq/">FAQ・困った時を開く →</a></div></section>
 </body>
 </html>
