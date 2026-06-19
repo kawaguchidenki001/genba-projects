@@ -1,18 +1,37 @@
 {
   "appName": "Gen-Can",
-  "appVersion": "v2026.06.19-24",
-  "build": "20260619-mobile-quick-24",
-  "gasFile": "Code_v124.gs",
+  "appVersion": "v2026.06.19-41",
+  "build": "20260619-rollout-check-41",
+  "gasFile": "Code_v141.gs",
   "updatedAt": "2026-06-19",
-  "summary": "Code_v124化、現場クイックメニューを追加",
+  "summary": "導入チェックリスト追加",
   "changedFiles": [
-    "index.html",
+    "Code_v141.gs",
     "config.js",
-    "quick/index.html",
-    "help/index.html",
+    "index.html",
+    "rollout/index.html",
+    "operations/index.html",
     "version/index.html",
+    "update/index.html",
+    "files/index.html",
+    "common_ui.js",
     "sw.js",
-    "Code_v124.gs",
     "version.json"
+  ],
+  "changes": [
+    "導入チェック画面を追加",
+    "販売前・お客様引き渡し前のチェックリストを追加",
+    "チェック進捗の保存・表示に対応",
+    "引き渡しメモコピーと印刷に対応",
+    "Codeファイル名をCode_v141.gsへ更新"
+  ],
+  "fileBadge": "v89",
+  "updated": "2026-06-19",
+  "gasVersion": "v141-rollout-check",
+  "highlights": [
+    "販売前の抜け漏れを確認しやすくなります",
+    "導入時にお客様へ説明した内容をメモとして共有できます",
+    "最終チェック・エラー診断・販売設定への導線を整理しました",
+    "進捗率が見えるため引き渡し準備状況が分かりやすくなります"
   ]
 }

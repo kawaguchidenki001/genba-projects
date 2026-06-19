@@ -1,4 +1,5 @@
-<!-- version 73 files app version v2026.06.19-24 mobile quick + Code_v124 -->
+<!-- version 89 files app version v2026.06.19-41 common UI + Code_v141 -->
+<!-- version 74 files app version v2026.06.19-41 ledger folder fallback + Code_v141 -->
 <!-- version 71 files app version v2026.06.19-22 version history + Code_v122 -->
 <!-- version 68 files ledger output history and ledger folder opener -->
 <!-- version 67 files ledger template output style -->
@@ -320,7 +321,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v73</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v89</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -459,11 +460,11 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260619-mobile-quick-24"></script>
+<script src="../config.js?v=20260619-rollout-check-41"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-24';
-var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-mobile-quick-24';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-41';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-rollout-check-41';
 try{localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}
 
 function genbaSessionTok(){
@@ -964,7 +965,7 @@ function loadHomeGenericDriveRoot(forceRefresh){
       }).catch(function(e){showHomeDriveLoading('フォルダ準備に失敗しました。更新ボタンを押すか、少し待ってから再選択してください。');toast((err&&err.message)||e.message);});
       return;
     }
-    showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v124.gs を確認してください。');toast(err.message);
+    showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v141.gs を確認してください。');toast(err.message);
   });
 }
 
@@ -1320,7 +1321,7 @@ function loadGenericDriveRoot(){
     driveRootId=res.rootId||''; driveCurrentId=driveRootId; driveCurrentName='現場フォルダ';
     genericDriveStack=[{id:driveRootId,name:'現場フォルダ'}];
     renderGenericDriveItems(res.folders||[],res.files||[]);
-  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">現場フォルダの取得に失敗しました。<br>GAS側の Code_v124.gs を貼り替えて再デプロイしてください。</div>';toast(err.message);});
+  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">現場フォルダの取得に失敗しました。<br>GAS側の Code_v141.gs を貼り替えて再デプロイしてください。</div>';toast(err.message);});
 }
 function openGenericFolder(fid,name,keepStack){
   if(!fid){toast('フォルダIDがありません');return;}
@@ -1832,5 +1833,6 @@ if(!genbaSessionTok()){
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="../common_ui.js?v=20260619-rollout-check-41"></script>
 </body>
 </html>

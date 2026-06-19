@@ -1,5 +1,8 @@
+<!-- version 84 root app version v2026.06.19-41 final check + Code_v136 -->
+<!-- version 80 root app version v2026.06.19-41 demo mode + Code_v136 -->
+<!-- version 75 root app version v2026.06.19-26 common UI + Code_v126 -->
 <!DOCTYPE html>
-<!-- version 73 root app version v2026.06.19-24 mobile quick + Code_v124 -->
+<!-- version 73 root app version v2026.06.19-26 mobile quick + Code_v125 -->
 <!-- version 71 root app version v2026.06.19-22 version history + Code_v122 -->
 <!-- version 70 root app version v2026.06.19-22 setup check + Code_v122.gs -->
 <!-- version 68 root app version v2026.06.19-22 ledger history -->
@@ -64,9 +67,10 @@
   .t-quick .ic{color:#2563eb;} .t-proj .ic{color:#5b5bd6;} .t-report .ic{color:#0e9f6e;} .t-time .ic{color:#7c3aed;}
   .t-sched .ic{color:#2d7dd2;} .t-files .ic{color:#e8910b;} .t-photo .ic{color:#dc2626;} .t-tool .ic{color:#0d9aa0;}
   .t-veh .ic{color:#b45309;} .t-tool2 .ic{color:#a16207;} .t-safety .ic{color:#15803d;}
-  .t-est .ic{color:#9d7a18;} .t-cost .ic{color:#0f766e;} .t-admin .ic{color:#475569;} .t-setup .ic{color:#2563eb;} .t-version .ic{color:#7c3aed;}
+  .t-est .ic{color:#9d7a18;} .t-cost .ic{color:#0f766e;} .t-admin .ic{color:#475569;} .t-faq .ic{color:#0f766e;} .t-backup .ic{color:#0f766e;} .t-setup .ic{color:#2563eb;} .t-version .ic{color:#7c3aed;}
   .t-material .ic{color:#2563eb;}
   .t-ai .ic{color:#7c3aed;}
+  .t-demo .ic{color:#2563eb;} .t-final .ic{color:#15803d;} .t-rollout .ic{color:#0f766e;}
 
   /* スマホ：横3列の正方形タイル */
   .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
@@ -81,6 +85,10 @@
 
   .soons{display:flex;flex-wrap:wrap;gap:8px;}
   .soon{font-size:12.5px;color:var(--sub);background:#e8ecf2;border:none;border-radius:12px;padding:9px 13px;box-shadow:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;}
+
+  .permBadge{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:#eef6ff;color:#1f5fa8;border:1px solid #d6e8fb;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;}
+  .permNote{display:none;margin:0 4px 12px;color:#6b7280;font-size:12.5px;}
+  .permNote.show{display:block;}
 
   /* PC：リスト型 */
   @media (min-width:680px){
@@ -209,7 +217,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.19-24</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.19-41</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -222,9 +230,10 @@
       <input id="lgid" name="username" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text" autocomplete="username" placeholder="ID" enterkeyhint="next">
       <input id="lgpw" name="password" type="password" autocomplete="current-password" placeholder="パスワード" enterkeyhint="go">
       <button id="lgbtn" type="submit">ログイン</button>
+      <button type="button" onclick="location.href='./demo/'" style="margin-top:10px;background:#edf3fa;color:#1f5fa8;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #ffffff;">デモモードで確認</button>
     </form>
     <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.55;">Chrome・Edge等で保存すると、次回から指紋・顔認証で自動入力できます。</div>
-    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.19-24</div>
+    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.19-41</div>
     <div class="err" id="lgerr"></div>
   </div>
 </div>
@@ -239,11 +248,14 @@
       </div>
     </div>
     <div class="co">河口電機株式会社</div>
+    <div class="permBadge" id="permBadge" style="display:none;">権限：社員</div>
   </div>
 
   <div class="lbl">現場用</div>
+  <div class="permNote" id="permNote">この利用者の権限で使えるメニューだけを表示しています。</div>
   <div class="grid">
     <a class="sq t-quick" href="./quick/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8Z"/></svg></span><span class="txt"><span class="en">Field Quick</span><span class="nm">現場クイック</span><span class="ds">日報・ファイル・工事写真・打刻を大きいボタンで操作</span></span><span class="cor">⚡</span></a>
+    <a class="sq t-start" href="./start/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5V5a2 2 0 0 1 2-2h11a3 3 0 0 1 3 3v13.5"/><path d="M6 17h14"/><path d="M8 7h8M8 11h6"/><path d="m15 14 2 2 4-4"/></svg></span><span class="txt"><span class="en">Start Guide</span><span class="nm">利用開始ガイド</span><span class="ds">初めて使う人向けの最短手順・説明文</span></span><span class="cor">New</span></a>
     <a class="sq t-proj" href="./projects/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span><span class="txt"><span class="en">Projects</span><span class="nm">案件管理</span><span class="ds">現場の一覧・詳細・写真・ファイルはこちら</span></span><span class="cor">→</span></a>
     <a class="sq t-report" href="./report/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="txt"><span class="en">Daily report</span><span class="nm">作業日報</span><span class="ds">現場ごとの作業・人工・時間を記録</span></span><span class="cor">→</span></a>
     <a class="sq t-time" href="./timecard/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="txt"><span class="en">Timecard</span><span class="nm">タイムカード</span><span class="ds">出勤・退勤の打刻と勤怠集計</span></span><span class="cor">→</span></a>
@@ -264,9 +276,27 @@
     <a class="sq t-cost" href="./daicho/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V12M11 21V7M16 21v-7M21 21V4"/></svg></span><span class="txt"><span class="en">Ledger</span><span class="nm">工事台帳</span></span><span class="cor lock">🔒</span></a>
     <a class="sq t-admin" href="./admin/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></span><span class="txt"><span class="en">Admin</span><span class="nm">管理画面</span></span><span class="cor lock">🔒</span></a>
 
+    <a class="sq t-demo" href="./demo/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H4z"/><path d="M8 19h8"/><path d="M10 15v4M14 15v4"/><path d="m9 10 2 2 4-4"/></svg></span><span class="txt"><span class="en">Demo</span><span class="nm">デモモード</span><span class="ds">販売説明用のサンプル画面を確認</span></span><span class="cor">▶</span></a>
+
+    <a class="sq t-backup" href="./backup/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/><path d="M12 7v6l4 2"/></svg></span><span class="txt"><span class="en">Backup</span><span class="nm">バックアップ・復元</span><span class="ds">手動作成・自動保存・復元手順を確認</span></span><span class="cor lock">🔒</span></a>
+
+
+    <a class="sq t-ops" href="./operations/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><path d="m15 17 2 2 4-4"/></svg></span><span class="txt"><span class="en">Operations</span><span class="nm">運用センター</span><span class="ds">更新後確認・販売準備・保守画面をまとめて開く</span></span><span class="cor lock">🔒</span></a>
+
+    
+
+    <a class="sq t-rollout" href="./rollout/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2 2 4-4"/><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M7 3h10M8 7h8M8 17h4"/></svg></span><span class="txt"><span class="en">Rollout</span><span class="nm">導入チェック</span><span class="ds">販売前・お客様引き渡し前の確認項目</span></span><span class="cor lock">🔒</span></a>
+
+    <a class="sq t-final" href="./finalcheck/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l2 2 4-4"/><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg></span><span class="txt"><span class="en">Final</span><span class="nm">最終チェック</span><span class="ds">主要画面・GAS・更新後の反映を確認</span></span><span class="cor">→</span></a>
+
     <a class="sq t-version" href="./version/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><path d="M17 13l2 2-2 2"/></svg></span><span class="txt"><span class="en">Version</span><span class="nm">更新履歴</span><span class="ds">バージョン・GAS接続・変更内容を確認</span></span><span class="cor">→</span></a>
     <a class="sq t-setup" href="./setup/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M4.9 4.9 7 7M17 17l2.1 2.1M3 12h3M18 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="4"/><path d="m10.8 12.2.8.8 1.8-2"/></svg></span><span class="txt"><span class="en">Setup</span><span class="nm">初期設定チェック</span><span class="ds">GAS・シート・Drive・バージョン確認</span></span><span class="cor lock">🔒</span></a>
 
+
+
+
+    <a class="sq t-faq" href="./faq/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4"/><path d="M12 17h.01"/></svg></span><span class="txt"><span class="en">FAQ</span><span class="nm">FAQ・困った時</span><span class="ds">よくある質問・エラー時の確認手順</span></span><span class="cor">?</span></a>
+    <a class="sq t-support" href="./support/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a4 4 0 0 1-4 4H8l-5 3V7a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4z"/><path d="M8 9h8M8 13h5"/></svg></span><span class="txt"><span class="en">Support</span><span class="nm">サポート依頼</span><span class="ds">不具合・要望・端末情報をまとめてコピー</span></span><span class="cor">→</span></a>
     <a class="sq t-help" href="./help/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.7 1.2-2.2 1.5-2.7 2.5"/><path d="M12 17h.01"/></svg></span><span class="txt"><span class="en">Help</span><span class="nm">操作ガイド</span><span class="ds">使い方・困った時の確認</span></span><span class="cor">→</span></a>
   </div>
 
@@ -274,11 +304,11 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260619-ledger-photo-info-17"></script>
+<script src="./config.js?v=20260619-rollout-check-41"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-24';
-var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-ledger-photo-info-17';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-41';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-rollout-check-41';
 (function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
 
 function genbaSessionTok(){
@@ -295,10 +325,54 @@ function genbaSaveSession(res){
 }
 function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
 var T_GENERAL='';
+
+function genbaRoleFromUser(u){
+  try{
+    if(!u) return 'staff';
+    var r=String(u.appRole||u.role||u['権限']||'').trim().toLowerCase();
+    if(r==='管理者'||r==='admin')return 'admin';
+    if(r==='現場責任者'||r==='責任者'||r==='manager')return 'manager';
+    if(r==='社員'||r==='staff')return 'staff';
+    if(r==='現場作業員'||r==='作業員'||r==='常用'||r==='field')return 'field';
+    if(r==='閲覧のみ'||r==='閲覧'||r==='viewer')return 'viewer';
+    if(r==='停止'||r==='利用停止'||r==='disabled')return 'disabled';
+    var k=String(u['区分']||''); if(/常用|協力|外注|応援|下請/.test(k))return 'field';
+  }catch(e){}
+  return 'staff';
+}
+function genbaRoleLabel(role){return {admin:'管理者',manager:'現場責任者',staff:'社員',field:'現場作業員',viewer:'閲覧のみ',disabled:'停止'}[role]||'社員';}
+function genbaAllowedMenu(role){
+  var all=['quick','start','projects','report','timecard','calendar','files','photos','aitools','toolbox','material','vehicles','tools','safety','estimate','daicho','admin','backup','setup','diagnosis','demo','finalcheck','operations','version','faq','faq','support','help'];
+  var sets={
+    admin:all,
+    manager:['quick','start','projects','report','timecard','calendar','files','photos','aitools','toolbox','material','vehicles','tools','safety','estimate','daicho','backup','demo','finalcheck','operations','version','faq','faq','support','help'],
+    staff:['quick','start','projects','report','timecard','calendar','files','photos','aitools','toolbox','material','vehicles','tools','demo','finalcheck','operations','version','faq','faq','support','help'],
+    field:['quick','start','projects','report','timecard','files','photos','toolbox','demo','finalcheck','operations','version','faq','faq','support','help'],
+    viewer:['projects','files','photos','demo','finalcheck','operations','version','faq','faq','support','help'],
+    disabled:['demo','finalcheck','operations','version','faq','faq','support','help']
+  };
+  var out={}, arr=sets[role]||sets.staff; arr.forEach(function(x){out[x]=1;}); return out;
+}
+function genbaMenuKeyFromHref(href){
+  href=String(href||'');
+  var m=href.match(/\.\/([^\/]+)\//); return m?m[1]:'';
+}
+function applyRootPermissions(u){
+  var role=genbaRoleFromUser(u), allow=genbaAllowedMenu(role);
+  document.querySelectorAll('a.sq').forEach(function(a){
+    var k=genbaMenuKeyFromHref(a.getAttribute('href')||'');
+    if(!k)return;
+    a.style.display=allow[k]?'':'none';
+  });
+  var b=document.getElementById('permBadge');
+  if(b){ b.style.display='inline-flex'; b.textContent='権限：'+genbaRoleLabel(role); }
+  var n=document.getElementById('permNote'); if(n)n.classList.add('show');
+}
+
 function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
 function setErr(m){document.getElementById('lgerr').textContent=m||'';}
 function showMenu(u){var lg=document.getElementById('login');if(lg)lg.style.display='none';var w=document.querySelector('.wrap');if(w)w.style.display='block';
-  document.getElementById('meName').textContent=u&&u['氏名']?u['氏名']+' さん':'';}
+  document.getElementById('meName').textContent=u&&u['氏名']?u['氏名']+' さん':'';applyRootPermissions(u);}
 function showLogin(){var w=document.querySelector('.wrap');if(w)w.style.display='none';var lg=document.getElementById('login');if(lg)lg.style.display='flex';}
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
@@ -545,5 +619,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
+<script src="./common_ui.js?v=20260619-rollout-check-41"></script>
 </body>
 </html>

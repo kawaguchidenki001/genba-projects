@@ -494,7 +494,7 @@ function loadHomeGenericDriveRoot(forceRefresh){
       }).catch(function(e){showHomeDriveLoading('フォルダ準備に失敗しました。更新ボタンを押すか、少し待ってから再選択してください。');toast((err&&err.message)||e.message);});
       return;
     }
-    showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v124.gs を確認してください。');toast(err.message);
+    showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v141.gs を確認してください。');toast(err.message);
   });
 }
 
@@ -815,7 +815,7 @@ function loadGenericDriveRoot(){
     driveRootId=res.rootId||''; driveCurrentId=driveRootId; driveCurrentName='現場フォルダ';
     genericDriveStack=[{id:driveRootId,name:'現場フォルダ'}];
     renderGenericDriveItems(res.folders||[],res.files||[]);
-  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">現場フォルダの取得に失敗しました。<br>GAS側の Code_v124.gs を貼り替えて再デプロイしてください。</div>';toast(err.message);});
+  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">現場フォルダの取得に失敗しました。<br>GAS側の Code_v141.gs を貼り替えて再デプロイしてください。</div>';toast(err.message);});
 }
 function openGenericFolder(fid,name,keepStack){
   if(!fid){toast('フォルダIDがありません');return;}

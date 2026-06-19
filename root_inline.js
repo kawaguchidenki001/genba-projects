@@ -1,7 +1,7 @@
 
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-24';
-var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-mobile-quick-24';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-41';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-rollout-check-41';
 (function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
 
 function genbaSessionTok(){
@@ -18,10 +18,54 @@ function genbaSaveSession(res){
 }
 function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
 var T_GENERAL='';
+
+function genbaRoleFromUser(u){
+  try{
+    if(!u) return 'staff';
+    var r=String(u.appRole||u.role||u['権限']||'').trim().toLowerCase();
+    if(r==='管理者'||r==='admin')return 'admin';
+    if(r==='現場責任者'||r==='責任者'||r==='manager')return 'manager';
+    if(r==='社員'||r==='staff')return 'staff';
+    if(r==='現場作業員'||r==='作業員'||r==='常用'||r==='field')return 'field';
+    if(r==='閲覧のみ'||r==='閲覧'||r==='viewer')return 'viewer';
+    if(r==='停止'||r==='利用停止'||r==='disabled')return 'disabled';
+    var k=String(u['区分']||''); if(/常用|協力|外注|応援|下請/.test(k))return 'field';
+  }catch(e){}
+  return 'staff';
+}
+function genbaRoleLabel(role){return {admin:'管理者',manager:'現場責任者',staff:'社員',field:'現場作業員',viewer:'閲覧のみ',disabled:'停止'}[role]||'社員';}
+function genbaAllowedMenu(role){
+  var all=['quick','start','projects','report','timecard','calendar','files','photos','aitools','toolbox','material','vehicles','tools','safety','estimate','daicho','admin','setup','version','faq','support','help'];
+  var sets={
+    admin:all,
+    manager:['quick','start','projects','report','timecard','calendar','files','photos','aitools','toolbox','material','vehicles','tools','safety','estimate','daicho','version','faq','support','help'],
+    staff:['quick','start','projects','report','timecard','calendar','files','photos','aitools','toolbox','material','vehicles','tools','version','faq','support','help'],
+    field:['quick','start','projects','report','timecard','files','photos','toolbox','version','faq','support','help'],
+    viewer:['projects','files','photos','version','faq','support','help'],
+    disabled:['version','faq','support','help']
+  };
+  var out={}, arr=sets[role]||sets.staff; arr.forEach(function(x){out[x]=1;}); return out;
+}
+function genbaMenuKeyFromHref(href){
+  href=String(href||'');
+  var m=href.match(/\.\/([^\/]+)\//); return m?m[1]:'';
+}
+function applyRootPermissions(u){
+  var role=genbaRoleFromUser(u), allow=genbaAllowedMenu(role);
+  document.querySelectorAll('a.sq').forEach(function(a){
+    var k=genbaMenuKeyFromHref(a.getAttribute('href')||'');
+    if(!k)return;
+    a.style.display=allow[k]?'':'none';
+  });
+  var b=document.getElementById('permBadge');
+  if(b){ b.style.display='inline-flex'; b.textContent='権限：'+genbaRoleLabel(role); }
+  var n=document.getElementById('permNote'); if(n)n.classList.add('show');
+}
+
 function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
 function setErr(m){document.getElementById('lgerr').textContent=m||'';}
 function showMenu(u){var lg=document.getElementById('login');if(lg)lg.style.display='none';var w=document.querySelector('.wrap');if(w)w.style.display='block';
-  document.getElementById('meName').textContent=u&&u['氏名']?u['氏名']+' さん':'';}
+  document.getElementById('meName').textContent=u&&u['氏名']?u['氏名']+' さん':'';applyRootPermissions(u);}
 function showLogin(){var w=document.querySelector('.wrap');if(w)w.style.display='none';var lg=document.getElementById('login');if(lg)lg.style.display='flex';}
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
