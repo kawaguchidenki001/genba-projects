@@ -1,3 +1,4 @@
+<!-- version 59 files ledger project open fix + hide file dock in ledger -->
 <!-- version 58 files drive folder speed cache + silent hierarchy loading -->
 <!-- version 57 files inline Google Drive hierarchy + fixed file add dock -->
 <!-- version 56 files project tap opens drive directly + file add only buttons -->
@@ -213,7 +214,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v58</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v59</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -295,7 +296,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260619-file-speed-09"></script>
+<script src="../config.js?v=20260619-ledger-fix-10"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -511,7 +512,7 @@ function setDriveHomeLevelLabel(txt){var el=document.getElementById('driveHomeLe
 function resetDriveHome(){
   driveHomeLevel='category'; driveHomeCategory=''; driveHomeCustomer='';
   var p=document.getElementById('panel'); if(p)p.style.display='none';
-  driveHomeRestoreTitle();
+  if(initialMode==='ledger')driveHomeSetAsLedgerSelection(); else driveHomeRestoreTitle();
   curId=''; folderReady=false; driveRootId=''; driveCurrentId=''; driveCurrentName='現場フォルダ'; driveFolders=[]; genericDriveStack=[];
   updateFileAddDock();
   var s=document.getElementById('projSel'); if(s)s.value='';
@@ -579,6 +580,11 @@ function renderProjectFolders(){renderDriveHome();}
 function updateFileAddDock(){
   var dock=document.getElementById('fileAddDock'), btn=document.getElementById('fileAddDockBtn'), txt=document.getElementById('fileAddDockText');
   if(!dock||!btn||!txt)return;
+  // 工事写真台帳モードでは、下部はPDF/Excel作成バーを優先するため、ファイル追加バーは出さない
+  if(initialMode==='ledger'||ledgerMode){
+    dock.style.display='none';
+    return;
+  }
   var p=(projects||[]).filter(function(x){return x['案件ID']===curId;})[0]||{};
   dock.style.display='block';
   if(curId){
@@ -605,6 +611,21 @@ function driveHomeSetAsProjectDrive(projectName){
 function driveHomeRestoreTitle(){
   var title=document.querySelector('.driveHomeTitle span:nth-child(2)'); if(title)title.textContent='ファイルドライブ';
   var note=document.querySelector('.driveHomeNote'); if(note)note.textContent='官公庁・民間などのフォルダから、顧客フォルダ、現場フォルダの順に開けます。現場フォルダ内もGoogleドライブのように閲覧できます。';
+}
+function driveHomeSetAsLedgerSelection(){
+  var title=document.querySelector('.driveHomeTitle span:nth-child(2)'); if(title)title.textContent='工事写真台帳';
+  var note=document.querySelector('.driveHomeNote'); if(note)note.textContent='現場フォルダを選ぶと、写真を表示して工事写真台帳を作成できます。';
+  setDriveHomeLevelLabel('現場選択');
+}
+function driveHomeSetLedgerOpened(projectName){
+  var title=document.querySelector('.driveHomeTitle span:nth-child(2)'); if(title)title.textContent='工事写真台帳';
+  var note=document.querySelector('.driveHomeNote'); if(note)note.textContent='選択した現場の写真を下に表示しています。台帳に入れる写真を選んでPDFまたはExcelで作成できます。';
+  setDriveHomeLevelLabel('写真選択');
+  setDriveHomeBreadcrumb([projectName||'選択中の現場']);
+  var box=document.getElementById('projectFolderGrid');
+  if(box){
+    box.innerHTML='<div class="driveHomeEmpty">'+escText(projectName||'現場')+' の写真一覧を表示中です。<br><span style="font-size:12px;color:#7d8ea3;">下の写真を選択して台帳を作成してください。</span></div>';
+  }
 }
 function setDriveHomeDriveBreadcrumb(){
   var bc=document.getElementById('driveHomeBreadcrumb'); if(!bc)return;
@@ -726,8 +747,8 @@ function openProjectFolderFromDrive(id){
     if(home){try{home.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){home.scrollIntoView();}}
   },50);
 }
-function onCType(){ curId=''; folderReady=false; updateFileAddDock(); hideLegacyBrowserPanel(); driveHomeRestoreTitle(); buildCand(); buildProj(); driveHomeLevel='category'; renderDriveHome(); }
-function onCand(){ curId=''; folderReady=false; updateFileAddDock(); hideLegacyBrowserPanel(); buildProj(); renderDriveHome(); }
+function onCType(){ curId=''; folderReady=false; updateFileAddDock(); hideLegacyBrowserPanel(); if(initialMode==='ledger')driveHomeSetAsLedgerSelection(); else driveHomeRestoreTitle(); buildCand(); buildProj(); driveHomeLevel='category'; renderDriveHome(); }
+function onCand(){ curId=''; folderReady=false; updateFileAddDock(); hideLegacyBrowserPanel(); if(initialMode==='ledger')driveHomeSetAsLedgerSelection(); buildProj(); renderDriveHome(); }
 
 function onSelect(){
   curId=document.getElementById('projSel').value;
@@ -791,12 +812,23 @@ function showLedger(){
   if(!curId){toast('案件を選んでください');return;}
   if(!folderReady){toast('準備中です。少し待ってください');return;}
   ledgerMode=true; ledgerCandidateOnly=true;
+  updateFileAddDock();
+  var p=(projects||[]).filter(function(x){return x['案件ID']===curId;})[0]||{};
+  driveHomeSetLedgerOpened(p['案件名']||'選択中の現場');
+  var panel=document.getElementById('panel'); if(panel)panel.style.display='block';
+  var board=document.getElementById('board'); if(board)board.style.display='none';
+  var btnrow=document.querySelector('#panel .btnrow'); if(btnrow)btnrow.style.display='none';
+  var hint=document.getElementById('hint'); if(hint)hint.style.display='none';
   var sb=document.getElementById('selBar'); if(sb)sb.style.display='flex';
   var lt=document.getElementById('listTitle'); if(lt)lt.childNodes[0].nodeValue='写真一覧 ';
-  document.getElementById('gridArea').style.display='block';
-  document.getElementById('outBar').style.display='block';
-  document.getElementById('photos').innerHTML='<div class="empty">フォルダを読込中…</div>';
+  var ga=document.getElementById('gridArea'); if(ga)ga.style.display='block';
+  var out=document.getElementById('outBar'); if(out)out.style.display='block';
+  document.getElementById('photos').innerHTML='<div class="empty">写真を読込中…</div>';
   loadDriveFolders(true);
+  setTimeout(function(){
+    var target=document.getElementById('gridArea')||document.getElementById('panel');
+    if(target){try{target.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){target.scrollIntoView();}}
+  },120);
 }
 function loadDriveFolders(forLedger){
   callGAS({action:'photoFolders',id:curId}).then(function(res){
@@ -1259,7 +1291,7 @@ var toastT;function toast(m){var t=document.getElementById('toast');t.textConten
   });
 })();
 
-try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';var _note=document.querySelector('.driveHomeNote');if(_note)_note.textContent='現場フォルダを選ぶと、台帳候補の写真を表示して工事写真台帳を作成できます。';}}catch(e){}
+try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
 // 起動時は、まず保存済みデータを即表示し、最新データは裏で更新する。
 try{updateFileAddDock();}catch(e){}
 readFilesCache_();
