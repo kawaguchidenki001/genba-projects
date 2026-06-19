@@ -2024,9 +2024,6 @@
 
 <div class="tload" id="tload"><div class="tlbox"><div class="tspin"></div><div class="tltxt" id="tltxt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-
-<script src="../config.js"></script>
-<script src="./config.js"></script>
 <script>
 /* ===== 共通 ===== */
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
@@ -4058,5 +4055,7 @@ function openBoardForCase(id){
 /* 材料管理ハブからの直リンク（?tool=mat 等）でツールを開く */
 (function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
+
+<script src="../config.js?v=20260619-drive-hierarchy-08"></script>
 </body>
 </html>
