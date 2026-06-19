@@ -1,5 +1,4 @@
 <!-- version 56 files project tap opens drive directly + file add only buttons -->
-<!-- version 56 files auth guard + stale session redirect for drive folder browser -->
 <!-- version 55 files renamed to file drive + generic Google Drive style folder browser + ledger moved to 工事写真 -->
 <!-- version 54 files drive open robustness + recursive photo list fix -->
 <!-- version 53 files drive home project open fix -->
@@ -294,21 +293,6 @@ function genbaSaveSession(res){
   }catch(e){}
 }
 function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
-function isAuthError_(err){
-  var m=String((err&&err.message)||err||'');
-  return m.indexOf('認証エラー')>=0 || m.indexOf('ログイン')>=0 || m.toLowerCase().indexOf('auth')>=0;
-}
-function genbaRequireLogin_(msg){
-  try{sessionStorage.setItem('genba_after_login', location.pathname+location.search+location.hash);}catch(e){}
-  try{localStorage.removeItem('genba_user');}catch(e){}
-  genbaClearSession();
-  toast(msg||'ログインの有効期限が切れました。もう一度ログインしてください');
-  setTimeout(function(){ location.href='../'; },900);
-}
-function ensureLoginBeforeDrive_(){
-  if(!genbaSessionTok()){ genbaRequireLogin_('ログインの有効期限が切れました。もう一度ログインしてください'); return false; }
-  return true;
-}
 var SECRET='';
 var MAXPX = 800, QUALITY = 0.80;
 
@@ -379,11 +363,6 @@ function loadProjects(silent){
     if(!res.ok)throw new Error(res.error||'エラー');
     projects=res.projects||[]; customers=res.customers||[]; saveFilesCache_(); buildSel(); setSync('ok','同期済み');
   }).catch(function(err){
-    if(isAuthError_(err)){
-      setSync('off','ログインが必要です');
-      if(!silent)genbaRequireLogin_('ログインの有効期限が切れました。もう一度ログインしてください');
-      return;
-    }
     if(!projects.length){readFilesCache_();}
     if(!silent)toast('読込失敗：'+err.message);
     setSync(projects.length?'ok':'off',projects.length?'保存データ表示中':'オフライン');
@@ -527,7 +506,6 @@ function renderProjectFolders(){renderDriveHome();}
 function openProjectFolderFromDrive(id){
   id=String(id||'').trim();
   if(!id){toast('現場IDが取得できません');return;}
-  if(!ensureLoginBeforeDrive_())return;
   if(!ensureProjectOption(id)){toast('現場データが見つかりません。更新してください');return;}
   var s=document.getElementById('projSel');
   if(s){s.value=id;}
@@ -557,7 +535,6 @@ function onSelect(){
   panel.style.display='block';
   document.getElementById('photos').innerHTML='<div class="empty">フォルダを準備中…</div>';
   folderReady=false;
-  if(!ensureLoginBeforeDrive_())return;
   // フォルダを用意（無ければ作成）してから一覧
   callGAS({action:'ensureFolder',id:curId}).then(function(res){
     if(!res.ok)throw new Error(res.error||'フォルダ準備失敗');
@@ -571,11 +548,7 @@ function onSelect(){
     autoOpenDriveAfterFolder=false;
     // 現場フォルダを押したら、Googleドライブのようにすぐ中身を表示する
     setTimeout(function(){ if(initialMode==='ledger')showLedger(); else showDriveBrowser(); },80);
-  }).catch(function(err){
-    if(isAuthError_(err)){ genbaRequireLogin_('ログインの有効期限が切れました。もう一度ログインしてください'); return; }
-    document.getElementById('photos').innerHTML='<div class="empty">フォルダ準備に失敗しました。<br>↻でやり直すか、少し待って再選択してください。</div>';
-    toast(err.message);
-  });
+  }).catch(function(err){ document.getElementById('photos').innerHTML='<div class="empty">フォルダ準備に失敗しました。<br>↻でやり直すか、少し待って再選択してください。</div>'; toast(err.message); });
 }
 
 function buildLedgerFiles(fmt){
@@ -603,7 +576,6 @@ function buildLedgerFiles(fmt){
 function showPhotos(){showDriveBrowser();}
 function showDriveBrowser(){
   if(!curId){toast('案件を選んでください');return;}
-  if(!ensureLoginBeforeDrive_())return;
   if(!folderReady){toast('準備中です。少し待ってください');return;}
   ledgerMode=false; ledgerCandidateOnly=false;
   document.getElementById('gridArea').style.display='block';
@@ -751,11 +723,7 @@ function loadGenericDriveRoot(){
     driveRootId=res.rootId||''; driveCurrentId=driveRootId; driveCurrentName='現場フォルダ';
     genericDriveStack=[{id:driveRootId,name:'現場フォルダ'}];
     renderGenericDriveItems(res.folders||[],res.files||[]);
-  }).catch(function(err){
-    if(isAuthError_(err)){ genbaRequireLogin_('ログインの有効期限が切れました。もう一度ログインしてください'); return; }
-    document.getElementById('photos').innerHTML='<div class="empty">現場フォルダの取得に失敗しました。<br>GAS側の Code_v108.gs を貼り替えて再デプロイしてください。</div>';
-    toast(err.message);
-  });
+  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">現場フォルダの取得に失敗しました。<br>GAS側の Code_v108.gs を貼り替えて再デプロイしてください。</div>';toast(err.message);});
 }
 function openGenericFolder(fid,name,keepStack){
   if(!fid){toast('フォルダIDがありません');return;}
@@ -765,11 +733,7 @@ function openGenericFolder(fid,name,keepStack){
   callGAS({action:'driveItems',fid:fid}).then(function(res){
     if(!res||!res.ok)throw new Error((res&&res.error)||'一覧取得失敗');
     renderGenericDriveItems(res.folders||[],res.files||[]);
-  }).catch(function(err){
-    if(isAuthError_(err)){ genbaRequireLogin_('ログインの有効期限が切れました。もう一度ログインしてください'); return; }
-    document.getElementById('photos').innerHTML='<div class="empty">フォルダの取得に失敗しました</div>';
-    toast(err.message);
-  });
+  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">フォルダの取得に失敗しました</div>';toast(err.message);});
 }
 function renderGenericDriveItems(folders,files){
   setGenericDriveHeader();
@@ -1094,14 +1058,9 @@ var toastT;function toast(m){var t=document.getElementById('toast');t.textConten
 })();
 
 try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';var _note=document.querySelector('.driveHomeNote');if(_note)_note.textContent='現場フォルダを選ぶと、台帳候補の写真を表示して工事写真台帳を作成できます。';}}catch(e){}
-// 起動時はログイン状態を確認してから表示する。期限切れ時に保存キャッシュだけが表示され、現場フォルダで認証エラーになるのを防ぐ。
-if(genbaSessionTok()){
-  readFilesCache_();
-  loadProjects(true);
-}else{
-  setSync('off','ログインが必要です');
-  genbaRequireLogin_('ログインの有効期限が切れました。もう一度ログインしてください');
-}
+// 起動時は、まず保存済みデータを即表示し、最新データは裏で更新する。
+readFilesCache_();
+loadProjects(true);
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </body>
