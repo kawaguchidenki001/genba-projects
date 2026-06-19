@@ -1,3 +1,4 @@
+<!-- version 60 files ledger simplified Google Drive hierarchy + inline photo selection -->
 <!-- version 59 files ledger project open fix + hide file dock in ledger -->
 <!-- version 58 files drive folder speed cache + silent hierarchy loading -->
 <!-- version 57 files inline Google Drive hierarchy + fixed file add dock -->
@@ -168,6 +169,22 @@
   .afterActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
   .afterActions button,.afterActions a{border:none;border-radius:10px;background:var(--bg);box-shadow:var(--rise-sm);padding:10px 12px;font-size:13px;font-weight:800;color:var(--ink);text-decoration:none;cursor:pointer;}
   .candidateBadge{position:absolute;left:4px;top:4px;background:rgba(232,145,11,.95);color:#fff;border-radius:999px;padding:2px 6px;font-size:10px;font-weight:800;z-index:2;box-shadow:0 1px 3px rgba(0,0,0,.18);} 
+  .ledgerPhotoSection{grid-column:1/-1;margin-top:2px;padding:12px;border-radius:16px;background:var(--bg);box-shadow:var(--well-soft);} 
+  .ledgerPhotoHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .ledgerPhotoTitle{font-size:15px;font-weight:900;color:var(--ink);line-height:1.35;}
+  .ledgerPhotoSub{font-size:12px;color:var(--sub);font-weight:700;margin-top:2px;line-height:1.45;}
+  .ledgerMiniActions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;}
+  .ledgerMiniActions button{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:7px 10px;font-size:11.5px;font-weight:900;color:var(--accent-d);cursor:pointer;}
+  .ledgerMiniActions button:active{box-shadow:var(--well);}
+  .ledgerDock{position:fixed;left:0;right:0;bottom:0;z-index:65;background:rgba(232,236,242,.96);backdrop-filter:blur(10px);border-top:1px solid rgba(219,226,234,.9);box-shadow:0 -6px 18px rgba(31,58,82,.12);padding:9px 14px calc(env(safe-area-inset-bottom) + 9px);display:none;}
+  .ledgerDockInner{max-width:860px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;}
+  .ledgerDockInfo{grid-column:1/-1;font-size:12.5px;color:var(--sub);font-weight:800;line-height:1.35;}
+  .ledgerDockInfo strong{color:var(--ink);font-size:13.5px;}
+  .ledgerDock button{border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);padding:13px 14px;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;}
+  .ledgerDock button.primary{background:var(--grad);color:#fff;}
+  .ledgerDock button.excel{color:#1e7a3a;}
+  .ledgerDock button:active{box-shadow:var(--well);}
+  .ledgerResultDock{grid-column:1/-1;display:none;font-size:13px;line-height:1.6;}
   .filterNote{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.5;}
   .loading{position:fixed;inset:0;z-index:1000;background:rgba(232,236,242,.78);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
   .loading.show{display:flex;}
@@ -294,9 +311,18 @@
   </div>
 </div>
 
+<div class="ledgerDock" id="ledgerDock">
+  <div class="ledgerDockInner">
+    <div class="ledgerResultDock" id="ledgerResultDock"></div>
+    <div class="ledgerDockInfo"><strong id="ledgerDockProject">現場を選択してください</strong><br><span id="ledgerDockCount">写真を選択して台帳を作成できます</span></div>
+    <button type="button" class="primary" onclick="buildLedgerFiles('pdf')">📄 PDFで作成</button>
+    <button type="button" class="excel" onclick="buildLedgerFiles('xlsx')">📊 エクセルで作成</button>
+  </div>
+</div>
+
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260619-ledger-fix-10"></script>
+<script src="../config.js?v=20260619-ledger-simple-11"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -514,7 +540,7 @@ function resetDriveHome(){
   var p=document.getElementById('panel'); if(p)p.style.display='none';
   if(initialMode==='ledger')driveHomeSetAsLedgerSelection(); else driveHomeRestoreTitle();
   curId=''; folderReady=false; driveRootId=''; driveCurrentId=''; driveCurrentName='現場フォルダ'; driveFolders=[]; genericDriveStack=[];
-  updateFileAddDock();
+  updateFileAddDock(); updateLedgerDock();
   var s=document.getElementById('projSel'); if(s)s.value='';
   renderDriveHome();
 }
@@ -577,6 +603,15 @@ function renderDriveHome(){
 }
 function renderProjectFolders(){renderDriveHome();}
 
+function updateLedgerDock(){
+  var dock=document.getElementById('ledgerDock'), pj=document.getElementById('ledgerDockProject');
+  if(!dock)return;
+  if(!(initialMode==='ledger'||ledgerMode)){dock.style.display='none';return;}
+  dock.style.display=curId?'block':'none';
+  var p=(projects||[]).filter(function(x){return x['案件ID']===curId;})[0]||{};
+  if(pj)pj.textContent=p['案件名']||'選択中の現場';
+  updateSelCount();
+}
 function updateFileAddDock(){
   var dock=document.getElementById('fileAddDock'), btn=document.getElementById('fileAddDockBtn'), txt=document.getElementById('fileAddDockText');
   if(!dock||!btn||!txt)return;
@@ -617,19 +652,22 @@ function driveHomeSetAsLedgerSelection(){
   var note=document.querySelector('.driveHomeNote'); if(note)note.textContent='現場フォルダを選ぶと、写真を表示して工事写真台帳を作成できます。';
   setDriveHomeLevelLabel('現場選択');
 }
-function driveHomeSetLedgerOpened(projectName){
+function driveHomeSetAsLedgerDrive(projectName){
+  driveHomeLevel='drive';
   var title=document.querySelector('.driveHomeTitle span:nth-child(2)'); if(title)title.textContent='工事写真台帳';
-  var note=document.querySelector('.driveHomeNote'); if(note)note.textContent='選択した現場の写真を下に表示しています。台帳に入れる写真を選んでPDFまたはExcelで作成できます。';
+  var note=document.querySelector('.driveHomeNote'); if(note)note.textContent='Googleドライブと同じようにフォルダを開き、写真がある場所では下に写真を表示します。台帳に入れる写真をタップして選択してください。';
   setDriveHomeLevelLabel('写真選択');
-  setDriveHomeBreadcrumb([projectName||'選択中の現場']);
-  var box=document.getElementById('projectFolderGrid');
-  if(box){
-    box.innerHTML='<div class="driveHomeEmpty">'+escText(projectName||'現場')+' の写真一覧を表示中です。<br><span style="font-size:12px;color:#7d8ea3;">下の写真を選択して台帳を作成してください。</span></div>';
-  }
+}
+function ledgerBackToProjects(){
+  genericDriveStack=[]; driveRootId=''; driveCurrentId=''; driveCurrentName='現場フォルダ'; folderReady=false; curId=''; ledgerMode=true; ledgerCandidateOnly=false; updateLedgerDock();
+  var s=document.getElementById('projSel'); if(s)s.value='';
+  var p=document.getElementById('panel'); if(p)p.style.display='none';
+  driveHomeLevel='project'; driveHomeSetAsLedgerSelection(); renderDriveHome();
 }
 function setDriveHomeDriveBreadcrumb(){
   var bc=document.getElementById('driveHomeBreadcrumb'); if(!bc)return;
-  var html='<span>マイドライブ</span><span>›</span><span>現場ファイル</span>';
+  var base=(initialMode==='ledger'||ledgerMode)?'工事写真台帳':'現場ファイル';
+  var html='<span>マイドライブ</span><span>›</span><span>'+base+'</span>';
   genericDriveStack.forEach(function(x,i){
     html+='<span>›</span><button type="button" style="border:none;background:transparent;color:'+(i===genericDriveStack.length-1?'var(--ink)':'var(--accent-d)')+';font-weight:900;font-size:12.5px;padding:0;cursor:pointer;" onclick="openHomeDriveIndex('+i+')">'+escText(x.name||'フォルダ')+'</button>';
   });
@@ -662,21 +700,79 @@ function renderHomeDriveItems(folders,files){
   files.forEach(function(f){box.appendChild(makeHomeDriveFileCard(f));});
   if(!folders.length&&!files.length){box.innerHTML='<div class="driveHomeEmpty">このフォルダは空です。</div>';}
 }
+function isImageFile_(f){
+  var mt=String((f&&f.mime)||''), nm=String((f&&f.name)||'');
+  return mt.indexOf('image/')===0 || /\.(jpg|jpeg|png|gif|webp|heic|heif)$/i.test(nm);
+}
+function renderLedgerPhotoCard_(f){
+  var cand=isLedgerCandidate(f);
+  var a=document.createElement('div'); a.className='ph'+(cand?' selected':''); a.id='ph_'+f.id; a.dataset.id=f.id; a.dataset.candidate=cand?'1':'0';
+  a.onclick=function(){togglePhSel(this);};
+  var tw=document.createElement('div'); tw.className='thumbWrap';
+  if(cand){var bd=document.createElement('span'); bd.className='candidateBadge'; bd.textContent='台帳候補'; tw.appendChild(bd);}
+  var img=document.createElement('img'); img.loading='lazy'; img.src='https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w500';
+  img.onerror=function(){tw.innerHTML=(cand?'<span class="candidateBadge">台帳候補</span>':'')+'<span class="fallback">🖼</span>';};
+  tw.appendChild(img); a.appendChild(tw);
+  var meta=document.createElement('div'); meta.className='meta';
+  var cap=document.createElement('span'); cap.className='cap'; cap.textContent=f.name||''; meta.appendChild(cap);
+  var tags=photoTagsFromName(f.name||''), tl=document.createElement('div'); tl.className='tagline';
+  tags.slice(0,3).forEach(function(t){var sp=document.createElement('span');sp.className='ptag';sp.textContent=t;tl.appendChild(sp);});
+  meta.appendChild(tl); a.appendChild(meta);
+  return a;
+}
+function renderHomeCurrentItems(folders,files){
+  if(initialMode==='ledger'||ledgerMode)renderHomeLedgerItems(folders,files);
+  else renderHomeDriveItems(folders,files);
+}
+function renderHomeLedgerItems(folders,files){
+  ledgerMode=true; ledgerCandidateOnly=false;
+  setDriveHomeDriveBreadcrumb();
+  updateLedgerDock();
+  var box=document.getElementById('projectFolderGrid'); if(!box)return;
+  box.innerHTML='';
+  folders=folders||[]; files=files||[];
+  if(genericDriveStack.length>1){
+    box.appendChild(makeFolderCard({cls:'back',icon:'↩',name:'上の階層へ戻る',meta:(genericDriveStack[genericDriveStack.length-2]||{}).name||'現場フォルダへ',badge:'戻る',onclick:function(){openHomeDriveIndex(genericDriveStack.length-2);}}));
+  }else{
+    box.appendChild(makeFolderCard({cls:'back',icon:'↩',name:'上の階層へ戻る',meta:'現場一覧へ',badge:'戻る',onclick:ledgerBackToProjects}));
+  }
+  folders.forEach(function(f){
+    box.appendChild(makeFolderCard({cls:'folder',icon:'📁',name:f.name||'フォルダ',meta:'フォルダ',badge:'開く',onclick:function(){openHomeGenericFolder(f.id,f.name,false);}}));
+  });
+  var imgs=(files||[]).filter(isImageFile_);
+  photoCache=imgs;
+  if(imgs.length){
+    var sec=document.createElement('div'); sec.className='ledgerPhotoSection';
+    var head=document.createElement('div'); head.className='ledgerPhotoHead';
+    var left=document.createElement('div');
+    left.innerHTML='<div class="ledgerPhotoTitle">写真ファイル（'+imgs.length+'枚）</div><div class="ledgerPhotoSub">写真をタップして選択・解除できます。候補名の写真は自動選択しています。</div>';
+    var acts=document.createElement('div'); acts.className='ledgerMiniActions';
+    acts.innerHTML='<button type="button" onclick="selCandidates()">候補選択</button><button type="button" onclick="selAll(true)">全選択</button><button type="button" onclick="selAll(false)">全解除</button>';
+    head.appendChild(left); head.appendChild(acts); sec.appendChild(head);
+    var g=document.createElement('div'); g.className='grid'; sec.appendChild(g);
+    imgs.forEach(function(f){g.appendChild(renderLedgerPhotoCard_(f));});
+    box.appendChild(sec);
+  }
+  if(!folders.length&&!imgs.length){
+    box.appendChild((function(){var d=document.createElement('div');d.className='driveHomeEmpty';d.style.gridColumn='1/-1';d.innerHTML='このフォルダに写真はありません。<br><span style="font-size:12px;color:#7d8ea3;">上の階層へ戻るか、写真が入っているフォルダを開いてください。</span>';return d;})());
+  }
+  updateSelCount();
+}
 
 function loadHomeGenericDriveRoot(forceRefresh){
   if(!curId){toast('現場を選択してください');return;}
   var p=(projects||[]).filter(function(x){return x['案件ID']===curId;})[0]||{};
-  driveHomeSetAsProjectDrive(p['案件名']||'現場フォルダ');
+  if(initialMode==='ledger'||ledgerMode)driveHomeSetAsLedgerDrive(p['案件名']||'現場フォルダ'); else driveHomeSetAsProjectDrive(p['案件名']||'現場フォルダ');
   hideLegacyBrowserPanel();
   var cached=!forceRefresh && readProjectRootCache_(curId);
   if(cached&&cached.rootId){
     driveRootId=cached.rootId||''; driveCurrentId=driveRootId; driveCurrentName='現場フォルダ';
     genericDriveStack=[{id:driveRootId,name:p['案件名']||'現場フォルダ'}];
-    renderHomeDriveItems(cached.folders||[],cached.files||[]);
+    renderHomeCurrentItems(cached.folders||[],cached.files||[]);
     setSync('ok','保存データから即時表示中');
     // 画面はすぐ出し、裏側で最新状態だけ確認します。
     callGAS({action:'projectDriveRoot',id:curId},18000,true).then(function(res){
-      if(res&&res.ok){cacheProjectRoot_(curId,res); if(driveHomeLevel==='drive'&&genericDriveStack.length===1&&String(curId)){driveRootId=res.rootId||driveRootId;driveCurrentId=driveRootId;renderHomeDriveItems(res.folders||[],res.files||[]);}}
+      if(res&&res.ok){cacheProjectRoot_(curId,res); if(driveHomeLevel==='drive'&&genericDriveStack.length===1&&String(curId)){driveRootId=res.rootId||driveRootId;driveCurrentId=driveRootId;renderHomeCurrentItems(res.folders||[],res.files||[]);}}
     }).catch(function(){});
     prefetchChildFolders_(cached.folders||[]);
     return;
@@ -689,7 +785,7 @@ function loadHomeGenericDriveRoot(forceRefresh){
     driveRootId=res.rootId||''; driveCurrentId=driveRootId; driveCurrentName='現場フォルダ';
     genericDriveStack=[{id:driveRootId,name:p['案件名']||'現場フォルダ'}];
     cacheProjectRoot_(curId,res);
-    renderHomeDriveItems(res.folders||[],res.files||[]);
+    renderHomeCurrentItems(res.folders||[],res.files||[]);
     prefetchChildFolders_(res.folders||[]);
   }).catch(function(err){if(seq===driveRequestSeq){showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v108.gs を確認してください。');toast(err.message);}});
 }
@@ -701,13 +797,13 @@ function openHomeGenericFolder(fid,name,keepStack,forceRefresh){
   setDriveHomeDriveBreadcrumb();
   var cached=!forceRefresh && readDriveItemsCache_(fid);
   if(cached){
-    renderHomeDriveItems(cached.folders||[],cached.files||[]);
+    renderHomeCurrentItems(cached.folders||[],cached.files||[]);
     setSync('ok','保存データから即時表示中');
     prefetchChildFolders_(cached.folders||[]);
     // 表示を止めずに裏側で最新化。現在見ているフォルダの時だけ差し替えます。
     var currentFid=fid;
     callGAS({action:'driveItems',fid:fid},18000,true).then(function(res){
-      if(res&&res.ok){cacheDriveItems_(currentFid,res); if(driveCurrentId===currentFid)renderHomeDriveItems(res.folders||[],res.files||[]);}
+      if(res&&res.ok){cacheDriveItems_(currentFid,res); if(driveCurrentId===currentFid)renderHomeCurrentItems(res.folders||[],res.files||[]);}
     }).catch(function(){});
     return;
   }
@@ -717,7 +813,7 @@ function openHomeGenericFolder(fid,name,keepStack,forceRefresh){
     if(seq!==driveRequestSeq)return;
     if(!res||!res.ok)throw new Error((res&&res.error)||'一覧取得失敗');
     cacheDriveItems_(fid,res);
-    renderHomeDriveItems(res.folders||[],res.files||[]);
+    renderHomeCurrentItems(res.folders||[],res.files||[]);
     prefetchChildFolders_(res.folders||[]);
   }).catch(function(err){if(seq===driveRequestSeq){showHomeDriveLoading('フォルダの取得に失敗しました');toast(err.message);}});
 }
@@ -747,15 +843,15 @@ function openProjectFolderFromDrive(id){
     if(home){try{home.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){home.scrollIntoView();}}
   },50);
 }
-function onCType(){ curId=''; folderReady=false; updateFileAddDock(); hideLegacyBrowserPanel(); if(initialMode==='ledger')driveHomeSetAsLedgerSelection(); else driveHomeRestoreTitle(); buildCand(); buildProj(); driveHomeLevel='category'; renderDriveHome(); }
-function onCand(){ curId=''; folderReady=false; updateFileAddDock(); hideLegacyBrowserPanel(); if(initialMode==='ledger')driveHomeSetAsLedgerSelection(); buildProj(); renderDriveHome(); }
+function onCType(){ curId=''; folderReady=false; updateFileAddDock(); updateLedgerDock(); hideLegacyBrowserPanel(); if(initialMode==='ledger')driveHomeSetAsLedgerSelection(); else driveHomeRestoreTitle(); buildCand(); buildProj(); driveHomeLevel='category'; renderDriveHome(); }
+function onCand(){ curId=''; folderReady=false; updateFileAddDock(); updateLedgerDock(); hideLegacyBrowserPanel(); if(initialMode==='ledger')driveHomeSetAsLedgerSelection(); buildProj(); renderDriveHome(); }
 
 function onSelect(){
   curId=document.getElementById('projSel').value;
   driveRootId=''; driveCurrentId=''; driveCurrentName='現場フォルダ'; driveFolders=[];
   var ut=document.getElementById('upThumbs');if(ut){ut.style.display='none';ut.innerHTML='';}
   var panel=document.getElementById('panel');
-  if(!curId){panel.style.display='none';return;}
+  if(!curId){panel.style.display='none';updateLedgerDock();return;}
   var p=projects.filter(function(x){return x['案件ID']===curId;})[0]||{};
   document.getElementById('pName').textContent=p['案件名']||'';
   document.getElementById('pId').textContent=curId;
@@ -767,7 +863,7 @@ function onSelect(){
     if(!res.ok)throw new Error(res.error||'フォルダ準備失敗');
     var openBtn=document.getElementById('openBtn');
     if(openBtn)openBtn.href=res.url||'#';
-    folderReady=true; updateFileAddDock();
+    folderReady=true; updateFileAddDock(); updateLedgerDock();
     autoOpenDriveAfterFolder=false;
     if(initialMode==='ledger')showLedger(); else loadHomeGenericDriveRoot();
   }).catch(function(err){ showHomeDriveLoading('フォルダ準備に失敗しました。↻でやり直すか、少し待って再選択してください。'); updateFileAddDock(); toast(err.message); });
@@ -775,10 +871,10 @@ function onSelect(){
 
 function buildLedgerFiles(fmt){
   if(!curId){toast('案件を選んでください');return;}
-  var ids=[];document.querySelectorAll('#photos .ph.selected').forEach(function(el){ids.push(el.dataset.id);});
+  var ids=[];document.querySelectorAll('#photos .ph.selected, #projectFolderGrid .ph.selected').forEach(function(el){ids.push(el.dataset.id);});
   if(!ids.length){toast('写真を選択してください');return;}
   var nm=(document.getElementById('pName')||{}).textContent||'';
-  var box=document.getElementById('ledgerResult'); if(box){box.style.display='none';box.innerHTML='';}
+  var box=document.getElementById('ledgerResultDock')||document.getElementById('ledgerResult'); if(box){box.style.display='none';box.innerHTML='';}
   var lt=document.querySelector('#loading .txt'); if(lt) lt.textContent='台帳を作成中…';
   toast((fmt==='xlsx'?'エクセル':'PDF')+'を作成中です。少し時間がかかります…'); showLoad();
   callGAS({action:'makeLedgerFiles',id:curId,ids:ids.join(','),name:nm,fmt:fmt},180000).then(function(res){
@@ -811,24 +907,18 @@ function showDriveBrowser(){
 function showLedger(){
   if(!curId){toast('案件を選んでください');return;}
   if(!folderReady){toast('準備中です。少し待ってください');return;}
-  ledgerMode=true; ledgerCandidateOnly=true;
+  ledgerMode=true; ledgerCandidateOnly=false;
   updateFileAddDock();
   var p=(projects||[]).filter(function(x){return x['案件ID']===curId;})[0]||{};
-  driveHomeSetLedgerOpened(p['案件名']||'選択中の現場');
-  var panel=document.getElementById('panel'); if(panel)panel.style.display='block';
-  var board=document.getElementById('board'); if(board)board.style.display='none';
-  var btnrow=document.querySelector('#panel .btnrow'); if(btnrow)btnrow.style.display='none';
-  var hint=document.getElementById('hint'); if(hint)hint.style.display='none';
-  var sb=document.getElementById('selBar'); if(sb)sb.style.display='flex';
-  var lt=document.getElementById('listTitle'); if(lt)lt.childNodes[0].nodeValue='写真一覧 ';
-  var ga=document.getElementById('gridArea'); if(ga)ga.style.display='block';
-  var out=document.getElementById('outBar'); if(out)out.style.display='block';
-  document.getElementById('photos').innerHTML='<div class="empty">写真を読込中…</div>';
-  loadDriveFolders(true);
+  driveHomeSetAsLedgerDrive(p['案件名']||'選択中の現場');
+  updateLedgerDock();
+  hideLegacyBrowserPanel();
+  showHomeDriveLoading('写真フォルダを読込中…');
+  loadHomeGenericDriveRoot();
   setTimeout(function(){
-    var target=document.getElementById('gridArea')||document.getElementById('panel');
+    var target=document.getElementById('driveHome');
     if(target){try{target.scrollIntoView({behavior:'smooth',block:'start'});}catch(e){target.scrollIntoView();}}
-  },120);
+  },80);
 }
 function loadDriveFolders(forLedger){
   callGAS({action:'photoFolders',id:curId}).then(function(res){
@@ -914,11 +1004,7 @@ function loadCurFolderPhotos(){
 function loadPhotos(){
   if(!curId)return;
   if(ledgerMode){
-    if(driveCurrentId){openDriveFolder(driveCurrentId,driveCurrentName,driveCurrentId===driveRootId);return;}
-    callGAS({action:'listPhotos',id:curId}).then(function(res){
-      if(!res.ok)throw new Error(res.error||'一覧取得失敗');
-      renderPhotos(res.photos||[]);
-    }).catch(function(err){toast('一覧：'+err.message);});
+    refreshCurrentHomeDrive();
     return;
   }
   showDriveBrowser();
@@ -989,10 +1075,10 @@ function renderGenericDriveItems(folders,files){
   });
 }
 function isLedgerCandidate(f){var n=String((f&&f.name)||'');return /台帳候補|施工前|施工中|施工後|材料検収|試験状況|完成|是正前|是正後/.test(n);} 
-function updateSelCount(){var n=document.querySelectorAll('#photos .ph.selected').length,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}
+function updateSelCount(){var n=document.querySelectorAll('#photos .ph.selected, #projectFolderGrid .ph.selected').length,c=document.getElementById('selCount'),dc=document.getElementById('ledgerDockCount');if(c)c.textContent=n?n+'枚選択中':'';if(dc)dc.textContent=n?n+'枚選択中':'写真を選択して台帳を作成できます';}
 function showCandidateOnly(){ledgerCandidateOnly=true;renderPhotoCache();}
 function showAllPhotoCandidates(){ledgerCandidateOnly=false;renderPhotoCache();}
-function selCandidates(){document.querySelectorAll('#photos .ph').forEach(function(e){e.classList.toggle('selected',e.dataset.candidate==='1');});updateSelCount();}
+function selCandidates(){document.querySelectorAll('#photos .ph, #projectFolderGrid .ph').forEach(function(e){e.classList.toggle('selected',e.dataset.candidate==='1');});updateSelCount();}
 function renderPhotos(arr){photoCache=arr||[];renderPhotoCache();}
 function renderPhotoCache(){
   var arr=photoCache||[], list=arr;
@@ -1079,7 +1165,7 @@ function ledgerCover(nm){
 function makeLedger(){
   if(!curId){toast('案件を選んでください');return;}
   var sd={};
-  document.querySelectorAll('#photos .ph.selected').forEach(function(el){sd[el.dataset.id]=1;});
+  document.querySelectorAll('#photos .ph.selected, #projectFolderGrid .ph.selected').forEach(function(el){sd[el.dataset.id]=1;});
   if(!Object.keys(sd).length){toast('写真を選択してください');return;}
   if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF機能の読込に失敗しました');return;}
   if(!confirm('選択した写真で台帳を作成します。\n作成後、その写真は一覧から削除（ゴミ箱へ移動）します。\nよろしいですか？'))return;
@@ -1138,7 +1224,7 @@ function makeLedger(){
     step(0);
   }).catch(function(){hideLoad();toast('写真の取得に失敗しました');});
 }
-function delSelected(){var ids=[];document.querySelectorAll('#photos .ph.selected').forEach(function(el){ids.push(el.dataset.id);});if(!ids.length){toast('写真を選択してください');return;}if(!confirm('選択した'+ids.length+'枚をゴミ箱に移動します。よろしいですか？'))return;callGAS({action:'deletePhotos',ids:ids.join(',')}).then(function(res){toast(((res&&res.deleted)||0)+'枚をゴミ箱に移動しました');loadPhotos();}).catch(function(){toast('削除に失敗しました');});}function togglePhSel(e){e.classList.toggle('selected');var n=document.querySelectorAll('#photos .ph.selected').length,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function selAll(b){document.querySelectorAll('#photos .ph').forEach(function(e){b?e.classList.add('selected'):e.classList.remove('selected');});var n=b?document.querySelectorAll('#photos .ph').length:0,c=document.getElementById('selCount');if(c)c.textContent=n?n+'枚選択中':'';}function pickFiles(){ if(!folderReady){toast('フォルダ準備中です。少し待ってください');return;} document.getElementById('file').click(); }
+function delSelected(){var ids=[];document.querySelectorAll('#photos .ph.selected, #projectFolderGrid .ph.selected').forEach(function(el){ids.push(el.dataset.id);});if(!ids.length){toast('写真を選択してください');return;}if(!confirm('選択した'+ids.length+'枚をゴミ箱に移動します。よろしいですか？'))return;callGAS({action:'deletePhotos',ids:ids.join(',')}).then(function(res){toast(((res&&res.deleted)||0)+'枚をゴミ箱に移動しました');loadPhotos();}).catch(function(){toast('削除に失敗しました');});}function togglePhSel(e){e.classList.toggle('selected');updateSelCount();}function selAll(b){document.querySelectorAll('#photos .ph, #projectFolderGrid .ph').forEach(function(e){b?e.classList.add('selected'):e.classList.remove('selected');});updateSelCount();}function pickFiles(){ if(!folderReady){toast('フォルダ準備中です。少し待ってください');return;} document.getElementById('file').click(); }
 document.getElementById('file').addEventListener('change',function(e){ var fs=e.target.files; if(fs&&fs.length)uploadAll(fs); this.value=''; });
 
 
