@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- version 59 root ログイン通信安定化・バージョンバッジ更新 -->
 <!-- version 58 root 工事写真メニュー追加・写真ファイルをファイルに名称変更 -->
 <!-- version 57 root 今日の状況・今日やることカード削除 -->
 <!-- version 56 root config.js共通化 -->
@@ -200,7 +201,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v57</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.19-06</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -215,6 +216,7 @@
       <button id="lgbtn" type="submit">ログイン</button>
     </form>
     <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.55;">Chrome・Edge等で保存すると、次回から指紋・顔認証で自動入力できます。</div>
+    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.19-06</div>
     <div class="err" id="lgerr"></div>
   </div>
 </div>
@@ -258,10 +260,12 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="../config.js"></script>
-<script src="./config.js"></script>
+<script src="./config.js?v=20260619-login-06"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-06';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-login-06';
+(function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
 
 function genbaSessionTok(){
   try{
@@ -292,28 +296,69 @@ function maybeStorePasswordCredential(id,pw){
     navigator.credentials.store(cred).catch(function(){});
   }catch(e){}
 }
+function buildQuery_(params){
+  var q=[];
+  for(var k in params){ if(Object.prototype.hasOwnProperty.call(params,k) && params[k]!==undefined && params[k]!==null){ q.push(encodeURIComponent(k)+'='+encodeURIComponent(String(params[k]))); } }
+  return q.join('&');
+}
+function jsonpCall_(params,onOk,onNg,timeoutMs){
+  if(!GAS_URL || !/^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(GAS_URL)){
+    if(onNg)onNg('bad_url');
+    return;
+  }
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6);
+  params=params||{}; params.callback=cb; params._build=BUILD_ID; params._ts=Date.now();
+  var s=document.createElement('script'), done=false;
+  var timer=setTimeout(function(){finish('timeout');}, timeoutMs||25000);
+  function finish(kind,res){
+    if(done)return; done=true;
+    clearTimeout(timer);
+    try{delete window[cb];}catch(e){window[cb]=undefined;}
+    if(s.parentNode)s.parentNode.removeChild(s);
+    if(kind==='ok'){ if(onOk)onOk(res||{}); }
+    else{ if(onNg)onNg(kind); }
+  }
+  window[cb]=function(res){finish('ok',res);};
+  s.async=true; s.charset='utf-8';
+  try{s.referrerPolicy='no-referrer-when-downgrade';}catch(e){}
+  s.onerror=function(){finish('load_error');};
+  s.src=GAS_URL+(GAS_URL.indexOf('?')>=0?'&':'?')+buildQuery_(params);
+  document.head.appendChild(s);
+}
 function doLogin(){
   var id=document.getElementById('lgid').value.trim(),pw=document.getElementById('lgpw').value;
   if(!id){setErr('IDを入力してください');return;}
   setErr('');var btn=document.getElementById('lgbtn');btn.disabled=true;btn.textContent='確認中…';showLoad();
-  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
-  var timer=setTimeout(function(){cleanup();setErr('通信できませんでした。電波を確認してください');},20000);
-  function cleanup(){hideLoad();btn.disabled=false;btn.textContent='ログイン';try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
-  window[cb]=function(res){cleanup();
-    if(res&&res.ok&&res.worker){maybeStorePasswordCredential(id,pw);genbaSaveSession(res);localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);}
-    else setErr((res&&res.error)||'ログインできませんでした');};
-  s.src=GAS_URL+'?action=login&id='+encodeURIComponent(id)+'&pw='+encodeURIComponent(pw)+'&callback='+cb;
-  s.onerror=function(){cleanup();setErr('通信エラー');};document.head.appendChild(s);
+  var attempts=0;
+  function finish(){hideLoad();btn.disabled=false;btn.textContent='ログイン';}
+  function tryLogin(){
+    attempts++;
+    jsonpCall_({action:'login',id:id,pw:pw},function(res){
+      finish();
+      if(res&&res.ok&&res.worker){maybeStorePasswordCredential(id,pw);genbaSaveSession(res);localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);}
+      else setErr((res&&res.error)||'ログインできませんでした');
+    },function(kind){
+      if(attempts<2){ setTimeout(tryLogin,700); return; }
+      finish();
+      var msg='通信エラー：Google Apps Scriptに接続できません。';
+      if(kind==='bad_url') msg='通信設定エラー：config.js の GAS_URL を確認してください。';
+      else if(kind==='timeout') msg='通信タイムアウト：GASのデプロイ状態、公開範囲、URLを確認してください。';
+      setErr(msg+'（'+APP_VERSION+'）');
+    },25000);
+  }
+  tryLogin();
 }
 function logout(){genbaClearSession();localStorage.removeItem('genba_user');location.reload();}
 function jsonpGet(action,onOk,extra){
-  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
-  var timer=setTimeout(function(){cleanup();},25000);
-  function cleanup(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
-  window[cb]=function(res){cleanup();if(res&&res.ok)onOk(res);};
-  s.src=GAS_URL+'?action='+encodeURIComponent(action)+'&secret='+encodeURIComponent(genbaSessionTok())+'&callback='+cb+(extra||'');
-  s.onerror=function(){cleanup();};
-  document.head.appendChild(s);
+  var params={action:action,secret:genbaSessionTok()};
+  if(extra){
+    String(extra).replace(/^&/,'').split('&').forEach(function(part){
+      if(!part)return; var kv=part.split('=');
+      var k=decodeURIComponent(kv[0]||''), v=decodeURIComponent((kv.slice(1).join('=')||''));
+      if(k)params[k]=v;
+    });
+  }
+  jsonpCall_(params,function(res){if(res&&res.ok)onOk(res);},function(){},25000);
 }
 function escD(v){return String(v==null?'':v).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function hm5(v){var t=String(v||'').slice(0,5);return t;}
