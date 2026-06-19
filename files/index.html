@@ -1,3 +1,4 @@
+<!-- version 58 files drive folder speed cache + silent hierarchy loading -->
 <!-- version 57 files inline Google Drive hierarchy + fixed file add dock -->
 <!-- version 56 files project tap opens drive directly + file add only buttons -->
 <!-- version 55 files renamed to file drive + generic Google Drive style folder browser + ledger moved to 工事写真 -->
@@ -212,7 +213,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v57</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v58</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -238,7 +239,7 @@
         <div class="driveHomeTitle"><span class="miniFolder">📁</span><span>ファイルドライブ</span><span class="driveHomeLevel" id="driveHomeLevel">区分</span></div>
         <div class="driveHomeNote">官公庁・民間などのフォルダから、顧客フォルダ、現場フォルダの順に開けます。現場フォルダ内もGoogleドライブのように閲覧できます。</div>
       </div>
-      <div class="driveHomeActions"><button type="button" onclick="resetDriveHome()">最初へ</button><button type="button" onclick="loadProjects(false)">更新</button></div>
+      <div class="driveHomeActions"><button type="button" onclick="resetDriveHome()">最初へ</button><button type="button" onclick="refreshFileScreen()">更新</button></div>
     </div>
     <div class="driveHomeBreadcrumb" id="driveHomeBreadcrumb"><span>マイドライブ</span><span>›</span><span>現場ファイル</span></div>
     <div class="projectFolderGrid" id="projectFolderGrid"><div class="driveHomeEmpty">現場フォルダを準備しています…<br><span style="font-size:12px;color:#7d8ea3;">初回のみ少し時間がかかります。次回からはすぐ表示されます。</span></div></div>
@@ -294,7 +295,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260619-drive-hierarchy-08"></script>
+<script src="../config.js?v=20260619-file-speed-09"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -322,6 +323,11 @@ var initialMode=(/[?&](mode=ledger|ledger=1|tool=ledger)/.test(location.search))
 var genericDriveStack=[];
 var driveHomeLevel='category', driveHomeCategory='', driveHomeCustomer='';
 var CACHE='genba_projects_cache_files';
+var DRIVE_ROOT_CACHE_PREFIX='gencan_drive_root_v09_';
+var DRIVE_ITEMS_CACHE_PREFIX='gencan_drive_items_v09_';
+var DRIVE_ITEMS_TTL=10*60*1000;
+var driveRequestSeq=0;
+var drivePrefetching={};
 // 案件管理からタップで来たとき用：?case=案件ID（id / proj でも可）
 var INIT_CASE=(function(){try{var p=new URLSearchParams(location.search);return p.get('case')||p.get('id')||p.get('proj')||'';}catch(e){return '';}})();
 var initApplied=false;
@@ -368,6 +374,52 @@ function readFilesCache_(){
   if(p.length){applyFilesData_(p,c,src);return true;}
   return false;
 }
+
+function driveItemsCacheKey_(fid){return DRIVE_ITEMS_CACHE_PREFIX+String(fid||'');}
+function driveRootCacheKey_(pid){return DRIVE_ROOT_CACHE_PREFIX+String(pid||'');}
+function readJsonCache_(key,ttl){
+  try{
+    var o=JSON.parse(localStorage.getItem(key)||'null');
+    if(!o||!o.at||!o.data)return null;
+    if(ttl && (Date.now()-Number(o.at||0)>ttl))return null;
+    return o.data;
+  }catch(e){return null;}
+}
+function writeJsonCache_(key,data){
+  try{localStorage.setItem(key,JSON.stringify({at:Date.now(),data:data||{}}));}catch(e){}
+}
+function clearDriveItemCache_(fid){try{localStorage.removeItem(driveItemsCacheKey_(fid));}catch(e){}}
+function cacheDriveItems_(fid,res){
+  if(!fid||!res||!res.ok)return;
+  writeJsonCache_(driveItemsCacheKey_(fid),{ok:true,folders:res.folders||[],files:res.files||[]});
+}
+function readDriveItemsCache_(fid){return readJsonCache_(driveItemsCacheKey_(fid),DRIVE_ITEMS_TTL);}
+function cacheProjectRoot_(pid,res){
+  if(!pid||!res||!res.ok||!res.rootId)return;
+  writeJsonCache_(driveRootCacheKey_(pid),{ok:true,rootId:res.rootId,url:res.url||'',folders:res.folders||[],files:res.files||[]});
+  cacheDriveItems_(res.rootId,{ok:true,folders:res.folders||[],files:res.files||[]});
+}
+function readProjectRootCache_(pid){return readJsonCache_(driveRootCacheKey_(pid),DRIVE_ITEMS_TTL);}
+function prefetchChildFolders_(folders){
+  folders=(folders||[]).slice(0,4); // 多すぎるとGASに負荷がかかるため、先頭4フォルダだけ先読み
+  folders.forEach(function(f,idx){
+    if(!f||!f.id||readDriveItemsCache_(f.id)||drivePrefetching[f.id])return;
+    drivePrefetching[f.id]=1;
+    setTimeout(function(){
+      callGAS({action:'driveItems',fid:f.id},18000,true).then(function(res){
+        if(res&&res.ok)cacheDriveItems_(f.id,res);
+      }).catch(function(){}).then(function(){delete drivePrefetching[f.id];});
+    },250+idx*350);
+  });
+}
+function refreshFileScreen(){
+  if(driveHomeLevel==='drive'&&genericDriveStack&&genericDriveStack.length){
+    var cur=genericDriveStack[genericDriveStack.length-1]||{};
+    if(cur.id){clearDriveItemCache_(cur.id);openHomeGenericFolder(cur.id,cur.name,true,true);return;}
+  }
+  loadProjects(false);
+}
+
 function loadProjects(silent){
   setSync('busy',silent?'バックグラウンド更新中…':'同期中…');
   callGAS({action:'filesHomeData'},15000,silent).then(function(res){
@@ -589,28 +641,64 @@ function renderHomeDriveItems(folders,files){
   files.forEach(function(f){box.appendChild(makeHomeDriveFileCard(f));});
   if(!folders.length&&!files.length){box.innerHTML='<div class="driveHomeEmpty">このフォルダは空です。</div>';}
 }
-function loadHomeGenericDriveRoot(){
+
+function loadHomeGenericDriveRoot(forceRefresh){
   if(!curId){toast('現場を選択してください');return;}
   var p=(projects||[]).filter(function(x){return x['案件ID']===curId;})[0]||{};
   driveHomeSetAsProjectDrive(p['案件名']||'現場フォルダ');
   hideLegacyBrowserPanel();
+  var cached=!forceRefresh && readProjectRootCache_(curId);
+  if(cached&&cached.rootId){
+    driveRootId=cached.rootId||''; driveCurrentId=driveRootId; driveCurrentName='現場フォルダ';
+    genericDriveStack=[{id:driveRootId,name:p['案件名']||'現場フォルダ'}];
+    renderHomeDriveItems(cached.folders||[],cached.files||[]);
+    setSync('ok','保存データから即時表示中');
+    // 画面はすぐ出し、裏側で最新状態だけ確認します。
+    callGAS({action:'projectDriveRoot',id:curId},18000,true).then(function(res){
+      if(res&&res.ok){cacheProjectRoot_(curId,res); if(driveHomeLevel==='drive'&&genericDriveStack.length===1&&String(curId)){driveRootId=res.rootId||driveRootId;driveCurrentId=driveRootId;renderHomeDriveItems(res.folders||[],res.files||[]);}}
+    }).catch(function(){});
+    prefetchChildFolders_(cached.folders||[]);
+    return;
+  }
   showHomeDriveLoading('現場フォルダを読込中…');
-  callGAS({action:'projectDriveRoot',id:curId}).then(function(res){
+  var seq=++driveRequestSeq;
+  callGAS({action:'projectDriveRoot',id:curId},18000,true).then(function(res){
+    if(seq!==driveRequestSeq)return;
     if(!res||!res.ok)throw new Error((res&&res.error)||'フォルダ取得失敗');
     driveRootId=res.rootId||''; driveCurrentId=driveRootId; driveCurrentName='現場フォルダ';
     genericDriveStack=[{id:driveRootId,name:p['案件名']||'現場フォルダ'}];
+    cacheProjectRoot_(curId,res);
     renderHomeDriveItems(res.folders||[],res.files||[]);
-  }).catch(function(err){showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v108.gs を確認してください。');toast(err.message);});
+    prefetchChildFolders_(res.folders||[]);
+  }).catch(function(err){if(seq===driveRequestSeq){showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v108.gs を確認してください。');toast(err.message);}});
 }
-function openHomeGenericFolder(fid,name,keepStack){
+
+function openHomeGenericFolder(fid,name,keepStack,forceRefresh){
   if(!fid){toast('フォルダIDがありません');return;}
   if(!keepStack)genericDriveStack.push({id:fid,name:name||'フォルダ'});
   driveCurrentId=fid; driveCurrentName=name||'フォルダ';
-  setDriveHomeDriveBreadcrumb(); showHomeDriveLoading('フォルダを読込中…');
-  callGAS({action:'driveItems',fid:fid}).then(function(res){
+  setDriveHomeDriveBreadcrumb();
+  var cached=!forceRefresh && readDriveItemsCache_(fid);
+  if(cached){
+    renderHomeDriveItems(cached.folders||[],cached.files||[]);
+    setSync('ok','保存データから即時表示中');
+    prefetchChildFolders_(cached.folders||[]);
+    // 表示を止めずに裏側で最新化。現在見ているフォルダの時だけ差し替えます。
+    var currentFid=fid;
+    callGAS({action:'driveItems',fid:fid},18000,true).then(function(res){
+      if(res&&res.ok){cacheDriveItems_(currentFid,res); if(driveCurrentId===currentFid)renderHomeDriveItems(res.folders||[],res.files||[]);}
+    }).catch(function(){});
+    return;
+  }
+  showHomeDriveLoading('フォルダを読込中…');
+  var seq=++driveRequestSeq;
+  callGAS({action:'driveItems',fid:fid},18000,true).then(function(res){
+    if(seq!==driveRequestSeq)return;
     if(!res||!res.ok)throw new Error((res&&res.error)||'一覧取得失敗');
+    cacheDriveItems_(fid,res);
     renderHomeDriveItems(res.folders||[],res.files||[]);
-  }).catch(function(err){showHomeDriveLoading('フォルダの取得に失敗しました');toast(err.message);});
+    prefetchChildFolders_(res.folders||[]);
+  }).catch(function(err){if(seq===driveRequestSeq){showHomeDriveLoading('フォルダの取得に失敗しました');toast(err.message);}});
 }
 function openHomeDriveIndex(i){
   var it=genericDriveStack[i]; if(!it)return;
