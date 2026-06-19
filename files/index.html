@@ -1,4 +1,4 @@
-<!-- version 61 files ledger thumbnails 6 columns + natural ratio -->
+<!-- version 62 files ledger open without ensureFolder + fallback -->
 <!-- version 59 files ledger project open fix + hide file dock in ledger -->
 <!-- version 58 files drive folder speed cache + silent hierarchy loading -->
 <!-- version 57 files inline Google Drive hierarchy + fixed file add dock -->
@@ -238,7 +238,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v61</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v62</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -329,7 +329,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260619-ui-thumb-12"></script>
+<script src="../config.js?v=20260619-ledger-open-13"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -675,9 +675,14 @@ function setDriveHomeDriveBreadcrumb(){
   var bc=document.getElementById('driveHomeBreadcrumb'); if(!bc)return;
   var base=(initialMode==='ledger'||ledgerMode)?'工事写真台帳':'現場ファイル';
   var html='<span>マイドライブ</span><span>›</span><span>'+base+'</span>';
-  genericDriveStack.forEach(function(x,i){
-    html+='<span>›</span><button type="button" style="border:none;background:transparent;color:'+(i===genericDriveStack.length-1?'var(--ink)':'var(--accent-d)')+';font-weight:900;font-size:12.5px;padding:0;cursor:pointer;" onclick="openHomeDriveIndex('+i+')">'+escText(x.name||'フォルダ')+'</button>';
-  });
+  if(genericDriveStack&&genericDriveStack.length){
+    genericDriveStack.forEach(function(x,i){
+      html+='<span>›</span><button type="button" style="border:none;background:transparent;color:'+(i===genericDriveStack.length-1?'var(--ink)':'var(--accent-d)')+';font-weight:900;font-size:12.5px;padding:0;cursor:pointer;" onclick="openHomeDriveIndex('+i+')">'+escText(x.name||'フォルダ')+'</button>';
+    });
+  }else if(curId){
+    var p=(projects||[]).filter(function(x){return x['案件ID']===curId;})[0]||{};
+    html+='<span>›</span><span>'+escText(p['案件名']||'選択中の現場')+'</span>';
+  }
   bc.innerHTML=html;
 }
 function showHomeDriveLoading(msg){
@@ -794,7 +799,22 @@ function loadHomeGenericDriveRoot(forceRefresh){
     cacheProjectRoot_(curId,res);
     renderHomeCurrentItems(res.folders||[],res.files||[]);
     prefetchChildFolders_(res.folders||[]);
-  }).catch(function(err){if(seq===driveRequestSeq){showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v108.gs を確認してください。');toast(err.message);}});
+  }).catch(function(err){
+    if(seq!==driveRequestSeq)return;
+    // 工事写真台帳では、フォルダ一覧取得に失敗しても写真一覧だけは表示できる場合があるため、旧方式にフォールバックする。
+    if(initialMode==='ledger'||ledgerMode){
+      showHomeDriveLoading('フォルダ取得を再試行中…');
+      callGAS({action:'listPhotos',id:curId},30000,true).then(function(r){
+        if(!r||!r.ok)throw new Error((r&&r.error)||'写真一覧取得失敗');
+        driveRootId=''; driveCurrentId=''; genericDriveStack=[];
+        setDriveHomeBreadcrumb([((projects||[]).filter(function(x){return x['案件ID']===curId;})[0]||{})['案件名']||'選択中の現場']);
+        renderHomeLedgerItems([],r.photos||[]);
+        toast('フォルダ表示は取得できなかったため、写真一覧のみ表示しています');
+      }).catch(function(e){showHomeDriveLoading('フォルダ準備に失敗しました。更新ボタンを押すか、少し待ってから再選択してください。');toast((err&&err.message)||e.message);});
+      return;
+    }
+    showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v108.gs を確認してください。');toast(err.message);
+  });
 }
 
 function openHomeGenericFolder(fid,name,keepStack,forceRefresh){
@@ -856,6 +876,7 @@ function onCand(){ curId=''; folderReady=false; updateFileAddDock(); updateLedge
 function onSelect(){
   curId=document.getElementById('projSel').value;
   driveRootId=''; driveCurrentId=''; driveCurrentName='現場フォルダ'; driveFolders=[];
+  genericDriveStack=[];
   var ut=document.getElementById('upThumbs');if(ut){ut.style.display='none';ut.innerHTML='';}
   var panel=document.getElementById('panel');
   if(!curId){panel.style.display='none';updateLedgerDock();return;}
@@ -863,16 +884,30 @@ function onSelect(){
   document.getElementById('pName').textContent=p['案件名']||'';
   document.getElementById('pId').textContent=curId;
   hideLegacyBrowserPanel();
+
+  // 工事写真台帳は「閲覧・選択」が主目的なので、重い ensureFolder を先に走らせない。
+  // ここで止まると写真台帳が開かないため、Google Drive風の一覧取得を直接行う。
+  if(initialMode==='ledger'||ledgerMode){
+    ledgerMode=true;
+    folderReady=true;
+    updateFileAddDock();
+    updateLedgerDock();
+    driveHomeSetAsLedgerDrive(p['案件名']||'選択中の現場');
+    showHomeDriveLoading('写真フォルダを読込中…');
+    loadHomeGenericDriveRoot(true);
+    return;
+  }
+
   showHomeDriveLoading('現場フォルダを準備中…');
   folderReady=false; updateFileAddDock();
-  // フォルダを用意（無ければ作成）してから、同じ場所にGoogleドライブ風で表示
+  // ファイル画面はアップロード先が必要なので、フォルダを用意（無ければ作成）してから表示する。
   callGAS({action:'ensureFolder',id:curId}).then(function(res){
     if(!res.ok)throw new Error(res.error||'フォルダ準備失敗');
     var openBtn=document.getElementById('openBtn');
     if(openBtn)openBtn.href=res.url||'#';
     folderReady=true; updateFileAddDock(); updateLedgerDock();
     autoOpenDriveAfterFolder=false;
-    if(initialMode==='ledger')showLedger(); else loadHomeGenericDriveRoot();
+    loadHomeGenericDriveRoot();
   }).catch(function(err){ showHomeDriveLoading('フォルダ準備に失敗しました。↻でやり直すか、少し待って再選択してください。'); updateFileAddDock(); toast(err.message); });
 }
 
