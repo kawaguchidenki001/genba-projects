@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<!-- version page app v2026.06.19-24 Code_v124 mobile quick -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>更新履歴｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--blue:#2563eb;--ok:#15803d;--warn:#b45309;--ng:#dc2626;--line:#d4e4f0;}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.65;}
+.wrap{max-width:960px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 100px;}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.back{width:42px;height:42px;border-radius:14px;border:0;background:#e8ecf2;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #fff;color:#1f5fa8;font-size:20px;font-weight:800;cursor:pointer;}
+.head{flex:1;min-width:0;} .kicker{font-family:Manrope,sans-serif;font-weight:800;letter-spacing:.18em;font-size:10px;color:var(--sub);text-transform:uppercase;}
+h1{font-size:24px;color:#1f5fa8;line-height:1.25;}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#dfeaf6;color:#1f5fa8;font-family:Manrope,sans-serif;font-size:11px;font-weight:800;padding:5px 10px;}
+.card{background:#e8ecf2;border-radius:18px;box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #fff;padding:16px;margin:14px 0;}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.btn{border:0;border-radius:14px;padding:12px 16px;font-weight:800;background:#2563eb;color:#fff;box-shadow:4px 4px 9px #cdd3dc,-4px -4px 9px #fff;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;}
+.btn.secondary{background:#edf3fa;color:#1f5fa8;}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.metric{background:#edf3fa;border:1px solid #d7e5f2;border-radius:16px;padding:13px;min-height:86px;}
+.metric b{display:block;font-size:18px;color:#1f5fa8;line-height:1.25;word-break:break-word;}
+.metric span{display:block;color:var(--sub);font-size:12px;font-weight:800;margin-top:4px;}
+.status{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;}
+.status.ok{background:#dcfce7;color:var(--ok);} .status.warn{background:#fef3c7;color:var(--warn);} .status.ng{background:#fee2e2;color:var(--ng);}
+.list{display:grid;gap:10px;margin-top:10px;}
+.item{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:16px;padding:13px 14px;}
+.item .date{font-family:Manrope,sans-serif;font-size:11px;font-weight:800;color:#7a8da1;letter-spacing:.08em;}
+.item h3{font-size:16px;color:#1f5fa8;margin:2px 0 6px;}
+ul{padding-left:1.25em;} li{margin:.1em 0;}
+.small{font-size:12px;color:var(--sub);}
+.err{background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:800;display:none;}
+@media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr);} h1{font-size:22px;}}
+</style>
+<script src="../config.js?v=20260619-mobile-quick-24"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <button class="back" onclick="location.href='../'">←</button>
+    <div class="head"><div class="kicker">Gen-Can Version</div><h1>更新履歴・バージョン確認</h1></div>
+    <span class="badge" id="appBadge">v2026.06.19-24</span>
+  </div>
+
+  <div class="card">
+    <div id="gasStatus" class="status warn">GAS確認前</div>
+    <p class="small" style="margin-top:10px;">アプリ本体・GitHub側ファイル・GAS側コードのバージョンを確認します。更新後の確認用です。</p>
+    <div class="actions">
+      <button class="btn" onclick="checkGas()">GAS接続を確認</button>
+      <a class="btn secondary" href="../setup/">初期設定チェックへ</a>
+      <a class="btn secondary" href="../help/">操作ガイドへ</a>
+      <a class="btn secondary" href="../">メニューへ戻る</a>
+    </div>
+    <div class="err" id="err"></div>
+  </div>
+
+  <div class="grid" id="metrics"></div>
+
+  <div class="card">
+    <h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">今回の更新</h2>
+    <ul>
+      <li><b>Code_v124.gs</b> に変更しました。</li>
+      <li>ルートメニューに <b>現場クイック</b> を追加しました。</li>
+      <li>スマホ・タブレットで日報、ファイル、工事写真、打刻へすぐ移動できます。</li>
+      <li>操作ガイドにも現場クイックの使い方を追加しました。</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">更新履歴</h2>
+    <div class="list">
+      <div class="item"><div class="date">2026.06.19 / v24</div><h3>現場クイックメニュー追加</h3><ul><li>Code_v124化</li><li>スマホでよく使う機能を大きいボタンで表示</li><li>日報・ファイル・工事写真・打刻へ下部固定ナビから移動</li></ul></div>
+      <div class="item"><div class="date">2026.06.19 / v23</div><h3>操作ガイド追加</h3><ul><li>Code_v123化</li><li>ファイル・工事写真・台帳作成の手順を整理</li><li>トラブル時の確認導線を追加</li></ul></div>
+      <div class="item"><div class="date">2026.06.19 / v22</div><h3>バージョン確認・更新履歴</h3><ul><li>Code_v122化</li><li>更新履歴画面を追加</li><li>GAS接続確認を追加</li></ul></div>
+      <div class="item"><div class="date">2026.06.19 / v21</div><h3>初期設定チェック</h3><ul><li>Code_v121化</li><li>GAS・シート・Drive・バックアップ確認</li><li>不足シート・不足列の修復</li></ul></div>
+      <div class="item"><div class="date">2026.06.19 / v20</div><h3>ログイン・認証安定化</h3><ul><li>セッション切れ時の案内を改善</li><li>認証エラー時の復帰処理を追加</li></ul></div>
+      <div class="item"><div class="date">2026.06.19 / v14〜v19</div><h3>工事写真台帳の強化</h3><ul><li>写真選択順・並び替え</li><li>写真拡大プレビュー</li><li>工種・撮影箇所・備考入力</li><li>PDF/Excel出力・作成済み台帳一覧</li></ul></div>
+      <div class="item"><div class="date">2026.06.19 / v08〜v13</div><h3>ファイル画面・工事写真台帳の階層表示</h3><ul><li>Google Drive風の階層表示</li><li>ファイル読み込み高速化</li><li>下部固定ボタン</li></ul></div>
+    </div>
+  </div>
+</div>
+<script>
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-24';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-mobile-quick-24';
+document.getElementById('appBadge').textContent=APP_VERSION;
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function metric(nm,val){return '<div class="metric"><b>'+esc(val)+'</b><span>'+esc(nm)+'</span></div>';}
+function setErr(t){var e=document.getElementById('err');e.style.display=t?'block':'none';e.textContent=t||'';}
+function render(base,gas){
+  document.getElementById('metrics').innerHTML=metric('アプリ',APP_VERSION)+metric('ビルド',BUILD_ID)+metric('GAS',gas&&gas.version?gas.version:'未確認')+metric('GASファイル',gas&&gas.gasFile?gas.gasFile:'未確認');
+}
+function jsonp(params){return new Promise(function(resolve,reject){
+  if(!GAS_URL){reject(new Error('config.js の GAS_URL が空です'));return;}
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6); params=params||{}; params.callback=cb; params._ts=Date.now(); params._build=BUILD_ID;
+  var s=document.createElement('script'), timer=setTimeout(function(){finish('timeout');},20000), done=false;
+  function finish(kind,res){if(done)return;done=true;clearTimeout(timer);try{delete window[cb];}catch(e){} if(s.parentNode)s.parentNode.removeChild(s); if(kind==='ok')resolve(res||{}); else reject(new Error(kind==='timeout'?'タイムアウト':'通信エラー'));}
+  window[cb]=function(res){finish('ok',res);}; s.onerror=function(){finish('error');};
+  s.src=GAS_URL+'?'+Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&'); document.head.appendChild(s);
+});}
+function checkGas(){
+  setErr(''); var st=document.getElementById('gasStatus'); st.className='status warn'; st.textContent='確認中...';
+  jsonp({action:'versionInfo'}).then(function(res){
+    st.className='status '+(res&&res.ok?'ok':'ng'); st.textContent=(res&&res.ok)?'GAS接続OK':'GAS確認NG'; render({},res||{});
+  }).catch(function(e){st.className='status ng';st.textContent='GAS接続NG';setErr(e.message+'。Code_v124.gsをGAS側に貼り替え、既存デプロイを新バージョンで更新してください。');render({},null);});
+}
+render({},null);checkGas();
+</script>
+</body>
+</html>

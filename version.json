@@ -1,0 +1,18 @@
+{
+  "appName": "Gen-Can",
+  "appVersion": "v2026.06.19-24",
+  "build": "20260619-mobile-quick-24",
+  "gasFile": "Code_v124.gs",
+  "updatedAt": "2026-06-19",
+  "summary": "Code_v124化、現場クイックメニューを追加",
+  "changedFiles": [
+    "index.html",
+    "config.js",
+    "quick/index.html",
+    "help/index.html",
+    "version/index.html",
+    "sw.js",
+    "Code_v124.gs",
+    "version.json"
+  ]
+}

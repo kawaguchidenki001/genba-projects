@@ -1,5 +1,12 @@
 <!DOCTYPE html>
-<!-- version 64 root app version v2026.06.19-13 ledger open fix -->
+<!-- version 73 root app version v2026.06.19-24 mobile quick + Code_v124 -->
+<!-- version 71 root app version v2026.06.19-22 version history + Code_v122 -->
+<!-- version 70 root app version v2026.06.19-22 setup check + Code_v122.gs -->
+<!-- version 68 root app version v2026.06.19-22 ledger history -->
+<!-- version 67 root app version v2026.06.19-22 ledger template output -->
+<!-- version 66 root app version v2026.06.19-22 ledger photo info -->
+<!-- version 65 root app version v2026.06.19-22 ledger selection order -->
+<!-- version 64 root app version v2026.06.19-22 ledger open fix -->
 <!-- version 59 root ログイン通信安定化・バージョンバッジ更新 -->
 <!-- version 58 root 工事写真メニュー追加・写真ファイルをファイルに名称変更 -->
 <!-- version 57 root 今日の状況・今日やることカード削除 -->
@@ -54,10 +61,10 @@
   .sq .cor{color:var(--sub);}
 
   /* 色分け（アイコンの線色） */
-  .t-proj .ic{color:#5b5bd6;} .t-report .ic{color:#0e9f6e;} .t-time .ic{color:#7c3aed;}
+  .t-quick .ic{color:#2563eb;} .t-proj .ic{color:#5b5bd6;} .t-report .ic{color:#0e9f6e;} .t-time .ic{color:#7c3aed;}
   .t-sched .ic{color:#2d7dd2;} .t-files .ic{color:#e8910b;} .t-photo .ic{color:#dc2626;} .t-tool .ic{color:#0d9aa0;}
   .t-veh .ic{color:#b45309;} .t-tool2 .ic{color:#a16207;} .t-safety .ic{color:#15803d;}
-  .t-est .ic{color:#9d7a18;} .t-cost .ic{color:#0f766e;} .t-admin .ic{color:#475569;}
+  .t-est .ic{color:#9d7a18;} .t-cost .ic{color:#0f766e;} .t-admin .ic{color:#475569;} .t-setup .ic{color:#2563eb;} .t-version .ic{color:#7c3aed;}
   .t-material .ic{color:#2563eb;}
   .t-ai .ic{color:#7c3aed;}
 
@@ -202,7 +209,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.19-13</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.19-24</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -217,7 +224,7 @@
       <button id="lgbtn" type="submit">ログイン</button>
     </form>
     <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.55;">Chrome・Edge等で保存すると、次回から指紋・顔認証で自動入力できます。</div>
-    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.19-13</div>
+    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.19-24</div>
     <div class="err" id="lgerr"></div>
   </div>
 </div>
@@ -236,6 +243,7 @@
 
   <div class="lbl">現場用</div>
   <div class="grid">
+    <a class="sq t-quick" href="./quick/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2 3 14h8l-1 8 10-12h-8Z"/></svg></span><span class="txt"><span class="en">Field Quick</span><span class="nm">現場クイック</span><span class="ds">日報・ファイル・工事写真・打刻を大きいボタンで操作</span></span><span class="cor">⚡</span></a>
     <a class="sq t-proj" href="./projects/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span><span class="txt"><span class="en">Projects</span><span class="nm">案件管理</span><span class="ds">現場の一覧・詳細・写真・ファイルはこちら</span></span><span class="cor">→</span></a>
     <a class="sq t-report" href="./report/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span class="txt"><span class="en">Daily report</span><span class="nm">作業日報</span><span class="ds">現場ごとの作業・人工・時間を記録</span></span><span class="cor">→</span></a>
     <a class="sq t-time" href="./timecard/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span class="txt"><span class="en">Timecard</span><span class="nm">タイムカード</span><span class="ds">出勤・退勤の打刻と勤怠集計</span></span><span class="cor">→</span></a>
@@ -255,17 +263,22 @@
     <a class="sq t-est" href="./estimate/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l4 4v16H6z"/><path d="M9.5 11.5 12 14l2.5-2.5M12 14v4M10 16h4"/></svg></span><span class="txt"><span class="en">Invoice</span><span class="nm">見積・請求</span></span><span class="cor lock">🔒</span></a>
     <a class="sq t-cost" href="./daicho/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 21V12M11 21V7M16 21v-7M21 21V4"/></svg></span><span class="txt"><span class="en">Ledger</span><span class="nm">工事台帳</span></span><span class="cor lock">🔒</span></a>
     <a class="sq t-admin" href="./admin/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></span><span class="txt"><span class="en">Admin</span><span class="nm">管理画面</span></span><span class="cor lock">🔒</span></a>
+
+    <a class="sq t-version" href="./version/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><path d="M17 13l2 2-2 2"/></svg></span><span class="txt"><span class="en">Version</span><span class="nm">更新履歴</span><span class="ds">バージョン・GAS接続・変更内容を確認</span></span><span class="cor">→</span></a>
+    <a class="sq t-setup" href="./setup/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M4.9 4.9 7 7M17 17l2.1 2.1M3 12h3M18 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/><circle cx="12" cy="12" r="4"/><path d="m10.8 12.2.8.8 1.8-2"/></svg></span><span class="txt"><span class="en">Setup</span><span class="nm">初期設定チェック</span><span class="ds">GAS・シート・Drive・バージョン確認</span></span><span class="cor lock">🔒</span></a>
+
+    <a class="sq t-help" href="./help/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.7 1.2-2.2 1.5-2.7 2.5"/><path d="M12 17h.01"/></svg></span><span class="txt"><span class="en">Help</span><span class="nm">操作ガイド</span><span class="ds">使い方・困った時の確認</span></span><span class="cor">→</span></a>
   </div>
 
   <div class="foot"><span id="meName"></span> ・ <a href="#" onclick="logout();return false;">ログアウト</a></div>
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260619-ledger-open-13"></script>
+<script src="./config.js?v=20260619-ledger-photo-info-17"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-13';
-var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-ui-thumb-12';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-24';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-ledger-photo-info-17';
 (function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
 
 function genbaSessionTok(){

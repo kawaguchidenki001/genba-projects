@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!-- quick menu app v2026.06.19-24 Code_v124 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>現場クイック｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800;900&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--blue:#2563eb;--cyan:#06b6d4;--purple:#7c3aed;--line:#d4e4f0;--card:#f7fbff;--shadow:6px 6px 13px #cdd3dc,-6px -6px 13px #fff;--shadow-sm:4px 4px 9px #cdd3dc,-4px -4px 9px #fff;}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;}html{scroll-behavior:smooth;}body{min-height:100vh;background:linear-gradient(145deg,#eaf4fb 0%,#f5fbff 54%,#eef3fb 100%);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16px;line-height:1.6;padding-bottom:calc(84px + env(safe-area-inset-bottom));}
+.wrap{max-width:980px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 28px;}.top{display:flex;align-items:center;gap:12px;margin-bottom:16px;}.back{width:46px;height:46px;border:0;border-radius:16px;background:#e8ecf2;box-shadow:var(--shadow-sm);font-size:22px;font-weight:900;color:#1f5fa8;cursor:pointer;}.head{flex:1;min-width:0;}.kicker{font-family:Manrope,sans-serif;font-size:10px;font-weight:900;letter-spacing:.18em;color:var(--sub);text-transform:uppercase;}h1{font-size:26px;line-height:1.22;color:#1f5fa8;font-weight:900;}.badge{font-family:Manrope,sans-serif;font-size:10.5px;font-weight:900;color:#fff;background:linear-gradient(92deg,var(--cyan),var(--blue) 60%,var(--purple));border-radius:999px;padding:5px 10px;white-space:nowrap;}
+.hero{background:#e8ecf2;border-radius:24px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px;}.hero h2{font-size:20px;color:#173b5d;margin-bottom:4px;}.hero p{font-size:13.5px;color:var(--sub);}.user{margin-top:10px;font-size:12.5px;color:#607d96;font-weight:800;}.section{margin:18px 0 10px;font-family:Manrope,sans-serif;font-weight:900;letter-spacing:.12em;font-size:11px;color:var(--sub);text-transform:uppercase;}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}.card{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:150px;text-decoration:none;color:var(--ink);background:#e8ecf2;border-radius:24px;box-shadow:var(--shadow);padding:17px;border:1px solid rgba(255,255,255,.45);}.card:active{transform:translateY(1px);box-shadow:inset 4px 4px 9px #cdd3dc,inset -4px -4px 9px #fff;}.ic{width:46px;height:46px;border-radius:18px;background:#f5f9fd;border:1px solid #dce8f3;display:flex;align-items:center;justify-content:center;color:var(--blue);}.ic svg{width:25px;height:25px;}.nm{font-size:21px;font-weight:900;letter-spacing:.02em;color:#173b5d;}.ds{font-size:12.5px;color:var(--sub);line-height:1.45;margin-top:3px;}.go{position:absolute;right:14px;top:13px;color:#7a8da1;font-weight:900;}.wide{grid-column:span 2;}.primary{background:linear-gradient(135deg,#eff9ff,#e8ecf2 50%,#eef1ff);}.primary .ic{background:linear-gradient(135deg,#06b6d4,#2563eb 70%,#7c3aed);color:#fff;border:0;}.note{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:18px;padding:13px;color:#526f88;font-size:13px;margin-top:14px;}.bottom{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(247,251,255,.94);backdrop-filter:blur(12px);border-top:1px solid #d8e6f2;padding:8px 10px calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}.bottom a{min-height:50px;border-radius:15px;text-decoration:none;color:#43637e;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:900;line-height:1.2;}.bottom a b{font-size:18px;line-height:1;}.bottom a.active{background:#e8ecf2;color:#1f5fa8;box-shadow:inset 3px 3px 7px #cdd3dc,inset -3px -3px 7px #fff;}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr);gap:11px;}.card{min-height:136px;padding:15px;border-radius:21px;}.wide{grid-column:span 2;}.nm{font-size:19px;}h1{font-size:24px;}.wrap{padding-left:14px;padding-right:14px;}}
+@media(max-width:420px){.grid{grid-template-columns:1fr;}.wide{grid-column:span 1;}.card{min-height:118px;}.bottom a{font-size:10.5px;}.hero{border-radius:21px;}}
+</style>
+<script src="../config.js?v=20260619-mobile-quick-24"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <button class="back" onclick="location.href='../'">←</button>
+    <div class="head"><div class="kicker">Gen-Can Field Quick</div><h1>現場クイック</h1></div>
+    <span class="badge" id="appBadge">v2026.06.19-24</span>
+  </div>
+  <div class="hero">
+    <h2>現場で使う機能だけを大きく表示</h2>
+    <p>スマホ・タブレットで、日報・写真・ファイル・打刻へすぐ移動できる画面です。</p>
+    <div class="user" id="userLine">ログイン情報を確認中…</div>
+  </div>
+  <div class="section">よく使う機能</div>
+  <div class="grid">
+    <a class="card primary" href="../report/"><span class="go">→</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><span><div class="nm">作業日報</div><div class="ds">今日の作業・人工を入力</div></span></a>
+    <a class="card primary" href="../files/"><span class="go">→</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 10h18"/></svg></span><span><div class="nm">ファイル</div><div class="ds">図面・資料・写真をDrive風に閲覧</div></span></a>
+    <a class="card primary" href="../photos/"><span class="go">→</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.2"/></svg></span><span><div class="nm">工事写真</div><div class="ds">小黒板カメラ・写真台帳</div></span></a>
+    <a class="card" href="../toolbox/?tool=board&from=quick&mode=live"><span class="go">→</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><circle cx="17" cy="16" r="2"/></svg></span><span><div class="nm">小黒板カメラ</div><div class="ds">黒板付き写真をすぐ撮影</div></span></a>
+    <a class="card" href="../files/?mode=ledger"><span class="go">→</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5M9 12h6M9 16h6"/></svg></span><span><div class="nm">写真台帳</div><div class="ds">写真を選んでPDF・Excel作成</div></span></a>
+    <a class="card" href="../timecard/"><span class="go">→</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg></span><span><div class="nm">打刻</div><div class="ds">出勤・退勤を記録</div></span></a>
+  </div>
+  <div class="section">確認・管理</div>
+  <div class="grid">
+    <a class="card" href="../projects/"><span class="go">→</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span><span><div class="nm">案件管理</div><div class="ds">現場情報を確認</div></span></a>
+    <a class="card" href="../calendar/"><span class="go">→</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span><div class="nm">予定</div><div class="ds">スケジュールを確認</div></span></a>
+    <a class="card" href="../help/"><span class="go">→</span><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 1 1 5.8 1c-.7 1.2-2.2 1.5-2.7 2.5"/><path d="M12 17h.01"/></svg></span><span><div class="nm">操作ガイド</div><div class="ds">使い方・困った時</div></span></a>
+  </div>
+  <div class="note">この画面はスマホ現場作業用です。通常メニューに戻る場合は左上の戻る、または下部の「メニュー」を押してください。</div>
+</div>
+<div class="bottom">
+  <a class="active" href="./"><b>⚡</b>クイック</a>
+  <a href="../report/"><b>📝</b>日報</a>
+  <a href="../files/"><b>📁</b>ファイル</a>
+  <a href="../photos/"><b>📸</b>写真</a>
+  <a href="../timecard/"><b>⏱</b>打刻</a>
+</div>
+<script>
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-24';
+document.getElementById('appBadge').textContent=APP_VERSION;
+(function(){
+  var u=null;try{u=JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){}
+  var line=document.getElementById('userLine');
+  if(u&&u['氏名']) line.textContent=u['氏名']+' さん用のクイック操作です';
+  else line.textContent='ログイン済みでない場合は、メニューへ戻ってログインしてください';
+})();
+</script>
+</body>
+</html>

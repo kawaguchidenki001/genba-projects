@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<!-- setup version 3 app v2026.06.19-24 Code_v124 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>初期設定チェック｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--blue:#2563eb;--ok:#15803d;--warn:#b45309;--ng:#dc2626;--line:#d4e4f0;}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.6;}
+.wrap{max-width:960px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 100px;}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.back{width:42px;height:42px;border-radius:14px;border:0;background:#e8ecf2;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #fff;color:#1f5fa8;font-size:20px;font-weight:800;}
+.head{flex:1;}
+.kicker{font-family:"Manrope",sans-serif;font-weight:800;letter-spacing:.18em;font-size:10px;color:var(--sub);text-transform:uppercase;}
+h1{font-size:24px;color:#1f5fa8;line-height:1.25;}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#dfeaf6;color:#1f5fa8;font-family:"Manrope",sans-serif;font-size:11px;font-weight:800;padding:5px 10px;}
+.card{background:#e8ecf2;border-radius:18px;box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #fff;padding:16px;margin:14px 0;}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.btn{border:0;border-radius:14px;padding:12px 16px;font-weight:800;background:#2563eb;color:#fff;box-shadow:4px 4px 9px #cdd3dc,-4px -4px 9px #fff;cursor:pointer;}
+.btn.secondary{background:#edf3fa;color:#1f5fa8;}
+.btn.warn{background:#b45309;color:#fff;}
+.btn:disabled{opacity:.55;cursor:not-allowed;}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.metric{background:#edf3fa;border:1px solid #d7e5f2;border-radius:16px;padding:13px;}
+.metric b{display:block;font-size:24px;color:#1f5fa8;line-height:1.1;}
+.metric span{display:block;color:var(--sub);font-size:12px;font-weight:800;margin-top:4px;}
+.status{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:800;}
+.status.ok{background:#dcfce7;color:var(--ok);} .status.warn{background:#fef3c7;color:var(--warn);} .status.ng{background:#fee2e2;color:var(--ng);}
+.tbl{width:100%;border-collapse:separate;border-spacing:0 8px;}
+.tbl th{text-align:left;color:var(--sub);font-size:12px;padding:0 10px;}
+.tbl td{background:#f5f9fd;border-top:1px solid #dbe8f3;border-bottom:1px solid #dbe8f3;padding:11px 10px;vertical-align:top;}
+.tbl td:first-child{border-left:1px solid #dbe8f3;border-radius:12px 0 0 12px;font-weight:800;}
+.tbl td:last-child{border-right:1px solid #dbe8f3;border-radius:0 12px 12px 0;}
+.small{font-size:12px;color:var(--sub);}
+.err{background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:800;display:none;}
+.okbox{background:#dcfce7;color:#166534;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:800;display:none;}
+.loading{position:fixed;inset:0;background:rgba(232,236,242,.72);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(3px);}
+.loading.show{display:flex;}
+.spin{width:44px;height:44px;border-radius:999px;border:5px solid #dbe8f3;border-top-color:#2563eb;animation:spin .8s linear infinite;}@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr);} .tbl{font-size:13px}.tbl th:nth-child(3),.tbl td:nth-child(3){display:none;}}
+</style>
+<script src="../config.js?v=20260619-mobile-quick-24"></script>
+</head>
+<body>
+<div class="loading" id="loading"><div class="spin"></div></div>
+<div class="wrap">
+  <div class="top">
+    <button class="back" onclick="location.href='../'">←</button>
+    <div class="head"><div class="kicker">Gen-Can Setup</div><h1>初期設定チェック</h1></div>
+    <span class="badge">v2026.06.19-24</span>
+  </div>
+  <div class="card">
+    <div id="summaryStatus" class="status warn">確認前</div>
+    <p class="small" style="margin-top:10px;">GAS・スプレッドシート・Driveフォルダ・バージョンの状態をまとめて確認します。販売前や更新後の確認用です。</p>
+    <div class="actions">
+      <button class="btn" onclick="loadStatus()">状態を確認</button>
+      <button class="btn warn" onclick="repairSetup()">不足シート・列を修復</button>
+      <button class="btn secondary" onclick="location.href='../admin/'">管理画面へ</button>
+      <button class="btn secondary" onclick="location.href='../version/'">更新履歴へ</button>
+      <button class="btn secondary" onclick="location.href='../help/'">操作ガイドへ</button>
+    </div>
+    <div class="err" id="err"></div>
+    <div class="okbox" id="okbox"></div>
+  </div>
+  <div class="grid" id="metrics"></div>
+  <div class="card" id="envCard" style="display:none;"></div>
+  <div class="card" id="sheetCard" style="display:none;"><h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">シート確認</h2><div style="overflow:auto;"><table class="tbl"><thead><tr><th>シート</th><th>状態</th><th>データ行</th><th>不足列</th></tr></thead><tbody id="sheetRows"></tbody></table></div></div>
+</div>
+<script>
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-24';
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function getSecret(){try{return localStorage.getItem('genba_admin')||localStorage.getItem('genba_session')||'';}catch(e){return '';}}
+function showLoad(v){document.getElementById('loading').classList.toggle('show',!!v);}
+function setErr(t){var e=document.getElementById('err');e.style.display=t?'block':'none';e.textContent=t||'';}
+function setOk(t){var e=document.getElementById('okbox');e.style.display=t?'block':'none';e.textContent=t||'';}
+function jsonp(params){return new Promise(function(resolve,reject){
+  if(!GAS_URL){reject(new Error('config.js の GAS_URL が空です'));return;}
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6); params=params||{}; params.callback=cb; params.secret=getSecret(); params._ts=Date.now(); params._build='20260619-mobile-quick-24';
+  var s=document.createElement('script'), timer=setTimeout(function(){finish('timeout');},30000), done=false;
+  function finish(kind,res){if(done)return;done=true;clearTimeout(timer);try{delete window[cb];}catch(e){} if(s.parentNode)s.parentNode.removeChild(s); if(kind==='ok')resolve(res||{}); else reject(new Error(kind==='timeout'?'タイムアウト':'通信エラー'));}
+  window[cb]=function(res){finish('ok',res);}; s.onerror=function(){finish('error');};
+  s.src=GAS_URL+'?'+Object.keys(params).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(params[k]);}).join('&'); document.head.appendChild(s);
+});}
+function metric(nm,val){return '<div class="metric"><b>'+esc(val)+'</b><span>'+esc(nm)+'</span></div>';}
+function render(res){
+  if(!res||res.ok===false){setErr((res&&res.error)||'取得できませんでした');return;}
+  var sm=res.summary||{};
+  document.getElementById('summaryStatus').className='status '+(sm.ok?'ok':(sm.missingSheets||sm.missingColumns?'ng':'warn'));
+  document.getElementById('summaryStatus').textContent=sm.ok?'正常です':'確認が必要です';
+  document.getElementById('metrics').innerHTML=
+    metric('GASファイル',res.gasFile||'Code_v124.gs')+
+    metric('シート数',sm.sheetCount||0)+
+    metric('不足シート',sm.missingSheets||0)+
+    metric('不足列',sm.missingColumns||0);
+  var env='<h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">環境情報</h2>'+
+    '<p><b>会社名：</b>'+esc(res.companyName||'')+'</p>'+
+    '<p><b>アプリ：</b>'+esc(APP_VERSION)+' / <b>GAS：</b>'+esc(res.version||'')+'</p>'+
+    '<p><b>スプレッドシート：</b> <a target="_blank" href="'+esc(res.spreadsheetUrl||'#')+'">'+esc(res.spreadsheetName||'')+'</a></p>'+
+    '<p><b>Drive親フォルダ：</b> '+(res.parentFolderExists?'<a target="_blank" href="'+esc(res.parentFolderUrl)+'">'+esc(res.parentFolderName)+'</a>':'<span class="status ng">未作成</span>')+'</p>'+
+    '<p><b>自動バックアップ：</b> '+((res.backup&&res.backup.enabled)?'<span class="status ok">有効</span>':'<span class="status warn">未設定</span>')+'</p>';
+  document.getElementById('envCard').style.display='block'; document.getElementById('envCard').innerHTML=env;
+  var rows=(res.sheets||[]).map(function(r){var cls=r.exists?(r.missingCount?'warn':'ok'):'ng';var st=r.exists?(r.missingCount?'不足列あり':'OK'):'未作成';return '<tr><td>'+esc(r.name)+'</td><td><span class="status '+cls+'">'+st+'</span></td><td>'+esc(r.rows||0)+'</td><td class="small">'+esc((r.missing||[]).join('、'))+'</td></tr>';}).join('');
+  document.getElementById('sheetCard').style.display='block'; document.getElementById('sheetRows').innerHTML=rows;
+}
+function loadStatus(){setErr('');setOk('');showLoad(true);jsonp({action:'setupStatus'}).then(function(res){showLoad(false);render(res);}).catch(function(e){showLoad(false);setErr(e.message+'。ログインし直すか、GASをv123で再デプロイしてください。');});}
+function repairSetup(){if(!confirm('不足シート・不足列を自動修復します。既存データは削除しません。実行しますか？'))return;setErr('');setOk('');showLoad(true);jsonp({action:'setupRepair'}).then(function(res){showLoad(false);setOk('修復を実行しました。結果を確認してください。');render(res);}).catch(function(e){showLoad(false);setErr(e.message+'。GASをv123で再デプロイしているか確認してください。');});}
+loadStatus();
+</script>
+</body>
+</html>
