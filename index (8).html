@@ -1,0 +1,1317 @@
+<!DOCTYPE html>
+<!-- admin version 56 (2026-06-19) 管理ホーム追加。各マスタ件数・ログイン未設定・停止ユーザー・車両期限アラート・横断検索・よく使う登録導線を1画面に整理。 -->
+<!-- admin version 55 config.js共通化 -->
+<!-- admin version 54 (2026-06-18) 削除済みデータ復元タブ追加。v103 GAS の deletedList / restoreDeleted を使用。 -->
+<!-- admin version 52 (2026-06-16) 会社設定に「あいさつ文(2行・自由入力・書類に印字)」欄を追加。save/loadにキー『あいさつ文』を追加。textareaをinput同等にCSS追加。保存はGASのsaveSettings_が任意キー対応のためGAS変更なし。PDF印字は別途GASで対応。 -->
+<!-- admin version 51 (2026-06-16) 会社情報に「会社名の上の行(業種・キャッチ)」「会社名の下の行(代表者・役職)」を追加。社判イメージに合わせPDFで会社名の上下に印字。save/loadに社名上段・社名下段を追加。GAS変更あり(v84)。 -->
+<!-- admin version 50 (2026-06-16) 会社情報に「会社名」「郵便番号」入力欄を追加(住所の前)。保存成功時に loadCompanyInfo(true) で実際の保存値を再表示し、保存できたか確認できるように。会社名はPDFが既に印字する作りのため保存すれば反映。GAS変更なし。 -->
+<!-- admin version 49 (2026-06-16) 会社情報の自動読み込みが、入力途中の欄を空で上書きしてしまう不具合(estData遅延とのタイミング競合)を修正。loadCompanyInfoのprefillを「空欄のみ補完(if !el.value)」に変更。これで電話/FAX等を入力中に読込が返っても消えない。機能・GAS変更なし。 -->
+<!-- admin version 48 (2026-06-15) v47で追加した会社情報フォームの入れ物が .card(display:flex)で横一列に潰れていたのを修正。普通の縦並びブロック(背景/角丸/影は維持)に変更。保存ボタンも横幅100%に。機能(estData読込/saveSettings保存)は不変・GAS変更なし。 -->
+<!-- admin version 47 (2026-06-15) 自社設定タブに会社情報(7項目:住所/電話/FAX/インボイス番号/振込先/見積有効日数/支払条件)の編集フォームを追加。既存GASの estData で読込・saveSettings で保存(GAS変更なし)。switchTab(company)初回表示時に読込。見積から会社情報を移設する第1段階。 -->
+<!-- admin version 46 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
+<!-- admin version 45 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。操作行hd2は保持。更新はloadAll()。機能・id不変 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>管理画面｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
+    --accent:#475569;--accent-d:#334155;--accent-soft:#dde3ec;
+    --radius:13px;
+    --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+    --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);min-height:100vh;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.55;padding-bottom:80px;}
+  select,input,textarea,button,a{font-family:inherit;}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);color:var(--ink);padding:calc(env(safe-area-inset-top) + 12px) 14px 11px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
+  .hbar{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"back . right" "title title title";align-items:center;row-gap:12px;column-gap:8px;max-width:760px;margin:0 auto;}
+  .hbar .back{grid-area:back;align-self:center;}
+  .hbar .hright{grid-area:right;justify-self:end;}
+  .hbar .hcenter{grid-area:title;justify-self:center;}
+  .hbar .htxt .nm{white-space:normal;}
+  .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11px;letter-spacing:.05em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 12px;text-decoration:none;white-space:nowrap;flex:0 0 auto;}
+  .back:active{box-shadow:var(--well);}
+  .hic{width:40px;height:40px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hic svg{width:21px;height:21px;}
+  .htxt{flex:1;min-width:0;}
+  .htxt .en{font-family:"Manrope",sans-serif;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .htxt .nm{font-weight:700;font-size:16.5px;color:var(--ink);display:block;line-height:1.2;white-space:nowrap;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:13px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
+  .hd2{display:flex;align-items:center;gap:8px;max-width:760px;margin:9px auto 0;}
+  .hd2 .sp{flex:1;}
+  #who{font-size:12px;color:var(--accent-d);font-weight:700;}
+  .ghost{padding:8px 13px;border:none;border-radius:10px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);font-size:12.5px;cursor:pointer;font-weight:700;}
+  .ghost:active{box-shadow:var(--well);}
+  .ghost.danger-ghost{color:#dc2626;}
+  main{padding:12px;max-width:760px;margin:0 auto;}
+  .gate{max-width:380px;margin:60px auto;text-align:center;padding:0 16px;}
+  .gate .lk{display:inline-flex;width:84px;height:84px;border-radius:50%;background:var(--bg);box-shadow:var(--well);align-items:center;justify-content:center;color:var(--accent);margin-bottom:6px;}
+  .gate .lk svg{width:42px;height:42px;}
+  .gate h2{font-size:19px;margin:10px 0 6px;color:var(--ink);}
+  .gate p{color:var(--sub);font-size:14.5px;margin:0 0 18px;line-height:1.7;}
+  .gate input{width:100%;padding:13px;border:none;border-radius:11px;font-size:16px;text-align:center;margin-bottom:12px;background:var(--bg);box-shadow:var(--well);color:var(--ink);}
+  .gate button{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-size:15.5px;font-weight:800;cursor:pointer;box-shadow:3px 4px 10px rgba(71,85,105,.4),-2px -2px 6px #ffffff;}
+  .sec{font-size:13px;font-weight:700;color:var(--sub);margin:4px 2px 10px;}
+  .card{position:relative;background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:13px 15px 13px 18px;margin-bottom:10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;overflow:hidden;}
+  .card:active{box-shadow:var(--well);}
+  .card::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:var(--accent);}
+  .card.kyo::before{background:#b45309;}
+  .card.kg::before{background:#2563eb;} .card.kk::before{background:#7c3aed;} .card.kx::before{background:#b45309;}
+  .nm{font-weight:700;font-size:16px;color:var(--ink);}
+  .meta{font-size:13px;color:var(--sub);}
+  .yen{font-weight:700;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .tag{font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;background:#e7eaef;color:#374151;}
+  .tag.kyo{background:#fef3c7;color:#92400e;}
+  .tag.kg{background:#dbeafe;color:#1e40af;} .tag.kk{background:#ede9fe;color:#6d28d9;} .tag.kx{background:#fef3c7;color:#92400e;}
+  .tabs{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;}
+  .tab{flex:1;min-width:62px;padding:10px 6px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);font-size:13px;font-weight:700;cursor:pointer;text-align:center;}
+  .tab:active{box-shadow:var(--well);}
+  .tab.on{background:var(--accent);color:#fff;box-shadow:var(--well-soft);}
+  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14.5px;}
+  .rcbar{display:flex;gap:7px;margin-bottom:12px;}
+  .rcseg{flex:1;padding:10px 5px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);font-size:13px;font-weight:700;cursor:pointer;}
+  .rcseg:active{box-shadow:var(--well);}
+  .rcseg.on{background:var(--accent);color:#fff;box-shadow:var(--well-soft);}
+  .rcday{position:relative;background:var(--bg);border-radius:13px;box-shadow:var(--rise-sm);padding:11px 14px 11px 17px;margin-bottom:8px;overflow:hidden;}
+  .rcday::before{content:"";position:absolute;left:0;top:11px;bottom:11px;width:4px;border-radius:0 4px 4px 0;background:#16a34a;}
+  .rcday.has::before{background:#dc2626;}
+  .rcday .rcd{display:flex;justify-content:space-between;align-items:center;}
+  .rcday .rcdate{font-weight:700;font-size:14.5px;color:var(--ink);}
+  .rcday .rcok{font-size:12px;color:#16a34a;font-weight:700;}
+  .rcday .rcmiss{margin-top:7px;display:flex;flex-wrap:wrap;gap:6px;}
+  .rcday .rcname{background:#fdeaea;color:#b91c1c;border-radius:999px;padding:3px 12px;font-size:12.5px;font-weight:700;}
+  .rcsum{background:#fceede;box-shadow:var(--rise-sm);border-radius:12px;padding:11px 14px;margin-bottom:12px;font-size:13.5px;color:#92400e;font-weight:700;}
+  .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;background:var(--accent);color:#fff;border:none;border-radius:999px;padding:14px 22px;font-size:15px;font-weight:800;box-shadow:5px 6px 16px rgba(71,85,105,.45),-3px -3px 8px #ffffff;cursor:pointer;}
+  .fab:active{transform:translateY(1px);}
+  .ov{position:fixed;inset:0;background:rgba(15,23,40,.45);z-index:40;display:none;align-items:flex-end;justify-content:center;}
+  .ov.show{display:flex;}
+  .sheet{background:var(--bg);width:100%;max-width:520px;border-radius:20px 20px 0 0;padding:16px 16px calc(env(safe-area-inset-bottom) + 16px);max-height:90vh;overflow-y:auto;box-shadow:0 -10px 30px rgba(20,30,50,.2);}
+  .sheet h2{font-size:17px;margin:2px 0 12px;color:var(--ink);}
+  .fld{margin-bottom:11px;} .fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:4px;font-weight:700;}
+  .fld input,.fld select,.fld textarea{width:100%;padding:11px 12px;border:none;border-radius:10px;font-size:15.5px;background:var(--bg);box-shadow:var(--well);color:var(--ink);font-family:inherit;}
+  .two{display:flex;gap:8px;} .two>.fld{flex:1;}
+  .acts{display:flex;gap:8px;margin-top:6px;} .btn{flex:1;padding:13px;border-radius:12px;border:none;font-size:15px;font-weight:800;cursor:pointer;}
+  .btn.primary{background:var(--accent);color:#fff;box-shadow:3px 4px 10px rgba(71,85,105,.4),-2px -2px 6px #ffffff;} .btn.primary:active{transform:translateY(1px);}
+  .btn.sub{background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);} .btn.sub:active{box-shadow:var(--well);}
+  .row-del{text-align:center;margin-top:10px;} .row-del a{color:#dc2626;font-size:13px;text-decoration:none;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;z-index:60;background:#1f3a52;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 20px rgba(31,58,82,.3);}
+  .toast.show{opacity:1;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(232,236,242,.78);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
+  .loading.show{display:flex;}
+  .lbox{background:var(--bg);border-radius:18px;box-shadow:var(--rise);padding:24px 32px;text-align:center;}
+  .spin{width:38px;height:38px;border:4px solid #d6deea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .lbox .txt{font-size:15px;font-weight:700;}
+  .danger-txt{font-size:13px;color:#7f1d1d;margin:0 0 12px;line-height:1.6;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  @media(max-width:600px){.grid-3{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:400px){.grid-3{grid-template-columns:1fr;}}
+  .ov-center{align-items:center;}
+  .ov-center .sheet{width:auto;max-width:380px;border-radius:18px;margin:0 16px;}
+  .ov-center .sheet h2{text-align:center;}
+  /* v: ヘッダー統一（中央寄せ＋更新ボタン・少し大きく） */
+  .hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:11px;min-width:0;}
+  .hright{flex:0 0 auto;display:flex;align-items:center;gap:9px;}
+  .hrf{width:42px;height:42px;border-radius:50%;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
+  .hrf svg{width:19px;height:19px;}
+  .hrf:active{box-shadow:var(--well);}
+  .hic{width:44px;height:44px;}
+  .hic svg{width:23px;height:23px;}
+  .htxt{flex:0 1 auto;min-width:0;text-align:center;}
+  .htxt .en{font-size:10px;}
+  .htxt .nm{font-size:19.5px;}
+  .hmark{font-size:15px;}
+  .back{font-size:11.5px;padding:9px 14px;}
+  /* 初期設定ウィザード v53 */
+  .setup-hero{background:linear-gradient(135deg,#f8fafc,#e0f2fe);border:1px solid #dbeafe;border-radius:16px;box-shadow:var(--rise);padding:16px;margin-bottom:14px;}
+  .setup-hero h2{margin:0 0 6px;font-size:18px;color:#17324a;}
+  .setup-hero p{margin:0;color:#64748b;font-size:13px;line-height:1.55;}
+  .setup-progress{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:13px 0 0;}
+  .setup-step{background:#fff;border:1px solid #e2e8f0;border-radius:11px;padding:9px 8px;text-align:center;font-size:12px;font-weight:800;color:#64748b;box-shadow:var(--rise-sm);}
+  .setup-step.done{background:#ecfdf5;border-color:#86efac;color:#166534;}
+  .setup-grid{display:grid;grid-template-columns:1fr;gap:12px;}
+  .setup-card{background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:14px 16px;}
+  .setup-card h3{margin:0 0 8px;font-size:15px;color:#1f3a52;display:flex;align-items:center;gap:7px;}
+  .setup-card .hint{font-size:12.5px;color:#64748b;line-height:1.55;margin:0 0 10px;}
+  .setup-card textarea{min-height:96px;font-family:inherit;}
+  .setup-mini{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px;}
+  .setup-pill{background:#fff;border:1px solid #dbe2ea;color:#334155;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800;box-shadow:var(--rise-sm);}
+  .setup-pill b{color:#0f766e;}
+  .setup-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+  .setup-actions .btn{flex:1;min-width:130px;}
+  .setup-finish{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:12px;padding:12px;font-size:13px;line-height:1.6;margin-top:10px;}
+  .setup-links{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
+  .setup-link{display:block;text-align:center;text-decoration:none;background:#fff;border:1px solid #dbe2ea;border-radius:10px;padding:10px 6px;font-size:13px;font-weight:800;color:#334155;box-shadow:var(--rise-sm);}
+  @media(max-width:620px){.setup-progress{grid-template-columns:1fr 1fr}.setup-links{grid-template-columns:1fr}.setup-actions .btn{min-width:100%;}}
+
+  /* 管理ホーム v56 */
+  .admin-home-hero{background:linear-gradient(135deg,#f8fafc,#e0f2fe 52%,#eef2ff);border:1px solid #dbeafe;border-radius:18px;box-shadow:var(--rise);padding:16px;margin-bottom:14px;overflow:hidden;position:relative;}
+  .admin-home-hero:after{content:"";position:absolute;right:-42px;top:-44px;width:120px;height:120px;border-radius:50%;background:rgba(37,99,235,.10);}
+  .admin-home-hero h2{font-size:19px;margin:0 0 5px;color:#17324a;position:relative;z-index:1;}
+  .admin-home-hero p{font-size:13px;line-height:1.65;color:#64748b;margin:0;position:relative;z-index:1;}
+  .admin-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:12px 0 14px;}
+  .admin-metric{background:var(--bg);border-radius:14px;box-shadow:var(--rise-sm);padding:13px 10px;min-height:80px;}
+  .admin-metric .label{font-size:11.5px;color:#64748b;font-weight:800;letter-spacing:.02em;}
+  .admin-metric .num{font-family:Manrope,sans-serif;font-size:27px;line-height:1.05;font-weight:900;color:#17324a;margin-top:5px;}
+  .admin-metric .mini{font-size:11px;color:#64748b;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .admin-panel{background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:14px 16px;margin-bottom:12px;}
+  .admin-panel h3{font-size:15.5px;margin:0 0 10px;color:#1f3a52;display:flex;align-items:center;gap:7px;}
+  .admin-search{display:flex;gap:8px;margin-bottom:10px;}
+  .admin-search input{flex:1;padding:12px 13px;border:none;border-radius:12px;background:var(--bg);box-shadow:var(--well);font-size:16px;color:var(--ink);}
+  .admin-search button{padding:10px 14px;border:none;border-radius:12px;background:var(--accent);color:#fff;font-weight:900;box-shadow:var(--rise-sm);}
+  .admin-results{display:grid;grid-template-columns:1fr;gap:8px;}
+  .admin-result{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px;cursor:pointer;}
+  .admin-result strong{display:block;color:#17324a;font-size:14.5px;}
+  .admin-result span{display:block;color:#64748b;font-size:12.5px;margin-top:2px;}
+  .admin-action-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+  .admin-action{appearance:none;border:none;text-align:left;background:#f8fafc;border:1px solid #dbe2ea;border-radius:14px;padding:13px 12px;box-shadow:var(--rise-sm);font-weight:900;color:#17324a;cursor:pointer;min-height:78px;}
+  .admin-action small{display:block;font-weight:700;color:#64748b;font-size:11.5px;line-height:1.35;margin-top:5px;}
+  .admin-alert{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;background:#fff7ed;border:1px solid #fed7aa;color:#92400e;border-radius:12px;padding:10px 12px;margin-bottom:8px;font-size:13px;line-height:1.5;}
+  .admin-alert.ok{background:#ecfdf5;border-color:#bbf7d0;color:#166534;}
+  .admin-alert.ng{background:#fef2f2;border-color:#fecaca;color:#991b1b;}
+  .admin-alert button{border:none;border-radius:999px;background:#fff;color:inherit;padding:6px 10px;font-size:12px;font-weight:900;box-shadow:var(--rise-sm);white-space:nowrap;}
+  @media(max-width:720px){.admin-metrics{grid-template-columns:repeat(2,1fr)}.admin-action-grid{grid-template-columns:1fr}.admin-search{flex-direction:column}.admin-search button{min-height:44px}}
+
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v84</div>
+<header>
+  <div class="hbar">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></span><span class="htxt"><span class="en">Admin</span><span class="nm">管理画面</span></span></div>
+    <div class="hright"><span class="hmark">Gen-Can</span><button class="hrf" onclick="loadAll()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
+  </div>
+  <div class="hd2">
+    <span id="who"></span>
+    <span class="sp"></span>
+    <button class="ghost danger-ghost" id="clearBtn" style="display:none;" onclick="openClearModal()">データ削除</button>
+    <button class="ghost" id="logoutBtn" style="display:none;" onclick="adminLogout()">ログアウト</button>
+  </div>
+</header>
+
+<!-- ログインゲート -->
+<div id="gate" class="gate" style="display:none;">
+  <div class="lk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="10.5" width="15" height="10" rx="2.2"/><path d="M8 10.5V7a4 4 0 0 1 8 0v3.5"/><circle cx="12" cy="15.4" r="1.3"/></svg></div>
+  <h2>管理者専用</h2>
+  <p>この画面は管理者のみ利用できます。管理者PINを入力してください。</p>
+  <input id="pin" type="password" inputmode="numeric" placeholder="管理者PIN" onkeydown="if(event.key==='Enter')doLogin()">
+  <button onclick="doLogin()">ログイン</button>
+</div>
+
+<!-- 管理コンテンツ -->
+<main id="content" style="display:none;">
+  <div class="tabs">
+    <button class="tab on" id="tab-adminhome" onclick="switchTab('adminhome')">管理ホーム</button>
+    <button class="tab" id="tab-worker" onclick="switchTab('worker')">作業員</button>
+    <button class="tab" id="tab-setup" onclick="switchTab('setup')">初期設定</button>
+    <button class="tab" id="tab-partner" onclick="switchTab('partner')">取引先</button>
+    <button class="tab" id="tab-contact" onclick="switchTab('contact')">先方担当者</button>
+    <button class="tab" id="tab-vehicle" onclick="switchTab('vehicle')">車両</button>
+    <button class="tab" id="tab-supplier" onclick="switchTab('supplier')">仕入先</button>
+    <button class="tab" id="tab-repcheck" onclick="switchTab('repcheck')">日報チェック</button>
+    <button class="tab" id="tab-restore" onclick="switchTab('restore')">復元</button>
+    <button class="tab" id="tab-company" onclick="switchTab('company')">自社設定</button>
+  </div>
+
+  <div id="sec-adminhome">
+    <div class="admin-home-hero">
+      <h2>管理ホーム</h2>
+      <p>作業員・取引先・担当者・車両などの登録状況をまとめて確認できます。販売前・導入時の確認にも使いやすいように整理しました。</p>
+    </div>
+    <div class="admin-metrics" id="adminMetrics">
+      <div class="admin-metric"><div class="label">作業員</div><div class="num">-</div><div class="mini">読込中</div></div>
+      <div class="admin-metric"><div class="label">取引先</div><div class="num">-</div><div class="mini">読込中</div></div>
+      <div class="admin-metric"><div class="label">担当者</div><div class="num">-</div><div class="mini">読込中</div></div>
+      <div class="admin-metric"><div class="label">車両</div><div class="num">-</div><div class="mini">読込中</div></div>
+    </div>
+    <div class="admin-panel">
+      <h3>すぐに登録</h3>
+      <div class="admin-action-grid">
+        <button class="admin-action" onclick="switchTab('worker');openWorker();">＋ 作業員<small>社員・常用・ログイン権限を登録</small></button>
+        <button class="admin-action" onclick="switchTab('partner');openPartner();">＋ 取引先<small>官公庁・法人・個人を登録</small></button>
+        <button class="admin-action" onclick="switchTab('vehicle');openVehicle();">＋ 車両<small>車検・保険・オイル交換を管理</small></button>
+        <button class="admin-action" onclick="switchTab('contact');openContact();">＋ 担当者<small>取引先ごとの連絡先を登録</small></button>
+        <button class="admin-action" onclick="switchTab('supplier');setTimeout(function(){openSupplier('');},250);">＋ 仕入先<small>電材店・外注・リース会社を登録</small></button>
+        <button class="admin-action" onclick="switchTab('setup');">初期設定<small>導入時のまとめ登録へ</small></button>
+      </div>
+    </div>
+    <div class="admin-panel">
+      <h3>マスタ横断検索</h3>
+      <div class="admin-search"><input id="adminSearchInput" placeholder="作業員・取引先・担当者・車両を検索" oninput="adminSearch()"><button onclick="adminSearch()">検索</button></div>
+      <div id="adminSearchResults" class="admin-results"><div class="empty" style="padding:12px;">キーワードを入れると、各マスタをまとめて検索できます。</div></div>
+    </div>
+    <div class="admin-panel">
+      <h3>確認が必要な項目</h3>
+      <div id="adminAlerts"><div class="empty" style="padding:12px;">読込中…</div></div>
+    </div>
+  </div>
+
+  <div id="sec-setup" style="display:none;">
+    <div class="setup-hero">
+      <h2>初期設定ウィザード</h2>
+      <p>導入時に最低限必要な「会社情報・作業員・車両・取引先」を順番に登録します。あとから各マスタ画面で編集できます。</p>
+      <div class="setup-progress" id="setupProgress">
+        <div class="setup-step" id="sp-company">1 会社情報</div>
+        <div class="setup-step" id="sp-worker">2 作業員</div>
+        <div class="setup-step" id="sp-vehicle">3 車両</div>
+        <div class="setup-step" id="sp-partner">4 取引先</div>
+        <div class="setup-step" id="sp-finish">5 完了</div>
+      </div>
+    </div>
+    <div class="setup-grid">
+      <div class="setup-card" id="setup-company-card">
+        <h3>1. 会社情報を登録</h3>
+        <p class="hint">見積書・請求書に印字される基本情報です。分かる範囲だけ入れて保存できます。</p>
+        <div class="fld"><label>会社名</label><input id="su_ci_name" placeholder="例）河口電機株式会社"></div>
+        <div class="fld"><label>郵便番号</label><input id="su_ci_zip" inputmode="numeric" placeholder="例）501-0000"></div>
+        <div class="fld"><label>会社住所</label><input id="su_ci_addr" placeholder="例）岐阜県岐阜市〇〇町1-2-3"></div>
+        <div class="two">
+          <div class="fld"><label>会社電話</label><input id="su_ci_tel" inputmode="tel" placeholder="例）058-000-0000"></div>
+          <div class="fld"><label>会社FAX</label><input id="su_ci_fax" inputmode="tel" placeholder="例）058-000-0001"></div>
+        </div>
+        <div class="fld"><label>インボイス登録番号</label><input id="su_ci_inv" placeholder="例）T1234567890123"></div>
+        <div class="fld"><label>振込先</label><input id="su_ci_bank" placeholder="例）〇〇銀行 〇〇支店 普通 1234567"></div>
+        <div class="setup-actions">
+          <button class="btn sub" onclick="setupLoadCompany()">会社情報を読み込み</button>
+          <button class="btn primary" id="setupCompanyBtn" onclick="setupSaveCompany()">会社情報を保存</button>
+        </div>
+      </div>
+
+      <div class="setup-card" id="setup-worker-card">
+        <h3>2. 作業員をまとめて追加</h3>
+        <p class="hint">1行に1人ずつ入力します。名前だけでも登録できます。ログインID・パスワードを入れる場合はカンマ区切りにしてください。</p>
+        <div class="setup-mini"><span class="setup-pill">現在 <b id="suWorkerCount">0</b> 人</span><span class="setup-pill">形式：氏名, 略称, 区分, ログインID, パスワード, 単価</span></div>
+        <textarea id="su_workers" placeholder="山田 太郎, 山田, 社員, yamada, 1234, 20000&#10;佐藤 一郎&#10;ナンカイ 花子, 花子, 常用, hanako, 1234, 18000"></textarea>
+        <div class="setup-actions">
+          <button class="btn sub" onclick="setupSample('workers')">入力例を入れる</button>
+          <button class="btn primary" id="setupWorkerBtn" onclick="setupBulkWorkers()">作業員を追加</button>
+        </div>
+      </div>
+
+      <div class="setup-card" id="setup-vehicle-card">
+        <h3>3. 車両をまとめて追加</h3>
+        <p class="hint">車両名だけでも登録できます。車検・保険満了日は分かる範囲で入れてください。</p>
+        <div class="setup-mini"><span class="setup-pill">現在 <b id="suVehicleCount">0</b> 台</span><span class="setup-pill">形式：車両名, ナンバー, 車検満了日, 保険満了日, メモ</span></div>
+        <textarea id="su_vehicles" placeholder="ハイエース1号, 岐阜 400 あ 12-34, 2027-06-30, 2027-06-30, 工事用&#10;軽バン&#10;高所作業車"></textarea>
+        <div class="setup-actions">
+          <button class="btn sub" onclick="setupSample('vehicles')">入力例を入れる</button>
+          <button class="btn primary" id="setupVehicleBtn" onclick="setupBulkVehicles()">車両を追加</button>
+        </div>
+      </div>
+
+      <div class="setup-card" id="setup-partner-card">
+        <h3>4. 取引先をまとめて追加</h3>
+        <p class="hint">取引先名だけでも登録できます。区分は「官公庁・法人・個人」のいずれかを入れてください。未入力時は法人になります。</p>
+        <div class="setup-mini"><span class="setup-pill">現在 <b id="suPartnerCount">0</b> 件</span><span class="setup-pill">形式：取引先名, 区分, 電話, 住所, 備考</span></div>
+        <textarea id="su_partners" placeholder="岐阜市役所, 官公庁, 058-000-0000, 岐阜県岐阜市〇〇町, 公共工事&#10;〇〇建設株式会社, 法人&#10;△△工場, 法人"></textarea>
+        <div class="setup-actions">
+          <button class="btn sub" onclick="setupSample('partners')">入力例を入れる</button>
+          <button class="btn primary" id="setupPartnerBtn" onclick="setupBulkPartners()">取引先を追加</button>
+        </div>
+      </div>
+
+      <div class="setup-card" id="setup-finish-card">
+        <h3>5. 使い始める</h3>
+        <p class="hint">最低限の登録ができたら、現場登録・予定登録・日報入力へ進めます。</p>
+        <div class="setup-finish" id="setupFinishText">登録状況を確認中…</div>
+        <div class="setup-links">
+          <a class="setup-link" href="https://kawaguchidenki001.github.io/genba-projects/projects/">案件管理へ</a>
+          <a class="setup-link" href="https://kawaguchidenki001.github.io/genba-projects/calendar/">予定表へ</a>
+          <a class="setup-link" href="https://kawaguchidenki001.github.io/genba-projects/report/">日報へ</a>
+        </div>
+        <div class="setup-actions">
+          <button class="btn sub" onclick="setupRefreshProgress()">登録状況を更新</button>
+          <button class="btn primary" onclick="setupMarkDone()">初期設定を完了にする</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="sec-worker">
+    <div class="sec">作業員マスタ（単価はここで設定）</div>
+    <div id="list"><div class="empty">読込中…</div></div>
+  </div>
+  <div id="sec-partner" style="display:none;">
+    <div class="sec">取引先マスタ（官公庁／法人／個人）</div>
+    <div id="listP"><div class="empty">読込中…</div></div>
+  </div>
+  <div id="sec-contact" style="display:none;">
+    <div class="sec">先方担当者マスタ（取引先ごとの担当者）</div>
+    <div id="listK"><div class="empty">読込中…</div></div>
+  </div>
+  <div id="sec-vehicle" style="display:none;">
+    <div class="sec">車両マスタ（車検・保険・オイル交換の管理）</div>
+    <div id="listV"><div class="empty">読込中…</div></div>
+  </div>
+  <div id="sec-supplier" style="display:none;">
+    <div class="sec">仕入先マスタ（台帳の材料費・外注費などの候補）</div>
+    <div id="listS"><div class="empty">読込中…</div></div>
+  </div>
+  <div id="sec-repcheck" style="display:none;">
+    <div class="sec">日報の未提出チェック（予定の担当に入っているのに日報が出ていない人）</div>
+    <div class="rcbar">
+      <button class="rcseg on" data-d="7" onclick="rcRange(7)">直近7日</button>
+      <button class="rcseg" data-d="14" onclick="rcRange(14)">直近14日</button>
+      <button class="rcseg" data-d="30" onclick="rcRange(30)">直近30日</button>
+    </div>
+    <div id="rcList"><div class="empty">「日報チェック」を開くと集計します。</div></div>
+  </div>
+
+  <div id="sec-restore" style="display:none;">
+    <div class="sec">削除済みデータの復元</div>
+    <p style="font-size:13px;color:#64748b;margin:0 0 12px;line-height:1.6;">v103以降で削除した案件・日報・予定・マスタなどは完全削除せず、ここから復元できます。写真はGoogleドライブのゴミ箱から復元してください。</p>
+    <div class="rcbar" style="margin-bottom:10px;">
+      <button class="rcseg on" data-rtype="" onclick="restoreFilter('')">すべて</button>
+      <button class="rcseg" data-rtype="projects" onclick="restoreFilter('projects')">案件</button>
+      <button class="rcseg" data-rtype="reports" onclick="restoreFilter('reports')">日報</button>
+      <button class="rcseg" data-rtype="schedules" onclick="restoreFilter('schedules')">予定</button>
+      <button class="rcseg" data-rtype="workers" onclick="restoreFilter('workers')">作業員</button>
+      <button class="rcseg" data-rtype="vehicles" onclick="restoreFilter('vehicles')">車両</button>
+      <button class="rcseg" data-rtype="customers" onclick="restoreFilter('customers')">取引先</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:10px;"><button class="btn sub" onclick="loadDeletedRows()">再読み込み</button></div>
+    <div id="restoreList"><div class="empty">「復元」を開くと削除済みデータを読み込みます。</div></div>
+  </div>
+
+
+  <!-- 自社設定タブ -->
+  <div id="sec-company" style="display:none;">
+      <div class="sec">会社情報（見積・請求書に印字されます）</div>
+      <div style="background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:14px 16px 12px;margin-bottom:14px;">
+        <div class="fld"><label>会社名の上の行（業種・キャッチ等）</label><input id="ci_above" placeholder="例）電気設備工事　設計・施工"></div>
+        <div class="fld"><label>会社名</label><input id="ci_name" placeholder="例）河口電機株式会社"></div>
+        <div class="fld"><label>会社名の下の行（代表者・役職等）</label><input id="ci_below" placeholder="例）代表取締役　河口 安男"></div>
+        <div class="fld"><label>郵便番号</label><input id="ci_zip" inputmode="numeric" placeholder="例）501-0000"></div>
+        <div class="fld"><label>会社住所</label><input id="ci_addr" placeholder="例）岐阜県岐阜市〇〇町1-2-3"></div>
+        <div class="two">
+          <div class="fld"><label>会社電話</label><input id="ci_tel" inputmode="tel" placeholder="例）058-000-0000"></div>
+          <div class="fld"><label>会社FAX</label><input id="ci_fax" inputmode="tel" placeholder="例）058-000-0001"></div>
+        </div>
+        <div class="fld"><label>インボイス登録番号</label><input id="ci_inv" placeholder="例）T1234567890123"></div>
+        <div class="fld"><label>振込先</label><input id="ci_bank" placeholder="例）〇〇銀行 〇〇支店 普通 1234567"></div>
+        <div class="two">
+          <div class="fld"><label>見積有効日数</label><input id="ci_valid" type="number" inputmode="numeric" placeholder="30"></div>
+          <div class="fld"><label>支払条件</label><input id="ci_cond" placeholder="例）月末締め翌月末払い"></div>
+        </div>
+        <div class="fld"><label>あいさつ文（書類に印字／2行まで）</label><textarea id="ci_greet" rows="2" placeholder="下記の通り御見積申し上げます。&#10;何卒ご用命賜ります様お願い申し上げます。" style="resize:vertical;line-height:1.5;"></textarea></div>
+        <button class="btn primary" style="width:100%;margin-top:4px;" onclick="saveCompanyInfo()">会社情報を保存</button>
+      </div>
+    <div class="sec">自社情報・会社書類</div>
+    <p style="font-size:13px;color:#64748b;margin:0 0 12px;">建退共許可票・建設業許可票などの会社書類を保管します。</p>
+    <div class="card" style="margin-bottom:12px;">
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;color:#475569;"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>会社書類一覧</div>
+      <div id="compDocList" style="display:flex;flex-direction:column;gap:7px;min-height:20px;"><div style="font-size:12.5px;color:#64748b;">読込中…</div></div>
+      <label style="display:flex;align-items:center;gap:8px;background:#eff4ff;border:1px dashed #93c5fd;border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:700;color:#1d4ed8;cursor:pointer;margin-top:10px;" for="compDocFile">
+        ＋ ファイルを追加（建退共許可票・建設業許可票・PDF・画像）
+        <input type="file" id="compDocFile" accept=".pdf,image/*" style="display:none;" onchange="uploadCompDoc(this)">
+      </label>
+    </div>
+  </div>
+</main>
+
+<button class="fab" id="fab" style="display:none;" onclick="fabAdd()">＋ 作業員</button>
+
+<div class="ov" id="ov">
+  <div class="sheet">
+    <h2 id="mTitle">作業員の追加</h2>
+    <input type="hidden" id="w_id">
+    <div class="two">
+      <div class="fld"><label>氏（姓） *</label><input id="w_sei" placeholder="例）河口"></div>
+      <div class="fld"><label>名</label><input id="w_mei" placeholder="例）太郎"></div>
+    </div>
+    <div class="fld"><label>略称（日報・予定表に表示）</label><input id="w_short" placeholder="例）河口 / ナンカイ"></div>
+    <div class="two">
+      <div class="fld"><label>区分</label><select id="w_kind" onchange="wKind()"><option>社員</option><option>常用</option></select></div>
+      <div class="fld"><label>標準単価（円/人工）</label><input id="w_unit" type="number" inputmode="numeric" placeholder="例）20000"></div>
+    </div>
+    <div class="fld" id="belongWrap" style="display:none;"><label>所属（協力会社名）</label><input id="w_belong" placeholder="例）ナンカイ（株）"></div>
+
+    <div class="two">
+      <div class="fld"><label>アプリ権限</label><select id="w_role"><option>管理者</option><option>現場責任者</option><option>社員</option><option>現場作業員</option><option>閲覧のみ</option></select></div>
+      <div class="fld"><label>利用状態</label><select id="w_status"><option>有効</option><option>停止</option></select></div>
+    </div>
+    <div style="border-top:1px solid var(--line);margin:6px 0 12px;padding-top:10px;font-size:12px;color:var(--sub);font-weight:700;">ログイン（タイムカード等で本人に紐づきます）</div>
+    <div class="two">
+      <div class="fld"><label>ログインID</label><input id="w_loginid" autocapitalize="off" placeholder="例）taro"></div>
+      <div class="fld"><label>パスワード</label><input id="w_pw" placeholder="簡単でOK"></div>
+    </div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeOv()">キャンセル</button>
+      <button class="btn primary" id="saveBtn" onclick="saveWorker()">保存</button>
+    </div>
+    <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="delWorker(event)">この作業員を削除</a></div>
+  </div>
+</div>
+
+<!-- 取引先モーダル -->
+<div class="ov" id="ovp">
+  <div class="sheet">
+    <h2 id="pTitle">取引先の追加</h2>
+    <input type="hidden" id="p_id">
+    <div class="fld"><label>区分 *</label><select id="p_kind"><option>官公庁</option><option>法人</option><option>個人</option></select></div>
+    <div class="fld"><label>取引先名 *</label><input id="p_name" placeholder="例）㈱井上デンキ工事 / 岐阜市"></div>
+    <div class="two">
+      <div class="fld"><label>電話</label><input id="p_tel" inputmode="tel"></div>
+      <div class="fld"><label>住所</label><input id="p_addr"></div>
+    </div>
+    <div class="fld"><label>ホームページ</label><input id="p_url" type="url" placeholder="https://example.com"></div>
+    <div class="fld"><label>備考</label><input id="p_note"></div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeP()">キャンセル</button>
+      <button class="btn primary" id="pSaveBtn" onclick="savePartner()">保存</button>
+    </div>
+    <div class="row-del" id="pDelRow" style="display:none;"><a href="#" onclick="delPartner(event)">この取引先を削除</a></div>
+  </div>
+</div>
+
+<!-- 先方担当者モーダル -->
+<div class="ov" id="ovk">
+  <div class="sheet">
+    <h2 id="kTitle">先方担当者の追加</h2>
+    <input type="hidden" id="k_id">
+    <div class="fld"><label>取引先 *</label><select id="k_partner"></select></div>
+    <div class="two">
+      <div class="fld"><label>担当者名 *</label><input id="k_name" placeholder="例）山田 太郎"></div>
+      <div class="fld"><label>役職</label><input id="k_role" placeholder="例）工事課長"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>電話</label><input id="k_tel" inputmode="tel"></div>
+      <div class="fld"><label>メール</label><input id="k_mail" inputmode="email"></div>
+    </div>
+    <div class="fld"><label>備考</label><input id="k_note"></div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeK()">キャンセル</button>
+      <button class="btn primary" id="kSaveBtn" onclick="saveContact()">保存</button>
+    </div>
+    <div class="row-del" id="kDelRow" style="display:none;"><a href="#" onclick="delContact(event)">この担当者を削除</a></div>
+  </div>
+</div>
+
+<!-- 車両モーダル -->
+<div class="ov" id="ovv">
+  <div class="sheet" style="max-height:88vh;overflow-y:auto;">
+    <h2 id="vTitle">車両の追加</h2>
+    <input type="hidden" id="v_id">
+    <div class="two">
+      <div class="fld"><label>車両名 *</label><input id="v_name" placeholder="例）ハイエース1号"></div>
+      <div class="fld"><label>ナンバー</label><input id="v_no" placeholder="例）岐阜 400 あ 12-34"></div>
+    </div>
+    <div class="fld"><label>車種・型式</label><input id="v_model" placeholder="例）トヨタ ハイエースバン"></div>
+    <div style="border-top:1px solid var(--line);margin:6px 0 12px;padding-top:10px;font-size:12px;color:var(--sub);font-weight:700;">車検</div>
+    <div class="two">
+      <div class="fld"><label>車検満了日</label><input id="v_shaken" type="date"></div>
+      <div class="fld"><label>車検番号</label><input id="v_shakenNo" placeholder="車検証の番号"></div>
+    </div>
+    <div style="border-top:1px solid var(--line);margin:6px 0 12px;padding-top:10px;font-size:12px;color:var(--sub);font-weight:700;">任意保険</div>
+    <div class="two">
+      <div class="fld"><label>保険会社</label><input id="v_hokenCo" placeholder="例）〇〇損保"></div>
+      <div class="fld"><label>証券番号</label><input id="v_hokenNo"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>保険開始日</label><input id="v_hokenFrom" type="date"></div>
+      <div class="fld"><label>保険満了日</label><input id="v_hokenTo" type="date"></div>
+    </div>
+    <div style="border-top:1px solid var(--line);margin:6px 0 12px;padding-top:10px;font-size:12px;color:var(--sub);font-weight:700;">オイル交換・走行距離</div>
+    <div class="two">
+      <div class="fld"><label>交換サイクル（km）</label><input id="v_oilKm" type="number" inputmode="numeric" placeholder="例）5000"></div>
+      <div class="fld"><label>交換サイクル（ヶ月）</label><input id="v_oilMon" type="number" inputmode="numeric" placeholder="例）6"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>前回オイル交換日</label><input id="v_oilDate" type="date"></div>
+      <div class="fld"><label>前回交換時の距離（km）</label><input id="v_oilOdo" type="number" inputmode="numeric"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>現在距離（km）</label><input id="v_odo" type="number" inputmode="numeric"></div>
+      <div class="fld"><label>日額単価（円/日・台帳用）</label><input id="v_rate" type="number" inputmode="numeric" placeholder="例）3000"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>表示順</label><input id="v_order" type="number" inputmode="numeric" placeholder="例）1"></div>
+      <div class="fld"><label>備考</label><input id="v_note"></div>
+    </div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeV()">キャンセル</button>
+      <button class="btn primary" id="vSaveBtn" onclick="saveVehicle()">保存</button>
+    </div>
+    <div class="row-del" id="vDelRow" style="display:none;"><a href="#" onclick="delVehicle(event)">この車両を削除</a></div>
+  </div>
+</div>
+
+<!-- 仕入先モーダル -->
+<div class="ov" id="ovS">
+  <div class="sheet">
+    <h2 id="sTitle">仕入先の追加</h2>
+    <input type="hidden" id="s_id">
+    <div class="fld"><label>仕入先名 *</label><input id="s_name" placeholder="例）愛知電材株式会社"></div>
+    <div class="two">
+      <div class="fld"><label>略称</label><input id="s_short" placeholder="例）愛知電材"></div>
+      <div class="fld"><label>種別</label><select id="s_type"><option>電材店</option><option>外注業者</option><option>機械リース</option><option>その他</option></select></div>
+    </div>
+    <div class="fld"><label>電話番号</label><input id="s_tel" inputmode="tel" placeholder="例）0586-00-0000"></div>
+    <div class="two">
+      <div class="fld"><label>担当者名</label><input id="s_person" placeholder="例）山田"></div>
+      <div class="fld"><label>メールアドレス</label><input id="s_mail" inputmode="email" autocapitalize="off" placeholder="発注メールの宛先"></div>
+    </div>
+    <div class="fld"><label>メモ</label><textarea id="s_memo" placeholder="支払条件など"></textarea></div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeOvS()">キャンセル</button>
+      <button class="btn primary" id="sBtnSave" onclick="saveSupplier()">保存</button>
+    </div>
+    <div class="row-del" id="sDelRow" style="display:none;"><a href="#" onclick="delSupplier(event)">この仕入先を削除</a></div>
+  </div>
+</div>
+
+<!-- 全データ削除 確認ポップアップ -->
+<div class="ov ov-center" id="ovDel">
+  <div class="sheet">
+    <div style="text-align:center;line-height:1;margin-bottom:8px;"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><path d="M12 9v5M12 17.4v.2"/></svg></div>
+    <h2 style="color:#b91c1c;margin-top:0;">全データを削除します</h2>
+    <p class="danger-txt" style="text-align:center;">案件・取引先・先方担当者・作業員・作業日報・スケジュール・勤怠を完全に削除します。<b>元に戻せません。</b><br>※ 写真・ファイル（Google Drive内）は削除されません。</p>
+    <div class="acts">
+      <button class="btn sub" onclick="closeClearModal()">キャンセル</button>
+      <button class="btn primary" id="delConfirmBtn" style="background:#dc2626;" onclick="doClearAll()">削除する</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
+<div class="toast" id="toast"></div>
+<script src="../config.js?v=20260619-material-action-fix-42"></script>
+<script>
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var workers=[],customers=[],contacts=[],vehicles=[],suppliers=[],curTab='adminhome',sLoaded=false,setupLoaded=false;
+var ADMCACHE='genba_admin_cache';
+function admLoadCache(){try{var c=JSON.parse(localStorage.getItem(ADMCACHE)||'{}');workers=c.workers||[];customers=c.customers||[];contacts=c.contacts||[];vehicles=c.vehicles||[];}catch(e){}}
+function admSaveCache(){try{localStorage.setItem(ADMCACHE,JSON.stringify({workers:workers,customers:customers,contacts:contacts,vehicles:vehicles}));}catch(e){}}
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+
+var loadCnt=0,loadShownAt=0;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+function callGAS(params,secretOverride,silent){
+  return new Promise(function(resolve,reject){
+    if(!silent) showLoad();
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+    var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
+    function cleanup(){if(!silent) hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    window[cb]=function(res){cleanup();resolve(res);};
+    var q=Object.assign({secret:secretOverride||admTok(),callback:cb},params);
+    if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
+    s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+    s.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(s);
+  });
+}
+
+function showGate(){document.getElementById('gate').style.display='block';document.getElementById('content').style.display='none';document.getElementById('fab').style.display='none';document.getElementById('logoutBtn').style.display='none';document.getElementById('clearBtn').style.display='none';document.getElementById('who').textContent='';}
+function showContent(){document.getElementById('gate').style.display='none';document.getElementById('content').style.display='block';document.getElementById('fab').style.display='none';document.getElementById('logoutBtn').style.display='inline-block';document.getElementById('clearBtn').style.display='inline-block';document.getElementById('who').textContent='管理者';}
+
+function init(){
+  if(!admTok()){showGate();return;}
+  admLoadCache();
+  var hadCache=(workers.length||customers.length||contacts.length);
+  callGAS({action:'checkRole'},null,hadCache).then(function(res){
+    if(res&&res.ok&&res.role==='admin'){showContent(); if(hadCache){render();renderCustomers();renderContacts();renderVehicles();} switchTab('adminhome'); renderAdminHome(); loadAll(hadCache);}
+    else{localStorage.removeItem('genba_admin');showGate();}
+  }).catch(function(){showGate();});
+}
+function doLogin(){
+  var pin=document.getElementById('pin').value;if(!pin){toast('PINを入力してください');return;}
+  callGAS({action:'checkRole'},pin).then(function(res){
+    if(res&&res.ok&&res.role==='admin'){localStorage.setItem('genba_admin',(res&&res.token)||pin);document.getElementById('pin').value='';showContent();switchTab('adminhome');loadAll();}
+    else toast('管理者PINが違います');
+  }).catch(function(err){toast('通信エラー：'+err.message);});
+}
+function adminLogout(){localStorage.removeItem('genba_admin');showGate();}
+
+function loadWorkers(silent){
+  callGAS({action:'workers'},null,silent).then(function(res){
+    if(!res.ok)throw new Error(res.error||'エラー');workers=res.workers||[];admSaveCache();render();renderAdminHome();adminSearch();
+  }).catch(function(err){if(!silent)toast('読込失敗：'+err.message);});
+}
+function render(){
+  var el=document.getElementById('list');
+  if(!workers.length){el.innerHTML='<div class="empty">作業員がまだいません。<br>右下の「＋作業員」から登録してください。</div>';return;}
+  el.innerHTML='';
+  var groups={},order=[];
+  workers.forEach(function(w){var k=String(w['区分']||'未分類');if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(w);});
+  order.forEach(function(k){
+    var arr=groups[k],isKyo=/常用|協力|外注|応援|下請/.test(k),sec=document.createElement('div');
+    sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'（'+arr.length+'）</div>';
+    var grid=document.createElement('div');grid.className='grid-3';
+    arr.forEach(function(w){
+      var div=document.createElement('div');div.className='card'+(isKyo?' kyo':'');div.onclick=function(){openWorker(w);};
+      div.innerHTML='<div><div class="nm">'+esc(w['氏名']||'')+' <span class="tag'+(isKyo?' kyo':'')+'">'+esc(w['区分']||'')+'</span></div>'+
+        '<div class="meta"><span class="tag">'+esc(w['権限']||'社員')+'</span> '+(w['利用状態']==='停止'?'<span class="tag kyo">停止</span> ':'')+(w['所属']?esc(w['所属'])+' ・ ':'')+(w['ログインID']?'<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:2px;"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 7.2-7.2M16 6l2.2 2.2M19 3l2.2 2.2"/></svg>'+esc(w['ログインID']):'<span style="color:#bbb;">ログイン未設定</span>')+'</div></div>'+
+        '<div class="yen">'+(numv(w['標準単価'])?yen(w['標準単価'])+'/人工':'<span style="color:#9aa1ab;font-weight:400;">単価未設定</span>')+'</div>';
+      grid.appendChild(div);
+    });
+    sec.appendChild(grid);el.appendChild(sec);
+  });
+}
+
+function openWorker(w){
+  document.getElementById('mTitle').textContent=w?'作業員の編集':'作業員の追加';
+  document.getElementById('delRow').style.display=w?'block':'none';
+  var g=function(id){return document.getElementById(id);};
+  var nm=w?(w['氏名']||''):'',sp=nm.split(/[\s　]+/);
+  g('w_id').value=w?(w['作業員ID']||''):'';
+  g('w_sei').value=w?(w['氏']||sp[0]||''):'';
+  g('w_mei').value=w?(w['名']||sp.slice(1).join(' ')||''):'';
+  g('w_short').value=w?(w['略称']||''):'';
+  g('w_kind').value=w?(w['区分']||'社員'):'社員';g('w_unit').value=w?(numv(w['標準単価'])||''):'';g('w_belong').value=w?(w['所属']||''):'';
+  g('w_loginid').value=w?(w['ログインID']||''):'';g('w_pw').value=w?(w['パスワード']||''):'';
+  if(g('w_role'))g('w_role').value=w?(w['権限']||'社員'):'社員';
+  if(g('w_status'))g('w_status').value=w?(w['利用状態']||'有効'):'有効';
+  wKind();document.getElementById('ov').classList.add('show');
+}
+function wKind(){document.getElementById('belongWrap').style.display=document.getElementById('w_kind').value==='常用'?'block':'none';}
+function closeOv(){document.getElementById('ov').classList.remove('show');}
+function saveWorker(){
+  var g=function(id){return document.getElementById(id).value;},sei=g('w_sei').trim(),mei=g('w_mei').trim();
+  if(!sei&&!mei){toast('氏（姓）を入れてください');return;}
+  var name=[sei,mei].filter(Boolean).join('　');
+  var kind=g('w_kind'),id=g('w_id'),isNew=!id;
+  var d={'氏名':name,'氏':sei,'名':mei,'略称':g('w_short').trim(),'区分':kind,'所属':kind==='常用'?g('w_belong').trim():'','権限':g('w_role')||'社員','利用状態':g('w_status')||'有効','標準単価':g('w_unit'),'ログインID':g('w_loginid').trim(),'パスワード':g('w_pw')};
+  var btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
+  var params=isNew?{action:'addWorker',data:d}:{action:'updateWorker',id:id,data:d};
+  callGAS(params).then(function(res){
+    if(!res.ok)throw new Error(res.error||'保存失敗');
+    if(isNew)workers.push(res.worker);else for(var i=0;i<workers.length;i++){if(workers[i]['作業員ID']===id){workers[i]=res.worker;break;}}
+    render();closeOv();toast(isNew?'登録しました':'更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+function delWorker(ev){
+  ev.preventDefault();var id=document.getElementById('w_id').value;if(!id)return;
+  if(!confirm('この作業員を削除します。よろしいですか？'))return;
+  callGAS({action:'deleteWorker',id:id}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'削除失敗');closeOv();toast('削除しました');loadWorkers();
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+
+function loadAll(silent){ loadWorkers(silent); loadCustomers(silent); loadContacts(silent); loadVehicles(silent); if(!sLoaded){loadSuppliers(true);sLoaded=true;} renderAdminHome(); }
+function openClearModal(){document.getElementById('ovDel').classList.add('show');}
+function closeClearModal(){document.getElementById('ovDel').classList.remove('show');}
+function doClearAll(){
+  var btn=document.getElementById('delConfirmBtn');btn.disabled=true;btn.textContent='削除中…';
+  callGAS({action:'clearAll'}).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'削除に失敗しました');
+    closeClearModal();toast('全データを削除しました');loadAll();
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='削除する';});
+}
+var ciLoaded=false;
+function loadCompanyInfo(force){
+  callGAS({action:'estData'},null,true).then(function(d){
+    if(d&&d.ok){
+      var st=d.settings||{};
+      var map={ci_above:'社名上段',ci_name:'会社名',ci_below:'社名下段',ci_zip:'会社郵便番号',ci_addr:'会社住所',ci_tel:'会社電話',ci_fax:'会社FAX',ci_inv:'インボイス登録番号',ci_bank:'振込先',ci_valid:'見積有効日数',ci_cond:'支払条件',ci_greet:'あいさつ文'};
+      Object.keys(map).forEach(function(id){var el=document.getElementById(id);if(el&&(force||!el.value))el.value=(st[map[id]]!=null?st[map[id]]:(id==='ci_valid'?'30':''));});
+      ciLoaded=true;
+    }
+  }).catch(function(e){toast('会社情報の読込に失敗：'+e.message);});
+}
+function saveCompanyInfo(){
+  var data={
+    '社名上段':document.getElementById('ci_above').value.trim(),
+    '会社名':document.getElementById('ci_name').value.trim(),
+    '社名下段':document.getElementById('ci_below').value.trim(),
+    '会社郵便番号':document.getElementById('ci_zip').value.trim(),
+    '会社住所':document.getElementById('ci_addr').value.trim(),
+    '会社電話':document.getElementById('ci_tel').value.trim(),
+    '会社FAX':document.getElementById('ci_fax').value.trim(),
+    'インボイス登録番号':document.getElementById('ci_inv').value.trim(),
+    '振込先':document.getElementById('ci_bank').value.trim(),
+    '見積有効日数':document.getElementById('ci_valid').value.trim()||'30',
+    '支払条件':document.getElementById('ci_cond').value.trim(),
+    'あいさつ文':document.getElementById('ci_greet').value.trim()
+  };
+  callGAS({action:'saveSettings',data:data}).then(function(res){
+    if(res&&res.ok){ciLoaded=true;toast('会社情報を保存しました');loadCompanyInfo(true);}
+    else toast((res&&res.error)||'保存に失敗しました');
+  }).catch(function(e){toast(e.message);});
+}
+function switchTab(t){ curTab=t;
+  if(t==='company'){if(!compDocs.length)loadCompDocs();if(!ciLoaded)loadCompanyInfo();}
+  if(t==='setup'){setupOpen();}
+  if(t==='adminhome'){renderAdminHome();}
+  ['adminhome','worker','setup','partner','contact','vehicle','supplier','repcheck','restore','company'].forEach(function(x){
+    document.getElementById('sec-'+x).style.display=(x===t)?'block':'none';
+    document.getElementById('tab-'+x).className='tab'+(x===t?' on':'');
+  });
+  var canAdd=(t==='worker'||t==='partner'||t==='contact'||t==='vehicle'||t==='supplier');
+  document.getElementById('fab').style.display=canAdd?'block':'none';
+  document.getElementById('fab').textContent= t==='worker'?'＋ 作業員' : t==='partner'?'＋ 取引先' : t==='contact'?'＋ 担当者' : t==='vehicle'?'＋ 車両' : '＋ 仕入先';
+  if(t==='supplier'&&!sLoaded){loadSuppliers();sLoaded=true;}
+  if(t==='repcheck'&&!rcLoaded){rcRange(7);rcLoaded=true;}
+  if(t==='restore'){loadDeletedRows();}
+}
+
+
+/* ===== 削除済みデータの復元 v54 ===== */
+var restoreType='';
+function restoreFilter(type){
+  restoreType=type||'';
+  var btns=document.querySelectorAll('[data-rtype]');
+  for(var i=0;i<btns.length;i++){btns[i].className='rcseg'+(btns[i].getAttribute('data-rtype')===restoreType?' on':'');}
+  loadDeletedRows();
+}
+function loadDeletedRows(){
+  var el=document.getElementById('restoreList');
+  if(!el)return;
+  el.innerHTML='<div class="empty">読込中…</div>';
+  callGAS({action:'deletedList',sheet:restoreType}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'読込失敗');
+    renderDeletedRows(res.rows||[]);
+  }).catch(function(err){el.innerHTML='<div class="empty">読込失敗：'+esc(err.message)+'</div>';});
+}
+function renderDeletedRows(rows){
+  var el=document.getElementById('restoreList');
+  if(!rows.length){el.innerHTML='<div class="empty">削除済みデータはありません。</div>';return;}
+  var html='';
+  rows.forEach(function(r){
+    html+='<div class="card" style="margin-bottom:8px;">'+
+      '<div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">'+
+        '<div><div class="nm">'+esc(r['名称']||'(名称なし)')+' <span class="tag">'+esc(r['種別']||'')+'</span></div>'+
+        '<div class="meta">ID：'+esc(r['ID']||'')+' ／ 削除：'+esc(r['削除日時']||'')+' ／ '+esc(r['削除者名']||'')+'</div></div>'+
+        '<button class="btn primary" style="width:auto;white-space:nowrap;" onclick="restoreDeletedRow(\''+escAttr(r.sheetKey||'')+'\',\''+escAttr(r['ID']||'')+'\')">復元</button>'+
+      '</div></div>';
+  });
+  el.innerHTML=html;
+}
+function restoreDeletedRow(key,id){
+  if(!key||!id)return;
+  if(!confirm('このデータを復元します。よろしいですか？'))return;
+  callGAS({action:'restoreDeleted',sheet:key,id:id}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'復元失敗');
+    toast(res.restored?'復元しました':'復元対象が見つかりません');
+    loadDeletedRows();
+    loadAll(true);
+  }).catch(function(err){toast('復元失敗：'+err.message);});
+}
+function escAttr(s){return String(s||'').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+/* ===== 初期設定ウィザード v53 ===== */
+function setupOpen(){
+  setupRefreshProgress();
+  if(!setupLoaded){setupLoadCompany(true);setupLoaded=true;}
+}
+function setupLines(id){
+  var v=(document.getElementById(id).value||'').trim();
+  if(!v)return[];
+  return v.split(/\r?\n/).map(function(line){return line.trim();}).filter(Boolean);
+}
+function setupParts(line){return line.split(',').map(function(x){return x.trim();});}
+function setupSetBusy(id,busy,label){var b=document.getElementById(id);if(!b)return;b.disabled=!!busy;b.textContent=busy?'保存中…':label;}
+function setupSample(type){
+  if(type==='workers')document.getElementById('su_workers').value='山田 太郎, 山田, 社員, yamada, 1234, 20000\n佐藤 一郎, 佐藤, 社員, sato, 1234, 20000\nナンカイ 花子, 花子, 常用, hanako, 1234, 18000';
+  if(type==='vehicles')document.getElementById('su_vehicles').value='ハイエース1号, 岐阜 400 あ 12-34, 2027-06-30, 2027-06-30, 工事用\n軽バン, 岐阜 580 あ 56-78\n高所作業車';
+  if(type==='partners')document.getElementById('su_partners').value='岐阜市役所, 官公庁, 058-000-0000, 岐阜県岐阜市〇〇町, 公共工事\n〇〇建設株式会社, 法人\n△△工場, 法人';
+}
+function setupRefreshProgress(){
+  var wc=workers.length||0,vc=vehicles.length||0,pc=customers.length||0;
+  var companyName=(document.getElementById('su_ci_name')&&document.getElementById('su_ci_name').value.trim())||(document.getElementById('ci_name')&&document.getElementById('ci_name').value.trim())||'';
+  var doneCompany=!!companyName, doneWorker=wc>0, doneVehicle=vc>0, donePartner=pc>0;
+  [['sp-company',doneCompany],['sp-worker',doneWorker],['sp-vehicle',doneVehicle],['sp-partner',donePartner],['sp-finish',doneCompany&&doneWorker&&donePartner]].forEach(function(x){var el=document.getElementById(x[0]);if(el)el.className='setup-step'+(x[1]?' done':'');});
+  var sw=document.getElementById('suWorkerCount'),sv=document.getElementById('suVehicleCount'),sp=document.getElementById('suPartnerCount');
+  if(sw)sw.textContent=wc;if(sv)sv.textContent=vc;if(sp)sp.textContent=pc;
+  var msg=[];
+  msg.push(doneCompany?'会社情報：登録済み':'会社情報：未登録');
+  msg.push('作業員：'+wc+'人');msg.push('車両：'+vc+'台');msg.push('取引先：'+pc+'件');
+  var ft=document.getElementById('setupFinishText');
+  if(ft)ft.innerHTML=msg.map(esc).join('<br>')+'<br><b>'+(doneCompany&&doneWorker&&donePartner?'最低限の初期設定は完了できます。':'会社情報・作業員・取引先を登録すると使い始めやすくなります。')+'</b>';
+}
+function setupLoadCompany(silent){
+  callGAS({action:'estData'},null,true).then(function(d){
+    if(d&&d.ok){
+      var st=d.settings||{};
+      var map={su_ci_name:'会社名',su_ci_zip:'会社郵便番号',su_ci_addr:'会社住所',su_ci_tel:'会社電話',su_ci_fax:'会社FAX',su_ci_inv:'インボイス登録番号',su_ci_bank:'振込先'};
+      Object.keys(map).forEach(function(id){var el=document.getElementById(id);if(el)el.value=st[map[id]]||'';});
+      setupRefreshProgress(); if(!silent)toast('会社情報を読み込みました');
+    }
+  }).catch(function(e){if(!silent)toast('会社情報の読込に失敗：'+e.message);});
+}
+function setupSaveCompany(){
+  var data={
+    '会社名':document.getElementById('su_ci_name').value.trim(),
+    '会社郵便番号':document.getElementById('su_ci_zip').value.trim(),
+    '会社住所':document.getElementById('su_ci_addr').value.trim(),
+    '会社電話':document.getElementById('su_ci_tel').value.trim(),
+    '会社FAX':document.getElementById('su_ci_fax').value.trim(),
+    'インボイス登録番号':document.getElementById('su_ci_inv').value.trim(),
+    '振込先':document.getElementById('su_ci_bank').value.trim()
+  };
+  if(!data['会社名']){toast('会社名を入力してください');return;}
+  setupSetBusy('setupCompanyBtn',true,'会社情報を保存');
+  callGAS({action:'saveSettings',data:data}).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'保存に失敗しました');
+    toast('会社情報を保存しました');ciLoaded=false;setupRefreshProgress();
+  }).catch(function(e){toast('失敗：'+e.message);}).then(function(){setupSetBusy('setupCompanyBtn',false,'会社情報を保存');});
+}
+function setupBulkWorkers(){
+  var lines=setupLines('su_workers'); if(!lines.length){toast('追加する作業員を入力してください');return;}
+  setupSetBusy('setupWorkerBtn',true,'作業員を追加');
+  var added=0,failed=0;
+  lines.reduce(function(p,line){return p.then(function(){
+    var a=setupParts(line),name=a[0]||''; if(!name){failed++;return;}
+    var sp=name.split(/[\s　]+/),sei=sp[0]||name,mei=sp.slice(1).join(' ');
+    var d={'氏名':name,'氏':sei,'名':mei,'略称':a[1]||sei,'区分':a[2]||'社員','所属':(a[2]==='常用'?'':'') ,'権限':(/常用|協力|外注|応援|下請/.test(a[2]||'')?'現場作業員':'社員'),'利用状態':'有効','標準単価':a[5]||'','ログインID':a[3]||'','パスワード':a[4]||''};
+    return callGAS({action:'addWorker',data:d},null,true).then(function(res){if(res&&res.ok){workers.push(res.worker);added++;}else failed++;}).catch(function(){failed++;});
+  });},Promise.resolve()).then(function(){
+    admSaveCache();render();document.getElementById('su_workers').value='';setupRefreshProgress();toast('作業員を追加：'+added+'件'+(failed?' / 失敗 '+failed+'件':''));
+  }).then(function(){setupSetBusy('setupWorkerBtn',false,'作業員を追加');});
+}
+function setupBulkVehicles(){
+  var lines=setupLines('su_vehicles'); if(!lines.length){toast('追加する車両を入力してください');return;}
+  setupSetBusy('setupVehicleBtn',true,'車両を追加');
+  var added=0,failed=0;
+  lines.reduce(function(p,line){return p.then(function(){
+    var a=setupParts(line),name=a[0]||''; if(!name){failed++;return;}
+    var d={'車両名':name,'ナンバー':a[1]||'','車検満了日':a[2]||'','保険満了日':a[3]||'','備考':a[4]||'','オイル交換距離':'5000','オイル交換月数':'6'};
+    return callGAS({action:'vehicleSave',data:d},null,true).then(function(res){if(res&&res.ok){vehicles.push(res.vehicle);added++;}else failed++;}).catch(function(){failed++;});
+  });},Promise.resolve()).then(function(){
+    admSaveCache();renderVehicles();document.getElementById('su_vehicles').value='';setupRefreshProgress();toast('車両を追加：'+added+'件'+(failed?' / 失敗 '+failed+'件':''));
+  }).then(function(){setupSetBusy('setupVehicleBtn',false,'車両を追加');});
+}
+function setupBulkPartners(){
+  var lines=setupLines('su_partners'); if(!lines.length){toast('追加する取引先を入力してください');return;}
+  setupSetBusy('setupPartnerBtn',true,'取引先を追加');
+  var added=0,failed=0;
+  lines.reduce(function(p,line){return p.then(function(){
+    var a=setupParts(line),name=a[0]||''; if(!name){failed++;return;}
+    var kind=a[1]||'法人'; if(['官公庁','法人','個人'].indexOf(kind)<0)kind='法人';
+    var d={'顧客名':name,'区分':kind,'電話':a[2]||'','住所':a[3]||'','備考':a[4]||''};
+    return callGAS({action:'addCustomer',data:d},null,true).then(function(res){if(res&&res.ok){customers.push(res.customer);added++;}else failed++;}).catch(function(){failed++;});
+  });},Promise.resolve()).then(function(){
+    admSaveCache();renderCustomers();document.getElementById('su_partners').value='';setupRefreshProgress();toast('取引先を追加：'+added+'件'+(failed?' / 失敗 '+failed+'件':''));
+  }).then(function(){setupSetBusy('setupPartnerBtn',false,'取引先を追加');});
+}
+function setupMarkDone(){
+  localStorage.setItem('genba_setup_done','1');
+  setupRefreshProgress();
+  toast('初期設定を完了にしました');
+}
+
+var rcLoaded=false,rcDays=7;
+function rcRange(days){
+  rcDays=days;
+  var bs=document.querySelectorAll('.rcseg');for(var i=0;i<bs.length;i++)bs[i].className='rcseg'+(String(bs[i].getAttribute('data-d'))===String(days)?' on':'');
+  var to=new Date(),from=new Date();from.setDate(to.getDate()-(days-1));
+  var p=function(n){return('0'+n).slice(-2);};
+  var fs=from.getFullYear()+'-'+p(from.getMonth()+1)+'-'+p(from.getDate());
+  var ts=to.getFullYear()+'-'+p(to.getMonth()+1)+'-'+p(to.getDate());
+  document.getElementById('rcList').innerHTML='<div class="empty">集計中…</div>';
+  callGAS({action:'reportGaps',from:fs,to:ts}).then(function(res){
+    if(!res||!res.ok){document.getElementById('rcList').innerHTML='<div class="empty">'+((res&&res.error)||'集計に失敗しました')+'</div>';return;}
+    renderRc(res);
+  }).catch(function(e){document.getElementById('rcList').innerHTML='<div class="empty">'+e.message+'</div>';});
+}
+function rcEsc(x){return String(x==null?'':x).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function renderRc(res){
+  var days=(res.days||[]).slice().reverse();
+  var el=document.getElementById('rcList');
+  var totalMiss=0;days.forEach(function(d){totalMiss+=d.missing.length;});
+  if(!days.length){el.innerHTML='<div class="empty">この期間は予定に担当が割り当てられた日がありません。<br>（スケジュールで担当を設定すると未提出チェックができます）</div>';return;}
+  var h='';
+  if(totalMiss===0)h+='<div class="rcsum" style="background:#f0fdf4;border-color:#86efac;color:#166534;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:4px;"><path d="m20 6-11 11-5-5"/></svg>この期間、未提出はありません。</div>';
+  else h+='<div class="rcsum"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3 2 20h20Z"/><path d="M12 9v5M12 17.4v.2"/></svg>未提出が合計 '+totalMiss+' 件あります。</div>';
+  days.forEach(function(d){
+    var dt=new Date(d.date+'T00:00:00');
+    var wd='日月火水木金土'[dt.getDay()];
+    var has=d.missing.length>0;
+    h+='<div class="rcday'+(has?' has':'')+'"><div class="rcd"><span class="rcdate">'+(dt.getMonth()+1)+'/'+dt.getDate()+'（'+wd+'）</span>'
+      +(has?'<span class="rcok" style="color:#b91c1c">未提出 '+d.missing.length+'/'+d.assigned+'名</span>':'<span class="rcok">全員提出済 '+d.assigned+'名</span>')+'</div>';
+    if(has){h+='<div class="rcmiss">'+d.missing.map(function(m){return '<span class="rcname">'+rcEsc(m['略称']||m['氏名'])+'</span>';}).join('')+'</div>';}
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner')openPartner(); else if(curTab==='contact')openContact(); else if(curTab==='vehicle')openVehicle(); else if(curTab==='supplier')openSupplier(''); }
+
+/* ===== 取引先（区分つき）===== */
+function custKind(c){ return String(c['区分']||'').trim()||'法人'; }   // 空は法人として扱う
+function kindCls(k){ return k==='官公庁'?'kk':(k==='個人'?'kx':'kg'); }
+function loadCustomers(silent){ callGAS({action:'customers'},null,silent).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); customers=res.customers||[]; admSaveCache(); renderCustomers();renderAdminHome();adminSearch(); }).catch(function(err){if(!silent)toast('取引先の読込失敗：'+err.message);}); }
+function renderCustomers(){
+  var el=document.getElementById('listP');
+  if(!customers.length){el.innerHTML='<div class="empty">取引先がまだありません。<br>右下の「＋取引先」から登録してください。</div>';return;}
+  var order=['官公庁','法人','個人'],groups={};
+  customers.forEach(function(c){var k=custKind(c);(groups[k]=groups[k]||[]).push(c);});
+  Object.keys(groups).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
+  el.innerHTML='';
+  order.forEach(function(k){ var arr=groups[k]; if(!arr||!arr.length)return; var cls=kindCls(k);
+    var sec=document.createElement('div'); sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'（'+arr.length+'）</div>';
+    arr.sort(function(a,b){return String(a['顧客名']||'').localeCompare(String(b['顧客名']||''),'ja');});
+    var grid=document.createElement('div');grid.className='grid-3';
+    arr.forEach(function(c){ var div=document.createElement('div');div.className='card '+cls;div.onclick=(function(x){return function(){openPartner(x);};})(c);
+      div.innerHTML='<div><div class="nm">'+esc(c['顧客名']||'')+' <span class="tag '+cls+'">'+esc(k)+'</span></div>'+
+        '<div class="meta">'+[c['電話'],c['住所']].filter(Boolean).map(esc).join(' ・ ')+'</div></div>';
+      grid.appendChild(div); });
+    sec.appendChild(grid);el.appendChild(sec);
+  });
+}
+function openPartner(c){
+  document.getElementById('pTitle').textContent=c?'取引先の編集':'取引先の追加';
+  document.getElementById('pDelRow').style.display=c?'block':'none';
+  var g=function(id){return document.getElementById(id);};
+  g('p_id').value=c?(c['顧客ID']||''):''; g('p_kind').value=c?custKind(c):'法人';
+  g('p_name').value=c?(c['顧客名']||''):''; g('p_tel').value=c?(c['電話']||''):'';
+  g('p_addr').value=c?(c['住所']||''):''; g('p_url').value=c?(c['ホームページ']||''):''; g('p_note').value=c?(c['備考']||''):'';
+  document.getElementById('ovp').classList.add('show');
+}
+function closeP(){document.getElementById('ovp').classList.remove('show');}
+function savePartner(){
+  var g=function(id){return document.getElementById(id).value;},name=g('p_name').trim();
+  if(!name){toast('取引先名を入れてください');return;}
+  var id=g('p_id'),isNew=!id;
+  var d={'顧客名':name,'区分':g('p_kind'),'電話':g('p_tel').trim(),'住所':g('p_addr').trim(),'ホームページ':g('p_url').trim(),'備考':g('p_note').trim()};
+  var btn=document.getElementById('pSaveBtn');btn.disabled=true;btn.textContent='保存中…';
+  var params=isNew?{action:'addCustomer',data:d}:{action:'updateCustomer',id:id,data:d};
+  callGAS(params).then(function(res){ if(!res.ok)throw new Error(res.error||'保存失敗');
+    if(isNew)customers.push(res.customer);else for(var i=0;i<customers.length;i++){if(customers[i]['顧客ID']===id){customers[i]=res.customer;break;}}
+    renderCustomers();closeP();toast(isNew?'登録しました':'更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+function delPartner(ev){ ev.preventDefault();var id=document.getElementById('p_id').value;if(!id)return;
+  if(!confirm('この取引先を削除します。よろしいですか？\n（ひもづく担当者は残ります）'))return;
+  callGAS({action:'deleteCustomer',id:id}).then(function(res){ if(!res.ok)throw new Error(res.error||'削除失敗');
+    closeP();toast('削除しました');loadCustomers();
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+
+/* ===== 先方担当者 ===== */
+function loadContacts(silent){ callGAS({action:'contacts'},null,silent).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); contacts=res.contacts||[]; admSaveCache(); renderContacts();renderAdminHome();adminSearch(); }).catch(function(err){if(!silent)toast('担当者の読込失敗：'+err.message);}); }
+function renderContacts(){
+  var el=document.getElementById('listK');
+  if(!contacts.length){el.innerHTML='<div class="empty">先方担当者がまだいません。<br>右下の「＋担当者」から登録してください。</div>';return;}
+  var groups={},order=[];
+  contacts.forEach(function(c){var k=String(c['取引先']||'（取引先未設定）');if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(c);});
+  order.sort(function(a,b){return a.localeCompare(b,'ja');});
+  el.innerHTML='';
+  order.forEach(function(k){ var arr=groups[k];
+    var sec=document.createElement('div');sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'（'+arr.length+'）</div>';
+    var grid=document.createElement('div');grid.className='grid-3';
+    arr.forEach(function(c){ var div=document.createElement('div');div.className='card';div.onclick=(function(x){return function(){openContact(x);};})(c);
+      div.innerHTML='<div><div class="nm">'+esc(c['担当者名']||'')+(c['役職']?' <span class="tag">'+esc(c['役職'])+'</span>':'')+'</div>'+
+        '<div class="meta">'+[c['電話'],c['メール']].filter(Boolean).map(esc).join(' ・ ')+'</div></div>';
+      grid.appendChild(div); });
+    sec.appendChild(grid);el.appendChild(sec);
+  });
+}
+function buildPartnerSelect(sel,val){
+  var order=['官公庁','法人','個人'],byKind={};
+  customers.forEach(function(c){var k=custKind(c);(byKind[k]=byKind[k]||[]).push(c);});
+  Object.keys(byKind).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
+  sel.innerHTML='<option value="">（取引先を選択）</option>';
+  order.forEach(function(k){ var arr=byKind[k];if(!arr)return; var og=document.createElement('optgroup');og.label=k;
+    arr.sort(function(a,b){return String(a['顧客名']||'').localeCompare(String(b['顧客名']||''),'ja');});
+    arr.forEach(function(c){var o=document.createElement('option');o.value=c['顧客名'];o.textContent=c['顧客名'];og.appendChild(o);});
+    sel.appendChild(og); });
+  if(val){ sel.value=val; if(sel.value!==val){ var o=document.createElement('option');o.value=val;o.textContent=val+'（未登録）';sel.appendChild(o);sel.value=val; } }
+}
+function openContact(c){
+  document.getElementById('kTitle').textContent=c?'先方担当者の編集':'先方担当者の追加';
+  document.getElementById('kDelRow').style.display=c?'block':'none';
+  buildPartnerSelect(document.getElementById('k_partner'), c?(c['取引先']||''):'');
+  var g=function(id){return document.getElementById(id);};
+  g('k_id').value=c?(c['担当者ID']||''):''; g('k_name').value=c?(c['担当者名']||''):'';
+  g('k_role').value=c?(c['役職']||''):''; g('k_tel').value=c?(c['電話']||''):'';
+  g('k_mail').value=c?(c['メール']||''):''; g('k_note').value=c?(c['備考']||''):'';
+  document.getElementById('ovk').classList.add('show');
+}
+function closeK(){document.getElementById('ovk').classList.remove('show');}
+function saveContact(){
+  var g=function(id){return document.getElementById(id).value;},name=g('k_name').trim(),partner=g('k_partner');
+  if(!partner){toast('取引先を選んでください');return;}
+  if(!name){toast('担当者名を入れてください');return;}
+  var id=g('k_id'),isNew=!id;
+  var d={'取引先':partner,'担当者名':name,'役職':g('k_role').trim(),'電話':g('k_tel').trim(),'メール':g('k_mail').trim(),'備考':g('k_note').trim()};
+  var btn=document.getElementById('kSaveBtn');btn.disabled=true;btn.textContent='保存中…';
+  var params=isNew?{action:'addContact',data:d}:{action:'updateContact',id:id,data:d};
+  callGAS(params).then(function(res){ if(!res.ok)throw new Error(res.error||'保存失敗');
+    if(isNew)contacts.push(res.contact);else for(var i=0;i<contacts.length;i++){if(contacts[i]['担当者ID']===id){contacts[i]=res.contact;break;}}
+    renderContacts();closeK();toast(isNew?'登録しました':'更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+function delContact(ev){ ev.preventDefault();var id=document.getElementById('k_id').value;if(!id)return;
+  if(!confirm('この担当者を削除します。よろしいですか？'))return;
+  callGAS({action:'deleteContact',id:id}).then(function(res){ if(!res.ok)throw new Error(res.error||'削除失敗');
+    closeK();toast('削除しました');loadContacts();
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+
+function numv(v){var n=parseFloat(String(v).replace(/[^\d.-]/g,''));return isNaN(n)?0:n;}
+function yen(v){var n=numv(v);return n?('¥'+Math.round(n).toLocaleString('ja-JP')):'';}
+
+function postGAS(params){
+  var body=Object.assign({secret:admTok()},params);
+  return fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){return r.json();});
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
+
+
+/* ===== 管理ホーム v56 ===== */
+function adminCountBy(arr,key){
+  var out={};(arr||[]).forEach(function(x){var k=String((key?x[key]:'')||'未設定');out[k]=(out[k]||0)+1;});return out;
+}
+function adminMiniCount(obj){return Object.keys(obj).map(function(k){return k+' '+obj[k];}).slice(0,3).join(' / ')||'未設定';}
+function adminOpenTab(t){switchTab(t);window.scrollTo({top:0,behavior:'smooth'});}
+function renderAdminHome(){
+  var m=document.getElementById('adminMetrics'); if(!m)return;
+  var activeWorkers=(workers||[]).filter(function(w){return String(w['利用状態']||'有効')!=='停止';}).length;
+  var stopped=(workers||[]).length-activeWorkers;
+  var noLogin=(workers||[]).filter(function(w){return !String(w['ログインID']||'').trim();}).length;
+  var kind=adminCountBy(workers,'区分');
+  var custKindMap=adminCountBy((customers||[]).map(function(c){return Object.assign({},c,{'区分':custKind(c)});}), '区分');
+  var vehicleWarn=(vehicles||[]).filter(function(v){var s=vDaysLeft(v['車検満了日']);var h=vDaysLeft(v['保険満了日']);return (s!=null&&s<=60)||(h!=null&&h<=60);}).length;
+  m.innerHTML=
+    '<div class="admin-metric" onclick="adminOpenTab(\'worker\')"><div class="label">作業員</div><div class="num">'+(workers||[]).length+'</div><div class="mini">有効 '+activeWorkers+' / 停止 '+stopped+'</div></div>'+ 
+    '<div class="admin-metric" onclick="adminOpenTab(\'partner\')"><div class="label">取引先</div><div class="num">'+(customers||[]).length+'</div><div class="mini">'+esc(adminMiniCount(custKindMap))+'</div></div>'+ 
+    '<div class="admin-metric" onclick="adminOpenTab(\'contact\')"><div class="label">担当者</div><div class="num">'+(contacts||[]).length+'</div><div class="mini">先方担当者</div></div>'+ 
+    '<div class="admin-metric" onclick="adminOpenTab(\'vehicle\')"><div class="label">車両</div><div class="num">'+(vehicles||[]).length+'</div><div class="mini">期限注意 '+vehicleWarn+' 台</div></div>';
+  var alerts=[];
+  if(!(workers||[]).length)alerts.push({cls:'ng',msg:'作業員が未登録です。最初に管理者・社員を登録してください。',btn:'作業員登録',tab:'worker'});
+  if(noLogin>0)alerts.push({cls:'ng',msg:'ログインID未設定の作業員が '+noLogin+' 人います。タイムカードや権限管理で本人紐づけできません。',btn:'作業員を見る',tab:'worker'});
+  if(stopped>0)alerts.push({cls:'',msg:'停止中の作業員が '+stopped+' 人います。退職者・一時停止の確認用です。',btn:'作業員を見る',tab:'worker'});
+  if(!(customers||[]).length)alerts.push({cls:'ng',msg:'取引先が未登録です。案件登録前に主要な取引先を登録すると入力が楽になります。',btn:'取引先登録',tab:'partner'});
+  if(vehicleWarn>0)alerts.push({cls:'ng',msg:'車検・保険の期限が近い車両が '+vehicleWarn+' 台あります。',btn:'車両を見る',tab:'vehicle'});
+  if(!(suppliers||[]).length)alerts.push({cls:'',msg:'仕入先が未登録です。材料・外注・リース先を登録すると原価管理に使いやすくなります。',btn:'仕入先登録',tab:'supplier'});
+  if(!alerts.length)alerts.push({cls:'ok',msg:'主要マスタの登録状況に大きな問題はありません。',btn:'更新',tab:'adminhome'});
+  var a=document.getElementById('adminAlerts');
+  if(a)a.innerHTML=alerts.map(function(x){return '<div class="admin-alert '+x.cls+'"><div>'+esc(x.msg)+'</div><button onclick="'+(x.tab==='adminhome'?'loadAll()':'adminOpenTab(\''+x.tab+'\')')+'">'+esc(x.btn)+'</button></div>';}).join('');
+}
+function adminSearch(){
+  var inp=document.getElementById('adminSearchInput'),box=document.getElementById('adminSearchResults'); if(!inp||!box)return;
+  var q=String(inp.value||'').trim().toLowerCase();
+  if(!q){box.innerHTML='<div class="empty" style="padding:12px;">キーワードを入れると、各マスタをまとめて検索できます。</div>';return;}
+  var rows=[];
+  function hit(obj,fields){return fields.some(function(f){return String(obj[f]||'').toLowerCase().indexOf(q)>=0;});}
+  (workers||[]).forEach(function(w){if(hit(w,['氏名','略称','区分','所属','ログインID','権限']))rows.push({type:'作業員',name:w['氏名']||'',meta:[w['区分'],w['権限'],w['ログインID']].filter(Boolean).join(' ・ '),open:function(){switchTab('worker');openWorker(w);}});});
+  (customers||[]).forEach(function(c){if(hit(c,['顧客名','区分','電話','住所','備考']))rows.push({type:'取引先',name:c['顧客名']||'',meta:[custKind(c),c['電話'],c['住所']].filter(Boolean).join(' ・ '),open:function(){switchTab('partner');openPartner(c);}});});
+  (contacts||[]).forEach(function(c){if(hit(c,['担当者名','取引先','役職','電話','メール','備考']))rows.push({type:'担当者',name:c['担当者名']||'',meta:[c['取引先'],c['役職'],c['電話']].filter(Boolean).join(' ・ '),open:function(){switchTab('contact');openContact(c);}});});
+  (vehicles||[]).forEach(function(v){if(hit(v,['車両名','ナンバー','車種','備考']))rows.push({type:'車両',name:v['車両名']||'',meta:[v['ナンバー'],v['車種']].filter(Boolean).join(' ・ '),open:function(){switchTab('vehicle');openVehicle(v);}});});
+  (suppliers||[]).forEach(function(s){if(hit(s,['仕入先名','略称','種別','電話番号','担当者名','メールアドレス','メモ']))rows.push({type:'仕入先',name:s['仕入先名']||'',meta:[s['種別'],s['電話番号'],s['担当者名']].filter(Boolean).join(' ・ '),open:function(){switchTab('supplier');openSupplier(s['仕入先ID']||'');}});});
+  if(!rows.length){box.innerHTML='<div class="empty" style="padding:12px;">該当するマスタはありません。</div>';return;}
+  box.innerHTML='';rows.slice(0,30).forEach(function(r){var d=document.createElement('div');d.className='admin-result';d.innerHTML='<strong>'+esc(r.type)+'｜'+esc(r.name)+'</strong><span>'+esc(r.meta||'')+'</span>';d.onclick=r.open;box.appendChild(d);});
+}
+
+/* ===== 車両マスタ ===== */
+function vDateVal(v){if(!v)return'';var m=String(v).match(/^(\d{4}-\d{2}-\d{2})/);return m?m[1]:'';}
+function vDateDisp(v){var s=vDateVal(v);return s?s.replace(/-/g,'/'):'';}
+function vDaysLeft(v){var s=vDateVal(v);if(!s)return null;var d=new Date(s+'T00:00:00'),t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
+function vAlertTag(label,days){
+  if(days==null)return'';
+  if(days<0)return' <span class="tag" style="background:#fee2e2;color:#b91c1c;">'+label+'切れ</span>';
+  if(days<=30)return' <span class="tag" style="background:#fee2e2;color:#b91c1c;">'+label+'まで'+days+'日</span>';
+  if(days<=60)return' <span class="tag" style="background:#fef3c7;color:#92400e;">'+label+'まで'+days+'日</span>';
+  return'';
+}
+function loadVehicles(silent){ callGAS({action:'vehicles'},null,silent).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); vehicles=res.vehicles||[]; admSaveCache(); renderVehicles();renderAdminHome();adminSearch(); }).catch(function(err){if(!silent)toast('車両の読込失敗：'+err.message);}); }
+function renderVehicles(){
+  var el=document.getElementById('listV');
+  if(!vehicles.length){el.innerHTML='<div class="empty">車両がまだ登録されていません。<br>右下の「＋車両」から登録してください。</div>';return;}
+  var grid=document.createElement('div');grid.className='grid-3';
+  vehicles.forEach(function(v){
+    var div=document.createElement('div');div.className='card';div.style.borderLeftColor='#0f766e';
+    div.onclick=(function(x){return function(){openVehicle(x);};})(v);
+    var alerts=vAlertTag('車検',vDaysLeft(v['車検満了日']))+vAlertTag('保険',vDaysLeft(v['保険満了日']));
+    var oil='';
+    var okm=numv(v['オイル交換距離']),last=numv(v['前回オイル交換距離']),cur=numv(v['現在距離']);
+    if(okm>0&&cur>0&&cur-last>=okm)oil=' <span class="tag" style="background:#fee2e2;color:#b91c1c;">オイル交換</span>';
+    var meta=[];
+    if(vDateVal(v['車検満了日']))meta.push('車検 '+vDateDisp(v['車検満了日']));
+    if(vDateVal(v['保険満了日']))meta.push('保険 '+vDateDisp(v['保険満了日']));
+    if(cur>0)meta.push(Math.round(cur).toLocaleString('ja-JP')+' km');
+    div.innerHTML='<div><div class="nm">'+esc(v['車両名']||'')+(v['ナンバー']?' <span class="tag">'+esc(v['ナンバー'])+'</span>':'')+alerts+oil+'</div>'+
+      '<div class="meta">'+meta.map(esc).join(' ・ ')+'</div></div>';
+    grid.appendChild(div);
+  });
+  el.innerHTML='';el.appendChild(grid);
+}
+function openVehicle(v){
+  document.getElementById('vTitle').textContent=v?'車両の編集':'車両の追加';
+  document.getElementById('vDelRow').style.display=v?'block':'none';
+  var g=function(id){return document.getElementById(id);};
+  g('v_id').value=v?(v['車両ID']||''):'';
+  g('v_name').value=v?(v['車両名']||''):''; g('v_no').value=v?(v['ナンバー']||''):'';
+  g('v_model').value=v?(v['車種']||''):'';
+  g('v_shaken').value=v?vDateVal(v['車検満了日']):''; g('v_shakenNo').value=v?(v['車検番号']||''):'';
+  g('v_hokenCo').value=v?(v['保険会社']||''):''; g('v_hokenNo').value=v?(v['保険証券番号']||''):'';
+  g('v_hokenFrom').value=v?vDateVal(v['保険開始日']):''; g('v_hokenTo').value=v?vDateVal(v['保険満了日']):'';
+  g('v_oilKm').value=v?(v['オイル交換距離']||''):'5000'; g('v_oilMon').value=v?(v['オイル交換月数']||''):'6';
+  g('v_oilDate').value=v?vDateVal(v['前回オイル交換日']):''; g('v_oilOdo').value=v?(v['前回オイル交換距離']||''):'';
+  g('v_odo').value=v?(v['現在距離']||''):''; g('v_rate').value=v?(v['日額単価']||''):'';
+  g('v_order').value=v?(v['表示順']||''):''; g('v_note').value=v?(v['備考']||''):'';
+  document.getElementById('ovv').classList.add('show');
+}
+function closeV(){document.getElementById('ovv').classList.remove('show');}
+function saveVehicle(){
+  var g=function(id){return document.getElementById(id).value;},name=g('v_name').trim();
+  if(!name){toast('車両名を入れてください');return;}
+  var id=g('v_id'),isNew=!id;
+  var d={'車両名':name,'ナンバー':g('v_no').trim(),'車種':g('v_model').trim(),
+    '車検満了日':g('v_shaken'),'車検番号':g('v_shakenNo').trim(),
+    '保険会社':g('v_hokenCo').trim(),'保険証券番号':g('v_hokenNo').trim(),'保険開始日':g('v_hokenFrom'),'保険満了日':g('v_hokenTo'),
+    'オイル交換距離':g('v_oilKm'),'オイル交換月数':g('v_oilMon'),'前回オイル交換日':g('v_oilDate'),'前回オイル交換距離':g('v_oilOdo'),
+    '現在距離':g('v_odo'),'日額単価':g('v_rate'),'表示順':g('v_order'),'備考':g('v_note').trim()};
+  if(g('v_odo')!=='')d['距離更新日']=new Date().toISOString().slice(0,10);
+  if(!isNew)d['車両ID']=id;
+  var btn=document.getElementById('vSaveBtn');btn.disabled=true;btn.textContent='保存中…';
+  callGAS({action:'vehicleSave',data:d}).then(function(res){ if(!res.ok)throw new Error(res.error||'保存失敗');
+    if(isNew)vehicles.push(res.vehicle);else for(var i=0;i<vehicles.length;i++){if(vehicles[i]['車両ID']===id){vehicles[i]=res.vehicle;break;}}
+    admSaveCache();renderVehicles();closeV();toast(isNew?'登録しました':'更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+function delVehicle(ev){ ev.preventDefault();var id=document.getElementById('v_id').value;if(!id)return;
+  if(!confirm('この車両を削除します。よろしいですか？'))return;
+  callGAS({action:'vehicleDelete',id:id}).then(function(res){ if(!res.ok)throw new Error(res.error||'削除失敗');
+    closeV();toast('削除しました');loadVehicles();
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+
+['ov','ovp','ovk','ovv','ovDel','ovS'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
+init();
+
+// ===== 仕入先マスタ（v38）=====
+function loadSuppliers(silent){
+  callGAS({action:'suppliers'},null,!!silent).then(function(res){
+    suppliers=res.suppliers||[]; renderSuppliers();renderAdminHome();adminSearch();
+  }).catch(function(){if(!silent)document.getElementById('listS').innerHTML='<div class="empty">読込失敗</div>';});
+}
+function renderSuppliers(){
+  var el=document.getElementById('listS');
+  if(!suppliers.length){el.innerHTML='<div class="empty">仕入先が登録されていません。<br>右下の「＋仕入先」から登録してください。</div>';return;}
+  var order=['電材店','外注業者','機械リース','その他'],groups={};
+  suppliers.forEach(function(x){var k=String(x['種別']||'その他').trim();(groups[k]=groups[k]||[]).push(x);});
+  Object.keys(groups).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
+  el.innerHTML='';
+  order.forEach(function(k){
+    var arr=groups[k]; if(!arr||!arr.length)return;
+    arr.sort(function(a,b){return String(a['仕入先名']||'').localeCompare(String(b['仕入先名']||''),'ja');});
+    var sec=document.createElement('div');
+    sec.innerHTML='<div class="sec" style="margin-top:6px;">'+esc(k)+'（'+arr.length+'）</div>';
+    var grid=document.createElement('div');grid.className='grid-3';
+    arr.forEach(function(x){
+      var div=document.createElement('div');div.className='card';
+      div.onclick=(function(id){return function(){openSupplier(id);};})(x['仕入先ID']||'');
+      div.innerHTML='<div><div class="nm">'+esc(x['仕入先名']||'')+
+        (x['略称']?' <span class="tag">'+esc(x['略称'])+'</span>':'')+
+        ' <span class="tag kg">'+esc(k)+'</span></div>'+
+        '<div class="meta">'+[x['電話番号'],x['メモ']].filter(Boolean).map(esc).join(' ・ ')+'</div></div>';
+      grid.appendChild(div);
+    });
+    sec.appendChild(grid);el.appendChild(sec);
+  });
+}
+function openSupplier(id){
+  var p=id?suppliers.filter(function(x){return x['仕入先ID']===id;})[0]:null;
+  document.getElementById('sTitle').textContent=p?'仕入先の編集':'仕入先の追加';
+  document.getElementById('s_id').value=p?(p['仕入先ID']||''):'';
+  document.getElementById('s_name').value=p?(p['仕入先名']||''):'';
+  document.getElementById('s_short').value=p?(p['略称']||''):'';
+  document.getElementById('s_type').value=p?(p['種別']||'電材店'):'電材店';
+  document.getElementById('s_tel').value=p?(p['電話番号']||''):'';
+  document.getElementById('s_person').value=p?(p['担当者名']||''):'';
+  document.getElementById('s_mail').value=p?(p['メールアドレス']||''):'';
+  document.getElementById('s_memo').value=p?(p['メモ']||''):'';
+  document.getElementById('sDelRow').style.display=p?'block':'none';
+  document.getElementById('ovS').classList.add('show');
+}
+function closeOvS(){document.getElementById('ovS').classList.remove('show');}
+function saveSupplier(){
+  var d={'仕入先ID':document.getElementById('s_id').value,'仕入先名':document.getElementById('s_name').value.trim(),
+    '略称':document.getElementById('s_short').value.trim(),'種別':document.getElementById('s_type').value,
+    '電話番号':document.getElementById('s_tel').value.trim(),
+    '担当者名':document.getElementById('s_person').value.trim(),'メールアドレス':document.getElementById('s_mail').value.trim(),
+    'メモ':document.getElementById('s_memo').value.trim()};
+  if(!d['仕入先名']){toast('仕入先名を入力してください');return;}
+  var btn=document.getElementById('sBtnSave'); btn.disabled=true; btn.textContent='保存中…';
+  callGAS({action:'supplierSave',data:d}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'保存失敗');
+    var rec=res.supplier; var id=d['仕入先ID'];
+    if(id){for(var i=0;i<suppliers.length;i++){if(suppliers[i]['仕入先ID']===id){suppliers[i]=rec;break;}}}
+    else{suppliers.push(rec);}
+    renderSuppliers(); closeOvS(); toast(id?'更新しました':'登録しました');
+  }).catch(function(e){toast('失敗：'+e.message);})
+    .then(function(){btn.disabled=false;btn.textContent='保存';});
+}
+function delSupplier(ev){
+  ev.preventDefault();
+  var id=document.getElementById('s_id').value; if(!id)return;
+  if(!confirm('この仕入先を削除しますか？'))return;
+  callGAS({action:'supplierDelete',id:id},null,true).then(function(){
+    suppliers=suppliers.filter(function(x){return x['仕入先ID']!==id;});
+    renderSuppliers(); closeOvS(); toast('削除しました');
+  }).catch(function(e){toast('削除失敗：'+e.message);});
+}
+/* ===== 自社書類管理 ===== */
+var compDocs=[];
+function loadCompDocs(){
+  callGAS({action:'docList',type:'company',targetId:'company'},null,true).then(function(r){
+    compDocs=(r&&r.ok&&r.docs)||[];renderCompDocs();
+  }).catch(function(){});
+}
+function renderCompDocs(){
+  var el=document.getElementById('compDocList');
+  if(!el)return;
+  if(!compDocs.length){el.innerHTML='<div style="font-size:12.5px;color:#64748b;">まだ書類が登録されていません</div>';return;}
+  el.innerHTML=compDocs.map(function(d){
+    var ic=String(d['MIME']||'').indexOf('image')>=0?'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.6"/><path d="m21 16-5-5-9 9"/></svg>':'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:4px;"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>';
+    var dt=String(d['登録日時']||'').replace('T',' ').slice(0,16);
+    return '<div style="display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #dbe2ec;border-radius:9px;padding:8px 11px;">'+
+      '<span style="font-size:17px;">'+ic+'</span>'+
+      '<a style="flex:1;min-width:0;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-decoration:none;color:inherit;" href="'+esc(d['DriveFileUrl']||'')+'" target="_blank" rel="noopener">'+esc(d['書類名']||'')+'</a>'+
+      '<span style="font-size:11px;color:#64748b;white-space:nowrap;">'+esc(dt)+'</span>'+
+      '<button style="background:#fee2e2;color:#b91c1c;border:none;border-radius:7px;padding:5px 9px;font-size:12px;font-weight:700;cursor:pointer;" onclick="deleteCompDoc(&quot;'+esc(d['書類ID'])+'&quot;)">削除</button>'+
+      '</div>';
+  }).join('');
+}
+function uploadCompDoc(inp){
+  var file=inp.files[0]; if(!file)return;
+  toast('アップロード中…');
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var b64=e.target.result.split(',')[1];
+    showLoad();
+    postGAS({action:'docUpload',type:'company',targetId:'company',name:file.name,mime:file.type||'application/octet-stream',data:b64}).then(function(r){
+      hideLoad();
+      if(!r.ok)throw new Error(r.error||'失敗');
+      compDocs.unshift(r.doc);renderCompDocs();toast('✓ アップロードしました');
+    }).catch(function(err){hideLoad();toast('失敗：'+err.message);});
+    inp.value='';
+  };
+  reader.readAsDataURL(file);
+}
+function deleteCompDoc(id){
+  if(!confirm('この書類を削除しますか？'))return;
+  callGAS({action:'docDelete',id:id}).then(function(r){
+    if(!r.ok)throw new Error(r.error||'失敗');
+    compDocs=compDocs.filter(function(d){return d['書類ID']!==id;});renderCompDocs();toast('削除しました');
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+</script>
+<script src="../common_ui.js?v=20260619-material-action-fix-42"></script>
+</body>
+</html>

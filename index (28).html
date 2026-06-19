@@ -1,5 +1,455 @@
+<!-- Gen-Can files app v2026.06.19-42 / file badge v90 / Code_v142 -->
+<!DOCTYPE html>
+<!-- files version 51 (2026-06-18) 写真ドライブを階層型に変更：官公庁/民間など → 顧客 → 現場 → 写真フォルダの順に開く。 -->
+<!-- files version 50 (2026-06-18) 初期画面からGoogleドライブ風：現場フォルダをカード表示し、タップで写真フォルダを開く。 -->
+<!-- files version 49 (2026-06-18) ドライブ風＋サムネイルカード型：アプリ内でフォルダを開いて写真を確認できる画面を追加。 -->
+<!-- files version 48 config.js共通化 -->
+<!-- files version 47 (2026-06-18) 写真アップロード成功確認：送信後にDrive保存完了を確認し、失敗時は×表示。 -->
+<!-- files version 46 (2026-06-18) 写真台帳フロー改善：工種/写真区分快速ボタン・台帳候補・候補自動選択・アップロード後アクション追加。GAS変更なし。 -->
+<!-- files version 44 (2026-06-15) 音声入力を継続録音化（黙っても止まらず、停止ボタンを押すまで録音継続。確定分を累積保持）。機能・id不変 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ファイル｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;--card:#e8ecf2;
+    --accent:#e8910b;--accent-d:#b06f0c;--accent-soft:#fbeed6;
+    --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
+    --radius:14px;
+    --rise:5px 5px 11px #ccd2db,-5px -5px 11px #ffffff;
+    --rise-sm:3px 3px 7px #d0d6df,-3px -3px 7px #fbfdff;
+    --well:inset 3px 3px 6px #ccd2db,inset -3px -3px 6px #ffffff;
+    --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  body{margin:0;background:var(--bg);min-height:100vh;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.55;padding-bottom:118px;}
+  select,input,textarea,button{font-family:inherit;}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);color:var(--ink);padding:calc(env(safe-area-inset-top) + 11px) 14px 11px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
+  .hd-row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  .hd-top{display:flex;align-items:center;gap:11px;}
+  .hd-top .hic{width:38px;height:38px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hd-top .hic svg{width:20px;height:20px;}
+  .hd-top h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.03em;color:var(--ink);line-height:1.15;}
+  .hd-top .en{font-family:"Manrope",sans-serif;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:14px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
+  .back{color:var(--accent-d);text-decoration:none;font-family:"Manrope",sans-serif;font-size:11px;font-weight:700;letter-spacing:.04em;background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 13px;white-space:nowrap;}
+  .back:active{box-shadow:var(--well);}
+  .sync{font-size:12.5px;display:flex;align-items:center;gap:5px;color:var(--sub);}
+  .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;}
+  .dot.ok{background:#22a06b;} .dot.busy{background:#e8910b;} .dot.off{background:#e5484d;}
+  .wrap{padding:12px;}
+  @media(min-width:600px){.sel-row{display:flex;gap:10px;} .sel-row .fld{flex:1;margin-bottom:0;}}
+  .fld label{display:block;font-size:13px;color:var(--sub);margin-bottom:4px;font-weight:700;}
+  select.f{width:100%;padding:12px 13px;border:none;border-radius:11px;background:var(--bg);color:var(--ink);font-size:16px;box-shadow:var(--well-soft);}
+  .panel{background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:15px;margin-top:12px;}
+  .pname{font-weight:700;font-size:17px;color:var(--ink);}
+  .pid{font-size:12.5px;color:var(--sub);}
+  .btnrow{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .btn{flex:1;min-width:130px;padding:14px;border-radius:12px;border:none;font-size:15.5px;font-weight:800;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;box-shadow:var(--rise-sm);}
+  .btn:active{box-shadow:var(--well);}
+  .btn svg{width:18px;height:18px;flex:0 0 auto;}
+  .btn.primary{background:var(--grad);color:#fff;}
+  .btn.open{background:var(--bg);color:var(--accent-d);}
+  .btn.ledger{background:var(--bg);color:var(--accent-d);}
+  .btn.excel{background:var(--bg);color:#1e7a3a;}
+  #photos{margin-bottom:120px;}
+  #panel .btnrow{display:none!important;}
+  .fileAddDock{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(232,236,242,.96);backdrop-filter:blur(10px);border-top:1px solid rgba(219,226,234,.9);box-shadow:0 -6px 18px rgba(31,58,82,.12);padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);display:none;}
+  .fileAddDockInner{max-width:980px;margin:0 auto;display:flex;gap:10px;align-items:center;}
+  .fileAddDockText{flex:1;min-width:0;font-size:12.5px;color:var(--sub);font-weight:800;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .fileAddDockText strong{display:block;color:var(--ink);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .fileAddDock button{border:none;border-radius:14px;background:var(--grad);color:#fff;box-shadow:var(--rise-sm);padding:14px 24px;font-size:15.5px;font-weight:900;cursor:pointer;min-width:170px;}
+  .fileAddDock button:active{box-shadow:var(--well);}
+  .fileAddDock button:disabled{background:#b7c0cc;color:#eef2f7;box-shadow:var(--well);cursor:not-allowed;}
+  .projectFolderCard.file .projectFolderIcon{background:#edf3fb;}
+  .projectFolderCard.image .projectFolderIcon{background:#edf3fb;overflow:hidden;}
+  .projectFolderCard.image .projectFolderIcon img{width:100%;height:100%;object-fit:cover;display:block;}
+  .projectFolderCard .projectFolderSub{font-size:11px;color:var(--sub);margin-top:2px;line-height:1.35;word-break:break-word;}
+  .hint{font-size:13px;color:var(--sub);margin-top:10px;line-height:1.7;}
+  .prog{font-size:13.5px;color:var(--accent-d);margin-top:10px;font-weight:700;}
+  .upwrap{margin-top:12px;background:var(--bg);border-radius:12px;box-shadow:var(--rise-sm);padding:11px;}
+  .upttl{font-size:13px;font-weight:700;color:var(--accent-d);margin-bottom:8px;}
+  .upgrid{display:flex;flex-wrap:wrap;gap:8px;}
+  .upitem{position:relative;width:74px;}
+  .upitem img{width:74px;height:74px;object-fit:cover;border-radius:9px;display:block;box-shadow:var(--rise-sm);}
+  .upfile{width:74px;height:74px;border-radius:9px;background:var(--bg);box-shadow:var(--well-soft);display:flex;align-items:center;justify-content:center;font-size:24px;}
+  .upnm{font-size:9.5px;color:var(--sub);word-break:break-all;line-height:1.3;margin-top:2px;max-height:24px;overflow:hidden;}
+  .upst{position:absolute;top:3px;right:3px;background:rgba(255,255,255,.95);border-radius:50%;width:18px;height:18px;font-size:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+  .drivebar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 10px;padding:10px;border-radius:12px;background:var(--bg);box-shadow:var(--well-soft);}
+  .crumbBtn{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:8px 12px;font-size:12.5px;font-weight:800;color:var(--accent-d);cursor:pointer;}
+  .crumbBtn:active{box-shadow:var(--well);}
+  .crumbText{font-size:13px;color:var(--sub);font-weight:700;flex:1;min-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .driveOpen{font-size:12px;color:var(--accent-d);text-decoration:none;font-weight:800;}
+  .folderCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:8px 0 12px;}
+  .folderCard{border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);padding:12px;display:flex;align-items:center;gap:11px;text-align:left;color:var(--ink);cursor:pointer;min-height:66px;}
+  .folderCard:active{box-shadow:var(--well);}
+  .folderIcon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#fff8e8,#f4b84a);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:var(--rise-sm);flex:0 0 auto;}
+  .folderName{font-weight:800;font-size:14.5px;line-height:1.35;word-break:break-word;}
+  .folderMeta{font-size:11px;color:var(--sub);margin-top:2px;}
+  .driveItems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px;}
+  .driveItem{border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);padding:12px;display:flex;align-items:center;gap:11px;text-align:left;color:var(--ink);cursor:pointer;min-height:72px;text-decoration:none;}
+  .driveItem:active{box-shadow:var(--well);}
+  .driveItemIcon{width:44px;height:44px;border-radius:12px;background:#edf3fb;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:var(--rise-sm);flex:0 0 auto;overflow:hidden;}
+  .driveItemIcon.folder{background:linear-gradient(135deg,#fff8e8,#f4b84a);}
+  .driveItemIcon img{width:100%;height:100%;object-fit:cover;display:block;}
+  .driveItemName{font-weight:900;font-size:13.5px;line-height:1.35;word-break:break-word;color:var(--ink);}
+  .driveItemMeta{font-size:11px;color:var(--sub);margin-top:3px;line-height:1.35;}
+  .driveCrumbs{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .driveCrumbs button{border:none;background:transparent;color:var(--accent-d);font-weight:900;font-size:12px;padding:3px 2px;cursor:pointer;}
+  .driveCrumbs span{color:var(--sub);font-size:12px;}
 
+  .driveHome{background:var(--bg);border-radius:18px;box-shadow:var(--rise);padding:14px;margin-top:12px;}
+  .driveHomeHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
+  .driveHomeTitle{font-size:15px;font-weight:900;color:var(--ink);display:flex;align-items:center;gap:8px;}
+  .driveHomeTitle .miniFolder{width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg,#fff8e8,#f4b84a);display:inline-flex;align-items:center;justify-content:center;box-shadow:var(--rise-sm);}
+  .driveHomeNote{font-size:12px;color:var(--sub);font-weight:700;line-height:1.45;margin-top:2px;}
+  .driveHomeActions{display:flex;gap:8px;align-items:center;}
+  .driveHomeActions button{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:8px 12px;font-size:12px;font-weight:900;color:var(--accent-d);cursor:pointer;}
+  .driveHomeActions button:active{box-shadow:var(--well);}
+  .driveHomeBreadcrumb{display:flex;align-items:center;gap:7px;flex-wrap:wrap;padding:9px 10px;border-radius:12px;background:var(--bg);box-shadow:var(--well-soft);font-size:12.5px;color:var(--sub);font-weight:800;margin-bottom:10px;}
+  .driveHomeBreadcrumb span:last-child{color:var(--ink);}
+  .projectFolderGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+  .projectFolderCard{border:none;border-radius:16px;background:var(--bg);box-shadow:var(--rise-sm);padding:12px;display:flex;align-items:center;gap:12px;text-align:left;color:var(--ink);cursor:pointer;min-height:78px;width:100%;}
+  .projectFolderCard:active{box-shadow:var(--well);}
+  .projectFolderIcon{width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,#fff8e8,#f4b84a);display:flex;align-items:center;justify-content:center;font-size:27px;box-shadow:var(--rise-sm);flex:0 0 auto;}
+  .projectFolderName{font-weight:900;font-size:15px;line-height:1.35;word-break:break-word;color:var(--ink);}
+  .projectFolderMeta{font-size:11.5px;color:var(--sub);margin-top:3px;line-height:1.4;}
+  .projectFolderBadge{display:inline-flex;align-items:center;border-radius:999px;background:var(--accent-soft);color:var(--accent-d);font-size:10.5px;font-weight:900;padding:3px 7px;margin-top:6px;}
+  .projectFolderCard.back{background:linear-gradient(145deg,#eef3fb,#e6edf6);}
+  .projectFolderCard.category .projectFolderIcon{background:linear-gradient(135deg,#e9f8ff,#74c0fc);}
+  .projectFolderCard.customer .projectFolderIcon{background:linear-gradient(135deg,#eefcf2,#83d89a);}
+  .projectFolderCard.project .projectFolderIcon{background:linear-gradient(135deg,#fff8e8,#f4b84a);}
+  .driveHomeLevel{display:inline-flex;align-items:center;border-radius:999px;background:rgba(30,136,229,.10);color:#1b6fb8;font-size:10.5px;font-weight:900;padding:4px 8px;margin-left:6px;}
+  .driveHomeEmpty{padding:28px 10px;text-align:center;color:var(--sub);font-size:14px;line-height:1.7;}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
+  .ph{position:relative;border-radius:14px;overflow:hidden;background:var(--bg);box-shadow:var(--rise-sm);display:flex;flex-direction:column;align-items:stretch;text-decoration:none;cursor:pointer;min-height:168px;}
+  .ph .thumbWrap{position:relative;background:#dfe5ee;aspect-ratio:1/1;width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;}
+  .ph img{width:100%;height:100%;object-fit:cover;display:block;}
+  .ph .fallback{font-size:34px;color:#9aa1ab;}
+  .ph .meta{padding:8px 8px 9px;background:rgba(255,255,255,.24);min-height:58px;}
+  .ph .cap{display:block;color:var(--ink);font-size:11.5px;font-weight:800;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .ph .tagline{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;min-height:17px;}
+  .ph .ptag{font-size:9.8px;line-height:1;border-radius:999px;padding:4px 6px;background:var(--accent-soft);color:var(--accent-d);font-weight:800;}
+  .ph.selected{outline:3px solid var(--accent);outline-offset:-3px;}
+  .ph.selected::after{content:'✓';position:absolute;top:7px;right:7px;background:var(--accent);color:#fff;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:14px;z-index:3;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+  #selBar{display:flex;align-items:center;gap:8px;margin-top:8px;}
+  #selBar button{font-size:12.5px;padding:7px 12px;border:none;border-radius:9px;background:var(--bg);box-shadow:var(--rise-sm);cursor:pointer;color:var(--ink);}
+  #selBar button:active{box-shadow:var(--well);}
+  #selCount{font-size:13.5px;color:var(--sub);flex:1;}
+  .empty{text-align:center;color:var(--sub);padding:30px 10px;font-size:15px;}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:24px;z-index:60;background:var(--ink);color:#fff;padding:12px 18px;border-radius:999px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 20px rgba(31,58,82,.3);}
+  .toast.show{opacity:1;}
+  .sec{font-size:14px;font-weight:700;color:var(--accent-d);margin-top:16px;}
+  input[type=file]{display:none;}
+  .board{margin-top:12px;border-radius:12px;padding:11px 13px;background:var(--bg);box-shadow:var(--well-soft);}
+  .bdtog{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px;color:var(--ink);cursor:pointer;margin-top:8px;}
+  .bdtog input{width:20px;height:20px;flex:0 0 auto;accent-color:var(--accent);}
+  .bdrow{display:flex;align-items:center;gap:10px;margin-top:8px;}
+  .bdrow label{font-size:13px;color:var(--sub);width:84px;flex:0 0 auto;}
+  .bdrow input{flex:1;padding:10px 11px;border:none;border-radius:9px;font-size:16px;background:var(--bg);box-shadow:var(--well-soft);color:var(--ink);}
+  .quickPanel{margin-top:10px;padding:10px;border-radius:12px;background:rgba(255,255,255,.28);box-shadow:var(--well-soft);} 
+  .quickTitle{font-size:12.5px;font-weight:800;color:var(--accent-d);margin-bottom:7px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+  .chipgrid{display:flex;flex-wrap:wrap;gap:7px;}
+  .chip{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:8px 11px;font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer;line-height:1;}
+  .chip:active,.chip.on{box-shadow:var(--well);color:var(--accent-d);} 
+  .chip.small{font-size:12.5px;padding:7px 10px;}
+  .ledgerHint{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.5;}
+  .afterActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .afterActions button,.afterActions a{border:none;border-radius:10px;background:var(--bg);box-shadow:var(--rise-sm);padding:10px 12px;font-size:13px;font-weight:800;color:var(--ink);text-decoration:none;cursor:pointer;}
+  .candidateBadge{position:absolute;left:4px;top:4px;background:rgba(232,145,11,.95);color:#fff;border-radius:999px;padding:2px 6px;font-size:10px;font-weight:800;z-index:2;box-shadow:0 1px 3px rgba(0,0,0,.18);} 
+  .selectOrderBadge{position:absolute;top:7px;right:7px;background:linear-gradient(135deg,#06b6d4,#2563eb 60%,#7c3aed);color:#fff;border-radius:999px;min-width:28px;height:28px;padding:0 7px;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:900;z-index:4;box-shadow:0 3px 10px rgba(37,99,235,.28);letter-spacing:.02em;}
+  .ph.selected .selectOrderBadge{display:flex;}
+  .ledgerPhotoSection .ph.selected::after{content:none;display:none;}
+  .ledgerPhotoSection{grid-column:1/-1;margin-top:2px;padding:12px;border-radius:16px;background:var(--bg);box-shadow:var(--well-soft);} 
+  .ledgerPhotoHead{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+  .ledgerPhotoTitle{font-size:15px;font-weight:900;color:var(--ink);line-height:1.35;}
+  .ledgerPhotoSub{font-size:12px;color:var(--sub);font-weight:700;margin-top:2px;line-height:1.45;}
+  .ledgerMiniActions{display:flex;gap:7px;flex-wrap:wrap;justify-content:flex-end;}
+  .ledgerMiniActions button{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:7px 10px;font-size:11.5px;font-weight:900;color:var(--accent-d);cursor:pointer;}
+  .ledgerMiniActions button:active{box-shadow:var(--well);}
+
+  .ledgerDock button.preview{grid-column:1/-1;color:var(--accent-d);}
+  .ledgerPreviewModal{position:fixed;inset:0;background:rgba(16,32,48,.42);backdrop-filter:blur(6px);z-index:90;display:none;align-items:center;justify-content:center;padding:18px;}
+  .ledgerPreviewModal.show{display:flex;}
+  .ledgerPreviewBox{width:min(1040px,100%);max-height:min(88vh,920px);background:var(--card);border-radius:24px;box-shadow:0 22px 60px rgba(31,58,82,.28);overflow:hidden;display:flex;flex-direction:column;}
+  .ledgerPreviewHead{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .ledgerPreviewTitle{font-size:18px;font-weight:900;color:var(--ink);line-height:1.35;}
+  .ledgerPreviewSub{font-size:12.5px;color:var(--sub);font-weight:700;margin-top:3px;line-height:1.45;}
+  .ledgerPreviewClose{border:none;background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:9px 13px;font-weight:900;color:var(--ink);cursor:pointer;}
+  .ledgerPreviewTools{padding:11px 18px;border-bottom:1px solid var(--line);display:flex;gap:9px;flex-wrap:wrap;align-items:center;}
+  .ledgerPreviewTools button{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:8px 12px;font-size:12.5px;font-weight:900;color:var(--accent-d);cursor:pointer;}
+  .ledgerPreviewList{padding:16px 18px 20px;overflow:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;background:rgba(255,255,255,.15);}
+  .ledgerPreviewCard{background:var(--card);border-radius:18px;box-shadow:var(--rise-sm);overflow:hidden;display:grid;grid-template-columns:118px 1fr;gap:0;min-height:116px;border:2px solid transparent;}
+  .ledgerPreviewThumb{position:relative;background:#eef3f8;display:flex;align-items:center;justify-content:center;min-height:116px;}
+  .ledgerPreviewThumb img{width:100%;height:100%;object-fit:contain;display:block;}
+  .ledgerPreviewOrder{position:absolute;left:8px;top:8px;min-width:30px;height:30px;padding:0 8px;border-radius:999px;background:var(--accent);color:#fff;font-size:14px;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.22);}
+  .ledgerPreviewMeta{padding:12px 12px 10px;display:flex;flex-direction:column;gap:8px;min-width:0;}
+  .ledgerPreviewName{font-size:13px;font-weight:900;color:var(--ink);line-height:1.35;word-break:break-all;}
+
+  .ledgerInfoGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:2px;}
+  .ledgerInfoField{display:flex;flex-direction:column;gap:4px;min-width:0;}
+  .ledgerInfoField.full{grid-column:1/-1;}
+  .ledgerInfoField span{font-size:10.8px;color:var(--sub);font-weight:900;letter-spacing:.02em;}
+  .ledgerInfoField input,.ledgerInfoField textarea{width:100%;box-sizing:border-box;border:none;border-radius:10px;background:var(--bg);box-shadow:var(--well-soft);padding:8px 9px;font-size:13px;font-weight:800;color:var(--ink);outline:none;}
+  .ledgerInfoField textarea{min-height:46px;resize:vertical;line-height:1.45;font-weight:700;}
+  .ledgerInfoNote{font-size:11px;color:var(--sub);line-height:1.45;font-weight:700;margin-top:-2px;}
+  .ledgerPreviewBtns{margin-top:auto;display:flex;gap:6px;flex-wrap:wrap;}
+  .ledgerPreviewBtns button{border:none;border-radius:10px;background:var(--bg);box-shadow:var(--rise-sm);padding:7px 9px;font-size:12px;font-weight:900;color:var(--ink);cursor:pointer;}
+  .ledgerPreviewBtns button.danger{color:#c0392b;}
+  .ledgerPreviewEmpty{grid-column:1/-1;text-align:center;color:var(--sub);font-weight:800;padding:36px 10px;}
+
+  .ledgerDock button.history{grid-column:1/-1;color:#6d4cc2;}
+  .ledgerHistoryModal{position:fixed;inset:0;background:rgba(16,32,48,.42);backdrop-filter:blur(6px);z-index:92;display:none;align-items:center;justify-content:center;padding:18px;}
+  .ledgerHistoryModal.show{display:flex;}
+  .ledgerHistoryBox{width:min(860px,100%);max-height:min(88vh,820px);background:var(--card);border-radius:24px;box-shadow:0 22px 60px rgba(31,58,82,.28);overflow:hidden;display:flex;flex-direction:column;}
+  .ledgerHistoryHead{padding:16px 18px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+  .ledgerHistoryTitle{font-size:18px;font-weight:900;color:var(--ink);line-height:1.35;}
+  .ledgerHistorySub{font-size:12.5px;color:var(--sub);font-weight:700;margin-top:3px;line-height:1.45;}
+  .ledgerHistoryClose{border:none;background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:9px 13px;font-weight:900;color:var(--ink);cursor:pointer;}
+  .ledgerHistoryTools{padding:11px 18px;border-bottom:1px solid var(--line);display:flex;gap:9px;flex-wrap:wrap;align-items:center;}
+  .ledgerHistoryTools button,.ledgerHistoryTools a{border:none;text-decoration:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:8px 12px;font-size:12.5px;font-weight:900;color:var(--accent-d);cursor:pointer;}
+  .ledgerHistoryList{padding:14px 18px 18px;overflow:auto;display:grid;gap:10px;background:rgba(255,255,255,.15);}
+  .ledgerHistoryItem{background:var(--card);border-radius:16px;box-shadow:var(--rise-sm);padding:13px 14px;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;}
+  .ledgerHistoryName{font-size:14px;font-weight:900;color:var(--ink);line-height:1.35;word-break:break-all;}
+  .ledgerHistoryMeta{font-size:12px;font-weight:800;color:var(--sub);line-height:1.45;margin-top:3px;}
+  .ledgerHistoryOpen{border:none;text-decoration:none;border-radius:12px;background:var(--grad);color:#fff;box-shadow:var(--rise-sm);padding:10px 12px;font-size:12.5px;font-weight:900;white-space:nowrap;}
+  .ledgerHistoryEmpty{text-align:center;color:var(--sub);font-weight:800;padding:34px 10px;line-height:1.6;}
+  @media(max-width:760px){.ledgerHistoryItem{grid-template-columns:1fr;}.ledgerHistoryOpen{text-align:center;}.ledgerHistoryBox{max-height:92vh;border-radius:20px;}.ledgerHistoryList{padding:12px;}}
+  @media(max-width:760px){.ledgerPreviewList{grid-template-columns:1fr;padding:12px;}.ledgerPreviewCard{grid-template-columns:104px 1fr;}.ledgerPreviewBox{max-height:92vh;border-radius:20px;}.ledgerDock button.preview{grid-column:1/-1;}}
+
+  .photoZoomBtn{position:absolute;right:7px;bottom:7px;z-index:4;border:none;border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 3px 10px rgba(31,58,82,.20);color:var(--ink);font-size:12px;font-weight:900;padding:6px 8px;cursor:pointer;backdrop-filter:blur(6px);}
+  .photoZoomBtn:active{box-shadow:var(--well);}
+  .photoViewerModal{position:fixed;inset:0;background:rgba(10,22,36,.76);backdrop-filter:blur(7px);z-index:95;display:none;align-items:center;justify-content:center;padding:16px;}
+  .photoViewerModal.show{display:flex;}
+  .photoViewerBox{width:min(1120px,100%);height:min(90vh,900px);background:var(--card);border-radius:24px;box-shadow:0 24px 70px rgba(0,0,0,.34);overflow:hidden;display:grid;grid-template-rows:auto 1fr auto;}
+  .photoViewerHead{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;}
+  .photoViewerTitle{min-width:0;}
+  .photoViewerName{font-size:15px;font-weight:900;color:var(--ink);line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:70vw;}
+  .photoViewerSub{font-size:12px;color:var(--sub);font-weight:800;margin-top:2px;}
+  .photoViewerClose{border:none;background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:9px 13px;font-weight:900;color:var(--ink);cursor:pointer;}
+  .photoViewerBody{display:grid;grid-template-columns:52px 1fr 52px;gap:8px;align-items:center;min-height:0;padding:12px;background:rgba(239,244,249,.65);}
+  .photoViewerImageWrap{height:100%;min-height:260px;display:flex;align-items:center;justify-content:center;background:#eef3f8;border-radius:18px;box-shadow:var(--well);overflow:hidden;}
+  .photoViewerImageWrap img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;display:block;}
+  .photoViewerNav{border:none;border-radius:18px;background:var(--card);box-shadow:var(--rise-sm);height:82px;font-size:26px;font-weight:900;color:var(--ink);cursor:pointer;}
+  .photoViewerNav:disabled{opacity:.35;cursor:default;}
+  .photoViewerFoot{padding:12px 16px;border-top:1px solid var(--line);display:grid;grid-template-columns:1fr auto auto auto;gap:10px;align-items:center;}
+  .photoViewerCount{font-size:13px;font-weight:900;color:var(--sub);line-height:1.45;}
+  .photoViewerFoot button,.photoViewerFoot a{border:none;text-decoration:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);padding:12px 14px;font-size:13.5px;font-weight:900;color:var(--accent-d);cursor:pointer;text-align:center;}
+  .photoViewerFoot button.primary{background:var(--grad);color:#fff;}
+  @media(max-width:760px){.photoViewerBox{height:92vh;border-radius:20px;}.photoViewerBody{grid-template-columns:40px 1fr 40px;padding:8px;}.photoViewerNav{height:64px;font-size:22px;border-radius:14px;}.photoViewerFoot{grid-template-columns:1fr 1fr;}.photoViewerCount{grid-column:1/-1;}.photoViewerName{max-width:58vw;}.photoViewerFoot button,.photoViewerFoot a{padding:11px 9px;font-size:12.5px;}}
+
+  .ledgerDock{position:fixed;left:0;right:0;bottom:0;z-index:65;background:rgba(232,236,242,.96);backdrop-filter:blur(10px);border-top:1px solid rgba(219,226,234,.9);box-shadow:0 -6px 18px rgba(31,58,82,.12);padding:9px 14px calc(env(safe-area-inset-bottom) + 9px);display:none;}
+  .ledgerDockInner{max-width:860px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;}
+  .ledgerDockInfo{grid-column:1/-1;font-size:12.5px;color:var(--sub);font-weight:800;line-height:1.35;}
+  .ledgerDockInfo strong{color:var(--ink);font-size:13.5px;}
+  .ledgerDock button{border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);padding:13px 14px;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;}
+  .ledgerDock button.primary{background:var(--grad);color:#fff;}
+  .ledgerDock button.excel{color:#1e7a3a;}
+  .ledgerDock button:active{box-shadow:var(--well);}
+  .ledgerResultDock{grid-column:1/-1;display:none;font-size:13px;line-height:1.6;}
+  /* 工事写真台帳：写真はPCで6枚並び、正方形に切り抜かず写真比率のまま表示 */
+  .ledgerPhotoSection .grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;}
+  .ledgerPhotoSection .ph{overflow:hidden;}
+  .ledgerPhotoSection .ph .thumbWrap{aspect-ratio:auto;height:auto;min-height:0;display:block;background:#f0f4fa;overflow:hidden;}
+  .ledgerPhotoSection .ph img{width:100%;height:auto;display:block;object-fit:contain;}
+  @media(min-width:700px){.ledgerPhotoSection .grid{grid-template-columns:repeat(4,minmax(0,1fr));}}
+  @media(min-width:1100px){.ledgerPhotoSection .grid{grid-template-columns:repeat(6,minmax(0,1fr));}}
+  .filterNote{font-size:12px;color:var(--sub);margin-top:6px;line-height:1.5;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(232,236,242,.78);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
+  .loading.show{display:flex;}
+  .lbox{background:var(--bg);border-radius:18px;box-shadow:var(--rise);padding:24px 32px;text-align:center;}
+  .spin{width:38px;height:38px;border:4px solid #d6deea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .lbox .txt{font-size:15px;font-weight:700;color:var(--ink);}
+  /* v: ヘッダー統一（中央寄せ＋更新ボタン・少し大きく） */
+  .hbar{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"back . right" "title title title";align-items:center;row-gap:12px;column-gap:8px;max-width:760px;margin:0 auto;}
+  .hbar .back{grid-area:back;align-self:center;}
+  .hbar .hright{grid-area:right;justify-self:end;}
+  .hbar .hcenter{grid-area:title;justify-self:center;}
+  .hbar .htxt .nm{white-space:normal;}
+  .hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:11px;min-width:0;}
+  .hright{flex:0 0 auto;display:flex;align-items:center;gap:9px;}
+  .hrf{width:42px;height:42px;border-radius:50%;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
+  .hrf svg{width:19px;height:19px;}
+  .hrf:active{box-shadow:var(--well);}
+  .hic{width:44px;height:44px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hic svg{width:23px;height:23px;}
+  .htxt{flex:0 1 auto;min-width:0;text-align:center;}
+  .hcenter .en{font-family:"Manrope",sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .hcenter h1{font-size:19.5px;margin:0;font-weight:700;letter-spacing:.02em;color:var(--ink);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:48vw;}
+  .hmark{font-size:15px;}
+  .back{font-size:11.5px;padding:9px 14px;}
+  .sync{display:none;}
+  /* ===== 音声入力マイク（汎用・input/textarea両対応・v43追加） ===== */
+  .micwrap{position:relative;}
+  .micwrap input,.micwrap textarea{padding-right:44px;}
+  .micbtn{position:absolute;right:7px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+  .micwrap textarea ~ .micbtn{top:auto;bottom:7px;transform:none;}
+  .micbtn:active{box-shadow:var(--well);}
+  .micbtn svg{width:16px;height:16px;}
+  .micbtn.recording{background:#ef4444;color:#fff;animation:micpulse 1.1s ease-in-out infinite;}
+  @keyframes micpulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.5);}50%{box-shadow:0 0 0 6px rgba(239,68,68,0);}}
+
+  @media (max-width:520px){
+    .folderCards{grid-template-columns:1fr;}
+    .projectFolderGrid{grid-template-columns:1fr;}
+    .grid{grid-template-columns:repeat(2,1fr);}
+    .driveItems{grid-template-columns:1fr;}
+    .ph{min-height:156px;}
+  }
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v90</div>
+<header>
+  <div class="hbar">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 10h18"/></svg></span><div class="htxt"><span class="en">Files</span><h1>ファイル</h1></div></div>
+    <div class="hright"><span class="hmark">Gen-Can</span><button class="hrf" onclick="loadPhotos()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
+  </div>
+  <span class="sync" style="display:none"><span id="dot" class="dot"></span><span id="syncTxt">読込中…</span></span>
+</header>
+
+<div class="wrap">
+  <div class="sel-row" style="display:none;">
+    <div class="fld"><label>発注者区分</label>
+      <select class="f" id="f_ctype" onchange="onCType()"><option value="">（すべて）</option><option>官公庁</option><option>法人</option><option>民間</option><option>個人</option></select></div>
+    <div class="fld"><label>顧客名</label>
+      <select class="f" id="f_cand" onchange="onCand()"><option value="">（顧客名を選択）</option></select></div>
+    <div class="fld"><label>現場名</label>
+      <select class="f" id="projSel" onchange="onSelect()"><option value="">― 選択 ―</option></select></div>
+  </div>
+
+  <div class="driveHome" id="driveHome">
+    <div class="driveHomeHead">
+      <div>
+        <div class="driveHomeTitle"><span class="miniFolder">📁</span><span>ファイルドライブ</span><span class="driveHomeLevel" id="driveHomeLevel">区分</span></div>
+        <div class="driveHomeNote">官公庁・民間などのフォルダから、顧客フォルダ、現場フォルダの順に開けます。現場フォルダ内もGoogleドライブのように閲覧できます。</div>
+      </div>
+      <div class="driveHomeActions"><button type="button" onclick="resetDriveHome()">最初へ</button><button type="button" onclick="refreshFileScreen()">更新</button></div>
+    </div>
+    <div class="driveHomeBreadcrumb" id="driveHomeBreadcrumb"><span>マイドライブ</span><span>›</span><span>現場ファイル</span></div>
+    <div class="projectFolderGrid" id="projectFolderGrid"><div class="driveHomeEmpty">現場フォルダを準備しています…<br><span style="font-size:12px;color:#7d8ea3;">初回のみ少し時間がかかります。次回からはすぐ表示されます。</span></div></div>
+  </div>
+
+  <div class="panel" id="panel" style="display:none;">
+    <div class="pname" id="pName"></div>
+    <div class="pid" id="pId"></div>
+
+    <div class="board" id="board" style="display:none">
+      <div class="bdrow"><label>工種<br><span style="font-size:10.5px;color:var(--sub);font-weight:400;">（写真フォルダ内で工種別に自動整理）</span></label><div class="micwrap"><input id="bdKind" type="text" list="kindList" placeholder="例：電気配線工事"><button type="button" class="micbtn" data-mic="bdKind" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div></div>
+      <div class="quickPanel"><div class="quickTitle">工種クイック選択</div><div class="chipgrid" id="kindChips"></div></div>
+      <label class="bdtog"><input type="checkbox" id="bdOn" checked onchange="toggleBoard()"><span>小黒板を写真に焼き込んで保存</span></label>
+      <div id="bdFields">
+        <div class="bdrow"><label>内容・状況</label><div class="micwrap"><input id="bdMemo" type="text" placeholder="例：施工後"><button type="button" class="micbtn" data-mic="bdMemo" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div></div>
+        <div class="quickPanel"><div class="quickTitle">写真区分</div><div class="chipgrid" id="statusChips"></div><label class="bdtog" style="margin-top:10px;"><input type="checkbox" id="ledgerCandidate" checked><span>この写真を台帳候補にする</span></label><div class="ledgerHint">ONにすると、ファイル名に「台帳候補」が付き、台帳作成画面で候補だけを自動表示・選択できます。</div></div>
+        <div class="bdrow"><label>日付</label><input id="bdDate" type="date"></div>
+      </div>
+      <datalist id="kindList"><option value="配線工事"></option><option value="配管工事"></option><option value="入線作業"></option><option value="照明器具"></option><option value="盤・分電盤"></option><option value="コンセント"></option><option value="スイッチ"></option><option value="接地工事"></option><option value="受変電設備"></option><option value="撤去工事"></option><option value="試験・測定"></option></datalist>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" id="addBtn" onclick="pickFiles()">ファイルを追加</button>
+      <button class="btn open" id="browseBtn" onclick="showDriveBrowser()" style="display:none;">ファイルを閲覧</button>
+      <a class="btn open" id="openBtn" target="_blank" style="display:none;">Driveで開く</a>
+    </div>
+    <input type="file" id="file" multiple>
+    <div class="hint" id="hint">「ファイルを追加」で、スマホやPCのファイルをこの現場のドライブに保存できます。フォルダを開くと、Googleドライブのように現場フォルダ内を閲覧できます。</div>
+    <div class="prog" id="prog" style="display:none;"></div>
+    <div class="upwrap" id="upThumbs" style="display:none;"></div>
+
+    <div id="gridArea" style="display:none;">
+    <div id="folderRow" style="display:none;margin-bottom:8px;"><label style="font-size:13px;color:var(--sub);margin-right:6px;">フォルダ</label><select class="f" id="folderSel" onchange="loadCurFolderPhotos()" style="display:inline-block;width:auto;min-width:60%;"></select></div>
+    <div class="drivebar" id="driveBar" style="display:none;">
+      <button class="crumbBtn" type="button" onclick="showDriveRoot()">📁 現場フォルダ</button>
+      <span class="crumbText" id="driveCrumb">現場フォルダ</span>
+      <a class="driveOpen" id="driveOpenCurrent" target="_blank" style="display:none;">Driveで開く</a>
+    </div>
+    <div class="folderCards" id="folderCards" style="display:none;"></div>
+    <div class="sec" id="listTitle">ファイル一覧 <span id="phCount" style="color:var(--sub);font-weight:400;"></span></div>
+    <div id="selBar"><span id="selCount"></span><button onclick="showCandidateOnly()">候補のみ</button><button onclick="showAllPhotoCandidates()">すべて表示</button><button onclick="selCandidates()">候補選択</button><button onclick="delSelected()" style="color:#c0392b;border-color:#e3b7b0;">削除</button><button onclick="selAll(true)">全選択</button><button onclick="selAll(false)">全解除</button></div><div class="filterNote" id="filterNote"></div>
+    <div id="photos"><div class="empty">読込中…</div></div>
+    <div id="outBar" style="display:none;position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);box-shadow:0 -2px 12px rgba(0,0,0,.10);padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);z-index:50;"><div id="ledgerResult" style="display:none;margin-bottom:8px;font-size:14px;line-height:1.6;"></div><div style="display:flex;gap:10px;max-width:760px;margin:0 auto;"><button class="btn primary" onclick="buildLedgerFiles('pdf')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5M9 13h6M9 17h6"/></svg>PDFで作成</button><button class="btn excel" onclick="buildLedgerFiles('xlsx')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg>エクセルで作成</button></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="fileAddDock" id="fileAddDock">
+  <div class="fileAddDockInner">
+    <div class="fileAddDockText" id="fileAddDockText"><strong>現場を選択してください</strong>現場フォルダへファイルを追加できます</div>
+    <button type="button" id="fileAddDockBtn" onclick="pickFiles()" disabled>ファイルを追加</button>
+  </div>
+</div>
+
+<div class="ledgerDock" id="ledgerDock">
+  <div class="ledgerDockInner">
+    <div class="ledgerResultDock" id="ledgerResultDock"></div>
+    <div class="ledgerDockInfo"><strong id="ledgerDockProject">現場を選択してください</strong><br><span id="ledgerDockCount">写真を選択して台帳を作成できます</span></div>
+    <button type="button" class="history" onclick="openLedgerHistory()">📚 作成済み台帳・台帳フォルダ</button>
+    <button type="button" class="preview" onclick="openLedgerPreview()">👁 プレビュー・並び替え</button>
+    <button type="button" class="primary" onclick="buildLedgerFiles('pdf')">📄 PDFで作成</button>
+    <button type="button" class="excel" onclick="buildLedgerFiles('xlsx')">📊 エクセルで作成</button>
+  </div>
+</div>
+
+
+<div class="ledgerHistoryModal" id="ledgerHistoryModal" onclick="if(event.target===this)closeLedgerHistory();">
+  <div class="ledgerHistoryBox">
+    <div class="ledgerHistoryHead">
+      <div><div class="ledgerHistoryTitle">作成済み工事写真台帳</div><div class="ledgerHistorySub" id="ledgerHistorySub">現場フォルダ内の「台帳」フォルダに保存されたPDF・Excelを表示します。</div></div>
+      <button type="button" class="ledgerHistoryClose" onclick="closeLedgerHistory()">閉じる</button>
+    </div>
+    <div class="ledgerHistoryTools"><button type="button" onclick="refreshLedgerHistory()">↻ 更新</button><a id="ledgerHistoryFolderLink" href="#" target="_blank" style="display:none;">Google Driveで台帳フォルダを開く</a></div>
+    <div class="ledgerHistoryList" id="ledgerHistoryList"><div class="ledgerHistoryEmpty">現場を選択すると、作成済み台帳を表示できます。</div></div>
+  </div>
+</div>
+
+
+<div class="ledgerPreviewModal" id="ledgerPreviewModal" onclick="if(event.target===this)closeLedgerPreview();">
+  <div class="ledgerPreviewBox">
+    <div class="ledgerPreviewHead">
+      <div><div class="ledgerPreviewTitle">台帳作成前プレビュー</div><div class="ledgerPreviewSub">選択した順番でPDF・Excelに出力します。ここで順番変更・写真情報入力・解除ができます。</div></div>
+      <button type="button" class="ledgerPreviewClose" onclick="closeLedgerPreview()">閉じる</button>
+    </div>
+    <div class="ledgerPreviewTools"><span id="ledgerPreviewCount" style="font-size:13px;color:var(--sub);font-weight:900;"></span><button type="button" onclick="ledgerAutoFillAllInfo_()">写真名から自動入力</button><button type="button" onclick="ledgerPreviewClear_()">全解除</button></div>
+    <div class="ledgerPreviewList" id="ledgerPreviewList"></div>
+  </div>
+</div>
+
+
+
+<div class="photoViewerModal" id="photoViewerModal" onclick="if(event.target===this)closePhotoViewer();">
+  <div class="photoViewerBox">
+    <div class="photoViewerHead">
+      <div class="photoViewerTitle"><div class="photoViewerName" id="photoViewerName">写真</div><div class="photoViewerSub" id="photoViewerSub">写真を大きく確認できます</div></div>
+      <button type="button" class="photoViewerClose" onclick="closePhotoViewer()">閉じる</button>
+    </div>
+    <div class="photoViewerBody">
+      <button type="button" class="photoViewerNav" id="photoViewerPrev" onclick="photoViewerMove(-1)">‹</button>
+      <div class="photoViewerImageWrap"><img id="photoViewerImg" alt="写真プレビュー"></div>
+      <button type="button" class="photoViewerNav" id="photoViewerNext" onclick="photoViewerMove(1)">›</button>
+    </div>
+    <div class="photoViewerFoot">
+      <div class="photoViewerCount" id="photoViewerCount">1 / 1</div>
+      <button type="button" class="primary" id="photoViewerSelect" onclick="photoViewerToggleSelect()">台帳に選択</button>
+      <button type="button" onclick="openLedgerPreview()">選択一覧</button>
+      <a id="photoViewerDrive" href="#" target="_blank" rel="noopener">Driveで開く</a>
+    </div>
+  </div>
+</div>
+
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
+<div class="toast" id="toast"></div>
+<script src="../config.js?v=20260619-material-action-fix-42"></script>
+<script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-42';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-material-action-fix-42';
+try{localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}
 
 function genbaSessionTok(){
   try{
@@ -14,12 +464,17 @@ function genbaSaveSession(res){
   }catch(e){}
 }
 function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+function isAuthError_(msg){msg=String(msg||'');return msg.indexOf('認証エラー')>=0||msg.indexOf('ログイン')>=0||msg.indexOf('有効期限')>=0;}
+function redirectToLogin_(msg){
+  try{genbaClearSession();localStorage.removeItem('genba_user');localStorage.setItem('genba_login_notice',msg||'ログインの有効期限が切れました。もう一度ログインしてください。');}catch(e){}
+  location.replace('../');
+}
 var SECRET='';
 var MAXPX = 800, QUALITY = 0.80;
 
 var projects=[], customers=[], curId='', folderReady=false;
 var photoCache=[], ledgerMode=false, ledgerCandidateOnly=false, ledgerSelectedOnly=false;
-var ledgerSelectionIds=[], ledgerSelectionMap={}, ledgerPhotoMetaMap={}, ledgerUserChangedSelection=false;
+var ledgerSelectionIds=[], ledgerSelectionMap={}, ledgerPhotoMetaMap={}, ledgerPhotoInfoMap={}, ledgerUserChangedSelection=false;
 var photoViewerList=[], photoViewerIndex=0;
 var driveRootId='', driveCurrentId='', driveCurrentName='現場フォルダ', driveFolders=[];
 var autoOpenDriveAfterFolder=false;
@@ -47,13 +502,13 @@ function callGAS(params,timeoutMs,silent){
     var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
     var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},timeoutMs||30000);
     function cleanup(){if(!silent) hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
-    window[cb]=function(res){cleanup();resolve(res);};
-    var q=Object.assign({secret:genbaSessionTok(),callback:cb},params);
+    window[cb]=function(res){cleanup();if(res&&res.ok===false&&isAuthError_(res.error)){redirectToLogin_(res.error);reject(new Error(res.error));return;}resolve(res);};
+    var q=Object.assign({secret:genbaSessionTok(),callback:cb,_build:BUILD_ID,_ts:Date.now()},params);
     s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
     s.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(s);
   });
 }
-function postNoCors(obj){ obj.secret=genbaSessionTok(); return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)}); }
+function postNoCors(obj){ obj.secret=genbaSessionTok(); obj._build=BUILD_ID; obj._ts=Date.now(); return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)}); }
 function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
 
 function saveFilesCache_(){
@@ -556,8 +1011,9 @@ function onCand(){ curId=''; folderReady=false; updateFileAddDock(); updateLedge
 
 function onSelect(){
   var nextId=document.getElementById('projSel').value;
-  if(nextId!==curId){ledgerClearSelection_();ledgerUserChangedSelection=false;ledgerSelectedOnly=false;}
+  if(nextId!==curId){ledgerClearSelection_();ledgerUserChangedSelection=false;ledgerSelectedOnly=false;ledgerPhotoInfoMap={};}
   curId=nextId;
+  ledgerLoadInfo_();
   driveRootId=''; driveCurrentId=''; driveCurrentName='現場フォルダ'; driveFolders=[];
   genericDriveStack=[];
   var ut=document.getElementById('upThumbs');if(ut){ut.style.display='none';ut.innerHTML='';}
@@ -650,20 +1106,54 @@ function buildLedgerFiles(fmt){
   var box=document.getElementById('ledgerResultDock')||document.getElementById('ledgerResult'); if(box){box.style.display='none';box.innerHTML='';}
   var lt=document.querySelector('#loading .txt'); if(lt) lt.textContent='台帳を作成中…';
   toast((fmt==='xlsx'?'エクセル':'PDF')+'を作成中です。少し時間がかかります…'); showLoad();
-  callGAS({action:'makeLedgerFiles',id:curId,ids:ids.join(','),name:nm,fmt:fmt},180000).then(function(res){
+  callGAS({action:'makeLedgerFiles',id:curId,ids:ids.join(','),name:nm,fmt:fmt,meta:JSON.stringify(ledgerBuildMeta_())},180000).then(function(res){
     hideLoad(); if(lt) lt.textContent='読み込み中…';
     if(!res||!res.ok){var em=(res&&res.error)||'不明なエラー';if(box){box.innerHTML='作成に失敗しました：<br>'+esc(em);box.style.display='block';}toast('作成に失敗しました');return;}
     var url=(fmt==='xlsx')?res.xlsxUrl:res.pdfUrl, lbl=(fmt==='xlsx')?'📊 台帳（Excel）をダウンロード':'📄 台帳（PDF）を開く';
     var note='ドライブの案件フォルダ内「台帳」フォルダにも保存されています。';
     if(box&&url){
-      box.innerHTML='<div style="font-weight:700;margin-bottom:10px;">台帳ができました（'+res.n+'枚）</div><button id="openLedgerBtn" style="display:block;width:100%;max-width:440px;padding:16px;font-size:17px;font-weight:700;color:#fff;background:#1e8e3e;border:none;border-radius:12px;cursor:pointer;">'+lbl+'</button><div style="color:var(--sub);font-size:12px;margin-top:8px;">'+note+'</div>';
+      var folderBtn=res.folderUrl?'<button id="openLedgerFolderBtn" style="display:block;width:100%;max-width:440px;margin-top:8px;padding:13px;font-size:14px;font-weight:900;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border:none;border-radius:12px;cursor:pointer;">📁 台帳フォルダを開く</button>':'';
+      box.innerHTML='<div style="font-weight:700;margin-bottom:10px;">台帳ができました（'+res.n+'枚）</div><button id="openLedgerBtn" style="display:block;width:100%;max-width:440px;padding:16px;font-size:17px;font-weight:700;color:#fff;background:#1e8e3e;border:none;border-radius:12px;cursor:pointer;">'+lbl+'</button>'+folderBtn+'<button id="showLedgerHistoryBtn" style="display:block;width:100%;max-width:440px;margin-top:8px;padding:13px;font-size:14px;font-weight:900;color:#6d4cc2;background:var(--bg);box-shadow:var(--rise-sm);border:none;border-radius:12px;cursor:pointer;">📚 作成履歴を表示</button><div style="color:var(--sub);font-size:12px;margin-top:8px;">'+note+'</div>';
       box.style.display='block';
       var ob=document.getElementById('openLedgerBtn');
       if(ob) ob.onclick=function(){ if(fmt==='xlsx'){ var a=document.createElement('a'); a.href=url; a.download=''; document.body.appendChild(a); a.click(); a.remove(); } else { window.open(url,'_blank','width=840,height=1100,scrollbars=yes,resizable=yes'); } };
+      var fb=document.getElementById('openLedgerFolderBtn'); if(fb)fb.onclick=function(){window.open(res.folderUrl,'_blank');};
+      var hb=document.getElementById('showLedgerHistoryBtn'); if(hb)hb.onclick=function(){openLedgerHistory(true);};
     }
+    try{clearDriveItemCache_(driveCurrentId||driveRootId);}catch(e){}
     toast('台帳を作成しました');
   }).catch(function(err){hideLoad();if(lt) lt.textContent='読み込み中…';toast('作成に失敗：'+err.message);});
 }
+
+function closeLedgerHistory(){var m=document.getElementById('ledgerHistoryModal');if(m)m.classList.remove('show');}
+function openLedgerHistory(forceRefresh){
+  if(!curId){toast('現場を選択してください');return;}
+  var m=document.getElementById('ledgerHistoryModal'); if(m)m.classList.add('show');
+  refreshLedgerHistory(forceRefresh);
+}
+function refreshLedgerHistory(){
+  if(!curId)return;
+  var list=document.getElementById('ledgerHistoryList'), sub=document.getElementById('ledgerHistorySub'), link=document.getElementById('ledgerHistoryFolderLink');
+  var p=(projects||[]).filter(function(x){return x['案件ID']===curId;})[0]||{};
+  if(sub)sub.textContent=(p['案件名']||'選択中の現場')+' の「台帳」フォルダを表示しています。';
+  if(list)list.innerHTML='<div class="ledgerHistoryEmpty">作成済み台帳を読込中…</div>';
+  if(link){link.style.display='none';link.href='#';}
+  callGAS({action:'ledgerFiles',id:curId},45000,true).then(function(res){
+    if(!res||!res.ok)throw new Error((res&&res.error)||'取得失敗');
+    if(link&&res.folderUrl){link.href=res.folderUrl;link.style.display='inline-block';}
+    renderLedgerHistory_(res.files||[]);
+  }).catch(function(err){if(list)list.innerHTML='<div class="ledgerHistoryEmpty">台帳履歴を取得できませんでした。<br>'+escText(err.message||err)+'</div>';});
+}
+function renderLedgerHistory_(rows){
+  var list=document.getElementById('ledgerHistoryList'); if(!list)return;
+  if(!rows||!rows.length){list.innerHTML='<div class="ledgerHistoryEmpty">まだ作成済みの台帳がありません。<br>PDFまたはExcelで作成すると、ここに表示されます。</div>';return;}
+  list.innerHTML=rows.map(function(f){
+    var icon=(String(f.type||'').indexOf('Excel')>=0||String(f.name||'').match(/\.xlsx$/i))?'📊':'📄';
+    var meta=[f.type||'',f.updated||'',f.sizeText||''].filter(function(x){return x;}).join('　｜　');
+    return '<div class="ledgerHistoryItem"><div><div class="ledgerHistoryName">'+icon+' '+escText(f.name||'台帳')+'</div><div class="ledgerHistoryMeta">'+escText(meta||'')+'</div></div><a class="ledgerHistoryOpen" href="'+escAttr(f.url||'#')+'" target="_blank">開く</a></div>';
+  }).join('');
+}
+
 function showPhotos(){showDriveBrowser();}
 function showDriveBrowser(){
   if(!curId){toast('案件を選んでください');return;}
@@ -867,6 +1357,72 @@ function collectLedgerSelectedIds(){
   var ids=[];document.querySelectorAll('#photos .ph.selected, #projectFolderGrid .ph.selected').forEach(function(el){if(el.dataset&&el.dataset.id)ids.push(el.dataset.id);});return ids;
 }
 function ledgerGetMeta_(id){id=String(id||'');return ledgerPhotoMetaMap[id]||{id:id,name:'写真'};}
+
+function ledgerInfoKey_(){return 'gencan_ledger_photo_info_v17_'+String(curId||'none');}
+function ledgerLoadInfo_(){
+  ledgerPhotoInfoMap={};
+  if(!curId)return;
+  try{ledgerPhotoInfoMap=JSON.parse(localStorage.getItem(ledgerInfoKey_())||'{}')||{};}catch(e){ledgerPhotoInfoMap={};}
+}
+function ledgerSaveInfo_(){
+  if(!curId)return;
+  try{localStorage.setItem(ledgerInfoKey_(),JSON.stringify(ledgerPhotoInfoMap||{}));}catch(e){}
+}
+function ledgerGetInfo_(id){
+  id=String(id||'');
+  if(!ledgerPhotoInfoMap[id])ledgerPhotoInfoMap[id]={kind:'',place:'',memo:''};
+  return ledgerPhotoInfoMap[id];
+}
+function ledgerSetInfoField_(id,key,val){
+  id=String(id||''); if(!id)return;
+  var info=ledgerGetInfo_(id); info[key]=String(val||'').slice(0,120);
+  ledgerSaveInfo_();
+}
+function ledgerInferInfoFromName_(f){
+  var nm=String((f&&f.name)||'').replace(/\.[^.]+$/,'');
+  var tags=photoTagsFromName(nm), info={kind:'',place:'',memo:''};
+  if(tags.length)info.kind=tags[0];
+  var parts=nm.split(/[_＿\-\s]+/).filter(Boolean).filter(function(x){return !/^\d{6,14}$/.test(x)&&x!=='台帳候補';});
+  if(!info.kind&&parts.length)info.kind=parts[0];
+  if(parts.length>1)info.memo=parts.slice(1,4).join(' ');
+  if(driveCurrentName&&driveCurrentName!=='現場フォルダ')info.place=driveCurrentName;
+  return info;
+}
+function ledgerEnsureInfo_(id){
+  var info=ledgerGetInfo_(id), f=ledgerGetMeta_(id)||{};
+  if(!info.kind&&!info.place&&!info.memo){
+    var auto=ledgerInferInfoFromName_(f);
+    info.kind=auto.kind||''; info.place=auto.place||''; info.memo=auto.memo||'';
+    ledgerSaveInfo_();
+  }
+  return info;
+}
+function ledgerBuildMeta_(){
+  var out={};
+  ledgerSelectionIds.forEach(function(id){
+    var f=ledgerGetMeta_(id)||{}, info=ledgerGetInfo_(id);
+    out[id]={name:f.name||'',kind:info.kind||'',place:info.place||'',memo:info.memo||''};
+  });
+  return out;
+}
+function ledgerAutoFillAllInfo_(){
+  if(!ledgerSelectionIds.length){toast('写真を選択してください');return;}
+  ledgerSelectionIds.forEach(function(id){
+    var info=ledgerGetInfo_(id), auto=ledgerInferInfoFromName_(ledgerGetMeta_(id)||{});
+    if(!info.kind)info.kind=auto.kind||'';
+    if(!info.place)info.place=auto.place||'';
+    if(!info.memo)info.memo=auto.memo||'';
+  });
+  ledgerSaveInfo_(); renderLedgerPreview(); toast('写真情報を自動入力しました');
+}
+function ledgerInfoInput_(id,key,label,value,multi){
+  var wrap=document.createElement('label'); wrap.className='ledgerInfoField'+(multi?' full':'');
+  var sp=document.createElement('span'); sp.textContent=label; wrap.appendChild(sp);
+  var el=document.createElement(multi?'textarea':'input'); if(!multi)el.type='text'; el.value=value||'';
+  el.oninput=function(){ledgerSetInfoField_(id,key,this.value);};
+  el.onclick=function(ev){ev.stopPropagation();};
+  wrap.appendChild(el); return wrap;
+}
 function openLedgerPreview(){
   if(!(ledgerMode||initialMode==='ledger'))return;
   if(!ledgerSelectionIds.length){toast('写真を選択してください');return;}
@@ -888,7 +1444,15 @@ function renderLedgerPreview(){
     var img=document.createElement('img');img.loading='lazy';img.src='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w900';img.onclick=function(){openPhotoViewer(id);};img.style.cursor='zoom-in';img.onerror=function(){th.innerHTML='<span class="ledgerPreviewOrder">'+(i+1)+'</span><span class="fallback">🖼</span>';};th.appendChild(img);
     var meta=document.createElement('div');meta.className='ledgerPreviewMeta';
     var nm=document.createElement('div');nm.className='ledgerPreviewName';nm.textContent=f.name||'写真';meta.appendChild(nm);
+    var info=ledgerEnsureInfo_(id);
+    var infoGrid=document.createElement('div');infoGrid.className='ledgerInfoGrid';
+    infoGrid.appendChild(ledgerInfoInput_(id,'kind','工種',info.kind,false));
+    infoGrid.appendChild(ledgerInfoInput_(id,'place','撮影箇所',info.place,false));
+    infoGrid.appendChild(ledgerInfoInput_(id,'memo','備考',info.memo,true));
+    meta.appendChild(infoGrid);
+    var note=document.createElement('div');note.className='ledgerInfoNote';note.textContent='入力した内容はこの端末に保存され、台帳出力にも送ります。';meta.appendChild(note);
     var btns=document.createElement('div');btns.className='ledgerPreviewBtns';
+    var auto=document.createElement('button');auto.type='button';auto.textContent='自動入力';auto.onclick=function(){var inf=ledgerGetInfo_(id), au=ledgerInferInfoFromName_(f);inf.kind=inf.kind||au.kind||'';inf.place=inf.place||au.place||'';inf.memo=inf.memo||au.memo||'';ledgerSaveInfo_();renderLedgerPreview();};btns.appendChild(auto);
     var up=document.createElement('button');up.type='button';up.textContent='↑ 上へ';up.disabled=(i===0);up.onclick=function(){ledgerPreviewMove_(id,-1);};btns.appendChild(up);
     var down=document.createElement('button');down.type='button';down.textContent='↓ 下へ';down.disabled=(i===ledgerSelectionIds.length-1);down.onclick=function(){ledgerPreviewMove_(id,1);};btns.appendChild(down);
     var rem=document.createElement('button');rem.type='button';rem.className='danger';rem.textContent='解除';rem.onclick=function(){ledgerPreviewRemove_(id);};btns.appendChild(rem);
@@ -1243,7 +1807,16 @@ var toastT;function toast(m){var t=document.getElementById('toast');t.textConten
 })();
 
 try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
-// 起動時は、まず保存済みデータを即表示し、最新データは裏で更新する。
+// 起動時は認証トークンを確認してから表示します。期限切れの保存データで誤操作しないようにします。
 try{updateFileAddDock();}catch(e){}
-readFilesCache_();
-loadProjects(true);
+if(!genbaSessionTok()){
+  redirectToLogin_('ログインの有効期限が切れました。もう一度ログインしてください。');
+}else{
+  readFilesCache_();
+  loadProjects(true);
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="../common_ui.js?v=20260619-material-action-fix-42"></script>
+</body>
+</html>

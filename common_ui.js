@@ -1,147 +1,286 @@
-/* Gen-Can common UI v2026.06.19-41 / support center + release prep */
-(function(){
-  'use strict';
-  var cfg = window.GENBA_CONFIG || {};
-  var appVersion = cfg.APP_VERSION || 'v2026.06.19-41';
-  var path = location.pathname || '';
-  var isRoot = /\/genba-projects\/?(?:index\.html)?$/.test(path) || /\/genba-projects$/.test(path);
-  var isSub = !isRoot;
-  var rootHref = isRoot ? './' : '../';
-
-  // viewport未指定ページのスマホ縮小表示を防ぐ
-  var viewport = document.querySelector('meta[name="viewport"]');
-  if(!viewport){
-    viewport = document.createElement('meta');
-    viewport.name = 'viewport';
-    document.head.appendChild(viewport);
+<!DOCTYPE html>
+<!-- vehicles version 5 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
+<!-- vehicles version 4 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はload()。 機能・id不変 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>車両管理｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
+    --accent:#b45309;--accent-d:#92400e;--accent-soft:#f3e2cf;
+    --radius:13px;
+    --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+    --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
   }
-  viewport.setAttribute('content','width=device-width,initial-scale=1,viewport-fit=cover');
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.55;padding-bottom:40px;}
+  select,input,textarea,button,a{font-family:inherit;}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);color:var(--ink);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
+  .hbar{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"back . right" "title title title";align-items:center;row-gap:12px;column-gap:8px;max-width:760px;margin:0 auto;}
+  .hbar .back{grid-area:back;align-self:center;}
+  .hbar .hright{grid-area:right;justify-self:end;}
+  .hbar .hcenter{grid-area:title;justify-self:center;}
+  .hbar .htxt .nm{white-space:normal;}
+  .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11px;letter-spacing:.05em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 12px;text-decoration:none;white-space:nowrap;flex:0 0 auto;}
+  .back:active{box-shadow:var(--well);}
+  .hic{width:40px;height:40px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hic svg{width:21px;height:21px;}
+  .htxt{flex:1;min-width:0;}
+  .htxt .en{font-family:"Manrope",sans-serif;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .htxt .nm{font-weight:700;font-size:16.5px;color:var(--ink);display:block;line-height:1.2;white-space:nowrap;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:13px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
+  main{padding:12px;max-width:760px;margin:0 auto;}
+  .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14.5px;}
+  .total{background:linear-gradient(135deg,#b45309,#92400e);color:#fff;border-radius:15px;padding:14px 17px;margin-bottom:12px;box-shadow:5px 6px 16px rgba(180,83,9,.32),-4px -4px 10px #ffffff;display:flex;gap:18px;align-items:center;}
+  .total .v{font-size:22px;font-weight:800;line-height:1.1;}
+  .total .k{font-size:11px;opacity:.85;}
+  .total .ok .v{color:#bbf7d0;}
+  .total .ng .v{color:#fecaca;}
+  .car{position:relative;background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:13px 15px 13px 18px;margin-bottom:11px;overflow:hidden;}
+  .car::before{content:"";position:absolute;left:0;top:12px;bottom:12px;width:4px;border-radius:0 4px 4px 0;background:#94a3b8;}
+  .car.alert::before{background:#dc2626;}
+  .car.warn::before{background:#d97706;}
+  .car .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap;}
+  .nm{font-weight:700;font-size:16.5px;color:var(--ink);}
+  .plate{font-size:12px;font-weight:700;border:1.5px solid #64748b;border-radius:7px;padding:1px 9px;color:#334155;white-space:nowrap;background:#eef2f7;}
+  .model{font-size:12.5px;color:var(--sub);}
+  .badges{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px;}
+  .bdg{font-size:11.5px;font-weight:700;padding:3px 10px;border-radius:999px;}
+  .bdg.red{background:#fee2e2;color:#b91c1c;}
+  .bdg.yel{background:#fef3c7;color:#92400e;}
+  .bdg.blu{background:#dbeafe;color:#1e40af;}
+  .bdg.grn{background:#dcfce7;color:#166534;}
+  .info{margin-top:10px;border-top:1px dashed var(--line);padding-top:9px;font-size:13.5px;}
+  .info .row{display:flex;justify-content:space-between;gap:10px;padding:4px 0;}
+  .info .row .k{color:var(--sub);flex:0 0 auto;}
+  .info .row .v{text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .odoBox{margin-top:10px;background:var(--bg);box-shadow:var(--well-soft);border-radius:11px;padding:11px 12px;}
+  .odoBox .lbl{font-size:12px;font-weight:700;color:var(--sub);margin-bottom:7px;}
+  .odoRow{display:flex;gap:8px;}
+  .odoRow input{flex:1;min-width:0;padding:11px 12px;border:none;border-radius:10px;font-size:16px;background:var(--bg);box-shadow:var(--well);color:var(--ink);}
+  .odoRow button{flex:0 0 auto;padding:11px 16px;border:none;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:2px 3px 8px rgba(180,83,9,.35);}
+  .odoRow button:active{transform:translateY(1px);}
+  .oilBtn{margin-top:9px;width:100%;padding:11px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--rise-sm);color:#9a3412;font-size:13.5px;font-weight:800;cursor:pointer;}
+  .oilBtn:active{box-shadow:var(--well);}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:60px;z-index:60;background:#1f3a52;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 20px rgba(31,58,82,.3);}
+  .toast.show{opacity:1;}
+  .loading{position:fixed;inset:0;z-index:1000;background:rgba(232,236,242,.78);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
+  .loading.show{display:flex;}
+  .lbox{background:var(--bg);border-radius:18px;box-shadow:var(--rise);padding:24px 32px;text-align:center;}
+  .spin{width:38px;height:38px;border:4px solid #d6deea;border-top-color:var(--accent);border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
+  @keyframes sp{to{transform:rotate(360deg);}}
+  .lbox .txt{font-size:15px;font-weight:700;}
+  .note{font-size:12px;color:var(--sub);margin-top:8px;line-height:1.7;}
+  /* v: ヘッダー統一（中央寄せ＋更新ボタン・少し大きく） */
+  .hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:11px;min-width:0;}
+  .hright{flex:0 0 auto;display:flex;align-items:center;gap:9px;}
+  .hrf{width:42px;height:42px;border-radius:50%;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
+  .hrf svg{width:19px;height:19px;}
+  .hrf:active{box-shadow:var(--well);}
+  .hic{width:44px;height:44px;}
+  .hic svg{width:23px;height:23px;}
+  .htxt{flex:0 1 auto;min-width:0;text-align:center;}
+  .htxt .en{font-size:10px;}
+  .htxt .nm{font-size:19.5px;}
+  .hmark{font-size:15px;}
+  .back{font-size:11.5px;padding:9px 14px;}
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v5</div>
+<header>
+  <div class="hbar">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 7h12v9H2zM14 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg></span><span class="htxt"><span class="en">Vehicles</span><span class="nm">車両管理</span></span></div>
+    <div class="hright"><span class="hmark">Gen-Can</span><button class="hrf" onclick="load()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
+  </div>
+</header>
 
-  document.documentElement.setAttribute('data-gencan-version', appVersion);
-  document.body.classList.add('gc-common-ui');
-  document.documentElement.classList.add('gc-performance-lite');
-  if(isRoot) document.body.classList.add('gc-root-page');
+<main>
+  <div class="total" id="totalBox" style="display:none;"></div>
+  <div id="list"><div class="empty">読込中…</div></div>
+  <div class="note">※車両の登録・編集（車検番号・保険・単価など）は管理画面の「車両」タブから行います。距離の更新とオイル交換の記録はこの画面から誰でもできます。</div>
+</main>
 
-  function setDeviceClass(){
-    var w = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-    document.body.classList.toggle('gc-phone', w <= 680);
-    document.body.classList.toggle('gc-tablet', w > 680 && w <= 1024);
-    document.body.classList.toggle('gc-desktop', w > 1024);
-    document.documentElement.setAttribute('data-gc-width', String(w));
-  }
-  setDeviceClass();
-  window.addEventListener('resize', function(){ clearTimeout(window.__gcResizeTimer); window.__gcResizeTimer=setTimeout(setDeviceClass,120); });
+<div class="toast" id="toast"></div>
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
+<script src="../config.js?v=20260619-material-action-fix-42"></script>
+<script>
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
-  // バージョンバッジを共通設定に同期
-  ['verBadge','appBadge','loginVer'].forEach(function(id){
-    var el = document.getElementById(id);
-    if(el) el.textContent = appVersion;
-  });
-
-  // 既存の「メニュー」「更新」ボタンを見た目だけ少し統一
-  Array.prototype.slice.call(document.querySelectorAll('a,button')).forEach(function(el){
-    var t = (el.textContent || '').replace(/\s+/g,'').trim();
-    if(t === '←メニュー' || t === 'メニューへ' || t === 'メニュー' || t === '←メニューへ') el.classList.add('gc-action-menu');
-    if(t === '更新' || t === '↻更新') el.classList.add('gc-action-refresh');
-  });
-
-  var style = document.createElement('style');
-  style.textContent = `
-    .gc-common-ui,.gc-common-ui *,.gc-common-ui *::before,.gc-common-ui *::after{box-sizing:border-box}
-    html{-webkit-text-size-adjust:100%;scroll-padding-bottom:110px}
-    /* v36: 画面描画の軽量化。対応ブラウザでは画面外カードの描画を遅らせる */
-    .gc-common-ui .card,.gc-common-ui .sq,.gc-common-ui section,.gc-common-ui .panel{content-visibility:auto;contain-intrinsic-size:1px 240px}
-    .gc-common-ui img:not([loading]){image-rendering:auto}
-    .gc-performance-lite{scroll-behavior:smooth}
-
-    body.gc-common-ui{overflow-x:hidden;touch-action:manipulation}
-    .gc-common-ui img,.gc-common-ui video,.gc-common-ui canvas,.gc-common-ui svg{max-width:100%}
-    .gc-common-ui input,.gc-common-ui select,.gc-common-ui textarea,.gc-common-ui button{font-family:inherit}
-    .gc-common-ui .gc-table-scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:14px}
-    .gc-common-ui .gc-scroll-hint{font-size:11px;color:#6b7f92;margin:5px 2px 0;display:none}
-    .gc-common-nav{position:fixed;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:120000;display:flex;gap:8px;align-items:center;padding:8px;border-radius:18px;background:rgba(244,248,252,.84);backdrop-filter:blur(14px);box-shadow:0 10px 24px rgba(31,58,82,.16);border:1px solid rgba(255,255,255,.72)}
-    .gc-common-nav a,.gc-common-nav button{appearance:none;border:0;text-decoration:none;cursor:pointer;min-height:38px;padding:0 13px;border-radius:999px;background:#eef5fb;color:#1f3a52;font-weight:900;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:5px;box-shadow:4px 4px 9px rgba(191,201,214,.75),-4px -4px 9px rgba(255,255,255,.95);font-family:inherit;white-space:nowrap}
-    .gc-common-nav a.primary{background:linear-gradient(92deg,#06b6d4,#2563eb 62%,#7c3aed);color:#fff;box-shadow:0 8px 18px rgba(37,99,235,.22)}
-    .gc-action-menu,.gc-action-refresh{font-weight:900!important;border-radius:999px!important;}
-    @media(max-width:1024px){
-      .gc-common-ui .wrap,.gc-common-ui .container,.gc-common-ui .shell,.gc-common-ui main,.gc-common-ui .page,.gc-common-ui .page-wrap{max-width:100%!important;width:100%!important}
-      .gc-common-ui .panel,.gc-common-ui .card,.gc-common-ui .box,.gc-common-ui .section{max-width:100%!important}
-      .gc-common-ui .toolbar,.gc-common-ui .actions,.gc-common-ui .btnrow,.gc-common-ui .row.actions{flex-wrap:wrap!important;gap:10px!important}
-      .gc-common-ui input,.gc-common-ui select,.gc-common-ui textarea{max-width:100%!important}
-    }
-    @media(max-width:820px){
-      .gc-common-ui{min-width:0!important}
-      .gc-common-ui input,.gc-common-ui select,.gc-common-ui textarea{font-size:16px!important;min-height:44px}
-      .gc-common-ui button,.gc-common-ui .btn,.gc-common-ui a.btn,.gc-common-ui [role="button"]{min-height:44px}
-      .gc-common-ui table{min-width:720px}
-      .gc-common-ui .gc-table-scroll + .gc-scroll-hint{display:block}
-      .gc-common-ui .grid:not(.ledger-photo-grid):not(.photo-grid),.gc-common-ui .cards,.gc-common-ui .tiles,.gc-common-ui .list-grid{grid-template-columns:1fr!important}
-      .gc-common-ui .hide-mobile{display:none!important}
-      .gc-common-ui .show-mobile{display:block!important}
-    }
-    @media(max-width:680px){
-      body.gc-common-ui{padding-bottom:calc(74px + env(safe-area-inset-bottom))}
-      .gc-common-ui .head,.gc-common-ui .hero,.gc-common-ui header{padding-left:14px!important;padding-right:14px!important}
-      .gc-common-ui .panel,.gc-common-ui .card,.gc-common-ui .box{border-radius:18px!important}
-      .gc-common-ui .modal,.gc-common-ui dialog{max-width:calc(100vw - 18px)!important;width:calc(100vw - 18px)!important}
-      .gc-common-nav{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));justify-content:space-between;border-radius:18px;padding:8px}
-      .gc-common-nav a,.gc-common-nav button{flex:1;padding:0 8px;font-size:12.5px;min-width:0}
-      .gc-root-page .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important}
-      .gc-root-page a.sq{padding:10px!important;border-radius:15px!important;min-height:0!important}
-      .gc-root-page .sq .ic{width:39px!important;height:39px!important}
-      .gc-root-page .sq .nm{font-size:14px!important;line-height:1.15!important}
-      .gc-root-page .sq .cor{top:8px!important;right:8px!important}
-      .gc-root-page .head h1{font-size:26px!important}
-      #fileAddDock,#ledgerDock,.ledger-dock,.file-dock{left:0!important;right:0!important;bottom:0!important;border-radius:18px 18px 0 0!important;padding:10px 12px calc(10px + env(safe-area-inset-bottom))!important;max-width:none!important}
-      #fileAddDock button,#ledgerDock button,.ledger-dock button,.file-dock button{min-height:50px!important}
-    }
-    @media(max-width:420px){
-      .gc-root-page .grid{gap:8px!important}
-      .gc-root-page .sq .nm{font-size:13px!important}
-      .gc-root-page .sq .ic{width:36px!important;height:36px!important}
-    }
-  `;
-  document.head.appendChild(style);
-
-  function wrapTables(){
-    Array.prototype.slice.call(document.querySelectorAll('table')).forEach(function(tbl){
-      if(tbl.closest('.gc-table-scroll')) return;
-      var parent = tbl.parentNode;
-      if(!parent) return;
-      var wrap = document.createElement('div');
-      wrap.className = 'gc-table-scroll';
-      parent.insertBefore(wrap, tbl);
-      wrap.appendChild(tbl);
-      var hint = document.createElement('div');
-      hint.className = 'gc-scroll-hint';
-      hint.textContent = '横にスクロールできます';
-      wrap.parentNode.insertBefore(hint, wrap.nextSibling);
-    });
-  }
-  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wrapTables); else wrapTables();
-
-  // 画面下に固定操作があるページでは重ねない
-  var hasOwnDock = document.getElementById('fileAddDock') || document.getElementById('ledgerDock') || document.querySelector('.bottom') || document.getElementById('outBar');
-  var skipPaths = /\/(files|photos|toolbox)\//.test(path);
-  if(isSub && !hasOwnDock && !skipPaths && !document.getElementById('gcCommonNav')){
-    var nav = document.createElement('div');
-    nav.id = 'gcCommonNav';
-    nav.className = 'gc-common-nav';
-    nav.innerHTML = '<a class="primary" href="'+rootHref+'">← メニュー</a><button type="button" data-gc-top>上へ</button><button type="button" data-gc-reload>更新</button>';
-    document.body.appendChild(nav);
-    nav.querySelector('[data-gc-top]').addEventListener('click', function(){window.scrollTo({top:0,behavior:'smooth'});});
-    nav.querySelector('[data-gc-reload]').addEventListener('click', function(){location.reload();});
-  }
-
-  // デモページ用の控えめな表示
+function genbaSessionTok(){
   try{
-    if(/\/demo\//.test(path) && !document.getElementById('gcDemoBadge')){
-      var db=document.createElement('div');
-      db.id='gcDemoBadge';
-      db.textContent='DEMO MODE';
-      db.style.cssText='position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:130000;background:linear-gradient(92deg,#06b6d4,#2563eb 62%,#7c3aed);color:#fff;border-radius:999px;padding:6px 11px;font:800 11px Manrope,sans-serif;letter-spacing:.08em;box-shadow:0 8px 18px rgba(37,99,235,.28);pointer-events:none;';
-      document.body.appendChild(db);
-    }
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
   }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var T_GENERAL='';
+var vehicles=[];
+var CACHE='genba_vehicles_cache';
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+function tok(){return admTok()||genbaSessionTok();}
+function loadCache(){try{vehicles=JSON.parse(localStorage.getItem(CACHE)||'[]');}catch(e){vehicles=[];}}
+function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify(vehicles));}catch(e){}}
 
-})();
+var loadCnt=0,loadShownAt=0;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},2600);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function num(v){if(v==null||v==='')return 0;var n=Number(String(v).replace(/[,，]/g,''));return isNaN(n)?0:n;}
+function km(n){return Math.round(n).toLocaleString('ja-JP')+' km';}
+function dVal(v){if(!v)return'';var m=String(v).match(/^(\d{4}-\d{2}-\d{2})/);return m?m[1]:'';}
+function dDisp(v){var s=dVal(v);return s?s.replace(/-/g,'/'):'－';}
+function daysLeft(v){var s=dVal(v);if(!s)return null;var d=new Date(s+'T00:00:00'),t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/86400000);}
+function daysAgo(v){var d=daysLeft(v);return d==null?null:-d;}
+
+function callGAS(params,silent){
+  return new Promise(function(resolve,reject){
+    if(!silent) showLoad();
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+    var timer=setTimeout(function(){cleanup();reject(new Error('タイムアウト'));},20000);
+    function cleanup(){if(!silent) hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    window[cb]=function(res){cleanup();resolve(res);};
+    var q=Object.assign({secret:tok(),callback:cb},params);
+    if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
+    s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+    s.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(s);
+  });
+}
+
+function load(silent){
+  callGAS({action:'vehicles'},silent).then(function(res){
+    if(!res.ok)throw new Error(res.error||'エラー');
+    vehicles=res.vehicles||[];saveCache();render();
+  }).catch(function(err){if(!silent)toast('読込失敗：'+err.message);});
+}
+
+/* ===== 状態判定 ===== */
+function vState(v){
+  var b=[],lv=0; // lv: 0=正常 1=注意 2=要対応
+  function push(cls,txt,l){b.push({cls:cls,txt:txt});if(l>lv)lv=l;}
+  // 車検
+  var ds=daysLeft(v['車検満了日']);
+  if(ds!=null){
+    if(ds<0)push('red','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3 2 20h20Z"/><path d="M12 9v5M12 17.4v.2"/></svg>車検切れ（'+(-ds)+'日経過）',2);
+    else if(ds<=30)push('red','車検まで '+ds+' 日',2);
+    else if(ds<=60)push('yel','車検まで '+ds+' 日',1);
+  }
+  // 保険
+  var dh=daysLeft(v['保険満了日']);
+  if(dh!=null){
+    if(dh<0)push('red','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3 2 20h20Z"/><path d="M12 9v5M12 17.4v.2"/></svg>任意保険 期限切れ',2);
+    else if(dh<=30)push('red','保険満了まで '+dh+' 日',2);
+    else if(dh<=60)push('yel','保険満了まで '+dh+' 日',1);
+  }
+  // オイル交換（距離）
+  var cyc=num(v['オイル交換距離']),last=num(v['前回オイル交換距離']),cur=num(v['現在距離']);
+  if(cyc>0&&cur>0){
+    var run=cur-last;
+    if(run>=cyc)push('red','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3s6 7 6 11.5a6 6 0 0 1-12 0C6 10 12 3 12 3Z"/></svg>オイル交換時期（'+km(run)+'走行）',2);
+    else if(run>=cyc-500)push('yel','オイル交換まであと '+km(cyc-run),1);
+  }
+  // オイル交換（月数）
+  var mon=num(v['オイル交換月数']),od=daysAgo(v['前回オイル交換日']);
+  if(mon>0&&od!=null){
+    if(od>=mon*30)push('red','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3s6 7 6 11.5a6 6 0 0 1-12 0C6 10 12 3 12 3Z"/></svg>オイル交換時期（前回から'+Math.floor(od/30)+'ヶ月）',2);
+    else if(od>=(mon-1)*30&&mon>1)push('yel','オイル交換が近づいています',1);
+  }
+  // 距離の更新催促
+  var ud=daysAgo(v['距離更新日']);
+  if(cur<=0||ud==null)push('blu','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3.2h6V4M9 10h6M9 14h4"/></svg>走行距離を入力してください',Math.max(lv,1)===lv?1:1);
+  else if(ud>=30)push('blu','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3.2h6V4M9 10h6M9 14h4"/></svg>距離の確認から'+ud+'日（更新してください）',1);
+  if(!b.length)push('grn','<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="m20 6-11 11-5-5"/></svg>異常なし',0);
+  return {badges:b,lv:lv};
+}
+
+function render(){
+  var el=document.getElementById('list'),tb=document.getElementById('totalBox');
+  if(!vehicles.length){el.innerHTML='<div class="empty">車両がまだ登録されていません。<br>管理画面の「車両」タブから登録してください。</div>';tb.style.display='none';return;}
+  var ng=0,wn=0;
+  var items=vehicles.map(function(v){var st=vState(v);if(st.lv===2)ng++;else if(st.lv===1)wn++;return {v:v,st:st};});
+  items.sort(function(a,b){return b.st.lv-a.st.lv;});
+  tb.style.display='flex';
+  tb.innerHTML='<div><div class="v">'+vehicles.length+'</div><div class="k">登録車両</div></div>'+
+    '<div class="ng"><div class="v">'+ng+'</div><div class="k">要対応</div></div>'+
+    '<div><div class="v" style="color:#fde68a;">'+wn+'</div><div class="k">注意</div></div>'+
+    '<div class="ok"><div class="v">'+(vehicles.length-ng-wn)+'</div><div class="k">正常</div></div>';
+  el.innerHTML=items.map(function(it){
+    var v=it.v,st=it.st,id=esc(v['車両ID']);
+    var cls=st.lv===2?'alert':(st.lv===1?'warn':'');
+    var h='<div class="car '+cls+'">';
+    h+='<div class="top"><div><div class="nm">'+esc(v['車両名']||'')+'</div>';
+    if(v['車種'])h+='<div class="model">'+esc(v['車種'])+'</div>';
+    h+='</div>';
+    if(v['ナンバー'])h+='<span class="plate">'+esc(v['ナンバー'])+'</span>';
+    h+='</div>';
+    h+='<div class="badges">'+st.badges.map(function(b){return '<span class="bdg '+b.cls+'">'+b.txt+'</span>';}).join('')+'</div>';
+    h+='<div class="info">';
+    h+='<div class="row"><span class="k">車検満了</span><span class="v">'+dDisp(v['車検満了日'])+(v['車検番号']?'（番号：'+esc(v['車検番号'])+'）':'')+'</span></div>';
+    h+='<div class="row"><span class="k">任意保険</span><span class="v">'+(v['保険会社']?esc(v['保険会社'])+' ':'')+(v['保険証券番号']?'証券番号 '+esc(v['保険証券番号']):'－')+'</span></div>';
+    h+='<div class="row"><span class="k">保険期間</span><span class="v">'+dDisp(v['保険開始日'])+' 〜 '+dDisp(v['保険満了日'])+'</span></div>';
+    var cyc=num(v['オイル交換距離']),mon=num(v['オイル交換月数']);
+    h+='<div class="row"><span class="k">前回オイル交換</span><span class="v">'+dDisp(v['前回オイル交換日'])+(num(v['前回オイル交換距離'])?'・'+km(num(v['前回オイル交換距離'])):'')+'</span></div>';
+    if(cyc>0||mon>0)h+='<div class="row"><span class="k">交換サイクル</span><span class="v">'+(cyc>0?km(cyc):'')+(cyc>0&&mon>0?' / ':'')+(mon>0?mon+'ヶ月':'')+'</span></div>';
+    h+='<div class="row"><span class="k">現在距離</span><span class="v">'+(num(v['現在距離'])?km(num(v['現在距離'])):'未入力')+(dVal(v['距離更新日'])?'（'+dDisp(v['距離更新日'])+' 時点）':'')+'</span></div>';
+    h+='</div>';
+    h+='<div class="odoBox"><div class="lbl">走行距離の更新（メーターの数値を入力）</div>';
+    h+='<div class="odoRow"><input id="odo_'+id+'" type="number" inputmode="numeric" placeholder="例）'+(num(v['現在距離'])?Math.round(num(v['現在距離'])):'52000')+'">';
+    h+='<button onclick="saveOdo(\''+id+'\')">距離を更新</button></div>';
+    h+='<button class="oilBtn" onclick="doOil(\''+id+'\')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:3px;"><path d="M12 3s6 7 6 11.5a6 6 0 0 1-12 0C6 10 12 3 12 3Z"/></svg>オイル交換しました（今日の日付・現在距離で記録）</button>';
+    h+='</div></div>';
+    return h;
+  }).join('');
+}
+
+function vehById(id){for(var i=0;i<vehicles.length;i++)if(String(vehicles[i]['車両ID'])===String(id))return vehicles[i];return null;}
+function applySaved(saved){for(var i=0;i<vehicles.length;i++)if(String(vehicles[i]['車両ID'])===String(saved['車両ID'])){var rate=vehicles[i]['日額単価'];vehicles[i]=saved;if(saved['日額単価']==null&&rate!=null)vehicles[i]['日額単価']=rate;break;}saveCache();render();}
+
+function saveOdo(id){
+  var inp=document.getElementById('odo_'+id);if(!inp)return;
+  var val=inp.value.trim();
+  if(!val){toast('距離を入力してください');return;}
+  var n=num(val),v=vehById(id),cur=v?num(v['現在距離']):0;
+  if(n<=0){toast('正しい距離を入力してください');return;}
+  if(cur>0&&n<cur&&!confirm('現在の記録（'+km(cur)+'）より小さい値です。このまま更新しますか？'))return;
+  callGAS({action:'vehicleOdo',data:{'車両ID':id,'現在距離':n}}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'更新失敗');
+    applySaved(res.vehicle);toast('距離を更新しました');
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+function doOil(id){
+  var v=vehById(id);if(!v)return;
+  var inp=document.getElementById('odo_'+id);
+  var typed=inp&&inp.value.trim()?num(inp.value.trim()):0;
+  var msg=typed>0?'今日の日付・'+km(typed)+'でオイル交換を記録します。よろしいですか？'
+                 :'今日の日付・現在距離（'+(num(v['現在距離'])?km(num(v['現在距離'])):'未入力')+'）でオイル交換を記録します。よろしいですか？\n※先に距離を入力すると、その値で記録されます。';
+  if(!confirm(msg))return;
+  var data={'車両ID':id,'オイル交換':1};
+  if(typed>0)data['現在距離']=typed;
+  callGAS({action:'vehicleOdo',data:data}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'記録失敗');
+    applySaved(res.vehicle);toast('オイル交換を記録しました');
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+
+loadCache();
+if(vehicles.length){render();load(true);}else{load();}
+</script>
+<script src="../common_ui.js?v=20260619-material-action-fix-42"></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<!-- aitools version 5 (2026-06-17) AI見積読取タイルを追加（見積書・発注書PDFから見積明細を自動作成。リンク先 ../estimate/?ai=1 で見積請求を開きAI読取モーダルを自動表示）。 -->
+<!-- aitools version 4 (2026-06-17) AI案件読取タイルを追加（見積書・発注書PDFから案件を自動登録。リンク先 ../projects/?ocr=1 で案件管理を開きOCRモーダルを自動表示）。 -->
+<!-- aitools version 3 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
+<!-- aitools version 2 (2026-06-15) AI翻訳タイルを追加（外国人作業員とのやり取り用、日本語↔英/越/中等）。リンク先は ../translate/（画面は次工程で作成）。 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AIツール｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
+    --accent:#7c3aed;--accent-d:#6d28d9;
+    --grad:linear-gradient(92deg,#06b6d4 10%,#7c3aed 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.55;padding-bottom:30px;}
+  a,button,select,input{font-family:inherit;}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;box-shadow:0 6px 14px -10px rgba(124,58,237,.4);}
+  .hbar{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"back . right" "title title title";align-items:center;row-gap:12px;column-gap:8px;max-width:680px;margin:0 auto;}
+  .hbar .back{grid-area:back;align-self:center;}
+  .hbar .hright{grid-area:right;justify-self:end;}
+  .hbar .hcenter{grid-area:title;justify-self:center;}
+  .hbar .htxt .nm{white-space:normal;}
+  .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.06em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:9px 14px;text-decoration:none;white-space:nowrap;}
+  .back:active{box-shadow:var(--well);}
+  .hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:11px;min-width:0;}
+  .hric{width:44px;height:44px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hric svg{width:23px;height:23px;}
+  .htxt{flex:0 1 auto;min-width:0;text-align:center;}
+  .htxt .en{font-family:"Manrope",sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .htxt .nm{font-weight:700;font-size:19.5px;color:var(--ink);display:block;line-height:1.2;}
+  .hright{flex:0 0 auto;display:flex;align-items:center;gap:9px;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:15px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
+  main{padding:14px;max-width:680px;margin:0 auto;}
+  .menu{display:flex;flex-direction:column;gap:12px;}
+  .entry{position:relative;display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:16px;box-shadow:var(--rise);padding:15px 16px 15px 19px;text-decoration:none;color:inherit;overflow:hidden;}
+  .entry:active{box-shadow:var(--well);}
+  .entry::before{content:"";position:absolute;left:0;top:13px;bottom:13px;width:4px;border-radius:0 4px 4px 0;background:var(--accent);}
+  .entry .ic{width:46px;height:46px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .entry .ic svg{width:24px;height:24px;}
+  .entry .tx{flex:1;min-width:0;}
+  .entry .nm{font-size:17px;font-weight:700;color:var(--ink);}
+  .entry .ds{font-size:13px;color:var(--sub);margin-top:2px;}
+  .entry .cor{color:var(--sub);font-size:20px;flex:0 0 auto;}
+  .e-chat::before{background:#2563eb;} .e-chat .ic{color:#2563eb;}
+  .e-mat::before{background:#059669;} .e-mat .ic{color:#059669;}
+  .e-tr::before{background:#7c3aed;} .e-tr .ic{color:#7c3aed;}
+  .e-tl::before{background:#f97316;} .e-tl .ic{color:#f97316;}
+  .e-pj::before{background:#4444b8;} .e-pj .ic{color:#4444b8;}
+  .e-es::before{background:#a8851f;} .e-es .ic{color:#a8851f;}
+  .e-new{background:#fef3c7;color:#92400e;font-size:10.5px;font-weight:800;padding:2px 7px;border-radius:999px;margin-left:6px;letter-spacing:.04em;vertical-align:2px;}
+  .flow{margin-top:18px;background:var(--bg);border-radius:14px;box-shadow:var(--rise-sm);padding:14px 15px;font-size:13px;color:var(--accent-d);line-height:1.9;}
+  .flow b{color:var(--accent);}
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v5</div>
+<header>
+  <div class="hbar">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <div class="hcenter">
+      <span class="hric"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/><circle cx="12" cy="12" r="4.5"/></svg></span>
+      <div class="htxt"><span class="en">AI Tools</span><span class="nm">AIツール</span></div>
+    </div>
+    <div class="hright"><span class="hmark">Gen-Can</span></div>
+  </div>
+</header>
+
+<main>
+  <div class="menu">
+    <a class="entry e-chat" href="../ai/">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.7 8.7 0 0 1-4-1l-5 1 1-5a8.4 8.4 0 0 1-1-4 8.4 8.4 0 0 1 8.5-8.5 8.4 8.4 0 0 1 8.5 8.5z"/></svg></span>
+      <span class="tx"><span class="nm">AIアシスタント</span><span class="ds">何でも聞けるAIチャット（Google検索連携）</span></span>
+      <span class="cor">→</span>
+    </a>
+    <a class="entry e-mat" href="../materialsearch/">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+      <span class="tx"><span class="nm">材料AI検索</span><span class="ds">型番・品名をAIで検索→材料リストに追加</span></span>
+      <span class="cor">→</span>
+    </a>
+    <a class="entry e-tr" href="../transcribe/">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0M12 19v3"/></svg></span>
+      <span class="tx"><span class="nm">AI文字起こし<span class="e-new">NEW</span></span><span class="ds">話した内容を文字に。整文・要約してメール/LINEへ</span></span>
+      <span class="cor">→</span>
+    </a>
+    <a class="entry e-tl" href="../translate/">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h10M9 3v2M5 5c0 4 3 8 7 8M14 13c-2 3-5 5-9 6"/><path d="m13 21 4-10 4 10M14.5 17h5"/></svg></span>
+      <span class="tx"><span class="nm">AI翻訳<span class="e-new">NEW</span></span><span class="ds">外国人作業員とのやり取り（日本語↔英/越/中など）</span></span>
+      <span class="cor">→</span>
+    </a>
+    <a class="entry e-pj" href="../projects/?ocr=1">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/><path d="M9 12h6M9 16h4"/></svg></span>
+      <span class="tx"><span class="nm">AI案件読取<span class="e-new">NEW</span></span><span class="ds">見積書・発注書PDFから案件を自動登録</span></span>
+      <span class="cor">→</span>
+    </a>
+    <a class="entry e-es" href="../estimate/?ai=1">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 2h7l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h3z"/><path d="M9 13h6M9 17h6M9 9h2"/></svg></span>
+      <span class="tx"><span class="nm">AI見積読取<span class="e-new">NEW</span></span><span class="ds">見積書・発注書PDFから見積明細を自動作成</span></span>
+      <span class="cor">→</span>
+    </a>
+  </div>
+
+  <div class="flow">
+    <b>AIツールの使いどころ</b><br>
+    調べもの・文章作成 → <b>AIアシスタント</b>／型番から材料を探す → <b>材料AI検索</b>／長い打合せや指示を文字に → <b>AI文字起こし</b>／外国人作業員と話す → <b>AI翻訳</b>／PDFから案件登録 → <b>AI案件読取</b>／PDFから見積明細を作成 → <b>AI見積読取</b>
+  </div>
+</main>
+
+
+<script src="../config.js?v=20260619-material-action-fix-42"></script>
+<script src="../common_ui.js?v=20260619-material-action-fix-42"></script>
+</body>
+</html>

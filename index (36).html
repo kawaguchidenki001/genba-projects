@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!-- material version 8 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
+<!-- material version 7 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はrefresh()。機能・id不変 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>材料管理｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
+    --accent:#2563eb;--accent-d:#1d4ed8;
+    --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.55;padding-bottom:30px;}
+  a,button,select,input{font-family:inherit;}
+  header{position:sticky;top:0;z-index:20;background:var(--bg);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
+  .hbar{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"back . right" "title title title";align-items:center;row-gap:12px;column-gap:8px;max-width:680px;margin:0 auto;}
+  .hbar .back{grid-area:back;align-self:center;}
+  .hbar .hright{grid-area:right;justify-self:end;}
+  .hbar .hcenter{grid-area:title;justify-self:center;}
+  .hbar .htxt .nm{white-space:normal;}
+  .back{font-family:"Manrope",sans-serif;font-weight:700;font-size:11px;letter-spacing:.06em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:8px 13px;text-decoration:none;white-space:nowrap;}
+  .back:active{box-shadow:var(--well);}
+  .hic{width:40px;height:40px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;color:var(--accent);}
+  .hic svg{width:21px;height:21px;}
+  .htxt{flex:1;min-width:0;}
+  .htxt .en{font-family:"Manrope",sans-serif;font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+  .htxt .nm{font-weight:700;font-size:17px;color:var(--ink);display:block;line-height:1.2;}
+  .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:14px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
+  main{padding:14px;max-width:680px;margin:0 auto;}
+  .stats{display:flex;gap:10px;margin-bottom:16px;}
+  .stat{flex:1;background:var(--bg);border-radius:14px;box-shadow:var(--rise);padding:13px 8px;text-align:center;text-decoration:none;color:inherit;}
+  .stat:active{box-shadow:var(--well);}
+  .stat .v{font-size:27px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .stat .l{font-size:12px;color:var(--sub);margin-top:6px;font-weight:700;}
+  .stat.warn .v{color:#ea580c;}
+  .stat.alert .v{color:#b91c1c;}
+  .menu{display:flex;flex-direction:column;gap:12px;}
+  .entry{position:relative;display:flex;align-items:center;gap:14px;background:var(--bg);border-radius:16px;box-shadow:var(--rise);padding:15px 16px 15px 19px;text-decoration:none;color:inherit;overflow:hidden;}
+  .entry:active{box-shadow:var(--well);}
+  .entry::before{content:"";position:absolute;left:0;top:13px;bottom:13px;width:4px;border-radius:0 4px 4px 0;background:var(--accent);}
+  .entry .ic{width:46px;height:46px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
+  .entry .ic svg{width:24px;height:24px;}
+  .entry .tx{flex:1;min-width:0;}
+  .entry .nm{font-size:17px;font-weight:700;color:var(--ink);}
+  .entry .ds{font-size:13px;color:var(--sub);margin-top:2px;}
+  .entry .cor{color:var(--sub);font-size:20px;}
+  .e-list::before{background:#2563eb;} .e-list .ic{color:#2563eb;}
+  .e-search::before{background:#059669;} .e-search .ic{color:#059669;}
+  .e-stock::before{background:#0e7490;} .e-stock .ic{color:#0e7490;}
+  .e-order::before{background:#4f46e5;} .e-order .ic{color:#4f46e5;}
+  .flow{margin-top:18px;background:var(--bg);border-radius:14px;box-shadow:var(--rise-sm);padding:14px 15px;font-size:13px;color:var(--accent-d);line-height:1.9;}
+  .flow b{color:var(--accent);}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:30px;z-index:80;background:#1f3a52;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 20px rgba(31,58,82,.3);}
+  .toast.show{opacity:1;}
+  /* v: ヘッダー統一（中央寄せ＋更新ボタン・少し大きく） */
+  .hcenter{flex:1;display:flex;align-items:center;justify-content:center;gap:11px;min-width:0;}
+  .hright{flex:0 0 auto;display:flex;align-items:center;gap:9px;}
+  .hrf{width:42px;height:42px;border-radius:50%;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto;}
+  .hrf svg{width:19px;height:19px;}
+  .hrf:active{box-shadow:var(--well);}
+  .hic{width:44px;height:44px;}
+  .hic svg{width:23px;height:23px;}
+  .htxt{flex:0 1 auto;min-width:0;text-align:center;}
+  .htxt .en{font-size:10px;}
+  .htxt .nm{font-size:19.5px;}
+  .hmark{font-size:15px;}
+  .back{font-size:11.5px;padding:9px 14px;}
+</style>
+</head>
+<body>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v8</div>
+<header>
+  <div class="hbar">
+    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/><path d="M16 5l-8 3.5"/></svg></span><span class="htxt"><span class="en">Material</span><span class="nm">材料管理</span></span></div>
+    <div class="hright"><span class="hmark">Gen-Can</span><button class="hrf" onclick="refresh()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
+  </div>
+</header>
+
+<main>
+  <div class="stats">
+    <a class="stat warn" id="stWarn" href="../stock/"><div class="v" id="vWarn">–</div><div class="l">要発注</div></a>
+    <a class="stat alert" id="stOut" href="../stock/"><div class="v" id="vOut">–</div><div class="l">在庫切れ</div></a>
+    <a class="stat" href="../stock/"><div class="v" id="vItems">–</div><div class="l">在庫品数</div></a>
+  </div>
+
+  <div class="menu">
+    <a class="entry e-list" href="../materiallist/">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5M9 12h6M9 16h6"/></svg></span>
+      <span class="tx"><span class="nm">材料リスト</span><span class="ds">現場ごとに記入・在庫照合・発注へ</span></span>
+      <span class="cor">→</span>
+    </a>
+    <a class="entry e-search" href="../materialsearch/">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>
+      <span class="tx"><span class="nm">材料AI検索</span><span class="ds">型番をAIで検索→リストに追加して保存</span></span>
+      <span class="cor">→</span>
+    </a>
+    <a class="entry e-stock" href="../stock/">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4Z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg></span>
+      <span class="tx"><span class="nm">在庫</span><span class="ds">在庫数・棚卸・入出庫、切れたら発注へ</span></span>
+      <span class="cor">→</span>
+    </a>
+    <a class="entry e-order" href="../order/">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/><path d="M2 3h3l2.3 12.2a1.5 1.5 0 0 0 1.5 1.3h8.6a1.5 1.5 0 0 0 1.5-1.2L22 7H6"/></svg></span>
+      <span class="tx"><span class="nm">発注</span><span class="ds">仕入先ごとにメール・LINEで発注</span></span>
+      <span class="cor">→</span>
+    </a>
+  </div>
+
+  <div class="flow">
+    <b>材料の流れ</b><br>
+    ① 材料リストに記入 → ② 在庫を確認 → ③ あれば<b>出庫</b>／無ければ<b>発注</b> → ④ 入荷したら<b>入庫</b>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+<script src="../config.js?v=20260619-material-action-fix-42"></script>
+<script>
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
+function genbaSaveSession(res){
+  try{
+    if(res&&res.token)localStorage.setItem('genba_session',JSON.stringify({token:res.token,role:res.role||'general',expiresAt:res.expiresAt||0}));
+  }catch(e){}
+}
+function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
+var T_GENERAL='';
+var CACHE='genba_material_hub';
+function tok(){return localStorage.getItem('genba_admin')||genbaSessionTok();}
+function num(v){if(v==null||v==='')return 0;var n=Number(String(v).replace(/[,，]/g,''));return isNaN(n)?0:n;}
+function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},2400);}
+
+function callGAS(params){
+  return new Promise(function(resolve,reject){
+    var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+    var timer=setTimeout(function(){cleanup();reject(new Error('timeout'));},20000);
+    function cleanup(){try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(timer);}
+    window[cb]=function(res){cleanup();resolve(res);};
+    var q=Object.assign({secret:tok(),callback:cb},params);
+    s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+    s.onerror=function(){cleanup();reject(new Error('error'));};document.head.appendChild(s);
+  });
+}
+function applySummary(products){
+  var warn=0,out=0;
+  (products||[]).forEach(function(p){
+    var stk=num(p['在庫数']), min=num(p['発注点']);
+    if(stk<=0) out++;
+    else if(min>0 && stk<=min) warn++;
+  });
+  document.getElementById('vWarn').textContent=warn;
+  document.getElementById('vOut').textContent=out;
+  document.getElementById('vItems').textContent=(products||[]).length;
+}
+function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'null');if(c&&c.products){applySummary(c.products);}}catch(e){}}
+function refresh(){
+  callGAS({action:'products'}).then(function(res){
+    if(!res.ok)return;
+    var products=res.products||[];
+    try{localStorage.setItem(CACHE,JSON.stringify({products:products}));}catch(e){}
+    applySummary(products);
+  }).catch(function(){});
+}
+loadCache();
+refresh();
+</script>
+<script src="../common_ui.js?v=20260619-material-action-fix-42"></script>
+</body>
+</html>

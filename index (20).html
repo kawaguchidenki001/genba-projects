@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<!-- demo page app v2026.06.19-42 Code_v142 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>デモモード｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--blue:#2563eb;--cyan:#06b6d4;--purple:#7c3aed;--line:#d4e4f0;--ok:#15803d;--warn:#b45309;--card:#f5f9fd;--shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #fff;}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15.5px;line-height:1.65;min-height:100vh}.wrap{max-width:1120px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 120px}.top{display:flex;align-items:center;gap:10px;margin-bottom:14px}.back{width:42px;height:42px;border-radius:14px;border:0;background:#e8ecf2;box-shadow:var(--shadow);color:#1f5fa8;font-size:20px;font-weight:800;cursor:pointer}.head{flex:1;min-width:0}.kicker{font-family:Manrope,sans-serif;font-weight:800;letter-spacing:.18em;font-size:10px;color:var(--sub);text-transform:uppercase}h1{font-size:26px;color:#1f5fa8;line-height:1.25}.badge{display:inline-flex;align-items:center;border-radius:999px;background:#dfeaf6;color:#1f5fa8;font-family:Manrope,sans-serif;font-size:11px;font-weight:800;padding:5px 10px}.hero,.card{background:#e8ecf2;border-radius:22px;box-shadow:var(--shadow);padding:18px;margin:14px 0}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;align-items:center;background:linear-gradient(135deg,#eef9ff,#f6f0ff)}.hero h2{font-size:25px;color:#123e68;margin-bottom:6px}.small{font-size:12.5px;color:var(--sub)}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px}.btn{border:0;border-radius:14px;padding:12px 16px;font-weight:900;background:linear-gradient(92deg,var(--cyan),var(--blue) 60%,var(--purple));color:#fff;box-shadow:0 8px 18px rgba(37,99,235,.22);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.btn.secondary{background:#edf3fa;color:#1f5fa8;box-shadow:4px 4px 9px #cdd3dc,-4px -4px 9px #fff;border:1px solid #d7e5f2}.heroMock{background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.9);border-radius:20px;padding:14px}.mrow{display:flex;gap:8px;margin:8px 0}.mchip{background:#fff;border:1px solid #dbe8f3;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900;color:#1f5fa8}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.feature{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:18px;padding:15px;min-height:150px}.feature .ic{font-size:26px;margin-bottom:8px}.feature h3{font-size:17px;color:#1f5fa8;margin-bottom:5px}.demoStage{display:grid;grid-template-columns:300px 1fr;gap:14px}.side{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:18px;padding:14px}.folderList{display:grid;gap:8px}.folder{border:0;background:#fff;border:1px solid #dbe8f3;border-radius:14px;padding:11px 12px;text-align:left;font-weight:900;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:9px}.folder.active{outline:3px solid #bfdbfe;background:#eff6ff}.stageMain{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:18px;padding:14px}.crumb{display:flex;gap:6px;flex-wrap:wrap;color:#6b7f92;font-size:12px;font-weight:800;margin-bottom:12px}.filesGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.fileCard{background:#fff;border:1px solid #dbe8f3;border-radius:16px;padding:13px;min-height:110px;cursor:pointer}.fileCard b{display:block;font-size:14px;color:#1f3a52;margin-top:5px}.fileCard span{font-size:12px;color:#6b7f92}.photoGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.photo{background:#fff;border:1px solid #dbe8f3;border-radius:14px;overflow:hidden;cursor:pointer;position:relative}.photo.selected{outline:3px solid #2563eb}.photo .img{height:95px;background:linear-gradient(135deg,#dbeafe,#fef3c7);display:flex;align-items:center;justify-content:center;font-size:30px}.photo:nth-child(2n) .img{background:linear-gradient(135deg,#dcfce7,#dbeafe)}.photo:nth-child(3n) .img{background:linear-gradient(135deg,#fce7f3,#e0e7ff)}.photo .cap{font-size:11px;color:#4b6478;padding:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.no{position:absolute;top:6px;left:6px;background:#2563eb;color:#fff;border-radius:999px;width:26px;height:26px;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:900}.photo.selected .no{display:flex}.preview{display:grid;gap:8px}.preRow{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:#fff;border:1px solid #dbe8f3;border-radius:14px;padding:8px}.preThumb{height:48px;border-radius:10px;background:linear-gradient(135deg,#dbeafe,#fef3c7);display:flex;align-items:center;justify-content:center}.status{display:inline-flex;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:900}.status.ok{background:#dcfce7;color:var(--ok)}.status.warn{background:#fef3c7;color:var(--warn)}@media(max-width:840px){.hero,.demoStage{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.filesGrid{grid-template-columns:repeat(2,1fr)}.photoGrid{grid-template-columns:repeat(2,1fr)}.btn{width:100%}}
+</style>
+<script src="../config.js?v=20260619-material-action-fix-42"></script>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><button class="back" onclick="location.href='../'">←</button><div class="head"><div class="kicker">Gen-Can Demo</div><h1>デモモード</h1></div><span class="badge" id="appBadge">v2026.06.19-42</span></div>
+  <div class="hero">
+    <div><h2>販売説明・社内確認用のサンプル画面</h2><p class="small">実際のスプレッドシートやGoogleドライブには接続せず、Gen-Canの操作感を安全に確認できます。お客様へ見せる時や、機能説明の練習に使えます。</p><div class="actions"><button class="btn" onclick="startGuidedDemo()">デモを開始</button><button class="btn secondary" onclick="resetDemo()">選択をリセット</button><a class="btn secondary" href="../help/">操作ガイド</a></div></div>
+    <div class="heroMock"><div class="mrow"><span class="mchip">案件 12件</span><span class="mchip">写真 48枚</span><span class="mchip">台帳 3冊</span></div><div class="mrow"><span class="mchip">日報提出 5/6名</span><span class="mchip">車両期限 1件</span></div><p class="small">デモ会社：河口電機サンプル / 権限：管理者デモ</p></div>
+  </div>
+  <div class="grid">
+    <div class="feature"><div class="ic">📁</div><h3>ファイル管理</h3><p class="small">Google Drive風に、区分 → 顧客 → 現場 → フォルダを開く操作を確認できます。</p></div>
+    <div class="feature"><div class="ic">📸</div><h3>工事写真台帳</h3><p class="small">写真を選択し、選択順・プレビュー・PDF/Excel作成の流れを説明できます。</p></div>
+    <div class="feature"><div class="ic">⚡</div><h3>現場クイック</h3><p class="small">現場でよく使う日報・ファイル・工事写真・打刻への導線を確認できます。</p></div>
+  </div>
+  <div class="card">
+    <h2 style="font-size:20px;color:#1f5fa8;margin-bottom:8px;">ファイル・工事写真台帳の操作デモ</h2>
+    <div class="demoStage">
+      <div class="side"><div class="small" style="font-weight:900;margin-bottom:8px;">サンプル階層</div><div class="folderList" id="folderList"></div></div>
+      <div class="stageMain"><div class="crumb" id="crumb"></div><div id="stageBody"></div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2 style="font-size:20px;color:#1f5fa8;margin-bottom:8px;">台帳作成プレビュー</h2>
+    <div class="small" id="selText">0枚選択中</div>
+    <div class="preview" id="preview"></div>
+    <div class="actions"><button class="btn" onclick="mockOutput('PDF')">PDFで作成</button><button class="btn secondary" onclick="mockOutput('Excel')">Excelで作成</button><span class="status warn" id="outMsg" style="display:none"></span></div>
+  </div>
+</div>
+<script>
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-42';document.getElementById('appBadge').textContent=APP_VERSION;
+var nodes=[
+ {id:'root',name:'民間',icon:'🏢',type:'folder',children:['cust']},
+ {id:'cust',name:'サンプル建設株式会社',icon:'📁',type:'folder',children:['project']},
+ {id:'project',name:'岐阜市〇〇電気設備改修工事',icon:'📁',type:'folder',children:['photo','draw','docs']},
+ {id:'photo',name:'写真',icon:'📸',type:'folder',children:['before','work','after']},
+ {id:'draw',name:'図面',icon:'📐',type:'files',files:[['幹線系統図.pdf','PDF'],['照明器具配置図.pdf','PDF'],['盤結線図.xlsx','Excel']]},
+ {id:'docs',name:'書類',icon:'📄',type:'files',files:[['施工計画書.docx','Word'],['安全書類一式.pdf','PDF']]},
+ {id:'before',name:'施工前',icon:'📷',type:'photos'},
+ {id:'work',name:'施工中',icon:'📷',type:'photos'},
+ {id:'after',name:'施工後',icon:'📷',type:'photos'}
+];
+var photos={before:['施工前_分電盤既設.jpg','施工前_配管ルート.jpg','施工前_天井内状況.jpg'],work:['施工中_配管工事.jpg','施工中_入線作業.jpg','材料検収_ケーブル.jpg','試験状況_絶縁測定.jpg'],after:['施工後_分電盤更新.jpg','施工後_照明点灯.jpg','完成_全景.jpg']};
+var cur='root', stack=['root'], selected=[];
+function n(id){return nodes.filter(function(x){return x.id===id})[0];}
+function renderFolders(){var el=document.getElementById('folderList');el.innerHTML='';stack.forEach(function(id,i){var o=n(id);var b=document.createElement('button');b.className='folder '+(i===stack.length-1?'active':'');b.innerHTML='<span>'+o.icon+'</span><span>'+o.name+'</span>';b.onclick=function(){stack=stack.slice(0,i+1);cur=id;render();};el.appendChild(b);});}
+function render(){renderFolders();var c=n(cur), crumb=document.getElementById('crumb');crumb.innerHTML=stack.map(function(id){return '<span>'+n(id).name+'</span>';}).join('<span>›</span>');var body=document.getElementById('stageBody');body.innerHTML='';if(c.children){var grid=document.createElement('div');grid.className='filesGrid';c.children.forEach(function(id){var o=n(id);var card=document.createElement('div');card.className='fileCard';card.innerHTML='<div style="font-size:30px">'+o.icon+'</div><b>'+o.name+'</b><span>フォルダを開く</span>';card.onclick=function(){cur=id;stack.push(id);render();};grid.appendChild(card);});body.appendChild(grid);}else if(c.type==='files'){var grid=document.createElement('div');grid.className='filesGrid';(c.files||[]).forEach(function(f){var card=document.createElement('div');card.className='fileCard';card.innerHTML='<div style="font-size:30px">📄</div><b>'+f[0]+'</b><span>'+f[1]+'ファイル</span>';grid.appendChild(card);});body.appendChild(grid);}else{renderPhotos(c.id,body);}renderPreview();}
+function renderPhotos(id,body){var g=document.createElement('div');g.className='photoGrid';(photos[id]||[]).forEach(function(name){var p=document.createElement('div');p.className='photo '+(selected.indexOf(name)>=0?'selected':'');p.onclick=function(){togglePhoto(name);};p.innerHTML='<span class="no">'+(selected.indexOf(name)+1)+'</span><div class="img">🖼</div><div class="cap">'+name+'</div>';g.appendChild(p);});body.appendChild(g);}
+function togglePhoto(name){var i=selected.indexOf(name);if(i>=0)selected.splice(i,1);else selected.push(name);render();}
+function renderPreview(){document.getElementById('selText').textContent=selected.length+'枚選択中（選択順で出力）';var p=document.getElementById('preview');p.innerHTML=selected.length?selected.map(function(x,i){return '<div class="preRow"><div class="preThumb">'+(i+1)+'</div><div><b>'+x+'</b><div class="small">工種：電気設備工事 / 撮影箇所：'+x.replace(/\.[^.]+$/,'')+'</div></div><span class="status ok">選択中</span></div>';}).join(''):'<div class="small">写真フォルダを開いて写真を選択してください。</div>';}
+function resetDemo(){selected=[];cur='root';stack=['root'];document.getElementById('outMsg').style.display='none';render();}
+function startGuidedDemo(){cur='project';stack=['root','cust','project'];render();window.scrollTo({top:document.querySelector('.card').offsetTop,behavior:'smooth'});}
+function mockOutput(fmt){var m=document.getElementById('outMsg');m.style.display='inline-flex';m.textContent=selected.length?fmt+'台帳を作成する流れを確認しました（デモ）':'先に写真を選択してください';}
+render();
+</script>
+<script src="../common_ui.js?v=20260619-material-action-fix-42"></script>
+</body>
+</html>

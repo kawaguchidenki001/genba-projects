@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<!-- diagnosis page app v2026.06.19-42 Code_v142 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>エラー診断｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--blue:#2563eb;--ok:#15803d;--warn:#b45309;--ng:#dc2626;--line:#d4e4f0;--card:#f5f9fd;}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;}
+body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.65;}
+.wrap{max-width:980px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 110px;}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.back{width:42px;height:42px;border-radius:14px;border:0;background:#e8ecf2;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #fff;color:#1f5fa8;font-size:20px;font-weight:800;cursor:pointer;}
+.head{flex:1;min-width:0}.kicker{font-family:Manrope,sans-serif;font-weight:800;letter-spacing:.18em;font-size:10px;color:var(--sub);text-transform:uppercase;}
+h1{font-size:24px;color:#1f5fa8;line-height:1.25}.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#dfeaf6;color:#1f5fa8;font-family:Manrope,sans-serif;font-size:11px;font-weight:800;padding:5px 10px;}
+.card{background:#e8ecf2;border-radius:20px;box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #fff;padding:16px;margin:14px 0;}
+.card h2{font-size:18px;color:#1f5fa8;margin-bottom:8px}.small{font-size:12.5px;color:var(--sub);}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.btn{border:0;border-radius:14px;padding:12px 16px;font-weight:900;background:#2563eb;color:#fff;box-shadow:4px 4px 9px #cdd3dc,-4px -4px 9px #fff;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px}.btn.secondary{background:#edf3fa;color:#1f5fa8}.btn.warn{background:#b45309;color:#fff}.btn.ok{background:#15803d;color:#fff}.btn:disabled{opacity:.55;cursor:not-allowed;}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.metric{background:#edf3fa;border:1px solid #d7e5f2;border-radius:16px;padding:13px;min-height:84px}.metric b{display:block;font-size:24px;color:#1f5fa8;line-height:1.1}.metric span{display:block;color:var(--sub);font-size:12px;font-weight:900;margin-top:4px}.status{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900}.status.ok{background:#dcfce7;color:var(--ok)}.status.warn{background:#fef3c7;color:var(--warn)}.status.ng{background:#fee2e2;color:var(--ng)}
+.err{background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:900;display:none}.okbox{background:#dcfce7;color:#166534;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:900;display:none}.note{background:#edf7ff;border:1px solid #d7e7f8;border-radius:14px;padding:12px;color:#35566f;font-size:13px;font-weight:700;}
+.checks{display:grid;gap:10px}.check{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:16px;padding:13px 14px;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}.check .mark{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:900}.check.ok .mark{background:#dcfce7;color:#15803d}.check.warn .mark{background:#fef3c7;color:#b45309}.check.ng .mark{background:#fee2e2;color:#dc2626}.check h3{font-size:16px;color:#1f5fa8;margin:1px 0 4px}.check .fix{font-size:12.5px;color:#5e7a92;margin-top:6px;font-weight:800}.kv{display:grid;grid-template-columns:170px 1fr;gap:6px 10px;font-size:13px;margin-top:10px}.kv b{color:#5e7a92}.mono{font-family:Manrope,monospace;word-break:break-all}.loading{position:fixed;inset:0;background:rgba(232,236,242,.72);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(3px)}.loading.show{display:flex}.spin{width:44px;height:44px;border-radius:999px;border:5px solid #dbe8f3;border-top-color:#2563eb;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.kv{grid-template-columns:1fr}.actions .btn{flex:1 1 100%}h1{font-size:22px}}
+</style>
+<script src="../config.js?v=20260619-material-action-fix-42"></script>
+</head>
+<body>
+<div class="loading" id="loading"><div class="spin"></div></div>
+<div class="wrap">
+  <div class="top"><button class="back" onclick="location.href='../'">←</button><div class="head"><div class="kicker">Gen-Can Diagnosis</div><h1>エラー診断</h1></div><span class="badge" id="appBadge">v2026.06.19-42</span></div>
+  <div class="card"><div id="mainStatus" class="status warn">未診断</div><p class="small" style="margin-top:10px;">ログインできない、通信エラー、ファイル・写真が開かない、GAS更新漏れなどをまとめて確認します。</p><div class="actions"><button class="btn" onclick="runAll()">診断を実行</button><button class="btn secondary" onclick="pingOnly()">GAS疎通だけ確認</button><button class="btn warn" onclick="repairSetup()">不足項目を修復</button><a class="btn secondary" href="../setup/">初期設定へ</a><a class="btn secondary" href="../version/">更新履歴へ</a></div><div class="err" id="err"></div><div class="okbox" id="okbox"></div></div>
+  <div class="grid" id="metrics"></div>
+  <div class="card"><h2>ブラウザ側チェック</h2><div class="checks" id="clientChecks"></div></div>
+  <div class="card"><h2>GAS・Drive・シート診断</h2><div class="checks" id="serverChecks"><div class="note">「診断を実行」を押すと詳細を確認します。</div></div></div>
+  <div class="card"><h2>確認メモ</h2><div class="kv" id="memo"></div></div>
+</div>
+<script>
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-42';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-material-action-fix-42';
+document.getElementById('appBadge').textContent=APP_VERSION;
+function esc(s){return String(s==null?'':s).replace(/[&<>\"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c;});}
+function showLoad(b){document.getElementById('loading').classList.toggle('show',!!b);}function setErr(t){var e=document.getElementById('err');e.style.display=t?'block':'none';e.textContent=t||'';}function setOk(t){var e=document.getElementById('okbox');e.style.display=t?'block':'none';e.textContent=t||'';}
+function session(){try{return JSON.parse(localStorage.getItem('genba_session')||'null');}catch(e){return null;}}function user(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}function token(){var s=session();return s&&(s.token||s.secret)||'';}
+function jsonp(params){return new Promise(function(resolve,reject){if(!GAS_URL){reject(new Error('config.js の GAS_URL が空です'));return;}var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6);params=params||{};params.callback=cb;params._ts=Date.now();params._build=BUILD_ID;if(token()&&!params.secret)params.secret=token();var s=document.createElement('script'),timer=setTimeout(function(){finish('timeout');},25000),done=false;function finish(kind,res){if(done)return;done=true;clearTimeout(timer);try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);if(kind==='ok'){if(res&&res.ok===false)reject(new Error(res.error||'GASエラー'));else resolve(res||{});}else reject(new Error(kind==='timeout'?'タイムアウト':'通信エラー'));}window[cb]=function(res){finish('ok',res);};s.onerror=function(){finish('error');};s.src=GAS_URL+'?'+Object.keys(params).map(function(k){var v=typeof params[k]==='object'?JSON.stringify(params[k]):params[k];return encodeURIComponent(k)+'='+encodeURIComponent(v);}).join('&');document.head.appendChild(s);});}
+function mark(status){return status==='ok'?'✓':(status==='warn'?'!':'×');}function checkHtml(c){return '<div class="check '+esc(c.status||'ok')+'"><div class="mark">'+mark(c.status)+'</div><div><h3>'+esc(c.title)+'</h3><div>'+esc(c.detail||'')+'</div>'+(c.fix?'<div class="fix">対処：'+esc(c.fix)+'</div>':'')+'</div></div>';}
+function clientChecks(){var arr=[];arr.push({title:'config.js',status:GAS_URL?'ok':'ng',detail:GAS_URL?'GAS_URL が設定されています。':'GAS_URL が空です。',fix:'config.js の GAS_URL をWebアプリURLにしてください。'});arr.push({title:'GAS_URL形式',status:/script\.google\.com\/macros\/s\//.test(GAS_URL)?'ok':'warn',detail:GAS_URL||'未設定',fix:'Google Apps ScriptのWebアプリURLを設定してください。'});arr.push({title:'ログインセッション',status:token()?'ok':'warn',detail:token()?'ブラウザにログイントークンがあります。':'ログイントークンがありません。',fix:'ログインし直してください。'});var u=user();arr.push({title:'ユーザー情報',status:u?'ok':'warn',detail:u?(u['氏名']||u['ログインID']||'保存済みユーザー情報あり'):'ユーザー情報が保存されていません。',fix:'ログインし直してください。'});arr.push({title:'ネットワーク',status:navigator.onLine?'ok':'ng',detail:navigator.onLine?'オンラインです。':'オフラインの可能性があります。',fix:'Wi-Fi/モバイル通信を確認してください。'});arr.push({title:'画面バージョン',status:'ok',detail:APP_VERSION+' / '+BUILD_ID,fix:''});document.getElementById('clientChecks').innerHTML=arr.map(checkHtml).join('');return arr;}
+function renderMetrics(res){var s=res&&res.summary||{};document.getElementById('metrics').innerHTML='<div class="metric"><b>'+esc(APP_VERSION)+'</b><span>アプリ</span></div><div class="metric"><b>'+esc(res&&res.gasFile||'未確認')+'</b><span>GAS</span></div><div class="metric"><b>'+esc(s.ok||0)+'</b><span>OK</span></div><div class="metric"><b>'+esc((s.warn||0)+' / '+(s.ng||0))+'</b><span>注意 / NG</span></div>';}
+function renderMemo(res){var ss=res&&res.setup||{};var html='';html+='<b>GAS_URL</b><span class="mono">'+esc(GAS_URL||'未設定')+'</span>';html+='<b>Build</b><span>'+esc(BUILD_ID)+'</span>';html+='<b>Drive親フォルダ</b><span>'+esc(ss.parentFolderName||'未確認')+'</span>';html+='<b>スプレッドシート</b><span>'+esc(ss.spreadsheetName||'未確認')+'</span>';html+='<b>診断時刻</b><span>'+esc(res&&res.serverTime||new Date().toISOString())+'</span>';document.getElementById('memo').innerHTML=html;}
+function pingOnly(){setErr('');setOk('');showLoad(true);jsonp({action:'ping'}).then(function(res){showLoad(false);setOk('GAS疎通OK：'+(res.gasFile||res.version||'応答あり'));renderMetrics(res);renderMemo(res);}).catch(function(e){showLoad(false);setErr(e.message+'。config.js のGAS_URL、GASの公開範囲、デプロイ更新を確認してください。');});}
+function runAll(){setErr('');setOk('');clientChecks();showLoad(true);jsonp({action:'diagnosisStatus'}).then(function(res){showLoad(false);var st=document.getElementById('mainStatus');st.className='status '+((res.summary&&res.summary.ng)?'ng':((res.summary&&res.summary.warn)?'warn':'ok'));st.textContent=(res.summary&&res.summary.ng)?'NGあり':((res.summary&&res.summary.warn)?'注意あり':'診断OK');document.getElementById('serverChecks').innerHTML=(res.checks||[]).map(checkHtml).join('')||'<div class="note">診断結果がありません。</div>';renderMetrics(res);renderMemo(res);}).catch(function(e){showLoad(false);setErr(e.message+'。管理者権限でログインしているか、Code_v142.gsを新バージョンで再デプロイしたか確認してください。');renderMetrics({});});}
+function repairSetup(){if(!confirm('不足シート・不足列、Drive親フォルダなどを修復します。既存データは削除しません。実行しますか？'))return;setErr('');setOk('');showLoad(true);jsonp({action:'diagnosisRepair'}).then(function(res){showLoad(false);setOk('修復を実行しました。もう一度診断します。');runAll();}).catch(function(e){showLoad(false);setErr(e.message+'。管理者権限でログインしてください。');});}
+clientChecks();renderMetrics({});renderMemo({});
+</script>
+<script src="../common_ui.js?v=20260619-material-action-fix-42"></script>
+</body>
+</html>
