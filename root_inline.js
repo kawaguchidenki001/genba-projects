@@ -1,7 +1,7 @@
 
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-42';
-var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260619-material-action-fix-42';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.7';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-7-audit';
 (function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
 
 function genbaSessionTok(){
@@ -130,6 +130,34 @@ function doLogin(){
   }
   tryLogin();
 }
+
+function isTestLoginVisible_(){
+  try{
+    var cfg=window.GENBA_CONFIG||{};
+    var q=new URLSearchParams(location.search||'');
+    return !!cfg.TEST_LOGIN_ENABLED && (q.get('test')==='1' || q.get('testlogin')==='1');
+  }catch(e){return false;}
+}
+function setupTestLoginButton_(){
+  var show=isTestLoginVisible_();
+  var b=document.getElementById('testLoginBtn'), n=document.getElementById('testLoginNote');
+  if(b)b.style.display=show?'block':'none';
+  if(n)n.style.display=show?'block':'none';
+}
+function doTestLogin(){
+  if(!isTestLoginVisible_()){setErr('テストログインは無効です');return;}
+  setErr('');var btn=document.getElementById('testLoginBtn');if(btn){btn.disabled=true;btn.textContent='テスト確認中…';}
+  showLoad();
+  jsonpCall_({action:'testLogin'},function(res){
+    hideLoad();if(btn){btn.disabled=false;btn.textContent='テストログイン';}
+    if(res&&res.ok&&res.worker){genbaSaveSession(res);localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);}
+    else setErr((res&&res.error)||'テストログインできませんでした');
+  },function(kind){
+    hideLoad();if(btn){btn.disabled=false;btn.textContent='テストログイン';}
+    setErr('テストログイン通信エラー：GAS側のtestLogin有効化と再デプロイを確認してください（'+kind+'）');
+  },25000);
+}
+setupTestLoginButton_();
 function logout(){genbaClearSession();localStorage.removeItem('genba_user');location.reload();}
 function jsonpGet(action,onOk,extra){
   var params={action:action,secret:genbaSessionTok()};

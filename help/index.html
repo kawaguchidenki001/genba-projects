@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- help page app v2026.06.19-42 Code_v142 -->
+<!-- help page app v2026.06.20-43.7 Code_v143 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -21,14 +21,14 @@ body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",san
 h2.sec{font-size:18px;color:#1f5fa8;margin-bottom:8px;}ol{padding-left:1.35em;}li{margin:.25em 0;}.tips{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}.tip{background:var(--card);border:1px solid #dbe8f3;border-radius:16px;padding:13px;}.tip b{display:block;color:#1f5fa8;margin-bottom:4px;}.status{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:800;}.status.ok{background:#dcfce7;color:var(--ok);}.status.warn{background:#fef3c7;color:var(--warn);}.status.ng{background:#fee2e2;color:var(--ng);}.kbd{font-family:Manrope,sans-serif;background:#fff;border:1px solid #d8e4ef;border-radius:8px;padding:1px 7px;font-size:12px;font-weight:800;}.checklist{display:grid;gap:8px;margin-top:8px;}.check{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:13px;padding:10px 12px;}.check:before{content:'✓';display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:999px;background:#dcfce7;color:#15803d;font-weight:900;margin-right:8px;}
 @media(max-width:720px){.nav{grid-template-columns:repeat(2,1fr);}.tips{grid-template-columns:1fr;}h1{font-size:22px;}.btn{width:100%;}}
 </style>
-<script src="../config.js?v=20260619-material-action-fix-42"></script>
+<script src="../config.js?v=20260620-v43-7-audit"></script>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
-    <button class="back" onclick="location.href='../'">←</button>
+    <button class="back" onclick="location.href='../'">← メニュー</button>
     <div class="head"><div class="kicker">Gen-Can Help</div><h1>操作ガイド</h1></div>
-    <span class="badge" id="appBadge">v2026.06.19-42</span>
+    <span class="badge" id="appBadge">v2026.06.20-43.7</span>
   </div>
 
   <div class="hero">
@@ -150,10 +150,10 @@ h2.sec{font-size:18px;color:#1f5fa8;margin-bottom:8px;}ol{padding-left:1.35em;}l
   <div class="card"><h2>最終チェック画面</h2><div class="tip"><b>更新後の確認</b>メニュー → 最終チェックで、GAS接続、主要画面、バージョン反映をまとめて確認できます。</div><div class="tip"><b>表示がおかしい場合</b>最終チェックの「画面キャッシュ削除」を実行してから、Ctrl + F5で再読み込みしてください。</div></div>
 </div>
 <script>
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.19-42';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.7';
 document.getElementById('appBadge').textContent=APP_VERSION;
 </script>
-<script src="../common_ui.js?v=20260619-material-action-fix-42"></script>
+<script src="../common_ui.js?v=20260620-v43-7-audit"></script>
 <script>try{console.log("v29 初期設定ウィザード追加");}catch(e){}</script>
 
 <section class="card" style="margin-top:14px"><h3>アップデート手順</h3><p>GitHub側の上書き、GAS側のCodeファイル更新、再デプロイ手順を確認できます。</p><div class="links"><a href="../update/">アップデート手順を開く →</a></div></section>

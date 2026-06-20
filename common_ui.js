@@ -1,8 +1,8 @@
-/* Gen-Can common UI v2026.06.20-43.2 / mobile root tile layout fix */
+/* Gen-Can common UI v2026.06.20-43.7 / support center + release prep */
 (function(){
   'use strict';
   var cfg = window.GENBA_CONFIG || {};
-  var appVersion = cfg.APP_VERSION || 'v2026.06.20-43-test';
+  var appVersion = cfg.APP_VERSION || 'v2026.06.20-43.7';
   var path = location.pathname || '';
   var isRoot = /\/genba-projects\/?(?:index\.html)?$/.test(path) || /\/genba-projects$/.test(path);
   var isSub = !isRoot;
@@ -75,7 +75,7 @@
       .gc-common-ui button,.gc-common-ui .btn,.gc-common-ui a.btn,.gc-common-ui [role="button"]{min-height:44px}
       .gc-common-ui table{min-width:720px}
       .gc-common-ui .gc-table-scroll + .gc-scroll-hint{display:block}
-      .gc-common-ui:not(.gc-root-page) .grid:not(.ledger-photo-grid):not(.photo-grid),.gc-common-ui .cards,.gc-common-ui .tiles,.gc-common-ui .list-grid{grid-template-columns:1fr!important}
+      .gc-common-ui .grid:not(.ledger-photo-grid):not(.photo-grid),.gc-common-ui .cards,.gc-common-ui .tiles,.gc-common-ui .list-grid{grid-template-columns:1fr!important}
       .gc-common-ui .hide-mobile{display:none!important}
       .gc-common-ui .show-mobile{display:block!important}
     }
@@ -86,19 +86,19 @@
       .gc-common-ui .modal,.gc-common-ui dialog{max-width:calc(100vw - 18px)!important;width:calc(100vw - 18px)!important}
       .gc-common-nav{left:10px;right:10px;bottom:calc(10px + env(safe-area-inset-bottom));justify-content:space-between;border-radius:18px;padding:8px}
       .gc-common-nav a,.gc-common-nav button{flex:1;padding:0 8px;font-size:12.5px;min-width:0}
-      body.gc-common-ui.gc-root-page .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important}
-      body.gc-common-ui.gc-root-page a.sq{padding:10px!important;border-radius:15px!important;min-height:0!important}
-      body.gc-common-ui.gc-root-page .sq .ic{width:39px!important;height:39px!important}
-      body.gc-common-ui.gc-root-page .sq .nm{font-size:14px!important;line-height:1.15!important}
-      body.gc-common-ui.gc-root-page .sq .cor{top:8px!important;right:8px!important}
-      body.gc-common-ui.gc-root-page .head h1{font-size:26px!important}
+      .gc-root-page .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important}
+      .gc-root-page a.sq{padding:10px!important;border-radius:15px!important;min-height:0!important}
+      .gc-root-page .sq .ic{width:39px!important;height:39px!important}
+      .gc-root-page .sq .nm{font-size:14px!important;line-height:1.15!important}
+      .gc-root-page .sq .cor{top:8px!important;right:8px!important}
+      .gc-root-page .head h1{font-size:26px!important}
       #fileAddDock,#ledgerDock,.ledger-dock,.file-dock{left:0!important;right:0!important;bottom:0!important;border-radius:18px 18px 0 0!important;padding:10px 12px calc(10px + env(safe-area-inset-bottom))!important;max-width:none!important}
       #fileAddDock button,#ledgerDock button,.ledger-dock button,.file-dock button{min-height:50px!important}
     }
     @media(max-width:420px){
-      body.gc-common-ui.gc-root-page .grid{gap:8px!important}
-      body.gc-common-ui.gc-root-page .sq .nm{font-size:13px!important}
-      body.gc-common-ui.gc-root-page .sq .ic{width:36px!important;height:36px!important}
+      .gc-root-page .grid{gap:8px!important}
+      .gc-root-page .sq .nm{font-size:13px!important}
+      .gc-root-page .sq .ic{width:36px!important;height:36px!important}
     }
   `;
   document.head.appendChild(style);

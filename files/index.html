@@ -1,4 +1,4 @@
-<!-- Gen-Can files app v2026.06.20-43.4 / ledger UI + cache route fix / Code_v143 -->
+<!-- Gen-Can files app v2026.06.20-43.7 / ledger UI + cache route fix / Code_v143 -->
 <!DOCTYPE html>
 <!-- files version 51 (2026-06-18) 写真ドライブを階層型に変更：官公庁/民間など → 顧客 → 現場 → 写真フォルダの順に開く。 -->
 <!-- files version 50 (2026-06-18) 初期画面からGoogleドライブ風：現場フォルダをカード表示し、タップで写真フォルダを開く。 -->
@@ -315,7 +315,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.6</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.7</div>
 <header>
   <div class="hbar">
     <a class="back" id="mainBack" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -454,11 +454,11 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260620-v43-test-login-1"></script>
+<script src="../config.js?v=20260620-v43-7-audit"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43-test';
-var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-test-login-1';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.7';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-7-audit';
 try{localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}
 
 function genbaSessionTok(){
@@ -855,7 +855,7 @@ function renderLedgerPhotoCard_(f){
   var id=String(f&&f.id||'');
   if(id)ledgerPhotoMetaMap[id]=f||{};
   var cand=isLedgerCandidate(f);
-  // v43.3: 台帳候補は最初から自動選択しない。必要な時だけ「候補選択」で選びます。
+  // v43.7: 台帳候補は最初から自動選択しない。必要な時だけ「候補選択」で選びます。
   var isSel=!!ledgerSelectionMap[id];
   var a=document.createElement('div'); a.className='ph'+(isSel?' selected':''); a.id='ph_'+id; a.dataset.id=id; a.dataset.candidate=cand?'1':'0';
   a.onclick=function(){togglePhSel(this);};
@@ -1515,7 +1515,7 @@ function renderPhotoCache(){
   list.forEach(function(f){
     var cand=isLedgerCandidate(f), id=String(f.id||'');
     if(id)ledgerPhotoMetaMap[id]=f||{};
-    // v43.3: 台帳候補は自動選択しない
+    // v43.7: 台帳候補は自動選択しない
     var a=document.createElement('div');a.className='ph'+(ledgerSelectionMap[id]?' selected':'');a.id='ph_'+id;a.dataset.id=id;a.dataset.candidate=cand?'1':'0';a.onclick=function(){togglePhSel(this);};
     var tw=document.createElement('div');tw.className='thumbWrap';
     if(cand){var bd=document.createElement('span');bd.className='candidateBadge';bd.textContent='台帳候補';tw.appendChild(bd);}
@@ -1827,7 +1827,7 @@ var toastT;function toast(m){var t=document.getElementById('toast');t.textConten
   });
 })();
 
-try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';var _b=document.getElementById('mainBack');if(_b){_b.href='../photos/?v=43-6';_b.textContent='← 工事写真';}driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
+try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';var _b=document.getElementById('mainBack');if(_b){_b.href='../photos/?v=43-7';_b.textContent='← 工事写真';}driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
 // 起動時は認証トークンを確認してから表示します。期限切れの保存データで誤操作しないようにします。
 try{updateFileAddDock();}catch(e){}
 if(!genbaSessionTok()){
@@ -1838,6 +1838,6 @@ if(!genbaSessionTok()){
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="../common_ui.js?v=20260620-v43-6-ui-audit"></script>
+<script src="../common_ui.js?v=20260620-v43-7-audit"></script>
 </body>
 </html>
