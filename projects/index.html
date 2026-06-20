@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- projects version 49 (2026-06-15) ヘッダー案A化(2段・CSSグリッド)。管理者ボタン(admBtn)を非表示(管理者状態は全画面共有)。 CSSのみ・HTML/JS/id不変・GAS変更なし。 -->
+<!-- projects version 50 (2026-06-15) ヘッダー案A化(2段・CSSグリッド)。管理者ボタン(admBtn)を非表示(管理者状態は全画面共有)。 CSSのみ・HTML/JS/id不変・GAS変更なし。 -->
 <!-- projects version 48 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。操作行hd2は同期表示を非表示化・管理者🔑保持。更新はreload()。 機能・id不変 -->
 <html lang="ja">
 <head>
@@ -184,7 +184,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.8.1</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.8.2</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -574,7 +574,7 @@ function openDetail(p){
       if(m.act==='memo')  location.href='../toolbox/?memo='+cid;
       else if(m.act==='check') location.href='../toolbox/?check='+cid;
       else if(m.act==='draw')  location.href='../toolbox/?draw='+cid;
-      else if(m.act==='mat')   location.href='../material/list/?case='+cid;
+      else if(m.act==='mat')   location.href='../materiallist/?case='+cid;
       else if(m.act==='board') location.href='../toolbox/?board='+cid+'&name='+encodeURIComponent(nm)+'&loc='+encodeURIComponent(loc);
       else if(m.act==='folder'){
         if(el._url){ window.open(el._url,'_blank'); }
