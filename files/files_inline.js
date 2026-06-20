@@ -1,4 +1,5 @@
 
+/* Gen-Can files_inline v2026.06.21-43.9.4 / 案1-A 写真B64フォールバック / Code_v144 */
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
 function genbaSessionTok(){
@@ -54,6 +55,66 @@ function callGAS(params,timeoutMs,silent){
   });
 }
 function postNoCors(obj){ obj.secret=genbaSessionTok(); return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)}); }
+
+/* v144 / 案1-A: 画像表示のGAS経由フォールバック。
+   Drive直リンク(thumbnail)が失敗した時にGASからbase64で取得し、確実に表示する。
+   - 同一fileIdはインメモリ＆sessionStorageでキャッシュ
+   - 同時並列3まで、それ以上はキュー
+   - 取得失敗時のみ onFinalFail を呼ぶ（既存の絵文字fallbackを保持） */
+window._gcB64Cache=window._gcB64Cache||{};
+window._gcB64Active=window._gcB64Active||0;
+window._gcB64Queue=window._gcB64Queue||[];
+window._gcB64FailedIds=window._gcB64FailedIds||{};
+function gcB64CacheGet_(id){
+  if(window._gcB64Cache[id])return window._gcB64Cache[id];
+  try{var s=sessionStorage.getItem('gcB64_'+id); if(s){window._gcB64Cache[id]=s; return s;}}catch(e){}
+  return null;
+}
+function gcB64CacheSet_(id,dataUri){
+  window._gcB64Cache[id]=dataUri;
+  try{ if(dataUri.length<200000) sessionStorage.setItem('gcB64_'+id, dataUri); }catch(e){}
+}
+function gcB64Drain_(){
+  while(window._gcB64Active<3 && window._gcB64Queue.length){
+    var job=window._gcB64Queue.shift();
+    window._gcB64Active++;
+    gcB64Fetch_(job.id,job.imgEl,job.onFail);
+  }
+}
+function gcB64Fetch_(id,imgEl,onFail){
+  try{
+    callGAS({action:'getPhotoB64',fileId:id},20000,true).then(function(res){
+      window._gcB64Active--;
+      if(res&&res.ok&&res.b64){
+        var uri='data:'+(res.mime||'image/jpeg')+';base64,'+res.b64;
+        gcB64CacheSet_(id,uri);
+        if(imgEl){ imgEl.onerror=null; imgEl.src=uri; }
+      }else{
+        window._gcB64FailedIds[id]=1;
+        if(typeof onFail==='function') try{onFail();}catch(e){}
+      }
+      gcB64Drain_();
+    }).catch(function(){
+      window._gcB64Active--;
+      window._gcB64FailedIds[id]=1;
+      if(typeof onFail==='function') try{onFail();}catch(e){}
+      gcB64Drain_();
+    });
+  }catch(e){
+    window._gcB64Active--;
+    if(typeof onFail==='function') try{onFail();}catch(e){}
+    gcB64Drain_();
+  }
+}
+function gcImgFallback(imgEl,fileId,onFinalFail){
+  if(!fileId){ if(typeof onFinalFail==='function')onFinalFail(); return; }
+  if(window._gcB64FailedIds[fileId]){ if(typeof onFinalFail==='function')onFinalFail(); return; }
+  var cached=gcB64CacheGet_(fileId);
+  if(cached){ if(imgEl){imgEl.onerror=null; imgEl.src=cached;} return; }
+  window._gcB64Queue.push({id:fileId,imgEl:imgEl,onFail:onFinalFail});
+  gcB64Drain_();
+}
+
 function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
 
 function saveFilesCache_(){
@@ -363,7 +424,7 @@ function makeHomeDriveFileCard(f){
   var ic=driveFileIcon_(f), iconHtml;
   if(ic==='image'){
     a.className+=' image';
-    iconHtml='<img loading="lazy" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w300" onerror="this.parentNode.textContent=\'🖼\';">';
+    iconHtml='<img loading="lazy" data-gcfb="'+encodeURIComponent(f.id)+'" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w300" onerror="(function(e){var pn=e.parentNode;gcImgFallback(e,decodeURIComponent(e.getAttribute(\'data-gcfb\')||\'\'),function(){pn.textContent=\'🖼\';});})(this);">';
   }else iconHtml=ic;
   a.innerHTML='<span class="projectFolderIcon">'+iconHtml+'</span><span><div class="projectFolderName">'+escText(f.name||'ファイル')+'</div><div class="projectFolderSub">'+escText(fmtSize_(f.size)||f.mime||'ファイル')+'</div><span class="projectFolderBadge">開く</span></span>';
   return a;
@@ -398,7 +459,7 @@ function renderLedgerPhotoCard_(f){
   if(cand){var bd=document.createElement('span'); bd.className='candidateBadge'; bd.textContent='台帳候補'; tw.appendChild(bd);}
   var od=document.createElement('span'); od.className='selectOrderBadge'; tw.appendChild(od);
   var img=document.createElement('img'); img.loading='lazy'; img.src='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w700';
-  img.onerror=function(){tw.innerHTML=(cand?'<span class="candidateBadge">台帳候補</span>':'')+'<span class="selectOrderBadge"></span><span class="fallback">🖼</span>'; ledgerRefreshSelectionUI();};
+  img.onerror=function(){gcImgFallback(img,id,function(){tw.innerHTML=(cand?'<span class="candidateBadge">台帳候補</span>':'')+'<span class="selectOrderBadge"></span><span class="fallback">🖼</span>'; ledgerRefreshSelectionUI();});};
   var zb=document.createElement('button'); zb.type='button'; zb.className='photoZoomBtn'; zb.textContent='拡大'; zb.onclick=function(ev){ev.stopPropagation();openPhotoViewer(id);};
   tw.appendChild(img); tw.appendChild(zb); a.appendChild(tw);
   var meta=document.createElement('div'); meta.className='meta';
@@ -616,7 +677,7 @@ function photoViewerMove(d){
 function renderPhotoViewer_(){
   var id=photoViewerList[photoViewerIndex]||'', f=ledgerGetMeta_(id)||{};
   var img=document.getElementById('photoViewerImg'), nm=document.getElementById('photoViewerName'), sub=document.getElementById('photoViewerSub'), cnt=document.getElementById('photoViewerCount'), sel=document.getElementById('photoViewerSelect'), drv=document.getElementById('photoViewerDrive'), prev=document.getElementById('photoViewerPrev'), next=document.getElementById('photoViewerNext');
-  if(img)img.src=id?('https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1800'):'';
+  if(img){img.onerror=function(){gcImgFallback(img,id,null);}; img.src=id?('https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w1800'):'';}
   if(nm)nm.textContent=f.name||'写真';
   var order=ledgerSelectionIndex_(id);
   if(sub)sub.textContent=(order>=0?('選択順：'+(order+1)+'番'):'未選択')+'　｜　大きく確認してから選択できます';
@@ -849,7 +910,7 @@ function renderGenericDriveItems(folders,files){
   });
   (files||[]).forEach(function(f){
     var a=document.createElement('a'); a.className='driveItem'; a.href=f.url||'#'; a.target='_blank'; a.rel='noopener';
-    var ic=driveFileIcon_(f), iconHtml=(ic==='image')?'<img loading="lazy" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w300">':ic;
+    var ic=driveFileIcon_(f), iconHtml=(ic==='image')?'<img loading="lazy" data-gcfb="'+encodeURIComponent(f.id)+'" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w300" onerror="(function(e){var pn=e.parentNode;gcImgFallback(e,decodeURIComponent(e.getAttribute(\'data-gcfb\')||\'\'),function(){pn.textContent=\'🖼\';});})(this);">':ic;
     a.innerHTML='<span class="driveItemIcon">'+iconHtml+'</span><span><div class="driveItemName">'+esc(f.name||'ファイル')+'</div><div class="driveItemMeta">'+esc(fmtSize_(f.size)||f.mime||'ファイル')+'</div></span>';
     box.appendChild(a);
   });
@@ -892,7 +953,7 @@ function renderLedgerPreview(){
     var card=document.createElement('div');card.className='ledgerPreviewCard';
     var th=document.createElement('div');th.className='ledgerPreviewThumb';
     var ord=document.createElement('span');ord.className='ledgerPreviewOrder';ord.textContent=String(i+1);th.appendChild(ord);
-    var img=document.createElement('img');img.loading='lazy';img.src='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w900';img.onclick=function(){openPhotoViewer(id);};img.style.cursor='zoom-in';img.onerror=function(){th.innerHTML='<span class="ledgerPreviewOrder">'+(i+1)+'</span><span class="fallback">🖼</span>';};th.appendChild(img);
+    var img=document.createElement('img');img.loading='lazy';img.src='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w900';img.onclick=function(){openPhotoViewer(id);};img.style.cursor='zoom-in';img.onerror=function(){gcImgFallback(img,id,function(){th.innerHTML='<span class="ledgerPreviewOrder">'+(i+1)+'</span><span class="fallback">🖼</span>';});};th.appendChild(img);
     var meta=document.createElement('div');meta.className='ledgerPreviewMeta';
     var nm=document.createElement('div');nm.className='ledgerPreviewName';nm.textContent=f.name||'写真';meta.appendChild(nm);
     var btns=document.createElement('div');btns.className='ledgerPreviewBtns';
@@ -950,7 +1011,7 @@ function renderPhotoCache(){
     if(cand){var bd=document.createElement('span');bd.className='candidateBadge';bd.textContent='台帳候補';tw.appendChild(bd);}
     var od=document.createElement('span');od.className='selectOrderBadge';tw.appendChild(od);
     var img=document.createElement('img');img.loading='lazy';img.src='https://drive.google.com/thumbnail?id='+encodeURIComponent(id)+'&sz=w700';
-    img.onerror=function(){tw.innerHTML=(cand?'<span class="candidateBadge">台帳候補</span>':'')+'<span class="fallback">🖼</span>';};
+    img.onerror=function(){gcImgFallback(img,id,function(){tw.innerHTML=(cand?'<span class="candidateBadge">台帳候補</span>':'')+'<span class="fallback">🖼</span>';});};
     tw.appendChild(img);a.appendChild(tw);
     var meta=document.createElement('div');meta.className='meta';
     var cap=document.createElement('span');cap.className='cap';cap.textContent=f.name||'';meta.appendChild(cap);
