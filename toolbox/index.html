@@ -1,3 +1,4 @@
+<!-- toolbox version 46 (2026-06-20) 小黒板カメラの戻るボタン表示を「工事写真」に変更。工事写真メニューから戻る導線と表示を統一。 -->
 <!-- toolbox version 45 (2026-06-19) 工事写真メニューから小黒板カメラを直接起動。ツールボックスの一瞬表示・戻る先・黒板非表示を修正。 -->
 <!-- toolbox version 43 (2026-06-19) 小黒板カメラを工事写真メニューへ移動し、ツールボックスの入口から削除。 -->
 <!DOCTYPE html>
@@ -679,7 +680,7 @@
 
   <div class="pane" id="p-board">
     <div class="thead">
-      <span class="back2" onclick="boardBack()">← ツールボックス</span>
+      <span class="back2" onclick="boardBack()">← 工事写真</span>
       <h2>小黒板カメラ</h2>
       <button class="thead-tool" id="boardTorchBtn" onclick="boardToggleTorch()" title="ライト"><svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.2 18h5.6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.8 10.7c.6.6.9 1 .9 2.3h5.8c0-1.3.3-1.7.9-2.3A6 6 0 0 0 12 3Z"/></svg></button>
     </div>
@@ -4056,7 +4057,7 @@ function openBoardForCase(id){
 (function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
 
-<script src="../config.js?v=20260619-material-action-fix-42"></script>
-<script src="../common_ui.js?v=20260619-material-action-fix-42"></script>
+<script src="../config.js?v=20260620-v43-5-toolbox-back-fix"></script>
+<script src="../common_ui.js?v=20260620-v43-5-toolbox-back-fix"></script>
 </body>
 </html>
