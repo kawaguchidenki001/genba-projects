@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.06.20-43.9.0bb / mobile horizontal card layout / Code_v143 -->
+<!-- Gen-Can root app v2026.06.20-43.9.1 / tile font up + admin tag + time status / Code_v145 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -62,15 +62,22 @@
   .sq .ic{width:50px;height:50px;border-radius:50%;}
   .sq .txt{margin-top:0;}
   .sq .en{display:block;font-size:10px;}
-  .sq .nm{font-size:17px;}
-  .sq .ds{display:block;font-size:12.5px;}
+  .sq .nm{font-size:20px;}
+  .sq .ds{display:block;font-size:14px;}
   .sq .cor{position:static;margin-left:auto;font-size:20px;}
   .sq .cor.lock{font-size:12px;background:#eef4f9;border:1px solid var(--line);padding:5px 11px;border-radius:999px;color:var(--sub);}
 
   .soons{display:flex;flex-wrap:wrap;gap:8px;}
   .soon{font-size:12.5px;color:var(--sub);background:#e8ecf2;border:none;border-radius:12px;padding:9px 13px;box-shadow:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;}
 
-  .permBadge{display:inline-flex;align-items:center;gap:6px;margin-top:10px;background:#eef6ff;color:#1f5fa8;border:1px solid #d6e8fb;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;}
+  .permBadge{display:none;align-items:center;gap:6px;margin-top:10px;background:#eef6ff;color:#1f5fa8;border:1px solid #d6e8fb;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;}
+  .permBadge.show{display:inline-flex;}
+  .timeStatus{display:none;align-items:center;gap:6px;background:#e8ecf2;border:none;border-radius:999px;padding:8px 13px;font-size:13px;font-weight:900;color:var(--ink);box-shadow:3px 3px 7px #cdd3dc,-3px -3px 7px #ffffff;cursor:pointer;font-family:inherit;text-decoration:none;white-space:nowrap;margin-left:auto;}
+  .timeStatus.show{display:inline-flex;}
+  .timeStatus:active{box-shadow:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
+  .timeStatus .dot{font-size:11px;line-height:1;}
+  .adminTag{display:none;align-items:center;gap:5px;background:#fde8e8;color:#c0392b;border:1px solid #f5c6c6;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;margin-left:8px;}
+  .adminTag.show{display:inline-flex;}
   .permNote{display:none;margin:0 4px 12px;color:#6b7280;font-size:12.5px;}
   .permNote.show{display:block;}
 
@@ -139,9 +146,9 @@
   .head h1{font-size:33px;}
   .head .co{font-size:14px;}
   .lbl{font-size:12.5px;}
-  .sq .nm{font-size:17px;}
-  .sq .ds{font-size:13.5px;}
-  .soon{font-size:13.5px;}
+  .sq .nm{font-size:20px;}
+  .sq .ds{font-size:14px;}
+  .soon{font-size:14px;}
   .dashHd{font-size:15.5px;}
   .dashHd .cnt{font-size:13.5px;}
   .dttl{font-size:13px;}
@@ -164,8 +171,8 @@
   .lbox .txt{font-size:15px;}
   .rem-c .tx{font-size:17px;}
   @media (min-width:680px){
-    .sq .nm{font-size:19px;}
-    .sq .ds{font-size:13.5px;}
+    .sq .nm{font-size:22px;}
+    .sq .ds{font-size:15px;}
     .sq .en{font-size:11px;}
   }
   /* ▲ 高齢者向け 文字拡大 ▲ */
@@ -192,7 +199,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.20-43.9.0b</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.20-43.9.1</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -208,7 +215,7 @@
       <button type="button" onclick="location.href='./demo/'" style="margin-top:10px;background:#edf3fa;color:#1f5fa8;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #ffffff;">デモモードで確認</button>
     </form>
     <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.55;">Chrome・Edge等で保存すると、次回から指紋・顔認証で自動入力できます。</div>
-    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.20-43.9.0b</div>
+    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.20-43.9.1</div>
     <div class="err" id="lgerr"></div>
   </div>
 </div>
@@ -221,9 +228,10 @@
         <div class="gc-name">Gen-Can</div>
         <div class="gc-sub">Smart Site Management</div>
       </div>
+      <a class="timeStatus" id="timeStatus" href="./timecard/" aria-label="勤怠状態へ"><span class="dot" id="timeStatusDot">⚪</span><span id="timeStatusLabel">未出勤</span></a>
     </div>
-    <div class="co">河口電機株式会社</div>
-    <div class="permBadge" id="permBadge" style="display:none;">権限：社員</div>
+    <div class="co" id="companyName">河口電機株式会社<span class="adminTag" id="adminTag">管理者</span></div>
+    <div class="permBadge" id="permBadge">権限：社員</div>
   </div>
 
   <div class="permNote" id="permNote">この利用者の権限で使えるメニューだけを表示しています。</div>
@@ -276,7 +284,7 @@
 <script src="./config.js?v=20260620-v43-8-3-cache-lock"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.9.0b';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.9.1';
 var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-8-3-cache-lock';
 (function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
 
@@ -339,9 +347,29 @@ function applyRootPermissions(u){
     while(p&&!(p.classList&&p.classList.contains('lbl')))p=p.previousElementSibling;
     if(p)p.style.display=anyVis?'':'none';
   });
-  var b=document.getElementById('permBadge');
-  if(b){ b.style.display='inline-flex'; b.textContent='権限：'+genbaRoleLabel(role); }
-  var n=document.getElementById('permNote'); if(n)n.classList.add('show');
+  // 管理者のみ赤い「管理者」タグを表示、社員以下は権限バッジ＆案内文を非表示
+  var adm=document.getElementById('adminTag');
+  if(adm){ if(role==='admin'){adm.classList.add('show');}else{adm.classList.remove('show');} }
+  var b=document.getElementById('permBadge'); if(b){ b.classList.remove('show'); }
+  var n=document.getElementById('permNote'); if(n){ n.classList.remove('show'); }
+  // 勤務状態：管理者以外で timecard が使える人に表示
+  var ts=document.getElementById('timeStatus');
+  if(ts){
+    if(role!=='admin' && allow['timecard']){ ts.classList.add('show'); updateTimeStatus_(u); }
+    else{ ts.classList.remove('show'); }
+  }
+}
+
+// 勤務状態の取得・更新
+function updateTimeStatus_(u){
+  if(!u||!u['作業員ID']) return;
+  jsonpCall_({action:'getMyTimecardStatus',wid:u['作業員ID']}, function(res){
+    if(!res||!res.ok) return;
+    var dot=document.getElementById('timeStatusDot'), lab=document.getElementById('timeStatusLabel');
+    if(res.status==='working'){ if(dot)dot.textContent='🟢'; if(lab)lab.textContent='勤務中'; }
+    else if(res.status==='done'){ if(dot)dot.textContent='🔴'; if(lab)lab.textContent='退勤後'; }
+    else{ if(dot)dot.textContent='⚪'; if(lab)lab.textContent='未出勤'; }
+  }, function(){ /* 失敗時は黙る */ });
 }
 
 function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
