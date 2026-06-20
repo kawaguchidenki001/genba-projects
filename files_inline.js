@@ -1256,7 +1256,7 @@ var toastT;function toast(m){var t=document.getElementById('toast');t.textConten
   });
 })();
 
-try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';var _b=document.getElementById('mainBack');if(_b){_b.href='../photos/';_b.textContent='← 工事写真';}driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
+try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';var _b=document.getElementById('mainBack');if(_b){_b.href='../photos/?v=43-6';_b.textContent='← 工事写真';}driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
 // 起動時は、まず保存済みデータを即表示し、最新データは裏で更新する。
 try{updateFileAddDock();}catch(e){}
 readFilesCache_();

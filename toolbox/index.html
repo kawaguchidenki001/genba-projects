@@ -1,3 +1,4 @@
+<!-- toolbox version 47 (2026-06-20) UI監査：小黒板カメラ戻る表示・道具箱表記・バージョン表示を整理。 -->
 <!-- toolbox version 46 (2026-06-20) 小黒板カメラの戻るボタン表示を「工事写真」に変更。工事写真メニューから戻る導線と表示を統一。 -->
 <!-- toolbox version 45 (2026-06-19) 工事写真メニューから小黒板カメラを直接起動。ツールボックスの一瞬表示・戻る先・黒板非表示を修正。 -->
 <!-- toolbox version 43 (2026-06-19) 小黒板カメラを工事写真メニューへ移動し、ツールボックスの入口から削除。 -->
@@ -351,7 +352,7 @@
   .citem .micbtn{position:static;transform:none;width:32px;height:32px;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">tb v66</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.6</div>
 
 <div class="wrap">
 
@@ -391,7 +392,7 @@
   <!-- 現場メモ：一覧 -->
   <div class="pane" id="p-memo-list">
     <div class="thead">
-      <span class="back2" onclick="go('p-home')">← 道具箱</span>
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
       <h2>現場メモ</h2>
     </div>
     <div class="sitebar" id="memoSiteBar"></div>
@@ -439,7 +440,7 @@
   <!-- ② 現場チェックリスト：一覧 -->
   <div class="pane" id="p-check-list">
     <div class="thead">
-      <span class="back2" onclick="go('p-home')">← 道具箱</span>
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
       <h2>現場チェックリスト</h2>
     </div>
     <div class="sitebar" id="checkSiteBar"></div>
@@ -469,7 +470,7 @@
   <!-- ========== 材料リスト：一覧 ========== -->
   <div class="pane" id="p-mat-list">
     <div class="thead">
-      <span class="back2" onclick="go('p-home')">← 道具箱</span>
+      <span class="back2" onclick="go('p-home')">← ツールボックス</span>
       <h2>材料リスト</h2>
       <span style="width:36px;"></span>
     </div>
@@ -2097,9 +2098,9 @@ function tbSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
 function fmtTs(ts){var d=new Date(ts),p=function(n){return('0'+n).slice(-2);};return d.getFullYear()+'/'+p(d.getMonth()+1)+'/'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());}
 function isBoardDirectLaunch(){return /[?&]tool=board/.test(location.search)||/[?&]from=photos/.test(location.search);}
 function boardReturnUrl(){
-  if(/[?&]from=photos/.test(location.search))return '../photos/';
-  try{if(document.referrer&&/\/photos\/?(?:[?#].*)?$/.test(new URL(document.referrer).pathname))return '../photos/';}catch(e){}
-  return '../photos/';
+  if(/[?&]from=photos/.test(location.search))return '../photos/?v=43-6';
+  try{if(document.referrer&&/\/photos\/?(?:[?#].*)?$/.test(new URL(document.referrer).pathname))return '../photos/?v=43-6';}catch(e){}
+  return '../photos/?v=43-6';
 }
 function exitBoardDirect(){try{stopBoardCamera();}catch(e){} location.href=boardReturnUrl();}
 
@@ -4054,10 +4055,10 @@ function openBoardForCase(id){
 })();
 
 /* 材料管理ハブからの直リンク（?tool=mat 等）でツールを開く */
-(function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
+(function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){document.title='小黒板カメラ｜Gen-Can';boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
 
-<script src="../config.js?v=20260620-v43-5-toolbox-back-fix"></script>
-<script src="../common_ui.js?v=20260620-v43-5-toolbox-back-fix"></script>
+<script src="../config.js?v=20260620-v43-6-ui-audit"></script>
+<script src="../common_ui.js?v=20260620-v43-6-ui-audit"></script>
 </body>
 </html>
