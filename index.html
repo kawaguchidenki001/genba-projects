@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.06.20-43.9.0 / menu reorganized 16 tiles + perm fix / Code_v143 -->
+<!-- Gen-Can root app v2026.06.20-43.9.0bb / mobile horizontal card layout / Code_v143 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -57,15 +57,15 @@
   .t-demo .ic{color:#2563eb;} .t-final .ic{color:#15803d;} .t-rollout .ic{color:#0f766e;}
 
   /* スマホ：横3列の正方形タイル */
-  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-  a.sq{flex-direction:column;aspect-ratio:1/1;border-radius:16px;padding:12px;}
-  .sq .ic{width:42px;height:42px;}
-  .sq .txt{margin-top:auto;}
-  .sq .en{display:none;}
-  .sq .nm{font-size:15.5px;}
-  .sq .ds{display:none;}
-  .sq .cor{position:absolute;top:10px;right:11px;font-size:15px;}
-  .sq .cor.lock{font-size:12px;}
+  .grid{display:grid;grid-template-columns:1fr;gap:11px;}
+  a.sq{flex-direction:row;align-items:center;aspect-ratio:auto;border-radius:18px;padding:16px 18px;gap:16px;}
+  .sq .ic{width:50px;height:50px;border-radius:50%;}
+  .sq .txt{margin-top:0;}
+  .sq .en{display:block;font-size:10px;}
+  .sq .nm{font-size:17px;}
+  .sq .ds{display:block;font-size:12.5px;}
+  .sq .cor{position:static;margin-left:auto;font-size:20px;}
+  .sq .cor.lock{font-size:12px;background:#eef4f9;border:1px solid var(--line);padding:5px 11px;border-radius:999px;color:var(--sub);}
 
   .soons{display:flex;flex-wrap:wrap;gap:8px;}
   .soon{font-size:12.5px;color:var(--sub);background:#e8ecf2;border:none;border-radius:12px;padding:9px 13px;box-shadow:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;}
@@ -76,16 +76,7 @@
 
   /* PC：リスト型 */
   @media (min-width:680px){
-    .grid{grid-template-columns:1fr;gap:11px;}
-    a.sq{flex-direction:row;align-items:center;aspect-ratio:auto;border-radius:18px;padding:16px 18px;gap:16px;}
-    .sq .ic{width:50px;height:50px;border-radius:50%;}
-    .sq .ic svg{width:24px;height:24px;}
-    .sq .txt{margin-top:0;}
-    .sq .en{display:block;font-size:10px;}
-    .sq .nm{font-size:17px;}
-    .sq .ds{display:block;font-size:12.5px;}
-    .sq .cor{position:static;margin-left:auto;font-size:20px;}
-    .sq .cor.lock{font-size:12px;background:#eef4f9;border:1px solid var(--line);padding:5px 11px;border-radius:999px;color:var(--sub);}
+    .grid{grid-template-columns:1fr 1fr;gap:10px;}
   }
 
   /* 先頭の案件管理（横長で目立たせる）*/
@@ -201,7 +192,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.20-43.9.0</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.20-43.9.0b</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -217,7 +208,7 @@
       <button type="button" onclick="location.href='./demo/'" style="margin-top:10px;background:#edf3fa;color:#1f5fa8;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #ffffff;">デモモードで確認</button>
     </form>
     <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.55;">Chrome・Edge等で保存すると、次回から指紋・顔認証で自動入力できます。</div>
-    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.20-43.9.0</div>
+    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.20-43.9.0b</div>
     <div class="err" id="lgerr"></div>
   </div>
 </div>
@@ -285,7 +276,7 @@
 <script src="./config.js?v=20260620-v43-8-3-cache-lock"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.9.0';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.9.0b';
 var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-8-3-cache-lock';
 (function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
 
