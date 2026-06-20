@@ -1,4 +1,4 @@
-<!-- Gen-Can files app v2026.06.20-43.3 / ledger UI fix / Code_v143 -->
+<!-- Gen-Can files app v2026.06.20-43.4 / ledger UI + cache route fix / Code_v143 -->
 <!DOCTYPE html>
 <!-- files version 51 (2026-06-18) 写真ドライブを階層型に変更：官公庁/民間など → 顧客 → 現場 → 写真フォルダの順に開く。 -->
 <!-- files version 50 (2026-06-18) 初期画面からGoogleドライブ風：現場フォルダをカード表示し、タップで写真フォルダを開く。 -->
@@ -1827,7 +1827,7 @@ var toastT;function toast(m){var t=document.getElementById('toast');t.textConten
   });
 })();
 
-try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';var _b=document.getElementById('mainBack');if(_b){_b.href='../photos/';_b.textContent='← 工事写真';}driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
+try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';var _b=document.getElementById('mainBack');if(_b){_b.href='../photos/?v=43-4';_b.textContent='← 工事写真';}driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
 // 起動時は認証トークンを確認してから表示します。期限切れの保存データで誤操作しないようにします。
 try{updateFileAddDock();}catch(e){}
 if(!genbaSessionTok()){
@@ -1838,6 +1838,6 @@ if(!genbaSessionTok()){
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="../common_ui.js?v=20260620-v43-test-login-1"></script>
+<script src="../common_ui.js?v=20260620-v43-4-cache-route-fix"></script>
 </body>
 </html>
