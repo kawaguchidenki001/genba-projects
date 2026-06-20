@@ -1,4 +1,4 @@
-<!-- Gen-Can files app v2026.06.20-43 / file badge v91 / Code_v143 -->
+<!-- Gen-Can files app v2026.06.20-43-test / file badge v91 / Code_v143 -->
 <!DOCTYPE html>
 <!-- files version 51 (2026-06-18) 写真ドライブを階層型に変更：官公庁/民間など → 顧客 → 現場 → 写真フォルダの順に開く。 -->
 <!-- files version 50 (2026-06-18) 初期画面からGoogleドライブ風：現場フォルダをカード表示し、タップで写真フォルダを開く。 -->
@@ -444,11 +444,11 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260620-login-header-fix-43"></script>
+<script src="../config.js?v=20260620-v43-test-login-1"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43';
-var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-login-header-fix-43';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43-test';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-test-login-1';
 try{localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}
 
 function genbaSessionTok(){
@@ -1682,7 +1682,12 @@ function uploadAll(files){
   box.style.display='block';
   box.innerHTML='<div class="upttl" id="upTtl">アップロード中…</div><div class="upgrid" id="upGrid"></div>';
   var grid=document.getElementById('upGrid');
-  var uploadNames=arr.map(function(file){return ((file.type||'').indexOf('image')===0)?bdFileName(file):file.name;});
+  // v43.1修正：通常の「ファイル」画面ではJPEG/PNG等も写真フォルダへ振り分けず、ファイルフォルダへ保存する。
+  // 工事写真台帳モードだけ、画像を写真として扱い、台帳用ファイル名に変換する。
+  var uploadNames=arr.map(function(file){
+    var isImg=((file.type||'').indexOf('image')===0);
+    return ((initialMode==='ledger'||ledgerMode)&&isImg)?bdFileName(file):file.name;
+  });
   var items=arr.map(function(file,idx){
     var d=document.createElement('div');d.className='upitem';
     var st='<span class="upst">⏳</span>';
@@ -1709,7 +1714,9 @@ function uploadAll(files){
     }
     var idx=i, file=arr[i++], expectedName=uploadNames[idx];
     prog.textContent='送信中… '+i+'/'+arr.length;
-    if((file.type||'').indexOf('image')===0){
+    var isImage=((file.type||'').indexOf('image')===0);
+    var toPhotoFolder=((initialMode==='ledger'||ledgerMode)&&isImage);
+    if(toPhotoFolder){
       resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
         return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',kind:(document.getElementById('bdKind').value||'').trim(),name:expectedName,mime:'image/jpeg',data:dataUrl.split(',')[1]});
       }).then(function(){
@@ -1817,6 +1824,6 @@ if(!genbaSessionTok()){
 }
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="../common_ui.js?v=20260620-login-header-fix-43"></script>
+<script src="../common_ui.js?v=20260620-v43-test-login-1"></script>
 </body>
 </html>

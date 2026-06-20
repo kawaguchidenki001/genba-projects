@@ -494,7 +494,7 @@ function loadHomeGenericDriveRoot(forceRefresh){
       }).catch(function(e){showHomeDriveLoading('フォルダ準備に失敗しました。更新ボタンを押すか、少し待ってから再選択してください。');toast((err&&err.message)||e.message);});
       return;
     }
-    showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v142.gs を確認してください。');toast(err.message);
+    showHomeDriveLoading('現場フォルダの取得に失敗しました。GAS側の Code_v143.gs を確認してください。');toast(err.message);
   });
 }
 
@@ -815,7 +815,7 @@ function loadGenericDriveRoot(){
     driveRootId=res.rootId||''; driveCurrentId=driveRootId; driveCurrentName='現場フォルダ';
     genericDriveStack=[{id:driveRootId,name:'現場フォルダ'}];
     renderGenericDriveItems(res.folders||[],res.files||[]);
-  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">現場フォルダの取得に失敗しました。<br>GAS側の Code_v142.gs を貼り替えて再デプロイしてください。</div>';toast(err.message);});
+  }).catch(function(err){document.getElementById('photos').innerHTML='<div class="empty">現場フォルダの取得に失敗しました。<br>GAS側の Code_v143.gs を貼り替えて再デプロイしてください。</div>';toast(err.message);});
 }
 function openGenericFolder(fid,name,keepStack){
   if(!fid){toast('フォルダIDがありません');return;}
@@ -1118,7 +1118,12 @@ function uploadAll(files){
   box.style.display='block';
   box.innerHTML='<div class="upttl" id="upTtl">アップロード中…</div><div class="upgrid" id="upGrid"></div>';
   var grid=document.getElementById('upGrid');
-  var uploadNames=arr.map(function(file){return ((file.type||'').indexOf('image')===0)?bdFileName(file):file.name;});
+  // v43.1修正：通常の「ファイル」画面ではJPEG/PNG等も写真フォルダへ振り分けず、ファイルフォルダへ保存する。
+  // 工事写真台帳モードだけ、画像を写真として扱い、台帳用ファイル名に変換する。
+  var uploadNames=arr.map(function(file){
+    var isImg=((file.type||'').indexOf('image')===0);
+    return ((initialMode==='ledger'||ledgerMode)&&isImg)?bdFileName(file):file.name;
+  });
   var items=arr.map(function(file,idx){
     var d=document.createElement('div');d.className='upitem';
     var st='<span class="upst">⏳</span>';
@@ -1145,7 +1150,9 @@ function uploadAll(files){
     }
     var idx=i, file=arr[i++], expectedName=uploadNames[idx];
     prog.textContent='送信中… '+i+'/'+arr.length;
-    if((file.type||'').indexOf('image')===0){
+    var isImage=((file.type||'').indexOf('image')===0);
+    var toPhotoFolder=((initialMode==='ledger'||ledgerMode)&&isImage);
+    if(toPhotoFolder){
       resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
         return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',kind:(document.getElementById('bdKind').value||'').trim(),name:expectedName,mime:'image/jpeg',data:dataUrl.split(',')[1]});
       }).then(function(){
