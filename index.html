@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.06.20-43.9.4 / PC 1col + mobile font swap / Code_v145 -->
+<!-- Gen-Can root app v2026.06.20-43.9.5 / user name in header / Code_v145 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -80,6 +80,7 @@
   .timeStatus.s-done{background:#fee2e2;border-color:#dc2626;color:#b91c1c;}
   .timeStatus.s-none{background:#f1f5f9;border-color:#94a3b8;color:#475569;}
   .adminTag{display:none;align-items:center;gap:5px;background:#fde8e8;color:#c0392b;border:1px solid #f5c6c6;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;margin-left:8px;}
+  .userName{font-weight:800;color:var(--ink);margin-left:6px;}
   .adminTag.show{display:inline-flex;}
   .permNote{display:none;margin:0 4px 12px;color:#6b7280;font-size:12.5px;}
   .permNote.show{display:block;}
@@ -202,7 +203,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.20-43.9.4</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.20-43.9.5</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -218,7 +219,7 @@
       <button type="button" onclick="location.href='./demo/'" style="margin-top:10px;background:#edf3fa;color:#1f5fa8;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #ffffff;">デモモードで確認</button>
     </form>
     <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.55;">Chrome・Edge等で保存すると、次回から指紋・顔認証で自動入力できます。</div>
-    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.20-43.9.4</div>
+    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.20-43.9.5</div>
     <div class="err" id="lgerr"></div>
   </div>
 </div>
@@ -233,7 +234,7 @@
       </div>
       <a class="timeStatus s-none" id="timeStatus" href="./timecard/" aria-label="勤怠状態へ"><span class="dot" id="timeStatusDot">⚪</span><span id="timeStatusLabel">未出勤</span></a>
     </div>
-    <div class="co" id="companyName">河口電機株式会社<span class="adminTag" id="adminTag">管理者</span></div>
+    <div class="co" id="companyName">河口電機株式会社 <span id="meName" class="userName"></span><span class="adminTag" id="adminTag">管理者</span></div>
     <div class="permBadge" id="permBadge">権限：社員</div>
   </div>
 
@@ -280,14 +281,14 @@
     <a class="sq t-admin" href="./admin/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></span><span class="txt"><span class="en">Admin</span><span class="nm">管理画面</span></span><span class="cor lock">🔒</span></a>
     <a class="sq t-ops" href="./operations/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><path d="m15 17 2 2 4-4"/></svg></span><span class="txt"><span class="en">Operations</span><span class="nm">運用センター</span><span class="ds">更新後確認・販売準備・保守画面をまとめて開く</span></span><span class="cor lock">🔒</span></a>
   </div>
-  <div class="foot"><span id="meName"></span> ・ <a href="#" onclick="logout();return false;">ログアウト</a></div>
+  <div class="foot"><a href="#" onclick="logout();return false;">ログアウト</a></div>
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <script src="./config.js?v=20260620-v43-8-3-cache-lock"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.9.4';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.9.5';
 var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-8-3-cache-lock';
 (function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
 
