@@ -1,4 +1,4 @@
-<!-- Gen-Can files app v2026.06.20-43-test / file badge v91 / Code_v143 -->
+<!-- Gen-Can files app v2026.06.20-43.3 / ledger UI fix / Code_v143 -->
 <!DOCTYPE html>
 <!-- files version 51 (2026-06-18) 写真ドライブを階層型に変更：官公庁/民間など → 顧客 → 現場 → 写真フォルダの順に開く。 -->
 <!-- files version 50 (2026-06-18) 初期画面からGoogleドライブ風：現場フォルダをカード表示し、タップで写真フォルダを開く。 -->
@@ -251,7 +251,17 @@
   .ledgerDock button.primary{background:var(--grad);color:#fff;}
   .ledgerDock button.excel{color:#1e7a3a;}
   .ledgerDock button:active{box-shadow:var(--well);}
-  .ledgerResultDock{grid-column:1/-1;display:none;font-size:13px;line-height:1.6;}
+   .ledgerResultDock{grid-column:1/-1;display:none;font-size:13px;line-height:1.6;}
+  .ledgerDock.hasResult .ledgerDockInfo{display:none;}
+  .ledgerResultDock.showSuccess,.ledgerResultDock.showError{display:block;border-radius:15px;background:rgba(255,255,255,.30);box-shadow:var(--well-soft);padding:10px 12px;}
+  .ledgerResultDock.showError{color:#b42318;}
+  .ledgerSuccessLine{display:flex;align-items:center;gap:8px;flex-wrap:wrap;color:var(--ink);font-weight:900;}
+  .ledgerSuccessLine small{font-size:12px;color:var(--sub);font-weight:800;}
+  .ledgerSuccessClose{margin-left:auto!important;min-width:34px!important;width:34px!important;height:34px!important;padding:0!important;border-radius:999px!important;font-size:17px!important;color:var(--sub)!important;background:var(--bg)!important;}
+  .ledgerSuccessActions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:9px;}
+  .ledgerSuccessActions button{padding:10px 8px!important;font-size:12.5px!important;border-radius:12px!important;min-height:40px;}
+  .ledgerSuccessActions .open{background:#1e8e3e!important;color:#fff!important;}
+  @media(max-width:560px){.ledgerSuccessActions{grid-template-columns:1fr 1fr;}.ledgerSuccessActions button:first-child{grid-column:1/-1;}}
   /* 工事写真台帳：写真はPCで6枚並び、正方形に切り抜かず写真比率のまま表示 */
   .ledgerPhotoSection .grid{grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;}
   .ledgerPhotoSection .ph{overflow:hidden;}
@@ -305,10 +315,10 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v91</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.3</div>
 <header>
   <div class="hbar">
-    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <a class="back" id="mainBack" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
     <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 10h18"/></svg></span><div class="htxt"><span class="en">Files</span><h1>ファイル</h1></div></div>
     <div class="hright"><span class="hmark">Gen-Can</span><button class="hrf" onclick="loadPhotos()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
   </div>
@@ -845,9 +855,7 @@ function renderLedgerPhotoCard_(f){
   var id=String(f&&f.id||'');
   if(id)ledgerPhotoMetaMap[id]=f||{};
   var cand=isLedgerCandidate(f);
-  if(ledgerMode && cand && !ledgerUserChangedSelection && id && !ledgerSelectionMap[id]){
-    ledgerSelectionMap[id]=1; ledgerSelectionIds.push(id);
-  }
+  // v43.3: 台帳候補は最初から自動選択しない。必要な時だけ「候補選択」で選びます。
   var isSel=!!ledgerSelectionMap[id];
   var a=document.createElement('div'); a.className='ph'+(isSel?' selected':''); a.id='ph_'+id; a.dataset.id=id; a.dataset.candidate=cand?'1':'0';
   a.onclick=function(){togglePhSel(this);};
@@ -1011,7 +1019,7 @@ function onCand(){ curId=''; folderReady=false; updateFileAddDock(); updateLedge
 
 function onSelect(){
   var nextId=document.getElementById('projSel').value;
-  if(nextId!==curId){ledgerClearSelection_();ledgerUserChangedSelection=false;ledgerSelectedOnly=false;ledgerPhotoInfoMap={};}
+  if(nextId!==curId){ledgerClearSelection_();ledgerUserChangedSelection=false;ledgerSelectedOnly=false;ledgerPhotoInfoMap={};clearLedgerResult();}
   curId=nextId;
   ledgerLoadInfo_();
   driveRootId=''; driveCurrentId=''; driveCurrentName='現場フォルダ'; driveFolders=[];
@@ -1098,27 +1106,33 @@ document.addEventListener('keydown',function(ev){
   if(ev.key===' '||ev.key==='Enter'){ev.preventDefault();photoViewerToggleSelect();}
 });
 
+function clearLedgerResult(){
+  var box=document.getElementById('ledgerResultDock')||document.getElementById('ledgerResult');
+  if(box){box.className='ledgerResultDock';box.style.display='none';box.innerHTML='';}
+  var dock=document.getElementById('ledgerDock'); if(dock)dock.classList.remove('hasResult');
+}
 function buildLedgerFiles(fmt){
   if(!curId){toast('案件を選んでください');return;}
   var ids=collectLedgerSelectedIds();
   if(!ids.length){toast('写真を選択してください');return;}
   var nm=(document.getElementById('pName')||{}).textContent||'';
-  var box=document.getElementById('ledgerResultDock')||document.getElementById('ledgerResult'); if(box){box.style.display='none';box.innerHTML='';}
+  var box=document.getElementById('ledgerResultDock')||document.getElementById('ledgerResult'); clearLedgerResult();
   var lt=document.querySelector('#loading .txt'); if(lt) lt.textContent='台帳を作成中…';
   toast((fmt==='xlsx'?'エクセル':'PDF')+'を作成中です。少し時間がかかります…'); showLoad();
   callGAS({action:'makeLedgerFiles',id:curId,ids:ids.join(','),name:nm,fmt:fmt,meta:JSON.stringify(ledgerBuildMeta_())},180000).then(function(res){
     hideLoad(); if(lt) lt.textContent='読み込み中…';
-    if(!res||!res.ok){var em=(res&&res.error)||'不明なエラー';if(box){box.innerHTML='作成に失敗しました：<br>'+esc(em);box.style.display='block';}toast('作成に失敗しました');return;}
+    if(!res||!res.ok){var em=(res&&res.error)||'不明なエラー';if(box){box.className='ledgerResultDock showError';box.innerHTML='作成に失敗しました：<br>'+escText(em);box.style.display='block';}toast('作成に失敗しました');return;}
     var url=(fmt==='xlsx')?res.xlsxUrl:res.pdfUrl, lbl=(fmt==='xlsx')?'📊 台帳（Excel）をダウンロード':'📄 台帳（PDF）を開く';
     var note='ドライブの案件フォルダ内「台帳」フォルダにも保存されています。';
     if(box&&url){
-      var folderBtn=res.folderUrl?'<button id="openLedgerFolderBtn" style="display:block;width:100%;max-width:440px;margin-top:8px;padding:13px;font-size:14px;font-weight:900;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border:none;border-radius:12px;cursor:pointer;">📁 台帳フォルダを開く</button>':'';
-      box.innerHTML='<div style="font-weight:700;margin-bottom:10px;">台帳ができました（'+res.n+'枚）</div><button id="openLedgerBtn" style="display:block;width:100%;max-width:440px;padding:16px;font-size:17px;font-weight:700;color:#fff;background:#1e8e3e;border:none;border-radius:12px;cursor:pointer;">'+lbl+'</button>'+folderBtn+'<button id="showLedgerHistoryBtn" style="display:block;width:100%;max-width:440px;margin-top:8px;padding:13px;font-size:14px;font-weight:900;color:#6d4cc2;background:var(--bg);box-shadow:var(--rise-sm);border:none;border-radius:12px;cursor:pointer;">📚 作成履歴を表示</button><div style="color:var(--sub);font-size:12px;margin-top:8px;">'+note+'</div>';
+      var dock=document.getElementById('ledgerDock'); if(dock)dock.classList.add('hasResult');
+      box.className='ledgerResultDock showSuccess';
+      box.innerHTML='<div class="ledgerSuccessLine"><strong>台帳作成完了</strong><small>'+res.n+'枚・Driveに保存済み</small><button type="button" class="ledgerSuccessClose" onclick="clearLedgerResult()">×</button></div><div class="ledgerSuccessActions"><button type="button" class="open" id="openLedgerBtn">'+lbl+'</button>'+(res.folderUrl?'<button type="button" id="openLedgerFolderBtn">📁 フォルダ</button>':'')+'<button type="button" id="showLedgerHistoryBtn">📚 履歴</button></div>';
       box.style.display='block';
       var ob=document.getElementById('openLedgerBtn');
       if(ob) ob.onclick=function(){ if(fmt==='xlsx'){ var a=document.createElement('a'); a.href=url; a.download=''; document.body.appendChild(a); a.click(); a.remove(); } else { window.open(url,'_blank','width=840,height=1100,scrollbars=yes,resizable=yes'); } };
       var fb=document.getElementById('openLedgerFolderBtn'); if(fb)fb.onclick=function(){window.open(res.folderUrl,'_blank');};
-      var hb=document.getElementById('showLedgerHistoryBtn'); if(hb)hb.onclick=function(){openLedgerHistory(true);};
+      var hb=document.getElementById('showLedgerHistoryBtn'); if(hb)hb.onclick=function(){ if(typeof openLedgerHistory==='function')openLedgerHistory(true); else toast('履歴機能を開けませんでした');};
     }
     try{clearDriveItemCache_(driveCurrentId||driveRootId);}catch(e){}
     toast('台帳を作成しました');
@@ -1501,7 +1515,7 @@ function renderPhotoCache(){
   list.forEach(function(f){
     var cand=isLedgerCandidate(f), id=String(f.id||'');
     if(id)ledgerPhotoMetaMap[id]=f||{};
-    if(ledgerMode && cand && !ledgerUserChangedSelection && id && !ledgerSelectionMap[id]){ledgerSelectionMap[id]=1;ledgerSelectionIds.push(id);}
+    // v43.3: 台帳候補は自動選択しない
     var a=document.createElement('div');a.className='ph'+(ledgerSelectionMap[id]?' selected':'');a.id='ph_'+id;a.dataset.id=id;a.dataset.candidate=cand?'1':'0';a.onclick=function(){togglePhSel(this);};
     var tw=document.createElement('div');tw.className='thumbWrap';
     if(cand){var bd=document.createElement('span');bd.className='candidateBadge';bd.textContent='台帳候補';tw.appendChild(bd);}
@@ -1813,7 +1827,7 @@ var toastT;function toast(m){var t=document.getElementById('toast');t.textConten
   });
 })();
 
-try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
+try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';var _b=document.getElementById('mainBack');if(_b){_b.href='../photos/';_b.textContent='← 工事写真';}driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
 // 起動時は認証トークンを確認してから表示します。期限切れの保存データで誤操作しないようにします。
 try{updateFileAddDock();}catch(e){}
 if(!genbaSessionTok()){
