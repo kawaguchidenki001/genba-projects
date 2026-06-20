@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- quick menu app v2026.06.20-43.8.1 Code_v143 -->
+<!-- quick menu app v2026.06.20-43.8.3 Code_v143 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -16,14 +16,14 @@
 @media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr);gap:11px;}.card{min-height:136px;padding:15px;border-radius:21px;}.wide{grid-column:span 2;}.nm{font-size:19px;}h1{font-size:24px;}.wrap{padding-left:14px;padding-right:14px;}}
 @media(max-width:420px){.grid{grid-template-columns:1fr;}.wide{grid-column:span 1;}.card{min-height:118px;}.bottom a{font-size:10.5px;}.hero{border-radius:21px;}}
 </style>
-<script src="../config.js?v=20260620-v43-8-1-cache-lock"></script>
+<script src="../config.js?v=20260620-v43-8-3-cache-lock"></script>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <button class="back" onclick="location.href='../'">← メニュー</button>
     <div class="head"><div class="kicker">Gen-Can Field Quick</div><h1>現場クイック</h1></div>
-    <span class="badge" id="appBadge">v2026.06.20-43.8.1</span>
+    <span class="badge" id="appBadge">v2026.06.20-43.8.3</span>
   </div>
   <div class="hero">
     <h2>現場で使う機能だけを大きく表示</h2>
@@ -55,7 +55,7 @@
   <a href="../timecard/"><b>⏱</b>打刻</a>
 </div>
 <script>
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.8.1';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.8.3';
 document.getElementById('appBadge').textContent=APP_VERSION;
 (function(){
   var u=null;try{u=JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){}
@@ -64,6 +64,6 @@ document.getElementById('appBadge').textContent=APP_VERSION;
   else line.textContent='ログイン済みでない場合は、メニューへ戻ってログインしてください';
 })();
 </script>
-<script src="../common_ui.js?v=20260620-v43-8-1-cache-lock"></script>
+<script src="../common_ui.js?v=20260620-v43-8-3-cache-lock"></script>
 </body>
 </html>

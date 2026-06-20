@@ -1,8 +1,8 @@
-/* Gen-Can common UI v2026.06.20-43.8.2 / support center + release prep */
+/* Gen-Can common UI v2026.06.20-43.8.3 / support center + release prep */
 (function(){
   'use strict';
   var cfg = window.GENBA_CONFIG || {};
-  var appVersion = cfg.APP_VERSION || 'v2026.06.20-43.8.2';
+  var appVersion = cfg.APP_VERSION || 'v2026.06.20-43.8.3';
   var path = location.pathname || '';
   var isRoot = /\/genba-projects\/?(?:index\.html)?$/.test(path) || /\/genba-projects$/.test(path);
   var isSub = !isRoot;

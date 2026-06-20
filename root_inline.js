@@ -1,7 +1,7 @@
 
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.8.1';
-var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-8-1-cache-lock';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.8.3';
+var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-8-3-cache-lock';
 (function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
 
 function genbaSessionTok(){
