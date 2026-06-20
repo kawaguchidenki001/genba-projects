@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.06.20-43.9.3 / instant time status + cache / Code_v145 -->
+<!-- Gen-Can root app v2026.06.20-43.9.4 / PC 1col + mobile font swap / Code_v145 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -62,8 +62,8 @@
   .sq .ic{width:50px;height:50px;border-radius:50%;}
   .sq .txt{margin-top:0;}
   .sq .en{display:block;font-size:10px;}
-  .sq .nm{font-size:20px;}
-  .sq .ds{display:block;font-size:14px;}
+  .sq .nm{font-size:26px;}
+  .sq .ds{display:block;font-size:13px;}
   .sq .cor{position:static;margin-left:auto;font-size:20px;}
   .sq .cor.lock{font-size:12px;background:#eef4f9;border:1px solid var(--line);padding:5px 11px;border-radius:999px;color:var(--sub);}
 
@@ -86,7 +86,7 @@
 
   /* PC：リスト型 */
   @media (min-width:680px){
-    .grid{grid-template-columns:1fr 1fr;gap:10px;}
+    .grid{grid-template-columns:1fr;gap:11px;}
   }
 
   /* 先頭の案件管理（横長で目立たせる）*/
@@ -149,9 +149,9 @@
   .head h1{font-size:33px;}
   .head .co{font-size:14px;}
   .lbl{font-size:12.5px;}
-  .sq .nm{font-size:24px;}
-  .sq .ds{font-size:16px;}
-  .soon{font-size:16px;}
+  .sq .nm{font-size:26px;}
+  .sq .ds{font-size:13px;}
+  .soon{font-size:13px;}
   .dashHd{font-size:15.5px;}
   .dashHd .cnt{font-size:13.5px;}
   .dttl{font-size:13px;}
@@ -202,7 +202,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.20-43.9.3</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.20-43.9.4</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -218,7 +218,7 @@
       <button type="button" onclick="location.href='./demo/'" style="margin-top:10px;background:#edf3fa;color:#1f5fa8;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #ffffff;">デモモードで確認</button>
     </form>
     <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.55;">Chrome・Edge等で保存すると、次回から指紋・顔認証で自動入力できます。</div>
-    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.20-43.9.3</div>
+    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.20-43.9.4</div>
     <div class="err" id="lgerr"></div>
   </div>
 </div>
@@ -287,7 +287,7 @@
 <script src="./config.js?v=20260620-v43-8-3-cache-lock"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.9.3';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.9.4';
 var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-8-3-cache-lock';
 (function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
 
