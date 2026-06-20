@@ -1,10 +1,10 @@
 {
   "appName": "Gen-Can",
-  "appVersion": "v2026.06.20-43.7",
-  "build": "20260620-v43-7-badge-cache-fix",
+  "appVersion": "v2026.06.20-43.8.1",
+  "build": "20260620-v43-8-1-cache-lock",
   "gasFile": "Code_v143.gs",
   "updatedAt": "2026-06-20",
-  "summary": "v43.7 バッジ反映用のconfig.jsキャッシュ対策を追加",
+  "summary": "v43.8.1 全体UI監査反映（戻る表示・表記ゆれ・最終チェック判定・キャッシュ対策を整理）",
   "changedFiles": [
     "Code_v143.gs",
     "config.js",
@@ -25,7 +25,7 @@
     "URL末尾に ?test=1 を付けた時だけ表示される一時テストログインを追加",
     "GAS側 action=testLogin で短時間のテスト用管理者セッションを発行"
   ],
-  "fileBadge": "v2026.06.20-43.7",
+  "fileBadge": "v2026.06.20-43.8.1",
   "updated": "2026-06-20",
   "gasVersion": "v143-login-header-fix",
   "highlights": [
@@ -34,5 +34,7 @@
     "作業員マスタの権限列・利用状態列が後ろに追加されている環境でも対応します",
     "テスト完了後は TEST_LOGIN_ENABLED を false に戻してください"
   ],
-  "requiredFiles": []
+  "requiredFiles": [],
+  "version": "v2026.06.20-43.8.1",
+  "gas": "Code_v143.gs"
 }

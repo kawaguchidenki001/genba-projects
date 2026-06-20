@@ -390,7 +390,7 @@ function renderLedgerPhotoCard_(f){
   var id=String(f&&f.id||'');
   if(id)ledgerPhotoMetaMap[id]=f||{};
   var cand=isLedgerCandidate(f);
-  // v43.7: 台帳候補は最初から自動選択しない。必要な時だけ「候補選択」で選びます。
+  // v43.8.1: 台帳候補は最初から自動選択しない。必要な時だけ「候補選択」で選びます。
   var isSel=!!ledgerSelectionMap[id];
   var a=document.createElement('div'); a.className='ph'+(isSel?' selected':''); a.id='ph_'+id; a.dataset.id=id; a.dataset.candidate=cand?'1':'0';
   a.onclick=function(){togglePhSel(this);};
@@ -944,7 +944,7 @@ function renderPhotoCache(){
   list.forEach(function(f){
     var cand=isLedgerCandidate(f), id=String(f.id||'');
     if(id)ledgerPhotoMetaMap[id]=f||{};
-    // v43.7: 台帳候補は自動選択しない
+    // v43.8.1: 台帳候補は自動選択しない
     var a=document.createElement('div');a.className='ph'+(ledgerSelectionMap[id]?' selected':'');a.id='ph_'+id;a.dataset.id=id;a.dataset.candidate=cand?'1':'0';a.onclick=function(){togglePhSel(this);};
     var tw=document.createElement('div');tw.className='thumbWrap';
     if(cand){var bd=document.createElement('span');bd.className='candidateBadge';bd.textContent='台帳候補';tw.appendChild(bd);}
@@ -1256,7 +1256,7 @@ var toastT;function toast(m){var t=document.getElementById('toast');t.textConten
   });
 })();
 
-try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';var _b=document.getElementById('mainBack');if(_b){_b.href='../photos/?v=43-7';_b.textContent='← 工事写真';}driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
+try{document.getElementById('bdDate').value=bdToday();initPhotoQuickControls();if(initialMode==='ledger'){document.title='工事写真台帳｜Gen-Can';var _h=document.querySelector('.hcenter h1');if(_h)_h.textContent='工事写真台帳';var _en=document.querySelector('.hcenter .en');if(_en)_en.textContent='Photo ledger';var _b=document.getElementById('mainBack');if(_b){_b.href='../photos/?v=43-8-1';_b.textContent='← 工事写真';}driveHomeSetAsLedgerSelection();updateFileAddDock();}}catch(e){}
 // 起動時は、まず保存済みデータを即表示し、最新データは裏で更新する。
 try{updateFileAddDock();}catch(e){}
 readFilesCache_();

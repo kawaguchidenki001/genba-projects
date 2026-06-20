@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- diagnosis version 4 app v2026.06.20-43.7 Code_v143 -->
+<!-- diagnosis version 4 app v2026.06.20-43.8.1 Code_v143 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -28,12 +28,12 @@ h1{font-size:24px;color:#1f5fa8;line-height:1.25;}.badge{display:inline-flex;ali
 .tbl{width:100%;border-collapse:separate;border-spacing:0 8px}.tbl th{text-align:left;color:var(--sub);font-size:12px;padding:0 10px}.tbl td{background:var(--card);border-top:1px solid #dbe8f3;border-bottom:1px solid #dbe8f3;padding:10px;vertical-align:top}.tbl td:first-child{border-left:1px solid #dbe8f3;border-radius:12px 0 0 12px;font-weight:900}.tbl td:last-child{border-right:1px solid #dbe8f3;border-radius:0 12px 12px 0}.checklist{display:grid;gap:8px}.check{display:flex;gap:9px;align-items:flex-start;background:#f5f9fd;border:1px solid #dbe8f3;border-radius:14px;padding:11px 12px;font-weight:800}.check .mark{width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#dcfce7;color:#15803d;flex:0 0 auto;font-size:12px}.check.warn .mark{background:#fef3c7;color:#b45309}.err{background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:900;display:none}.okbox{background:#dcfce7;color:#166534;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:900;display:none}.loading{position:fixed;inset:0;background:rgba(232,236,242,.72);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(3px)}.loading.show{display:flex}.spin{width:44px;height:44px;border-radius:999px;border:5px solid #dbe8f3;border-top-color:#2563eb;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:760px){.stepbar{grid-template-columns:1fr 1fr}.form,.grid{grid-template-columns:1fr 1fr}.tbl{font-size:13px}.tbl th:nth-child(3),.tbl td:nth-child(3){display:none}}@media(max-width:520px){.form,.grid{grid-template-columns:1fr}.actions .btn{width:100%}}
 </style>
-<script src="../config.js?v=20260620-v43-7-audit"></script>
+<script src="../config.js?v=20260620-v43-8-1-cache-lock"></script>
 </head>
 <body>
 <div class="loading" id="loading"><div class="spin"></div></div>
 <div class="wrap">
-  <div class="top"><button class="back" onclick="location.href='../'">← メニュー</button><div class="head"><div class="kicker">Gen-Can Setup Wizard</div><h1>初期設定ウィザード</h1></div><span class="badge" id="appBadge">v2026.06.20-43.7</span></div>
+  <div class="top"><button class="back" onclick="location.href='../'">← メニュー</button><div class="head"><div class="kicker">Gen-Can Setup Wizard</div><h1>初期設定ウィザード</h1></div><span class="badge" id="appBadge">v2026.06.20-43.8.1</span></div>
   <div class="card"><div id="summaryStatus" class="status warn">確認前</div><p class="small" style="margin-top:10px;">新規導入・更新後の確認を、順番に進められる画面です。既存データは削除せず、不足シート・不足列だけを補修します。</p><div class="actions"><button class="btn" onclick="loadStatus()">状態を確認</button><button class="btn secondary" onclick="location.href='../admin/'">管理画面</button><button class="btn secondary" onclick="location.href='../version/'">更新履歴</button><button class="btn secondary" onclick="location.href='../diagnosis/'">エラー診断</button><button class="btn secondary" onclick="location.href='../help/'">操作ガイド</button></div><div class="err" id="err"></div><div class="okbox" id="okbox"></div></div>
   <div class="stepbar" id="stepbar">
     <div class="step active" onclick="showStep(0)"><b>1 接続確認</b><span>GAS/Drive</span></div>
@@ -60,7 +60,7 @@ h1{font-size:24px;color:#1f5fa8;line-height:1.25;}.badge{display:inline-flex;ali
   <section class="panel" id="p4"><div class="card"><h2>5. 完了チェック</h2><div class="checklist" id="finishList"></div><div class="actions"><a class="btn" href="../">メニューへ戻る</a><a class="btn secondary" href="../files/">ファイルを確認</a><a class="btn secondary" href="../photos/">工事写真を確認</a><a class="btn secondary" href="../admin/">作業員を登録</a></div></div></section>
 </div>
 <script>
-var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.7';var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-7-audit';document.getElementById('appBadge').textContent=APP_VERSION;
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.8.1';var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-8-1-cache-lock';document.getElementById('appBadge').textContent=APP_VERSION;
 var lastStatus=null, curStep=0;
 function esc(s){return String(s==null?'':s).replace(/[&<>\"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function getSecret(){try{return localStorage.getItem('genba_admin')||localStorage.getItem('genba_session')||'';}catch(e){return '';}}
@@ -80,6 +80,6 @@ function backupEnable(){setErr('');setOk('');showLoad(true);jsonp({action:'setup
 function backupDisable(){if(!confirm('自動バックアップを停止しますか？'))return;setErr('');setOk('');showLoad(true);jsonp({action:'setupBackupDisable'}).then(function(res){showLoad(false);setOk('自動バックアップを停止しました。');render(res);}).catch(function(e){showLoad(false);setErr(e.message);});}
 loadStatus();
 </script>
-<script src="../common_ui.js?v=20260620-v43-7-audit"></script>
+<script src="../common_ui.js?v=20260620-v43-8-1-cache-lock"></script>
 </body>
 </html>
