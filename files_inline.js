@@ -1,5 +1,5 @@
 
-/* Gen-Can files_inline v2026.06.21-43.9.4 / 案1-A 写真B64フォールバック / Code_v144 */
+/* Gen-Can files_inline v2026.06.21-43.9.12 / 案1-A 写真B64フォールバック / Code_v144 */
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
 function genbaSessionTok(){
@@ -217,12 +217,12 @@ function escText(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){r
 function categoryKey(v){
   var s=String(v||'').trim();
   if(!s)return '未設定';
-  if(s==='官公庁'||s==='公共'||s==='官公署')return '官公庁';
+  if(s==='公共'||s==='官公庁'||s==='官公署')return '公共';
   if(s==='個人')return '個人';
-  if(s==='法人'||s==='民間'||s==='会社'||s==='企業')return '民間';
+  if(s==='法人'||s==='民間'||s==='会社'||s==='企業')return '法人';
   return s;
 }
-function categoryIcon(cat){return cat==='官公庁'?'🏛️':(cat==='民間'?'🏢':(cat==='個人'?'🏠':'📁'));}
+function categoryIcon(cat){return cat==='公共'?'🏛️':(cat==='法人'?'🏢':(cat==='個人'?'🏠':'📁'));}
 function customerCategoryByName(name){
   var n=String(name||'');
   for(var i=0;i<(customers||[]).length;i++){
@@ -310,7 +310,7 @@ function renderDriveHome(){
   if(driveHomeLevel==='category'){
     setDriveHomeBreadcrumb([]); setDriveHomeLevelLabel('区分');
     var counts={}; (projects||[]).forEach(function(p){var c=projectCategory(p); counts[c]=(counts[c]||0)+1;});
-    var order=['官公庁','民間','個人','未設定']; Object.keys(counts).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
+    var order=['公共','法人','個人','未設定']; Object.keys(counts).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
     var any=false;
     order.forEach(function(cat){var n=counts[cat]||0; if(!n)return; any=true;
       box.appendChild(makeFolderCard({cls:'category',icon:categoryIcon(cat),name:cat,meta:n+'件の現場',badge:'開く',onclick:function(){openDriveHomeCategory(cat);}}));
@@ -383,7 +383,7 @@ function driveHomeSetAsProjectDrive(projectName){
 }
 function driveHomeRestoreTitle(){
   var title=document.querySelector('.driveHomeTitle span:nth-child(2)'); if(title)title.textContent='ファイルドライブ';
-  var note=document.querySelector('.driveHomeNote'); if(note)note.textContent='官公庁・民間などのフォルダから、顧客フォルダ、現場フォルダの順に開けます。現場フォルダ内もGoogleドライブのように閲覧できます。';
+  var note=document.querySelector('.driveHomeNote'); if(note)note.textContent='公共・法人などのフォルダから、顧客フォルダ、現場フォルダの順に開けます。現場フォルダ内もGoogleドライブのように閲覧できます。';
 }
 function driveHomeSetAsLedgerSelection(){
   var title=document.querySelector('.driveHomeTitle span:nth-child(2)'); if(title)title.textContent='工事写真台帳';
