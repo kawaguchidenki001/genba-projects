@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- projects version 60 (2026-06-22) タイルが拡大表示の端末で巨大化する問題を修正（最大120px・縦横比指定をやめ最小高さで調整）。区分を選ぶと状態チップの件数がその区分内の数になるよう連動。GAS変更なし。 -->
 <!-- projects version 59 (2026-06-21) 詳細：図面・工程表・写真アイコンを、中身が無いとき淡色（グレー）表示にしてデータ有無が分かるように。GAS v149 が必要（folderCounts API）。 -->
 <!-- projects version 58 (2026-06-21) 詳細：「写真・資料の追加」ボタンを「この現場を編集」の上に追加（全ユーザー表示・この現場のファイル画面 ../files/?case= へ遷移しアップロード可）。GAS変更なし。 -->
 <!-- projects version 57 (2026-06-21) 詳細：顧客情報セクション（会社名・担当者・電話・メール）を案件情報の下に追加。案件情報からは担当者・電話・メールを顧客情報へ移動（住所・備考は案件情報に残す）。GAS変更なし。 -->
@@ -89,8 +90,8 @@
   .ghd .gc{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--accent);}
   .ghd .gn{flex:1;}
   .ghd .gcount{font-size:12px;color:var(--sub);font-weight:600;}
-  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;}
-  .tile{position:relative;background:var(--bg);border:none;border-top:4px solid var(--line);border-radius:14px;box-shadow:var(--rise-sm);padding:14px 10px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;aspect-ratio:1/1;min-height:106px;justify-content:center;}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,120px));gap:9px;justify-content:start;}
+  .tile{position:relative;background:var(--bg);border:none;border-top:4px solid var(--line);border-radius:14px;box-shadow:var(--rise-sm);padding:14px 10px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;min-height:114px;justify-content:center;}
   .tile:active{transform:scale(.97);box-shadow:var(--well);}
   .tile .ic{font-size:26px;line-height:1;color:var(--accent-d);}
   .tile .ic svg{width:26px;height:26px;display:block;}
@@ -438,8 +439,9 @@ function reload(silent){
 /* ===== UI構築 ===== */
 function normStatuses_(){ projects.forEach(function(p){ if(String(p['ステータス']||'').trim()==='進行中') p['ステータス']='施工中'; }); }
 function buildChips(){
+  var base=(filterKubun==='すべて')?projects:projects.filter(function(p){return String(p['種別']||'').trim()===filterKubun;});
   var counts={}; STATUSES.forEach(function(s){counts[s]=0;});
-  projects.forEach(function(p){if(counts[p['ステータス']]!=null)counts[p['ステータス']]++;});
+  base.forEach(function(p){if(counts[p['ステータス']]!=null)counts[p['ステータス']]++;});
   var wrap=document.getElementById('chips'); wrap.innerHTML='';
   var all=['すべて'].concat(STATUSES);
   all.forEach(function(s){
@@ -450,7 +452,7 @@ function buildChips(){
     c.style.borderColor=col;
     if(on){ c.style.background=col; c.style.color='#fff'; }
     else  { c.style.background='var(--bg)'; c.style.color=col; }
-    c.textContent= s==='すべて'?('すべて '+projects.length):(s+' '+(counts[s]||0));
+    c.textContent= s==='すべて'?('すべて '+base.length):(s+' '+(counts[s]||0));
     c.onclick=function(){filterStatus=s;buildChips();render();};
     wrap.appendChild(c);
   });
@@ -466,7 +468,7 @@ function buildKubunChips(){
     var c=document.createElement('div');
     c.className='chip'+(filterKubun===k?' on':'');
     c.textContent= k==='すべて'?('すべて '+projects.length):(k+' '+(counts[k]||0));
-    c.onclick=function(){filterKubun=k;buildKubunChips();render();};
+    c.onclick=function(){filterKubun=k;buildChips();render();};
     wrap.appendChild(c);
   });
 }
