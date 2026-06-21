@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- admin version 57 (2026-06-21) 区分の用語を統一：官公庁→公共。表示文言・選択肢・判定配列・並び順・CSSクラスをすべて公共に。GAS変更なし。 -->
 <!-- admin version 56 (2026-06-19) 管理ホーム追加。各マスタ件数・ログイン未設定・停止ユーザー・車両期限アラート・横断検索・よく使う登録導線を1画面に整理。 -->
 <!-- admin version 55 config.js共通化 -->
 <!-- admin version 54 (2026-06-18) 削除済みデータ復元タブ追加。v103 GAS の deletedList / restoreDeleted を使用。 -->
@@ -184,7 +185,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.8.3</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.21-43.9.12</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -238,7 +239,7 @@
       <h3>すぐに登録</h3>
       <div class="admin-action-grid">
         <button class="admin-action" onclick="switchTab('worker');openWorker();">＋ 作業員<small>社員・常用・ログイン権限を登録</small></button>
-        <button class="admin-action" onclick="switchTab('partner');openPartner();">＋ 取引先<small>官公庁・法人・個人を登録</small></button>
+        <button class="admin-action" onclick="switchTab('partner');openPartner();">＋ 取引先<small>公共・法人・個人を登録</small></button>
         <button class="admin-action" onclick="switchTab('vehicle');openVehicle();">＋ 車両<small>車検・保険・オイル交換を管理</small></button>
         <button class="admin-action" onclick="switchTab('contact');openContact();">＋ 担当者<small>取引先ごとの連絡先を登録</small></button>
         <button class="admin-action" onclick="switchTab('supplier');setTimeout(function(){openSupplier('');},250);">＋ 仕入先<small>電材店・外注・リース会社を登録</small></button>
@@ -311,9 +312,9 @@
 
       <div class="setup-card" id="setup-partner-card">
         <h3>4. 取引先をまとめて追加</h3>
-        <p class="hint">取引先名だけでも登録できます。区分は「官公庁・法人・個人」のいずれかを入れてください。未入力時は法人になります。</p>
+        <p class="hint">取引先名だけでも登録できます。区分は「公共・法人・個人」のいずれかを入れてください。未入力時は法人になります。</p>
         <div class="setup-mini"><span class="setup-pill">現在 <b id="suPartnerCount">0</b> 件</span><span class="setup-pill">形式：取引先名, 区分, 電話, 住所, 備考</span></div>
-        <textarea id="su_partners" placeholder="岐阜市役所, 官公庁, 058-000-0000, 岐阜県岐阜市〇〇町, 公共工事&#10;〇〇建設株式会社, 法人&#10;△△工場, 法人"></textarea>
+        <textarea id="su_partners" placeholder="岐阜市役所, 公共, 058-000-0000, 岐阜県岐阜市〇〇町, 公共工事&#10;〇〇建設株式会社, 法人&#10;△△工場, 法人"></textarea>
         <div class="setup-actions">
           <button class="btn sub" onclick="setupSample('partners')">入力例を入れる</button>
           <button class="btn primary" id="setupPartnerBtn" onclick="setupBulkPartners()">取引先を追加</button>
@@ -342,7 +343,7 @@
     <div id="list"><div class="empty">読込中…</div></div>
   </div>
   <div id="sec-partner" style="display:none;">
-    <div class="sec">取引先マスタ（官公庁／法人／個人）</div>
+    <div class="sec">取引先マスタ（公共／法人／個人）</div>
     <div id="listP"><div class="empty">読込中…</div></div>
   </div>
   <div id="sec-contact" style="display:none;">
@@ -458,7 +459,7 @@
   <div class="sheet">
     <h2 id="pTitle">取引先の追加</h2>
     <input type="hidden" id="p_id">
-    <div class="fld"><label>区分 *</label><select id="p_kind"><option>官公庁</option><option>法人</option><option>個人</option></select></div>
+    <div class="fld"><label>区分 *</label><select id="p_kind"><option>公共</option><option>法人</option><option>個人</option></select></div>
     <div class="fld"><label>取引先名 *</label><input id="p_name" placeholder="例）㈱井上デンキ工事 / 岐阜市"></div>
     <div class="two">
       <div class="fld"><label>電話</label><input id="p_tel" inputmode="tel"></div>
@@ -827,7 +828,7 @@ function setupSetBusy(id,busy,label){var b=document.getElementById(id);if(!b)ret
 function setupSample(type){
   if(type==='workers')document.getElementById('su_workers').value='山田 太郎, 山田, 社員, yamada, 1234, 20000\n佐藤 一郎, 佐藤, 社員, sato, 1234, 20000\nナンカイ 花子, 花子, 常用, hanako, 1234, 18000';
   if(type==='vehicles')document.getElementById('su_vehicles').value='ハイエース1号, 岐阜 400 あ 12-34, 2027-06-30, 2027-06-30, 工事用\n軽バン, 岐阜 580 あ 56-78\n高所作業車';
-  if(type==='partners')document.getElementById('su_partners').value='岐阜市役所, 官公庁, 058-000-0000, 岐阜県岐阜市〇〇町, 公共工事\n〇〇建設株式会社, 法人\n△△工場, 法人';
+  if(type==='partners')document.getElementById('su_partners').value='岐阜市役所, 公共, 058-000-0000, 岐阜県岐阜市〇〇町, 公共工事\n〇〇建設株式会社, 法人\n△△工場, 法人';
 }
 function setupRefreshProgress(){
   var wc=workers.length||0,vc=vehicles.length||0,pc=customers.length||0;
@@ -900,7 +901,7 @@ function setupBulkPartners(){
   var added=0,failed=0;
   lines.reduce(function(p,line){return p.then(function(){
     var a=setupParts(line),name=a[0]||''; if(!name){failed++;return;}
-    var kind=a[1]||'法人'; if(['官公庁','法人','個人'].indexOf(kind)<0)kind='法人';
+    var kind=a[1]||'法人'; if(['公共','法人','個人'].indexOf(kind)<0)kind='法人';
     var d={'顧客名':name,'区分':kind,'電話':a[2]||'','住所':a[3]||'','備考':a[4]||''};
     return callGAS({action:'addCustomer',data:d},null,true).then(function(res){if(res&&res.ok){customers.push(res.customer);added++;}else failed++;}).catch(function(){failed++;});
   });},Promise.resolve()).then(function(){
@@ -951,12 +952,12 @@ function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner'
 
 /* ===== 取引先（区分つき）===== */
 function custKind(c){ return String(c['区分']||'').trim()||'法人'; }   // 空は法人として扱う
-function kindCls(k){ return k==='官公庁'?'kk':(k==='個人'?'kx':'kg'); }
+function kindCls(k){ return k==='公共'?'kk':(k==='個人'?'kx':'kg'); }
 function loadCustomers(silent){ callGAS({action:'customers'},null,silent).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); customers=res.customers||[]; admSaveCache(); renderCustomers();renderAdminHome();adminSearch(); }).catch(function(err){if(!silent)toast('取引先の読込失敗：'+err.message);}); }
 function renderCustomers(){
   var el=document.getElementById('listP');
   if(!customers.length){el.innerHTML='<div class="empty">取引先がまだありません。<br>右下の「＋取引先」から登録してください。</div>';return;}
-  var order=['官公庁','法人','個人'],groups={};
+  var order=['公共','法人','個人'],groups={};
   customers.forEach(function(c){var k=custKind(c);(groups[k]=groups[k]||[]).push(c);});
   Object.keys(groups).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
   el.innerHTML='';
@@ -1020,7 +1021,7 @@ function renderContacts(){
   });
 }
 function buildPartnerSelect(sel,val){
-  var order=['官公庁','法人','個人'],byKind={};
+  var order=['公共','法人','個人'],byKind={};
   customers.forEach(function(c){var k=custKind(c);(byKind[k]=byKind[k]||[]).push(c);});
   Object.keys(byKind).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
   sel.innerHTML='<option value="">（取引先を選択）</option>';

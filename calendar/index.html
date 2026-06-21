@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- calendar version 59 (2026-06-21) 区分の用語を統一：官公庁→公共（区分フィルタ）。GAS変更なし。 -->
 <!-- calendar version 58 (2026-06-17) ヘッダー隠し時に月バー・曜日バーを確実に最上部へ移動。updatePositionsをピンチ後に即時実行・DOMContentLoadedでinitTopsを早期実行・offsetHeight取得タイミングを修正。GAS変更なし。 -->
 <!-- calendar version 57 (2026-06-17) スマホ月表示：下スクロールでヘッダー隠す・上スクロールで再表示、ピンチ拡大でもヘッダー隠す。曜日バー(.wk)をmonthView外に移動しstickyで上部固定。navbar/viewbar/wkのtopをJSで連動更新。スマホのみ(max-width:767px)・GAS変更なし。 -->
 <!-- calendar version 56 (2026-06-16) ヘッダーのクリア(ごみ箱)ボタンをHTMLから削除し、ヘッダーを上に詰める(.hbar row-gap 12→6px・hright 2段→1段化・header padding縮小)。clearPeriod関数とCSSルールは残置(将来再利用可)。HTML/JS関数/GAS不変。 -->
@@ -226,7 +227,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.8.3</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.21-43.9.12</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -303,7 +304,7 @@
     <!-- 3. 種別 ／ 候補（取引先）-->
     <div class="two">
       <div class="fld"><label>発注者区分</label><select id="f_ctype" onchange="onCType()">
-        <option value="">（すべて）</option><option>官公庁</option><option>法人</option><option>個人</option></select></div>
+        <option value="">（すべて）</option><option>公共</option><option>法人</option><option>個人</option></select></div>
       <div class="fld"><label>顧客名</label><select id="f_cand" onchange="onCand()"><option value="">（顧客名を選択）</option></select></div>
     </div>
     <!-- 4. 現場名（1行）-->

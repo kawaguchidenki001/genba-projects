@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- report version 66 (2026-06-21) 区分の用語を統一：官公庁→公共（KINDS）。GAS変更なし。 -->
 <!-- report version 65 config.js共通化 -->
 <!-- report version 64 (2026-06-18) 日報30秒化＋作業内容定型文の折りたたみカテゴリ表示に対応。GAS変更なし。 -->
 <!-- report version 61 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置)。長い名称でも重なり/切れなし。タイトル(nm/h1)の改行禁止解除。CSSのみ・HTML/機能/id不変・GAS変更なし。 -->
@@ -235,7 +236,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.8.3</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.21-43.9.12</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -639,7 +640,7 @@ function renderSum(list){
 }
 
 var NOCUST='（未分類）';
-var KINDS=['官公庁','法人','個人'];
+var KINDS=['公共','法人','個人'];
 function kindKey(p){var k=String(p['種別']||'').trim();return k||'未分類';}
 function buildKindOptions(){var sel=document.getElementById('f_kind');if(!sel)return;
   var list=KINDS.slice();

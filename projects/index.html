@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- projects version 51 (2026-06-21) 区分の用語を統一：官公庁→公共。種別の選択肢・並び順・既定値を公共に。GAS変更なし。 -->
 <!-- projects version 50 (2026-06-15) ヘッダー案A化(2段・CSSグリッド)。管理者ボタン(admBtn)を非表示(管理者状態は全画面共有)。 CSSのみ・HTML/JS/id不変・GAS変更なし。 -->
 <!-- projects version 48 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。操作行hd2は同期表示を非表示化・管理者🔑保持。更新はreload()。 機能・id不変 -->
 <html lang="ja">
@@ -184,7 +185,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.8.3</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.21-43.9.12</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -235,7 +236,7 @@
     </div>
     <div class="two">
       <div class="fld"><label>種別</label><select id="f_type">
-        <option>官公庁</option><option>法人</option><option>個人</option></select></div>
+        <option>公共</option><option>法人</option><option>個人</option></select></div>
       <div class="fld"><label>ステータス</label><select id="f_status">
         <option>見積中</option><option>受注</option><option>段取済</option><option>施工中</option><option>完了</option><option>請求済</option></select></div>
     </div>
@@ -437,7 +438,7 @@ function custKindOf(c){ return String(c['区分']||'').trim()||'法人'; }
 function buildCustList(){
   var sel=document.getElementById('f_cust'); if(!sel)return;
   var keep=sel.value;
-  var order=['官公庁','法人','個人'],byKind={};
+  var order=['公共','法人','個人'],byKind={};
   customers.forEach(function(c){var k=custKindOf(c);(byKind[k]=byKind[k]||[]).push(c);});
   Object.keys(byKind).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
   sel.innerHTML='<option value="">（選択）</option>';
@@ -701,7 +702,7 @@ function openProject(p){
   g('f_cust_other').value=(_csel.value==='__other__')?_cust:'';
   g('f_cust_other').style.display=(_csel.value==='__other__')?'block':'none';
   g('f_place').value= p?(p['場所']||''):'';
-  g('f_type').value = p?(p['種別']||'官公庁'):'官公庁';
+  g('f_type').value = p?(p['種別']||'公共'):'公共';
   g('f_status').value=p?(p['ステータス']||'受注'):'受注';
   g('f_start').value= p?(dateOnly(p['工期開始'])):'';
   g('f_end').value  = p?(dateOnly(p['工期完了'])):'';
