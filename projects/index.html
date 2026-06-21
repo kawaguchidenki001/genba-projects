@@ -1,4 +1,9 @@
 <!DOCTYPE html>
+<!-- projects version 59 (2026-06-21) 詳細：図面・工程表・写真アイコンを、中身が無いとき淡色（グレー）表示にしてデータ有無が分かるように。GAS v149 が必要（folderCounts API）。 -->
+<!-- projects version 58 (2026-06-21) 詳細：「写真・資料の追加」ボタンを「この現場を編集」の上に追加（全ユーザー表示・この現場のファイル画面 ../files/?case= へ遷移しアップロード可）。GAS変更なし。 -->
+<!-- projects version 57 (2026-06-21) 詳細：顧客情報セクション（会社名・担当者・電話・メール）を案件情報の下に追加。案件情報からは担当者・電話・メールを顧客情報へ移動（住所・備考は案件情報に残す）。GAS変更なし。 -->
+<!-- projects version 56 (2026-06-21) 詳細：お客様向け進捗共有を削除（連絡欄はLINE未設定なら非表示）。地図チップ＝現場地図を大きく・ホームセンターを小さく。スマホでタイルが横長になる問題を修正（aspect-ratio正方形＋列幅調整）。GAS変更なし。 -->
+<!-- projects version 55 (2026-06-21) 上部：顧客プルダウン削除。状態チップを枠線＋色付き（カードのバッジと同色）にし区分チップと種類を変えた。ステータス「進行中」を「施工中」に正規化（表示・色・チップ集計・絞り込みを統一）。GAS変更なし。 -->
 <!-- projects version 54 (2026-06-21) 上部の検索を選択式に変更：区分チップ（種別から動的生成）＋顧客プルダウン。検索ボックス廃止・発注者区分表記を解消。状態チップは維持。GAS変更なし。 -->
 <!-- projects version 53 (2026-06-21) ドライブから現場を取込（区分/顧客/現場名フォルダ→区分・顧客・現場名入りの案件を登録）。確認一覧→OKで登録。GAS v148必要。 -->
 <!-- projects version 52 (2026-06-21) 区分ラベル化(種別→区分)・並び替え(区分→顧客→現場名)・現場名ラベル統一(案件名→現場名)。id不変・GAS変更なし。 -->
@@ -56,7 +61,7 @@
   .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;}
   .chip{flex:0 0 auto;padding:7px 13px;border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);font-size:13px;cursor:pointer;white-space:nowrap;font-weight:700;}
   .chip.on{background:var(--ink);color:#fff;box-shadow:var(--well-soft);}
-  .custFilter{width:100%;margin:7px 0 2px;padding:10px 12px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--ink);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;}
+  .schip{flex:0 0 auto;padding:6px 12px;border:2px solid;border-radius:999px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:800;background:var(--bg);transition:background .15s,color .15s;}
   .row2{display:flex;gap:8px;align-items:center;}
   select.sort{flex:1;padding:10px 11px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--well);font-size:14px;color:var(--ink);}
   main{padding:4px 12px 12px;max-width:760px;margin:0 auto;}
@@ -84,8 +89,8 @@
   .ghd .gc{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--accent);}
   .ghd .gn{flex:1;}
   .ghd .gcount{font-size:12px;color:var(--sub);font-weight:600;}
-  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:10px;}
-  .tile{position:relative;background:var(--bg);border:none;border-top:4px solid var(--line);border-radius:14px;box-shadow:var(--rise-sm);padding:14px 10px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;min-height:106px;justify-content:center;}
+  .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;}
+  .tile{position:relative;background:var(--bg);border:none;border-top:4px solid var(--line);border-radius:14px;box-shadow:var(--rise-sm);padding:14px 10px 12px;cursor:pointer;display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;aspect-ratio:1/1;min-height:106px;justify-content:center;}
   .tile:active{transform:scale(.97);box-shadow:var(--well);}
   .tile .ic{font-size:26px;line-height:1;color:var(--accent-d);}
   .tile .ic svg{width:26px;height:26px;display:block;}
@@ -108,6 +113,8 @@
   .mchip{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:4px;text-decoration:none;color:var(--ink);background:var(--bg);box-shadow:var(--rise-sm);border:none;border-radius:13px;padding:11px 12px;min-width:72px;}
   .mchip:active{box-shadow:var(--well);}
   .mchip .i{font-size:21px;} .mchip .t{font-size:11.5px;font-weight:700;}
+  .mchip.big{padding:14px 16px;min-width:96px;} .mchip.big .i{font-size:28px;} .mchip.big .t{font-size:13px;}
+  .mchip.small{padding:8px 9px;min-width:56px;} .mchip.small .i{font-size:16px;} .mchip.small .t{font-size:10px;}
   .ctc{display:flex;flex-direction:column;gap:8px;}
   .cbtn{display:flex;align-items:center;gap:10px;text-decoration:none;border-radius:12px;padding:13px 15px;font-weight:700;font-size:14.5px;border:none;background:var(--bg);color:var(--ink);box-shadow:var(--rise-sm);cursor:pointer;font-family:inherit;}
   .cbtn:active{box-shadow:var(--well);}
@@ -122,6 +129,8 @@
   .fitem .ft{font-size:11px;font-weight:700;text-align:center;line-height:1.3;}
   .fc1{background:#5b6b8c;} .fc2{background:#2d7dd2;} .fc3{background:#e8910b;} .fc4{background:#d2566b;}
   .fc5{background:#22a06b;} .fc6{background:#7c6ce0;} .fc7{background:#0d9aa0;} .fc8{background:#0f766e;}
+  .fitem.fempty .fi{background:#dfe4ea !important;color:#aab2bf;box-shadow:none;}
+  .fitem.fempty .ft{color:#aab2bf;}
   .d-btns{display:flex;gap:8px;}
   .d-btns .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;text-align:center;}
   .fab{position:fixed;right:16px;bottom:calc(env(safe-area-inset-bottom) + 16px);z-index:30;background:var(--accent);color:#fff;border:none;border-radius:999px;padding:14px 21px;font-size:15px;font-weight:800;box-shadow:5px 6px 16px rgba(91,91,214,.45),-3px -3px 8px #ffffff;cursor:pointer;}
@@ -215,7 +224,6 @@
 
 <div class="toolbar">
   <div class="chips" id="kubunChips"></div>
-  <select id="custFilter" class="custFilter" onchange="render()"><option value="">すべての顧客</option></select>
   <div class="chips" id="chips"></div>
   <button id="driveImportBtn" onclick="openDriveImport()" style="display:none;margin-top:8px;width:100%;padding:11px;border:none;border-radius:11px;background:#eef5fb;color:#1f5fa8;font-weight:800;font-size:14px;cursor:pointer;box-shadow:4px 4px 9px rgba(196,207,219,.7),-4px -4px 9px #fff;">📁 ドライブから現場を取込</button>
 </div>
@@ -315,25 +323,9 @@
       <div class="d-secttl">現場周辺マップ</div>
       <div class="mapchips" id="d_mapchips"></div>
 
-      <div class="d-secttl">連絡</div>
-      <div class="ctc">
+      <div class="d-secttl" id="d_ctcttl">連絡</div>
+      <div class="ctc" id="d_ctc">
         <a id="d_line" class="cbtn lw" target="_blank" rel="noopener" style="display:none;"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.3-.5L3 21l1.4-4a8 8 0 0 1-1.4-4.5A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z"/></svg></span>LINE WORKSを開く</a>
-        <button id="d_share" class="cbtn share" style="display:none;" onclick="openSharePanel()"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6M10.5 6.5 13 4a4 4 0 0 1 6 6l-2.5 2.5M13.5 17.5 11 20a4 4 0 0 1-6-6l2.5-2.5"/></svg></span>お客様向け進捗共有</button>
-      </div>
-      <div id="sharePanel" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:13px 15px;margin-top:8px;">
-        <div style="font-size:12.5px;color:#1d4ed8;font-weight:700;margin-bottom:8px;">この案件の進捗（現場名・工期・予定・写真）を、ログイン不要の閲覧専用ページで施主・元請に共有できます。金額や連絡先は表示されません。</div>
-        <div id="shareOff">
-          <button class="cbtn fol" style="width:100%;justify-content:center;" onclick="shareEnable()"><span class="ci">▶</span>共有URLを発行する</button>
-        </div>
-        <div id="shareOn" style="display:none;">
-          <input id="shareUrl" readonly style="width:100%;padding:10px 12px;border:1px solid #bfdbfe;border-radius:9px;font-size:12.5px;background:#fff;margin-bottom:8px;">
-          <div style="display:flex;gap:7px;flex-wrap:wrap;">
-            <button class="cbtn" style="flex:1;justify-content:center;min-width:110px;" onclick="shareCopy()"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg></span>コピー</button>
-            <button class="cbtn" style="flex:1;justify-content:center;min-width:110px;" onclick="shareOpen()"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg></span>開く</button>
-            <button class="cbtn" style="flex:1;justify-content:center;min-width:110px;color:#c0392b;border-color:#e3b7b0;" onclick="shareDisable()"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6 18.4 18.4"/></svg></span>停止</button>
-          </div>
-        </div>
-      </div>
       <div class="d-secttl" id="arcTtl" style="display:none;">案件の保管と削除</div>
       <div id="arcPanel" style="display:none;background:#fff7ed;border:1px solid #f0c674;border-radius:12px;padding:13px 15px;">
         <div style="font-size:12.5px;color:#92400e;font-weight:700;line-height:1.7;margin-bottom:10px;">完了した現場のデータをNASなどへ保管してから、システムから削除する手順です。<br>① 保管用Excelを作成 → ② Driveフォルダをダウンロードして保管 → ③ システムから削除</div>
@@ -347,9 +339,15 @@
       <div class="d-secttl">案件情報</div>
       <div class="d-rows" id="d_rows"></div>
 
+      <div class="d-secttl">顧客情報</div>
+      <div class="d-rows" id="d_custrows"></div>
+
       <div class="d-secttl">この現場の機能</div>
       <div class="fmenu" id="d_fmenu"></div>
 
+      <div style="margin-top:18px;">
+        <button class="btn primary" style="width:100%;background:var(--grad);box-shadow:3px 4px 10px rgba(91,91,214,.35),-2px -2px 6px #fff;" onclick="addFilesFromDetail()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:7px;"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>写真・資料の追加</button>
+      </div>
       <div id="d_adminbtns" style="display:none;margin-top:18px;">
         <button class="btn primary" style="width:100%;" onclick="editFromDetail()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="m4 20 1.2-4.2L16 5l3 3L8.2 18.8Z"/><path d="m13.2 6.8 3 3"/></svg>この現場を編集</button>
       </div>
@@ -416,6 +414,7 @@ function setSync(state,txt){
 /* ===== 読込 ===== */
 function loadCache(){
   try{projects=JSON.parse(localStorage.getItem(CACHE_P)||'[]');}catch(e){projects=[];}
+  normStatuses_();
   try{customers=JSON.parse(localStorage.getItem(CACHE_C)||'[]');}catch(e){customers=[];}
   try{contacts=JSON.parse(localStorage.getItem(CACHE_K)||'[]');}catch(e){contacts=[];}
 }
@@ -428,7 +427,7 @@ function reload(silent){
   setSync('busy','同期中…');
   callGAS({action:'all'},null,silent).then(function(res){
     if(!res.ok){throw new Error(res.error||'エラー');}
-    projects=res.projects||[]; customers=res.customers||[]; contacts=res.contacts||[];
+    projects=res.projects||[]; customers=res.customers||[]; contacts=res.contacts||[]; normStatuses_();
     saveCache(); buildChips(); buildCustList(); render();
     setSync('ok','同期済み'); openCaseFromUrl();
   }).catch(function(err){
@@ -437,6 +436,7 @@ function reload(silent){
 }
 
 /* ===== UI構築 ===== */
+function normStatuses_(){ projects.forEach(function(p){ if(String(p['ステータス']||'').trim()==='進行中') p['ステータス']='施工中'; }); }
 function buildChips(){
   var counts={}; STATUSES.forEach(function(s){counts[s]=0;});
   projects.forEach(function(p){if(counts[p['ステータス']]!=null)counts[p['ステータス']]++;});
@@ -444,12 +444,17 @@ function buildChips(){
   var all=['すべて'].concat(STATUSES);
   all.forEach(function(s){
     var c=document.createElement('div');
-    c.className='chip'+(filterStatus===s?' on':'');
+    var on=(filterStatus===s);
+    var col=(s==='すべて')?'var(--ink)':statusColor(s);
+    c.className='schip'+(on?' on':'');
+    c.style.borderColor=col;
+    if(on){ c.style.background=col; c.style.color='#fff'; }
+    else  { c.style.background='var(--bg)'; c.style.color=col; }
     c.textContent= s==='すべて'?('すべて '+projects.length):(s+' '+(counts[s]||0));
     c.onclick=function(){filterStatus=s;buildChips();render();};
     wrap.appendChild(c);
   });
-  buildKubunChips(); fillCustFilter();
+  buildKubunChips();
 }
 function buildKubunChips(){
   var present={}, counts={};
@@ -464,15 +469,6 @@ function buildKubunChips(){
     c.onclick=function(){filterKubun=k;buildKubunChips();render();};
     wrap.appendChild(c);
   });
-}
-function fillCustFilter(){
-  var sel=document.getElementById('custFilter'); if(!sel)return;
-  var keep=sel.value;
-  var names={}; projects.forEach(function(p){var c=String(p['顧客']||'').trim(); if(c)names[c]=true;});
-  var arr=Object.keys(names).sort(function(a,b){return a.localeCompare(b,'ja');});
-  sel.innerHTML='<option value="">すべての顧客</option>';
-  arr.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
-  sel.value=(keep&&names[keep])?keep:'';
 }
 function custKindOf(c){ return String(c['区分']||'').trim()||'法人'; }
 function buildCustList(){
@@ -548,28 +544,21 @@ function openDetail(p){
   if(addr){
     var q=encodeURIComponent(addr);
     var chips=[
-      {i:'📍',t:'現場地図',u:'https://www.google.com/maps/search/?api=1&query='+q},
+      {i:'📍',t:'現場地図',sz:'big',u:'https://www.google.com/maps/search/?api=1&query='+q},
       {i:'🏪',t:'コンビニ',u:'https://www.google.com/maps/search/'+encodeURIComponent('コンビニ '+addr)},
       {i:'🚻',t:'トイレ',u:'https://www.google.com/maps/search/'+encodeURIComponent('トイレ '+addr)},
       {i:'🅿️',t:'駐車場',u:'https://www.google.com/maps/search/'+encodeURIComponent('コインパーキング '+addr)},
-      {i:'🛠️',t:'ホームセンター',u:'https://www.google.com/maps/search/'+encodeURIComponent('ホームセンター '+addr)}
+      {i:'🛠️',t:'ホームセンター',sz:'small',u:'https://www.google.com/maps/search/'+encodeURIComponent('ホームセンター '+addr)}
     ];
-    mc.innerHTML=chips.map(function(c){return '<a class="mchip" href="'+c.u+'" target="_blank" rel="noopener"><span class="i">'+c.i+'</span><span class="t">'+c.t+'</span></a>';}).join('');
+    mc.innerHTML=chips.map(function(c){return '<a class="mchip'+(c.sz?(' '+c.sz):'')+'" href="'+c.u+'" target="_blank" rel="noopener"><span class="i">'+c.i+'</span><span class="t">'+c.t+'</span></a>';}).join('');
     mc.style.display='flex';
   } else { mc.innerHTML='<div class="dnote-empty">住所が未登録のため周辺マップは表示できません。</div>'; mc.style.display='block'; }
 
   // LINE WORKS
-  var ln=g('d_line');
-  if(p['LINE_URL']){ ln.href=p['LINE_URL']; ln.style.display='flex'; } else { ln.style.display='none'; }
+  var ln=g('d_line'), ctcT=g('d_ctcttl'), ctcB=g('d_ctc');
+  if(p['LINE_URL']){ ln.href=p['LINE_URL']; ln.style.display='flex'; if(ctcT)ctcT.style.display=''; if(ctcB)ctcB.style.display=''; }
+  else { ln.style.display='none'; if(ctcT)ctcT.style.display='none'; if(ctcB)ctcB.style.display='none'; }
 
-  // お客様向け進捗共有（管理者のみ）
-  var shBtn=g('d_share'), shPanel=g('sharePanel');
-  shPanel.style.display='none';
-  if(isAdmin()){
-    shBtn.style.display='flex';
-    var tok=String(p['共有トークン']||'').trim();
-    setShareUI(tok);
-  } else { shBtn.style.display='none'; }
 
   // 案件の保管と削除（完了・請求済 × 管理者のみ）
   var arcT=g('arcTtl'),arcP=g('arcPanel'),stv=String(p['ステータス']||'').trim();
@@ -583,11 +572,18 @@ function openDetail(p){
   function row(k,v){ if(v) rows+='<div class="d-row"><span class="k">'+k+'</span><span class="v">'+esc(v)+'</span></div>'; }
   function linkRow(k,v,scheme){ if(v) rows+='<div class="d-row"><span class="k">'+k+'</span><span class="v"><a href="'+scheme+encodeURIComponent(v)+'">'+esc(v)+'</a></span></div>'; }
   row('住所',p['場所']);
-  row('担当者',p['先方担当者']);
-  linkRow('電話',p['電話番号'],'tel:');
-  linkRow('メール',p['メールアドレス'],'mailto:');
   row('備考',p['備考']);
   g('d_rows').innerHTML=rows||'<div class="dnote-empty">情報が登録されていません。</div>';
+
+  // 顧客情報（会社名・担当者・電話・メール）
+  var crows='';
+  function crow(k,v){ if(v) crows+='<div class="d-row"><span class="k">'+k+'</span><span class="v">'+esc(v)+'</span></div>'; }
+  function clinkRow(k,v,scheme){ if(v) crows+='<div class="d-row"><span class="k">'+k+'</span><span class="v"><a href="'+scheme+encodeURIComponent(v)+'">'+esc(v)+'</a></span></div>'; }
+  crow('会社名',p['顧客']);
+  crow('担当者',p['先方担当者']);
+  clinkRow('電話',p['電話番号'],'tel:');
+  clinkRow('メール',p['メールアドレス'],'mailto:');
+  g('d_custrows').innerHTML=crows||'<div class="dnote-empty">顧客情報が登録されていません。</div>';
 
   // 機能アイコン（フォルダ系はURL取得後に有効化）
   var menu=[
@@ -628,6 +624,16 @@ function openDetail(p){
       });
     }
   }).catch(function(){});
+  // 図面・工程表・写真の中身の有無を取得し、空のアイコンを淡色表示
+  callGAS({action:'folderCounts',id:p['案件ID']},null,true).then(function(res){
+    if(res&&res.ok&&res.counts){
+      var km={drawUrl:'draw',schedUrl:'sched',photoUrl:'photo'};
+      Array.prototype.forEach.call(fm.querySelectorAll('.fitem'),function(el){
+        var m=menu[+el.dataset.idx], k=km[m.key];
+        if(m.act==='folder'&&k){ if((res.counts[k]||0)===0) el.classList.add('fempty'); else el.classList.remove('fempty'); }
+      });
+    }
+  }).catch(function(){});
 
   g('d_adminbtns').style.display='block';
   document.getElementById('ovd').classList.add('show');
@@ -664,6 +670,7 @@ function openNoteInTB(caseId,noteId){ location.href='../toolbox/?memo='+encodeUR
 function openCheckInTB(caseId,noteId){ location.href='../toolbox/?check='+encodeURIComponent(caseId)+'&note='+encodeURIComponent(noteId); }
 function openDrawInTB(caseId,noteId){ location.href='../toolbox/?draw='+encodeURIComponent(caseId)+'&note='+encodeURIComponent(noteId); }
 function editFromDetail(){ closeDetail(); if(curDetail)openProject(curDetail); }
+function addFilesFromDetail(){ if(!curDetail)return; location.href='../files/?case='+encodeURIComponent(curDetail['案件ID']); }
 function closeDetail(ev){ if(ev&&ev.preventDefault)ev.preventDefault(); document.getElementById('ovd').classList.remove('show'); }
 function parseYmd(v){if(!v)return null;var t=String(v).slice(0,10).replace(/\//g,'-');var d=new Date(t+'T00:00:00');return isNaN(d.getTime())?null:d;}
 function termBar(p){
@@ -682,8 +689,7 @@ function termBar(p){
 function highlightCard(pid){
   if(!pid)return;
   var el=document.querySelector('.tile[data-pid="'+pid+'"]');
-  var _cf2=document.getElementById('custFilter');
-  if(!el&&(filterStatus!=='すべて'||filterKubun!=='すべて'||(_cf2&&_cf2.value))){filterStatus='すべて';filterKubun='すべて';if(_cf2)_cf2.value='';buildChips();render();el=document.querySelector('.tile[data-pid="'+pid+'"]');}
+  if(!el&&(filterStatus!=='すべて'||filterKubun!=='すべて')){filterStatus='すべて';filterKubun='すべて';buildChips();render();el=document.querySelector('.tile[data-pid="'+pid+'"]');}
   if(!el)return;
   el.scrollIntoView({behavior:'smooth',block:'center'});
   el.classList.add('hl');
@@ -693,8 +699,6 @@ function render(){
   var list=projects.slice();
   if(filterStatus!=='すべて') list=list.filter(function(p){return p['ステータス']===filterStatus;});
   if(filterKubun!=='すべて') list=list.filter(function(p){return String(p['種別']||'').trim()===filterKubun;});
-  var _cf=document.getElementById('custFilter'); var _fcust=_cf?_cf.value:'';
-  if(_fcust) list=list.filter(function(p){return String(p['顧客']||'').trim()===_fcust;});
   document.getElementById('count').textContent= list.length+' 件';
   var el=document.getElementById('list');
   if(!list.length){el.innerHTML='<div class="empty">該当する現場がありません。<br>右下の「＋新規案件」から登録できます。</div>';return;}
