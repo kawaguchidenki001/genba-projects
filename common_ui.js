@@ -22,16 +22,6 @@
   document.documentElement.classList.add('gc-performance-lite');
   if(isRoot) document.body.classList.add('gc-root-page');
 
-  function setDeviceClass(){
-    var w = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-    document.body.classList.toggle('gc-phone', w <= 680);
-    document.body.classList.toggle('gc-tablet', w > 680 && w <= 1024);
-    document.body.classList.toggle('gc-desktop', w > 1024);
-    document.documentElement.setAttribute('data-gc-width', String(w));
-  }
-  setDeviceClass();
-  window.addEventListener('resize', function(){ clearTimeout(window.__gcResizeTimer); window.__gcResizeTimer=setTimeout(setDeviceClass,120); });
-
   // バージョンバッジを共通設定に同期
   ['verBadge','appBadge','loginVer'].forEach(function(id){
     var el = document.getElementById(id);
@@ -49,9 +39,8 @@
   style.textContent = `
     .gc-common-ui,.gc-common-ui *,.gc-common-ui *::before,.gc-common-ui *::after{box-sizing:border-box}
     html{-webkit-text-size-adjust:100%;scroll-padding-bottom:110px}
-    /* v36: 画面描画の軽量化。対応ブラウザでは画面外カードの描画を遅らせる */
+    /* 画面描画の軽量化：画面外カードの描画を遅らせる */
     .gc-common-ui .card,.gc-common-ui .sq,.gc-common-ui section,.gc-common-ui .panel{content-visibility:auto;contain-intrinsic-size:1px 240px}
-    .gc-common-ui img:not([loading]){image-rendering:auto}
     .gc-performance-lite{scroll-behavior:smooth}
 
     body.gc-common-ui{overflow-x:hidden;touch-action:manipulation}
@@ -89,7 +78,6 @@
       .gc-root-page .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important}
       .gc-root-page a.sq{padding:10px!important;border-radius:15px!important;min-height:0!important}
       .gc-root-page .sq .ic{width:39px!important;height:39px!important}
-      .gc-root-page .sq .cor{top:8px!important;right:8px!important}
       .gc-root-page .head h1{font-size:26px!important}
       #fileAddDock,#ledgerDock,.ledger-dock,.file-dock{left:0!important;right:0!important;bottom:0!important;border-radius:18px 18px 0 0!important;padding:10px 12px calc(10px + env(safe-area-inset-bottom))!important;max-width:none!important}
       #fileAddDock button,#ledgerDock button,.ledger-dock button,.file-dock button{min-height:50px!important}
