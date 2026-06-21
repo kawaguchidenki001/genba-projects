@@ -106,8 +106,8 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wrapTables); else wrapTables();
 
-  // 画面下に固定操作があるページでは重ねない
-  var hasOwnDock = document.getElementById('fileAddDock') || document.getElementById('ledgerDock') || document.querySelector('.bottom') || document.getElementById('outBar');
+  // 画面下に固定操作があるページでは重ねない（FABボタンを持つ案件管理なども含む）
+  var hasOwnDock = document.getElementById('fileAddDock') || document.getElementById('ledgerDock') || document.querySelector('.bottom') || document.getElementById('outBar') || document.querySelector('.fab');
   var skipPaths = /\/(files|photos|toolbox)\//.test(path);
   if(isSub && !hasOwnDock && !skipPaths && !document.getElementById('gcCommonNav')){
     var nav = document.createElement('div');
