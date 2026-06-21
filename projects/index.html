@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- projects version 54 (2026-06-21) 上部の検索を選択式に変更：区分チップ（種別から動的生成）＋顧客プルダウン。検索ボックス廃止・発注者区分表記を解消。状態チップは維持。GAS変更なし。 -->
 <!-- projects version 53 (2026-06-21) ドライブから現場を取込（区分/顧客/現場名フォルダ→区分・顧客・現場名入りの案件を登録）。確認一覧→OKで登録。GAS v148必要。 -->
 <!-- projects version 52 (2026-06-21) 区分ラベル化(種別→区分)・並び替え(区分→顧客→現場名)・現場名ラベル統一(案件名→現場名)。id不変・GAS変更なし。 -->
 <!-- projects version 51 (2026-06-21) 区分の用語を統一：官公庁→公共。種別の選択肢・並び順・既定値を公共に。GAS変更なし。 -->
@@ -55,6 +56,7 @@
   .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;}
   .chip{flex:0 0 auto;padding:7px 13px;border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);font-size:13px;cursor:pointer;white-space:nowrap;font-weight:700;}
   .chip.on{background:var(--ink);color:#fff;box-shadow:var(--well-soft);}
+  .custFilter{width:100%;margin:7px 0 2px;padding:10px 12px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--ink);font-size:14px;font-weight:700;font-family:inherit;cursor:pointer;}
   .row2{display:flex;gap:8px;align-items:center;}
   select.sort{flex:1;padding:10px 11px;border:none;border-radius:11px;background:var(--bg);box-shadow:var(--well);font-size:14px;color:var(--ink);}
   main{padding:4px 12px 12px;max-width:760px;margin:0 auto;}
@@ -212,7 +214,8 @@
 </div>
 
 <div class="toolbar">
-  <div class="search"><input id="q" type="search" placeholder="発注者区分・顧客名・現場名で検索" oninput="render()"></div>
+  <div class="chips" id="kubunChips"></div>
+  <select id="custFilter" class="custFilter" onchange="render()"><option value="">すべての顧客</option></select>
   <div class="chips" id="chips"></div>
   <button id="driveImportBtn" onclick="openDriveImport()" style="display:none;margin-top:8px;width:100%;padding:11px;border:none;border-radius:11px;background:#eef5fb;color:#1f5fa8;font-weight:800;font-size:14px;cursor:pointer;box-shadow:4px 4px 9px rgba(196,207,219,.7),-4px -4px 9px #fff;">📁 ドライブから現場を取込</button>
 </div>
@@ -379,7 +382,7 @@ function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||genbaSessionTok();}
 
 var STATUSES = ['見積中','受注','段取済','施工中','完了','請求済'];
-var projects = [], customers = [], contacts = [], filterStatus = 'すべて';
+var projects = [], customers = [], contacts = [], filterStatus = 'すべて', filterKubun = 'すべて';
 var CACHE_P = 'genba_projects', CACHE_C = 'genba_customers', CACHE_K = 'genba_contacts';
 
 /* ===== JSONP 通信 ===== */
@@ -446,6 +449,30 @@ function buildChips(){
     c.onclick=function(){filterStatus=s;buildChips();render();};
     wrap.appendChild(c);
   });
+  buildKubunChips(); fillCustFilter();
+}
+function buildKubunChips(){
+  var present={}, counts={};
+  projects.forEach(function(p){var k=String(p['種別']||'').trim(); if(k){present[k]=true;counts[k]=(counts[k]||0)+1;}});
+  var canon=['公共','法人','個人'];
+  var order=canon.filter(function(k){return present[k];}).concat(Object.keys(present).filter(function(k){return canon.indexOf(k)<0;}).sort(function(a,b){return a.localeCompare(b,'ja');}));
+  var wrap=document.getElementById('kubunChips'); if(!wrap)return; wrap.innerHTML='';
+  ['すべて'].concat(order).forEach(function(k){
+    var c=document.createElement('div');
+    c.className='chip'+(filterKubun===k?' on':'');
+    c.textContent= k==='すべて'?('すべて '+projects.length):(k+' '+(counts[k]||0));
+    c.onclick=function(){filterKubun=k;buildKubunChips();render();};
+    wrap.appendChild(c);
+  });
+}
+function fillCustFilter(){
+  var sel=document.getElementById('custFilter'); if(!sel)return;
+  var keep=sel.value;
+  var names={}; projects.forEach(function(p){var c=String(p['顧客']||'').trim(); if(c)names[c]=true;});
+  var arr=Object.keys(names).sort(function(a,b){return a.localeCompare(b,'ja');});
+  sel.innerHTML='<option value="">すべての顧客</option>';
+  arr.forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o);});
+  sel.value=(keep&&names[keep])?keep:'';
 }
 function custKindOf(c){ return String(c['区分']||'').trim()||'法人'; }
 function buildCustList(){
@@ -655,20 +682,19 @@ function termBar(p){
 function highlightCard(pid){
   if(!pid)return;
   var el=document.querySelector('.tile[data-pid="'+pid+'"]');
-  if(!el&&filterStatus!=='すべて'){filterStatus='すべて';buildChips();render();el=document.querySelector('.tile[data-pid="'+pid+'"]');}
+  var _cf2=document.getElementById('custFilter');
+  if(!el&&(filterStatus!=='すべて'||filterKubun!=='すべて'||(_cf2&&_cf2.value))){filterStatus='すべて';filterKubun='すべて';if(_cf2)_cf2.value='';buildChips();render();el=document.querySelector('.tile[data-pid="'+pid+'"]');}
   if(!el)return;
   el.scrollIntoView({behavior:'smooth',block:'center'});
   el.classList.add('hl');
   setTimeout(function(){el.classList.remove('hl');},2600);
 }
 function render(){
-  var q=(document.getElementById('q').value||'').trim();
   var list=projects.slice();
   if(filterStatus!=='すべて') list=list.filter(function(p){return p['ステータス']===filterStatus;});
-  if(q){var lq=q.toLowerCase();
-    list=list.filter(function(p){
-      return [p['案件名'],p['顧客'],p['場所'],p['案件ID'],p['担当']]
-        .some(function(v){return String(v||'').toLowerCase().indexOf(lq)>=0;});});}
+  if(filterKubun!=='すべて') list=list.filter(function(p){return String(p['種別']||'').trim()===filterKubun;});
+  var _cf=document.getElementById('custFilter'); var _fcust=_cf?_cf.value:'';
+  if(_fcust) list=list.filter(function(p){return String(p['顧客']||'').trim()===_fcust;});
   document.getElementById('count').textContent= list.length+' 件';
   var el=document.getElementById('list');
   if(!list.length){el.innerHTML='<div class="empty">該当する現場がありません。<br>右下の「＋新規案件」から登録できます。</div>';return;}
