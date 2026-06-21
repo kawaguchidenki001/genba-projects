@@ -89,7 +89,6 @@
       .gc-root-page .grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:9px!important}
       .gc-root-page a.sq{padding:10px!important;border-radius:15px!important;min-height:0!important}
       .gc-root-page .sq .ic{width:39px!important;height:39px!important}
-      .gc-root-page .sq .nm{font-size:14px!important;line-height:1.15!important}
       .gc-root-page .sq .cor{top:8px!important;right:8px!important}
       .gc-root-page .head h1{font-size:26px!important}
       #fileAddDock,#ledgerDock,.ledger-dock,.file-dock{left:0!important;right:0!important;bottom:0!important;border-radius:18px 18px 0 0!important;padding:10px 12px calc(10px + env(safe-area-inset-bottom))!important;max-width:none!important}
@@ -97,7 +96,6 @@
     }
     @media(max-width:420px){
       .gc-root-page .grid{gap:8px!important}
-      .gc-root-page .sq .nm{font-size:13px!important}
       .gc-root-page .sq .ic{width:36px!important;height:36px!important}
     }
   `;

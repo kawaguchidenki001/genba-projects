@@ -1,6 +1,7 @@
 // Gen-Can 共通設定 v146
 // ファイル更新時は APP_VERSION / BUILD を必ず変更します。
 // ★ バージョンはこのファイルで一元管理。APP_VERSION を変えれば全ページのバッジに反映されます。
+// v2026.06.21-43.9.9 モバイル項目名サイズ修正(common_ui.jsの!important上書きを撤去し index.html管理へ)
 // v2026.06.21-43.9.8 CSS整理(重複集約・未使用クラス削除/表示は無変更)
 // v2026.06.20-43.9.6 キャッシュバスター固定値問題のfix
 // v2026.06.20-43.9.5 タイル文字サイズ調整＋氏名表示＋勤務状態キャッシュ
@@ -13,8 +14,8 @@
 // GASを再デプロイしてURLが変わった場合は GAS_URL だけ変更します。
 window.GENBA_CONFIG = {
   APP_NAME: 'Gen-Can',
-  APP_VERSION: 'v2026.06.21-43.9.8',
-  BUILD: '20260621-v43-9-8',
+  APP_VERSION: 'v2026.06.21-43.9.9',
+  BUILD: '20260621-v43-9-9',
   TEST_LOGIN_ENABLED: false, // 2026-06-20 販売準備としてテストログイン無効化済み
   GAS_URL: 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec'
 };
