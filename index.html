@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.06.20-43.9.6 / cache buster fix / Code_v145 -->
+<!-- Gen-Can root app v2026.06.21-43.9.8 / cache buster fix / Code_v145 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -19,56 +19,47 @@
     --line:#d4e4f0;--card:#ffffff;--shadow:0 2px 10px rgba(45,125,210,.10);--shadow-lg:0 10px 30px rgba(31,90,168,.16);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
-  body{min-height:100vh;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.6;
+  body{min-height:100vh;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.6;
     background:#e8ecf2;}
   .wrap{max-width:680px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 32px) 16px 40px;}
   .head{margin:0 4px 20px;}
-  .kicker{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.26em;font-size:11px;color:var(--sub);text-transform:uppercase;}
-  .head h1{font-weight:700;font-size:31px;letter-spacing:.05em;margin-top:6px;color:#1f5fa8;}
-  .head .co{color:var(--sub);font-size:13px;margin-top:3px;}
+  .kicker{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.26em;font-size:12px;color:var(--sub);text-transform:uppercase;}
+  .head h1{font-weight:700;font-size:33px;letter-spacing:.05em;margin-top:6px;color:#1f5fa8;}
+  .head .co{color:var(--sub);font-size:14px;margin-top:3px;}
   .head-logo{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
   .head-logo img{width:52px;height:52px;border-radius:12px;box-shadow:0 2px 8px rgba(31,90,168,.22);}
   .head-logo-text .gc-name{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:28px;letter-spacing:-.01em;line-height:1.1;padding-right:4px;
     background-image:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);-webkit-background-clip:text;background-clip:text;color:transparent;}
   .head-logo-text .gc-sub{font-family:"Manrope",sans-serif;font-weight:600;font-size:9.5px;color:var(--sub);letter-spacing:.22em;text-transform:uppercase;}
-  .lbl{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.14em;font-size:11px;color:var(--sub);text-transform:uppercase;margin:20px 4px 11px;}
+  .lbl{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.14em;font-size:12.5px;color:var(--sub);text-transform:uppercase;margin:20px 4px 11px;}
 
-  /* 共通タイル：B-4 ソフト質感（押せる立体感） */
-  a.sq{position:relative;display:flex;text-decoration:none;color:var(--ink);background:#e8ecf2;border:none;
+  /* 共通タイル：B-4 ソフト質感（押せる立体感）/ 横並びリスト型 */
+  .grid{display:grid;grid-template-columns:1fr;gap:11px;}
+  a.sq{position:relative;display:flex;flex-direction:row;align-items:center;text-decoration:none;color:var(--ink);background:#e8ecf2;border:none;aspect-ratio:auto;border-radius:18px;padding:16px 18px;gap:16px;
     box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;transition:box-shadow .12s ease,transform .12s ease;overflow:hidden;}
   a.sq:hover{transform:translateY(-2px);box-shadow:8px 8px 16px #c8ceD8,-8px -8px 16px #ffffff;}
   a.sq:active{transform:translateY(0);box-shadow:inset 4px 4px 8px #cdd3dc,inset -4px -4px 8px #ffffff;}
-  .sq .ic{display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:#e8ecf2;border-radius:50%;
+  .sq .ic{display:flex;align-items:center;justify-content:center;flex:0 0 auto;background:#e8ecf2;width:50px;height:50px;border-radius:50%;
     box-shadow:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
   .sq .ic svg{width:22px;height:22px;}
-  .sq .txt{display:flex;flex-direction:column;min-width:0;}
-  .sq .en{font-family:"Manrope",sans-serif;text-transform:uppercase;letter-spacing:.16em;color:var(--sub);}
-  .sq .nm{font-weight:700;letter-spacing:.02em;color:var(--ink);}
-  .sq .ds{color:var(--sub);line-height:1.4;}
-  .sq .cor{color:var(--sub);}
+  .sq .txt{display:flex;flex-direction:column;min-width:0;margin-top:0;}
+  .sq .en{font-family:"Manrope",sans-serif;text-transform:uppercase;letter-spacing:.16em;color:var(--sub);display:block;font-size:10px;}
+  .sq .nm{font-weight:700;letter-spacing:.02em;color:var(--ink);font-size:30px;}
+  .sq .ds{color:var(--sub);line-height:1.4;display:block;font-size:13px;}
+  .sq .cor{color:var(--sub);position:static;margin-left:auto;font-size:20px;}
 
   /* 色分け（アイコンの線色） */
-  .t-quick .ic{color:#2563eb;} .t-proj .ic{color:#5b5bd6;} .t-report .ic{color:#0e9f6e;} .t-time .ic{color:#7c3aed;}
+  .t-proj .ic{color:#5b5bd6;} .t-report .ic{color:#0e9f6e;} .t-time .ic{color:#7c3aed;}
   .t-sched .ic{color:#2d7dd2;} .t-files .ic{color:#e8910b;} .t-photo .ic{color:#dc2626;} .t-tool .ic{color:#0d9aa0;}
   .t-veh .ic{color:#b45309;} .t-tool2 .ic{color:#a16207;} .t-safety .ic{color:#15803d;}
-  .t-est .ic{color:#9d7a18;} .t-cost .ic{color:#0f766e;} .t-admin .ic{color:#475569;} .t-faq .ic{color:#0f766e;} .t-backup .ic{color:#0f766e;} .t-setup .ic{color:#2563eb;} .t-version .ic{color:#7c3aed;}
+  .t-est .ic{color:#9d7a18;} .t-cost .ic{color:#0f766e;} .t-admin .ic{color:#475569;} .t-faq .ic{color:#0f766e;}
   .t-material .ic{color:#2563eb;}
   .t-ai .ic{color:#7c3aed;}
-  .t-demo .ic{color:#2563eb;} .t-final .ic{color:#15803d;} .t-rollout .ic{color:#0f766e;}
 
-  /* スマホ：横3列の正方形タイル */
-  .grid{display:grid;grid-template-columns:1fr;gap:11px;}
-  a.sq{flex-direction:row;align-items:center;aspect-ratio:auto;border-radius:18px;padding:16px 18px;gap:16px;}
-  .sq .ic{width:50px;height:50px;border-radius:50%;}
-  .sq .txt{margin-top:0;}
-  .sq .en{display:block;font-size:10px;}
-  .sq .nm{font-size:26px;}
-  .sq .ds{display:block;font-size:13px;}
-  .sq .cor{position:static;margin-left:auto;font-size:20px;}
   .sq .cor.lock{font-size:12px;background:#eef4f9;border:1px solid var(--line);padding:5px 11px;border-radius:999px;color:var(--sub);}
 
   .soons{display:flex;flex-wrap:wrap;gap:8px;}
-  .soon{font-size:12.5px;color:var(--sub);background:#e8ecf2;border:none;border-radius:12px;padding:9px 13px;box-shadow:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;}
+  .soon{font-size:13px;color:var(--sub);background:#e8ecf2;border:none;border-radius:12px;padding:9px 13px;box-shadow:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;}
 
   .permBadge{display:none;align-items:center;gap:6px;margin-top:10px;background:#eef6ff;color:#1f5fa8;border:1px solid #d6e8fb;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:800;}
   .permBadge.show{display:inline-flex;}
@@ -85,23 +76,17 @@
   .permNote{display:none;margin:0 4px 12px;color:#6b7280;font-size:12.5px;}
   .permNote.show{display:block;}
 
-  /* PC：リスト型 */
-  @media (min-width:680px){
-    .grid{grid-template-columns:1fr;gap:11px;}
-  }
 
-  /* 先頭の案件管理（横長で目立たせる）*/
-  /* feat廃止 v41 */
 
-  .foot{text-align:center;color:var(--sub);font-size:12px;margin-top:24px;}
+  .foot{text-align:center;color:var(--sub);font-size:13px;margin-top:24px;}
   .foot a{color:#1f5fa8;text-decoration:underline;}
   #login{position:fixed;inset:0;z-index:100;background:#e8ecf2;display:none;align-items:center;justify-content:center;padding:20px;}
   #login .box{width:100%;max-width:340px;text-align:center;color:var(--ink);}
-  #login .lg-t{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.22em;font-size:11px;color:var(--sub);text-transform:uppercase;}
-  #login h2{font-size:24px;margin:8px 0 2px;font-weight:700;color:#1f5fa8;}
+  #login .lg-t{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:.22em;font-size:12px;color:var(--sub);text-transform:uppercase;}
+  #login h2{font-size:26px;margin:8px 0 2px;font-weight:700;color:#1f5fa8;}
   .dash{margin:0 0 18px;display:none;}
-  .dashHd{background:#e8ecf2;border-radius:14px;box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;padding:13px 16px;margin-bottom:12px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:800;color:#1f5fa8;-webkit-user-select:none;user-select:none;}
-  .dashHd .cnt{margin-left:auto;font-size:12.5px;font-weight:800;}
+  .dashHd{background:#e8ecf2;border-radius:14px;box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;padding:13px 16px;margin-bottom:12px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:15.5px;font-weight:800;color:#1f5fa8;-webkit-user-select:none;user-select:none;}
+  .dashHd .cnt{margin-left:auto;font-size:13.5px;font-weight:800;}
   .dashHd .cnt.warn{color:#d63a3f;}
   .dashHd .cnt.ok{color:var(--sub);}
   .dashHd .arw{font-size:11px;color:var(--sub);transition:transform .2s;}
@@ -109,29 +94,29 @@
   .dash .dbody{display:none;}
   .dash.open .dbody{display:block;}
   .dcard{background:#e8ecf2;border:none;border-radius:18px;box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;padding:14px 16px;margin-bottom:12px;}
-  .dttl{font-size:12px;font-weight:800;color:#1f5fa8;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
-  .drow{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);padding:5px 0;border-bottom:1px dashed #e8eef5;}
+  .dttl{font-size:13px;font-weight:800;color:#1f5fa8;letter-spacing:.05em;margin-bottom:8px;display:flex;align-items:center;gap:6px;}
+  .drow{display:flex;align-items:center;gap:8px;font-size:14.5px;color:var(--ink);padding:5px 0;border-bottom:1px dashed #e8eef5;}
   .drow:last-child{border-bottom:none;}
-  .dtime{font-weight:700;color:#1f5fa8;font-size:12px;white-space:nowrap;}
-  .dname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .dwho{font-size:11px;color:var(--sub);white-space:nowrap;}
-  .dempty{font-size:12.5px;color:var(--sub);padding:2px 0;}
+  .dtime{font-weight:700;color:#1f5fa8;font-size:13px;white-space:nowrap;}
+  .dname{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px;}
+  .dwho{font-size:12.5px;color:var(--sub);white-space:nowrap;}
+  .dempty{font-size:13px;color:var(--sub);padding:2px 0;}
   .dchips{display:flex;flex-wrap:wrap;gap:6px;}
-  .dchip{background:#eaf3fc;color:#1f5fa8;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:700;}
-  .dalert{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;padding:5px 0;}
-  .dalert .dd{font-size:11px;color:var(--sub);font-weight:400;margin-left:auto;white-space:nowrap;}
-  .dmore{font-size:12px;color:#1f5fa8;font-weight:700;text-decoration:none;display:inline-block;margin-top:4px;}
-  #login p{font-size:13px;color:var(--sub);margin:0 0 22px;}
-  #login input{width:100%;padding:14px;border:none;border-radius:12px;font-size:16px;margin-bottom:12px;background:#e8ecf2;color:var(--ink);box-shadow:inset 4px 4px 8px #cdd3dc,inset -4px -4px 8px #ffffff;}
+  .dchip{background:#eaf3fc;color:#1f5fa8;border-radius:999px;padding:5px 12px;font-size:13.5px;font-weight:700;}
+  .dalert{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:700;padding:5px 0;}
+  .dalert .dd{font-size:12px;color:var(--sub);font-weight:400;margin-left:auto;white-space:nowrap;}
+  .dmore{font-size:13.5px;color:#1f5fa8;font-weight:700;text-decoration:none;display:inline-block;margin-top:4px;}
+  #login p{font-size:14px;color:var(--sub);margin:0 0 22px;}
+  #login input{width:100%;padding:14px;border:none;border-radius:12px;font-size:16.5px;margin-bottom:12px;background:#e8ecf2;color:var(--ink);box-shadow:inset 4px 4px 8px #cdd3dc,inset -4px -4px 8px #ffffff;}
   #login input:focus{outline:none;border-color:#2d7dd2;box-shadow:0 0 0 3px #e3f0fb;}
-  #login button{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);color:#fff;font-size:16px;font-weight:800;cursor:pointer;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #ffffff;}
-  #login .err{color:#d63a3f;font-size:13px;min-height:18px;margin-top:10px;}
+  #login button{width:100%;padding:14px;border:none;border-radius:12px;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);color:#fff;font-size:17px;font-weight:800;cursor:pointer;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #ffffff;}
+  #login .err{color:#d63a3f;font-size:14px;min-height:18px;margin-top:10px;}
   .loading{position:fixed;inset:0;z-index:1000;background:rgba(234,244,251,.78);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px);display:none;align-items:center;justify-content:center;}
   .loading.show{display:flex;}
   .lbox{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-lg);padding:24px 32px;text-align:center;}
   .spin{width:38px;height:38px;border:4px solid #e3f0fb;border-top-color:#2d7dd2;border-radius:50%;margin:0 auto 12px;animation:sp .8s linear infinite;}
   @keyframes sp{to{transform:rotate(360deg);}}
-  .lbox .txt{font-size:14px;font-weight:700;color:var(--ink);}
+  .lbox .txt{font-size:15px;font-weight:700;color:var(--ink);}
   /* 忘れ物メモ ポップアップ */
   .rem-ov{position:fixed;inset:0;z-index:100000;background:rgba(20,30,50,.55);display:none;align-items:center;justify-content:center;padding:18px;}
   .rem-ov.show{display:flex;}
@@ -139,47 +124,16 @@
   .rem-box h3{margin:0 0 4px;font-size:17px;color:#b45309;display:flex;align-items:center;gap:8px;}
   .rem-box .rsub{font-size:12px;color:#6b7280;margin-bottom:12px;line-height:1.6;}
   .rem-c{border:1px solid #f0d9b5;background:#fffbeb;border-radius:13px;padding:13px 14px;margin-bottom:11px;}
-  .rem-c .tx{font-size:16px;font-weight:700;color:#1f2733;white-space:pre-wrap;line-height:1.55;}
+  .rem-c .tx{font-size:17px;font-weight:700;color:#1f2733;white-space:pre-wrap;line-height:1.55;}
   .rem-c .bt{display:flex;gap:9px;margin-top:12px;}
   .rem-c .bt button{flex:1;padding:11px;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;}
   .rem-ok{background:#0f766e;color:#fff;}
   .rem-del{background:#fee2e2;color:#b91c1c;}
-  /* ▼ 高齢者向け 文字拡大 v53 ▼ */
-  body{font-size:16.5px;}
-  .kicker{font-size:12px;}
-  .head h1{font-size:33px;}
-  .head .co{font-size:14px;}
-  .lbl{font-size:12.5px;}
-  .sq .nm{font-size:26px;}
-  .sq .ds{font-size:13px;}
-  .soon{font-size:13px;}
-  .dashHd{font-size:15.5px;}
-  .dashHd .cnt{font-size:13.5px;}
-  .dttl{font-size:13px;}
-  .drow{font-size:14.5px;}
-  .dtime{font-size:13px;}
-  .dname{font-size:14.5px;}
-  .dwho{font-size:12.5px;}
-  .dempty{font-size:13px;}
-  .dchip{font-size:13.5px;}
-  .dalert{font-size:14.5px;}
-  .dalert .dd{font-size:12px;}
-  .dmore{font-size:13.5px;}
-  .foot{font-size:13px;}
-  #login .lg-t{font-size:12px;}
-  #login h2{font-size:26px;}
-  #login p{font-size:14px;}
-  #login input{font-size:16.5px;}
-  #login button{font-size:17px;}
-  #login .err{font-size:14px;}
-  .lbox .txt{font-size:15px;}
-  .rem-c .tx{font-size:17px;}
+  /* 画面幅680px以上のときだけ、説明文と英字ラベルを微調整 */
   @media (min-width:680px){
-    .sq .nm{font-size:19px;}
     .sq .ds{font-size:13.5px;}
     .sq .en{font-size:11px;}
   }
-  /* ▲ 高齢者向け 文字拡大 ▲ */
 
   /* v104 今日やることカード */
   .todoPanel{background:#ffffff;border:1px solid #dbe8f5;border-radius:22px;box-shadow:0 8px 24px rgba(31,90,168,.12);padding:16px;margin:0 0 18px;display:none;}
@@ -203,7 +157,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.20-43.9.6</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.6;color:#fff;background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);padding:1px 10px;border-radius:0 0 9px 9px;font-family:Manrope,sans-serif;pointer-events:none;letter-spacing:.4px;box-shadow:0 2px 8px rgba(37,99,235,.25);">v2026.06.21-43.9.8</div>
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
@@ -219,7 +173,7 @@
       <button type="button" onclick="location.href='./demo/'" style="margin-top:10px;background:#edf3fa;color:#1f5fa8;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #ffffff;">デモモードで確認</button>
     </form>
     <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.55;">Chrome・Edge等で保存すると、次回から指紋・顔認証で自動入力できます。</div>
-    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.20-43.9.6</div>
+    <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">v2026.06.21-43.9.8</div>
     <div class="err" id="lgerr"></div>
   </div>
 </div>
@@ -288,7 +242,7 @@
 <script src="./config.js?v=20260621-v43-9-6"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.9.6';
+var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.21-43.9.8';
 var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-8-3-cache-lock';
 (function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
 
