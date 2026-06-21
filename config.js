@@ -1,6 +1,8 @@
 // Gen-Can 共通設定 v146
 // ファイル更新時は APP_VERSION / BUILD を必ず変更します。
 // ★ バージョンはこのファイルで一元管理。APP_VERSION を変えれば全ページのバッジに反映されます。
+// v2026.06.21-43.9.14 案件画面：ドライブから現場を取込ボタン（GAS v148）
+// v2026.06.21-43.9.13 案件フォーム：区分ラベル化・並び替え(区分→顧客→現場名)・現場名ラベル統一(案件名→現場名)
 // v2026.06.21-43.9.12 区分の用語統一：官公庁→公共／民間→法人（全画面の表示・選択肢・判定＋ファイル画面の正規化キー）。※43.9.11はPhase1引き継ぎ記録分
 // v2026.06.21-43.9.10 モバイル項目名を約70%(32->22px)に縮小
 // v2026.06.21-43.9.9 モバイル項目名サイズ修正(common_ui.jsの!important上書きを撤去し index.html管理へ)
@@ -16,8 +18,8 @@
 // GASを再デプロイしてURLが変わった場合は GAS_URL だけ変更します。
 window.GENBA_CONFIG = {
   APP_NAME: 'Gen-Can',
-  APP_VERSION: 'v2026.06.21-43.9.12',
-  BUILD: '20260621-v43-9-12',
+  APP_VERSION: 'v2026.06.21-43.9.14',
+  BUILD: '20260621-v43-9-14',
   TEST_LOGIN_ENABLED: false, // 2026-06-20 販売準備としてテストログイン無効化済み
   GAS_URL: 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec'
 };

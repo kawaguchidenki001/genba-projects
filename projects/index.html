@@ -1,4 +1,6 @@
 <!DOCTYPE html>
+<!-- projects version 53 (2026-06-21) ドライブから現場を取込（区分/顧客/現場名フォルダ→区分・顧客・現場名入りの案件を登録）。確認一覧→OKで登録。GAS v148必要。 -->
+<!-- projects version 52 (2026-06-21) 区分ラベル化(種別→区分)・並び替え(区分→顧客→現場名)・現場名ラベル統一(案件名→現場名)。id不変・GAS変更なし。 -->
 <!-- projects version 51 (2026-06-21) 区分の用語を統一：官公庁→公共。種別の選択肢・並び順・既定値を公共に。GAS変更なし。 -->
 <!-- projects version 50 (2026-06-15) ヘッダー案A化(2段・CSSグリッド)。管理者ボタン(admBtn)を非表示(管理者状態は全画面共有)。 CSSのみ・HTML/JS/id不変・GAS変更なし。 -->
 <!-- projects version 48 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。操作行hd2は同期表示を非表示化・管理者🔑保持。更新はreload()。 機能・id不変 -->
@@ -212,6 +214,7 @@
 <div class="toolbar">
   <div class="search"><input id="q" type="search" placeholder="発注者区分・顧客名・現場名で検索" oninput="render()"></div>
   <div class="chips" id="chips"></div>
+  <button id="driveImportBtn" onclick="openDriveImport()" style="display:none;margin-top:8px;width:100%;padding:11px;border:none;border-radius:11px;background:#eef5fb;color:#1f5fa8;font-weight:800;font-size:14px;cursor:pointer;box-shadow:4px 4px 9px rgba(196,207,219,.7),-4px -4px 9px #fff;">📁 ドライブから現場を取込</button>
 </div>
 
 <main>
@@ -221,22 +224,32 @@
 
 <button class="fab" id="fab" onclick="openProject()" style="display:none;">＋ 新規案件</button>
 
+<!-- ドライブ取込モーダル -->
+<div class="ov" id="ovImport">
+  <div class="sheet">
+    <h2>📁 ドライブから現場を取込</h2>
+    <div id="importBody"></div>
+    <div class="acts">
+      <button class="btn sub" onclick="closeImport()">キャンセル</button>
+      <button class="btn primary" id="importDoBtn" onclick="confirmDriveImport()">登録する</button>
+    </div>
+  </div>
+</div>
+
 <!-- 案件モーダル -->
 <div class="ov" id="ov">
   <div class="sheet">
     <h2 id="mTitle">新規案件</h2>
     <input type="hidden" id="f_id">
-    <div class="fld"><label>案件名 ／ 現場名 *</label><input id="f_name" placeholder="例）不破高等学校空調設備更新工事"></div>
+    <div class="fld"><label>区分 *</label><select id="f_type">
+      <option>公共</option><option>法人</option><option>個人</option></select></div>
+    <div class="fld"><label>顧客 ／ 取引先</label>
+      <select id="f_cust" onchange="onCustChange()"></select>
+      <input id="f_cust_other" style="display:none;margin-top:6px;" placeholder="一覧にない取引先を直接入力"></div>
+    <div class="fld"><label>現場名 *</label><input id="f_name" placeholder="例）不破高等学校空調設備更新工事"></div>
     <div class="fld"><label>略称（日報・予定表に表示）</label><input id="f_short" placeholder="例）不破高 空調"></div>
     <div class="two">
-      <div class="fld"><label>顧客 ／ 取引先</label>
-        <select id="f_cust" onchange="onCustChange()"></select>
-        <input id="f_cust_other" style="display:none;margin-top:6px;" placeholder="一覧にない取引先を直接入力"></div>
       <div class="fld"><label>場所（住所）</label><input id="f_place" placeholder="例）愛知県一宮市〇〇1-2"></div>
-    </div>
-    <div class="two">
-      <div class="fld"><label>種別</label><select id="f_type">
-        <option>公共</option><option>法人</option><option>個人</option></select></div>
       <div class="fld"><label>ステータス</label><select id="f_status">
         <option>見積中</option><option>受注</option><option>段取済</option><option>施工中</option><option>完了</option><option>請求済</option></select></div>
     </div>
@@ -305,7 +318,7 @@
         <button id="d_share" class="cbtn share" style="display:none;" onclick="openSharePanel()"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6M10.5 6.5 13 4a4 4 0 0 1 6 6l-2.5 2.5M13.5 17.5 11 20a4 4 0 0 1-6-6l2.5-2.5"/></svg></span>お客様向け進捗共有</button>
       </div>
       <div id="sharePanel" style="display:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:12px;padding:13px 15px;margin-top:8px;">
-        <div style="font-size:12.5px;color:#1d4ed8;font-weight:700;margin-bottom:8px;">この案件の進捗（案件名・工期・予定・写真）を、ログイン不要の閲覧専用ページで施主・元請に共有できます。金額や連絡先は表示されません。</div>
+        <div style="font-size:12.5px;color:#1d4ed8;font-weight:700;margin-bottom:8px;">この案件の進捗（現場名・工期・予定・写真）を、ログイン不要の閲覧専用ページで施主・元請に共有できます。金額や連絡先は表示されません。</div>
         <div id="shareOff">
           <button class="cbtn fol" style="width:100%;justify-content:center;" onclick="shareEnable()"><span class="ci">▶</span>共有URLを発行する</button>
         </div>
@@ -738,7 +751,7 @@ function gatherProject(){
 }
 function saveProject(){
   var d=gatherProject();
-  if(!d['案件名']){toast('案件名を入力してください');return;}
+  if(!d['案件名']){toast('現場名を入力してください');return;}
   var id=d['案件ID']; var isNew=!id;
   var btn=document.getElementById('saveBtn'); btn.disabled=true; btn.textContent='保存中…';
   var action= isNew?'addProject':'updateProject';
@@ -867,11 +880,51 @@ function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.c
 /* タブ復帰で自動更新 */
 document.addEventListener('visibilitychange',function(){if(!document.hidden && GAS_URL)reload(true);});
 
+/* ===== ドライブから現場を取込 ===== */
+function openDriveImport(){
+  callGAS({action:'scanDriveProjects'}).then(function(res){
+    if(!res.ok) throw new Error(res.error||'スキャンに失敗しました');
+    var items=res.items||[];
+    var body=document.getElementById('importBody');
+    var doBtn=document.getElementById('importDoBtn');
+    if(!items.length){
+      body.innerHTML='<div class="empty">新しい現場フォルダは見つかりませんでした。<br><span style="font-size:12.5px;">Googleドライブで「区分 → 顧客 → 現場名」の順にフォルダを作ると取り込めます。</span></div>';
+      doBtn.style.display='none';
+    }else{
+      var h='<div style="font-size:12.5px;color:#475569;margin-bottom:10px;">'+items.length+'件の新しい現場が見つかりました。登録するものにチェックを入れてください。</div>';
+      items.forEach(function(it){
+        h+='<label style="display:flex;gap:10px;align-items:flex-start;padding:10px 11px;border:1px solid #dbe8f3;border-radius:12px;margin-bottom:8px;background:#f7fbff;cursor:pointer;">'
+          +'<input type="checkbox" class="impChk" data-fid="'+esc(it.folderId)+'" checked style="width:20px;height:20px;flex:0 0 auto;margin-top:1px;accent-color:#2563eb;">'
+          +'<span><b style="font-size:14.5px;">'+esc(it['現場名'])+'</b>'
+          +'<br><span style="font-size:12px;color:#64748b;">区分：'+esc(it['区分'])+' ／ 顧客：'+esc(it['顧客'])+'</span></span></label>';
+      });
+      body.innerHTML=h;
+      doBtn.style.display='';
+    }
+    document.getElementById('ovImport').classList.add('show');
+  }).catch(function(err){toast('失敗：'+err.message);});
+}
+function closeImport(){document.getElementById('ovImport').classList.remove('show');}
+function confirmDriveImport(){
+  var ids=[];
+  document.querySelectorAll('#importBody .impChk:checked').forEach(function(c){ids.push(c.getAttribute('data-fid'));});
+  if(!ids.length){toast('1件以上選んでください');return;}
+  var btn=document.getElementById('importDoBtn'); btn.disabled=true; btn.textContent='登録中…';
+  callGAS({action:'importDriveProjects', ids:ids.join(',')}).then(function(res){
+    if(!res.ok) throw new Error(res.error||'登録に失敗しました');
+    closeImport();
+    toast(res.created+'件の現場を登録しました');
+    reload(true);
+  }).catch(function(err){toast('失敗：'+err.message);})
+    .then(function(){btn.disabled=false;btn.textContent='登録する';});
+}
+
 /* ===== 管理者ログイン ===== */
 function showGate(msg){document.getElementById('gate').style.display='flex';document.getElementById('gateMsg').textContent=msg||'';}
 function hideGate(){document.getElementById('gate').style.display='none';}
 function applyAdminUI(){
   document.getElementById('fab').style.display='block';                       // 誰でも登録できる
+  document.getElementById('driveImportBtn').style.display='block';            // 〔v53〕ドライブ取込
   document.getElementById('admBtn').textContent=isAdmin()?'管理者':'🔑';
 }
 function toggleAdmin(){
