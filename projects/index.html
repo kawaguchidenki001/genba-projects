@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- projects version 62 (2026-06-22) タイルの3列化をgridからFlexbox（%幅calc）に変更し、minmax(0,1fr)を解釈しない端末でも確実に1行3つに。状態・区分チップを折り返し表示にして完了・請求済が切れないように修正。GAS変更なし。 -->
 <!-- projects version 61 (2026-06-22) タイルを必ず1行3つ（auto-fillをやめ3等分・はみ出しなし）。カメラアイコンを削除。カメラ削除分タイルをコンパクトに（余白・最小高さ・現場名フォント調整）。GAS変更なし。 -->
 <!-- projects version 60 (2026-06-22) タイルが拡大表示の端末で巨大化する問題を修正（最大120px・縦横比指定をやめ最小高さで調整）。区分を選ぶと状態チップの件数がその区分内の数になるよう連動。GAS変更なし。 -->
 <!-- projects version 59 (2026-06-21) 詳細：図面・工程表・写真アイコンを、中身が無いとき淡色（グレー）表示にしてデータ有無が分かるように。GAS v149 が必要（folderCounts API）。 -->
@@ -61,7 +62,7 @@
   .toolbar{padding:10px 12px;display:flex;flex-direction:column;gap:8px;position:sticky;top:58px;background:var(--bg);z-index:10;max-width:760px;margin:0 auto;}
   .search{display:flex;gap:8px;}
   .search input{flex:1;padding:11px 13px;border:none;border-radius:11px;font-size:15.5px;background:var(--bg);box-shadow:var(--well);color:var(--ink);}
-  .chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch;}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;padding-bottom:2px;}
   .chip{flex:0 0 auto;padding:7px 13px;border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--sub);font-size:13px;cursor:pointer;white-space:nowrap;font-weight:700;}
   .chip.on{background:var(--ink);color:#fff;box-shadow:var(--well-soft);}
   .schip{flex:0 0 auto;padding:6px 12px;border:2px solid;border-radius:999px;font-size:13px;cursor:pointer;white-space:nowrap;font-weight:800;background:var(--bg);transition:background .15s,color .15s;}
@@ -92,8 +93,8 @@
   .ghd .gc{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--accent);}
   .ghd .gn{flex:1;}
   .ghd .gcount{font-size:12px;color:var(--sub);font-weight:600;}
-  .tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
-  .tile{position:relative;background:var(--bg);border:none;border-top:4px solid var(--line);border-radius:14px;box-shadow:var(--rise-sm);padding:12px 7px 11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;min-height:86px;justify-content:center;}
+  .tiles{display:flex;flex-wrap:wrap;gap:8px;}
+  .tile{flex:0 0 calc((100% - 18px)/3);max-width:calc((100% - 18px)/3);box-sizing:border-box;position:relative;background:var(--bg);border:none;border-top:4px solid var(--line);border-radius:14px;box-shadow:var(--rise-sm);padding:12px 6px 11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;min-height:86px;justify-content:center;}
   .tile:active{transform:scale(.97);box-shadow:var(--well);}
   .tile .ic{font-size:26px;line-height:1;color:var(--accent-d);}
   .tile .ic svg{width:26px;height:26px;display:block;}

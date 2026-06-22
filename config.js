@@ -1,6 +1,7 @@
 // Gen-Can 共通設定 v146
 // ファイル更新時は APP_VERSION / BUILD を必ず変更します。
 // ★ バージョンはこのファイルで一元管理。APP_VERSION を変えれば全ページのバッジに反映されます。
+// v2026.06.22-43.9.23 案件画面：タイル3列をFlexbox方式に変更（端末差なく確実に3列）・状態/区分チップを折り返し表示（完了・請求済の切れを解消）
 // v2026.06.22-43.9.22 案件画面：タイルを必ず1行3つ（3等分）・カメラアイコン削除・HTMLキャッシュ制御を追加
 // v2026.06.22-43.9.21 案件画面：拡大表示端末でタイルが巨大化する問題を修正（最大120px）・区分を選ぶと状態チップの件数がその区分内に連動
 // v2026.06.21-43.9.20 案件画面詳細：図面・工程表・写真アイコンのデータなしを淡色表示（GAS v149 folderCounts 必要）
@@ -26,8 +27,8 @@
 // GASを再デプロイしてURLが変わった場合は GAS_URL だけ変更します。
 window.GENBA_CONFIG = {
   APP_NAME: 'Gen-Can',
-  APP_VERSION: 'v2026.06.22-43.9.22',
-  BUILD: '20260622-v43-9-22',
+  APP_VERSION: 'v2026.06.22-43.9.23',
+  BUILD: '20260622-v43-9-23',
   TEST_LOGIN_ENABLED: false, // 2026-06-20 販売準備としてテストログイン無効化済み
   GAS_URL: 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec'
 };
