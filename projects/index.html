@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<!-- projects version 66 (2026-06-25) 工程管理(Step5/Phase2完了)：工程表をA4横の1枚絵で出力。「画像で保存」(PNG・オフライン可)と「PDFで保存」(jsPDF・要ネット接続)を追加。タイトル/期間/凡例(種別色)/今日ライン/進捗バー/出力日を描画。GAS変更なし。 -->
+<!-- projects version 65 (2026-06-25) 工程管理(Step4/Phase2)：種別名から自動で色分け、終了日超過＆未完了の工程に「遅延」赤バー＋日数表示、各工程の上下ボタンで並び替え（管理者・並び順を保存）。GAS変更なし。 -->
+<!-- projects version 64 (2026-06-25) 工程管理(Step3)：工程一覧を期間に合わせた横バー（ガント）表示に変更し、今日ラインと期間軸ラベル（開始/今日/終了）を追加。日付未設定の工程は淡色の全幅バーで表示。GAS変更なし。 -->
+<!-- projects version 63 (2026-06-25) 工程管理(Step2)：案件詳細に「工程管理」セクションを追加。工程の一覧・追加・編集・削除をGAS(v157のkoutei API)と連携。編集は管理者のみ・バー表示はStep3予定。GAS変更なし(本体はv157必須)。 -->
 <!-- projects version 62 (2026-06-22) タイルの3列化をgridからFlexbox（%幅calc）に変更し、minmax(0,1fr)を解釈しない端末でも確実に1行3つに。状態・区分チップを折り返し表示にして完了・請求済が切れないように修正。GAS変更なし。 -->
 <!-- projects version 61 (2026-06-22) タイルを必ず1行3つ（auto-fillをやめ3等分・はみ出しなし）。カメラアイコンを削除。カメラ削除分タイルをコンパクトに（余白・最小高さ・現場名フォント調整）。GAS変更なし。 -->
 <!-- projects version 60 (2026-06-22) タイルが拡大表示の端末で巨大化する問題を修正（最大120px・縦横比指定をやめ最小高さで調整）。区分を選ぶと状態チップの件数がその区分内の数になるよう連動。GAS変更なし。 -->
@@ -148,6 +152,29 @@
   .fld input,.fld select,.fld textarea{width:100%;padding:11px 12px;border:none;border-radius:10px;font-size:15.5px;background:var(--bg);box-shadow:var(--well);color:var(--ink);font-family:inherit;}
   .fld textarea{resize:vertical;min-height:54px;}
   .two{display:flex;gap:8px;} .two>.fld{flex:1;}
+  /* 工程管理（Step2） */
+  .klist{display:flex;flex-direction:column;gap:8px;}
+  .krow{background:var(--bg);border-radius:12px;padding:10px 12px;box-shadow:var(--rise-sm);cursor:pointer;}
+  .krow:active{box-shadow:var(--well);}
+  .krow-h{display:flex;align-items:center;gap:7px;}
+  .kname{font-size:14.5px;font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ktag{font-size:10.5px;font-weight:700;color:var(--accent-d);background:rgba(91,91,214,.10);border-radius:999px;padding:2px 8px;white-space:nowrap;}
+  .kpg{font-size:12.5px;font-weight:800;color:var(--accent-d);}
+  .kperiod{font-size:12px;color:var(--sub);margin:3px 0 6px;}
+  .gaxis{position:relative;height:15px;margin:2px 0 7px;font-size:10.5px;color:var(--sub);}
+  .gaxis .gx-min{position:absolute;left:0;} .gaxis .gx-max{position:absolute;right:0;}
+  .gaxis .gx-today{position:absolute;transform:translateX(-50%);color:#e0512f;font-weight:800;white-space:nowrap;}
+  .gtrack{position:relative;height:16px;border-radius:6px;background:rgba(0,0,0,.05);overflow:hidden;margin-top:3px;}
+  .gbar{position:absolute;top:2px;bottom:2px;border-radius:6px;background:rgba(91,91,214,.22);overflow:hidden;min-width:6px;}
+  .gbar-nodate{background:rgba(0,0,0,.06);}
+  .gbar-fill{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:6px;}
+  .gtoday{position:absolute;top:0;bottom:0;width:2px;background:#e0512f;z-index:2;}
+  .knodate{font-size:10px;color:#b45309;background:rgba(245,158,11,.13);border-radius:6px;padding:1px 6px;margin-left:4px;}
+  .kdelay{font-size:10px;color:#fff;background:#c0392b;border-radius:6px;padding:1px 6px;margin-left:4px;font-weight:700;}
+  .kmove{display:inline-flex;gap:3px;margin-left:2px;}
+  .kmv{border:none;background:var(--bg);box-shadow:var(--rise-sm);border-radius:7px;width:25px;height:22px;font-size:10px;line-height:1;color:var(--sub);cursor:pointer;padding:0;}
+  .kmv:active{box-shadow:var(--well);} .kmv:disabled{opacity:.35;box-shadow:none;cursor:default;}
+  .kexport{display:flex;gap:8px;margin-top:10px;}
   .ytip{display:flex;gap:6px;align-items:flex-end;}
   .ytip .mini{flex:0 0 auto;padding:10px;border:none;border-radius:10px;background:var(--bg);box-shadow:var(--rise-sm);font-size:12px;cursor:pointer;color:var(--accent-d);font-weight:700;}
   .ytip .mini:active{box-shadow:var(--well);}
@@ -202,7 +229,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.21-43.9.12</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.25-43.9.24</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -343,6 +370,9 @@
       <div class="d-secttl">案件情報</div>
       <div class="d-rows" id="d_rows"></div>
 
+      <div class="d-secttl">工程管理</div>
+      <div id="d_koutei"></div>
+
       <div class="d-secttl">顧客情報</div>
       <div class="d-rows" id="d_custrows"></div>
 
@@ -355,6 +385,29 @@
       <div id="d_adminbtns" style="display:none;margin-top:18px;">
         <button class="btn primary" style="width:100%;" onclick="editFromDetail()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="m4 20 1.2-4.2L16 5l3 3L8.2 18.8Z"/><path d="m13.2 6.8 3 3"/></svg>この現場を編集</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- 工程の追加・編集（管理者）-->
+<div class="ov" id="ovk">
+  <div class="sheet">
+    <h2 id="k_ttl">工程を追加</h2>
+    <div class="fld"><label>工程名 *</label><input id="k_name" placeholder="例）基礎工事"></div>
+    <div class="two">
+      <div class="fld"><label>開始日</label><input id="k_start" type="date"></div>
+      <div class="fld"><label>終了日</label><input id="k_end" type="date"></div>
+    </div>
+    <div class="two">
+      <div class="fld"><label>進捗（％）</label><input id="k_prog" type="number" inputmode="numeric" min="0" max="100" placeholder="0〜100"></div>
+      <div class="fld"><label>種別（任意）</label><input id="k_type" placeholder="例）基礎・内装"></div>
+    </div>
+    <div class="fld"><label>並び順（小さいほど上・空欄で自動）</label><input id="k_order" type="number" inputmode="numeric" min="0" placeholder="自動"></div>
+    <div class="fld"><label>備考（任意）</label><textarea id="k_note" placeholder="メモ"></textarea></div>
+    <div class="d-btns" style="display:flex;gap:8px;margin-top:6px;">
+      <button class="btn sub" onclick="closeKouteiForm()">閉じる</button>
+      <button class="btn danger" id="k_del" style="display:none;" onclick="deleteKouteiCur()">削除</button>
+      <button class="btn primary" onclick="saveKouteiForm()">保存</button>
     </div>
   </div>
 </div>
@@ -641,6 +694,7 @@ function openDetail(p){
   }).catch(function(){});
 
   g('d_adminbtns').style.display='block';
+  loadKoutei();
   document.getElementById('ovd').classList.add('show');
 }
 function openSiteNote(){ if(!curDetail)return; location.href='../toolbox/?memo='+encodeURIComponent(curDetail['案件ID']); }
@@ -677,6 +731,230 @@ function openDrawInTB(caseId,noteId){ location.href='../toolbox/?draw='+encodeUR
 function editFromDetail(){ closeDetail(); if(curDetail)openProject(curDetail); }
 function addFilesFromDetail(){ if(!curDetail)return; location.href='../files/?case='+encodeURIComponent(curDetail['案件ID']); }
 function closeDetail(ev){ if(ev&&ev.preventDefault)ev.preventDefault(); document.getElementById('ovd').classList.remove('show'); }
+/* ===== 工程管理（ガント）Step2：一覧・追加・編集・削除（バー表示はStep3） ===== */
+var kouteiItems=[], kouteiEditId='';
+function loadKoutei(){
+  var box=document.getElementById('d_koutei'); if(!box)return;
+  if(!curDetail){ box.innerHTML=''; return; }
+  box.innerHTML='<div class="dnote-load">工程を読み込み中…</div>';
+  callGAS({action:'koutei',projectId:curDetail['案件ID']},null,true).then(function(res){
+    kouteiItems=((res&&res.ok&&res.koutei)||[]);
+    renderKoutei();
+  }).catch(function(){ box.innerHTML='<div class="dnote-empty">工程の読み込みに失敗しました。</div>'; });
+}
+function fmtMd(d){ return (d.getMonth()+1)+'/'+d.getDate(); }
+var KPALETTE=['#2e86de','#e67e22','#16a085','#8e44ad','#0d9488','#d35400','#2980b9','#c2185b','#6d8b00','#7f8c8d'];
+function kColor(t){ t=String(t||'').trim(); if(!t) return '#5b6b8c';
+  var hsh=0; for(var i=0;i<t.length;i++){ hsh=(hsh*31+t.charCodeAt(i))>>>0; } return KPALETTE[hsh%KPALETTE.length]; }
+function hexA(hex,a){ var n=parseInt(String(hex).slice(1),16); return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')'; }
+function renderKoutei(){
+  var box=document.getElementById('d_koutei'); if(!box)return;
+  var adm=isAdmin(), h='';
+  if(kouteiItems.length){
+    var dates=[];
+    kouteiItems.forEach(function(k){ var s=parseYmd(k['開始日']),e=parseYmd(k['終了日']); if(s)dates.push(s.getTime()); if(e)dates.push(e.getTime()); });
+    if(curDetail){ var ps=parseYmd(curDetail['工期開始']),pe=parseYmd(curDetail['工期完了']); if(ps)dates.push(ps.getTime()); if(pe)dates.push(pe.getTime()); }
+    var hasRange=dates.length>0, minT=hasRange?Math.min.apply(null,dates):0, maxT=hasRange?Math.max.apply(null,dates):0;
+    var span=Math.max(1,(maxT-minT)/86400000);
+    var today=new Date(); today.setHours(0,0,0,0); var todayT=today.getTime();
+    var todayPct=(hasRange&&todayT>=minT&&todayT<=maxT)?((todayT-minT)/86400000/span*100):-1;
+    if(hasRange){
+      h+='<div class="gaxis"><span class="gx-min">'+esc(fmtMd(new Date(minT)))+'</span>'
+        +(todayPct>=0?'<span class="gx-today" style="left:'+todayPct+'%">▼今日</span>':'')
+        +'<span class="gx-max">'+esc(fmtMd(new Date(maxT)))+'</span></div>';
+    }
+    var last=kouteiItems.length-1;
+    h+='<div class="klist">'+kouteiItems.map(function(k,idx){
+      var s=parseYmd(k['開始日']),e=parseYmd(k['終了日']);
+      var pg=Math.max(0,Math.min(100,Number(k['進捗']||0)));
+      var typ=k['種別']?('<span class="ktag">'+esc(k['種別'])+'</span>'):'';
+      var overdue=(e && e.getTime()<todayT && pg<100);
+      var col=overdue?'#c0392b':kColor(k['種別']);
+      var clickAttr=adm?(' onclick="openKouteiForm(\''+esc(String(k['工程ID']))+'\')"'):'';
+      var period=(dateOnly(k['開始日'])||'未定')+' 〜 '+(dateOnly(k['終了日'])||'未定');
+      var delayTag=overdue?('<span class="kdelay">遅延 '+Math.floor((todayT-e.getTime())/86400000)+'日</span>'):'';
+      var nodateTag=(!(s&&e))?'<span class="knodate">日付未設定</span>':'';
+      var fill='<div class="gbar-fill" style="width:'+pg+'%;background:'+col+'"></div>';
+      var bar;
+      if(hasRange&&s&&e){
+        var L=(s.getTime()-minT)/86400000/span*100, W=(e.getTime()-s.getTime())/86400000/span*100;
+        if(L<0)L=0; if(W<1.5)W=1.5; if(L+W>100)W=100-L;
+        bar='<div class="gbar" style="left:'+L+'%;width:'+W+'%;background:'+hexA(col,0.20)+'">'+fill+'</div>';
+      } else {
+        bar='<div class="gbar gbar-nodate" style="left:0;width:100%">'+fill+'</div>';
+      }
+      var todayLine=(todayPct>=0)?'<div class="gtoday" style="left:'+todayPct+'%"></div>':'';
+      var move=adm?('<span class="kmove">'
+        +'<button class="kmv"'+(idx===0?' disabled':'')+' onclick="event.stopPropagation();moveKoutei(\''+esc(String(k['工程ID']))+'\',-1)">▲</button>'
+        +'<button class="kmv"'+(idx===last?' disabled':'')+' onclick="event.stopPropagation();moveKoutei(\''+esc(String(k['工程ID']))+'\',1)">▼</button>'
+        +'</span>'):'';
+      return '<div class="krow"'+clickAttr+'>'
+        +'<div class="krow-h"><span class="kname">'+esc(k['工程名']||'(無題)')+'</span>'+typ+'<span class="kpg">'+pg+'%</span>'+move+'</div>'
+        +'<div class="kperiod">'+esc(period)+nodateTag+delayTag+'</div>'
+        +'<div class="gtrack">'+todayLine+bar+'</div>'
+        +'</div>';
+    }).join('')+'</div>';
+  } else {
+    h+='<div class="dnote-empty">工程はまだ登録されていません。</div>';
+  }
+  if(kouteiItems.length){
+    h+='<div class="kexport"><button class="btn sub" onclick="exportKoutei(\'png\')">📷 画像で保存</button><button class="btn sub" onclick="exportKoutei(\'pdf\')">📄 PDFで保存</button></div>';
+  }
+  if(adm){
+    h+='<button class="btn sub" style="width:100%;margin-top:8px;" onclick="openKouteiForm(\'\')">＋ 工程を追加</button>';
+  }
+  box.innerHTML=h;
+}
+function moveKoutei(id,dir){
+  var arr=kouteiItems.slice(), i=-1;
+  for(var x=0;x<arr.length;x++){ if(String(arr[x]['工程ID'])===String(id)){ i=x; break; } }
+  if(i<0)return; var j=i+dir; if(j<0||j>=arr.length)return;
+  var tmp=arr[i]; arr[i]=arr[j]; arr[j]=tmp;
+  var calls=[];
+  arr.forEach(function(k,idx){ if(Number(k['並び順'])!==idx){ k['並び順']=idx; calls.push(callGAS({action:'updateKoutei',id:k['工程ID'],data:{'並び順':idx}},null,true)); } });
+  kouteiItems=arr; renderKoutei();
+  if(!calls.length)return;
+  Promise.all(calls).then(function(){ loadKoutei(); }).catch(function(){ toast('並び替えの保存に失敗しました'); loadKoutei(); });
+}
+/* ===== 工程表の出力（PNG画像 / PDF・A4横） ===== */
+function kClampPg(v){ return Math.max(0,Math.min(100,Number(v||0))); }
+function kFmtYmd(t){ var d=new Date(t); return d.getFullYear()+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+('0'+d.getDate()).slice(-2); }
+function kRoundRect(x,X,Y,W,Hh,r){ if(W<0){X+=W;W=-W;} r=Math.min(r,W/2,Hh/2); if(r<0)r=0; x.beginPath(); x.moveTo(X+r,Y); x.arcTo(X+W,Y,X+W,Y+Hh,r); x.arcTo(X+W,Y+Hh,X,Y+Hh,r); x.arcTo(X,Y+Hh,X,Y,r); x.arcTo(X,Y,X+W,Y,r); x.closePath(); }
+function kClipText(x,str,maxW){ str=String(str); if(x.measureText(str).width<=maxW)return str; var s=str; while(s.length&&x.measureText(s+'…').width>maxW){ s=s.slice(0,-1); } return s+'…'; }
+function drawGanttCanvas(){
+  var items=kouteiItems, W=1754, H=1240, M=64;
+  var c=document.createElement('canvas'); c.width=W; c.height=H;
+  var x=c.getContext('2d');
+  x.fillStyle='#ffffff'; x.fillRect(0,0,W,H);
+  var name=(curDetail&&curDetail['案件名'])||'工程表';
+  x.textBaseline='top'; x.textAlign='left';
+  x.fillStyle='#1f2937'; x.font='bold 40px sans-serif'; x.fillText(kClipText(x,name,W-2*M-360), M, M);
+  x.fillStyle='#6b7280'; x.font='600 24px sans-serif'; x.fillText('工程表', M, M+50);
+  var dates=[]; items.forEach(function(k){ var s=parseYmd(k['開始日']),e=parseYmd(k['終了日']); if(s)dates.push(s.getTime()); if(e)dates.push(e.getTime()); });
+  if(curDetail){ var ps=parseYmd(curDetail['工期開始']),pe=parseYmd(curDetail['工期完了']); if(ps)dates.push(ps.getTime()); if(pe)dates.push(pe.getTime()); }
+  var hasRange=dates.length>0, minT=hasRange?Math.min.apply(null,dates):0, maxT=hasRange?Math.max.apply(null,dates):0;
+  var span=Math.max(1,(maxT-minT)/86400000);
+  x.textAlign='right'; x.fillStyle='#6b7280'; x.font='500 22px sans-serif';
+  x.fillText(hasRange?(kFmtYmd(minT)+'  〜  '+kFmtYmd(maxT)):'期間未設定', W-M, M+10); x.textAlign='left';
+  var types=[]; items.forEach(function(k){ var t=String(k['種別']||'').trim(); if(t&&types.indexOf(t)<0)types.push(t); });
+  var legendY=M+98;
+  if(types.length){ var lx=M; x.font='500 20px sans-serif'; x.textBaseline='top';
+    types.forEach(function(t){ if(lx>W-M-220)return; var col=kColor(t); x.fillStyle=col; kRoundRect(x,lx,legendY,22,16,4); x.fill(); x.fillStyle='#374151'; x.fillText(t,lx+28,legendY-1); lx+=28+x.measureText(t).width+26; });
+  }
+  var chartTop=legendY+(types.length?40:6);
+  var labelW=440, axisH=34;
+  var trackX=M+labelW+10, trackW=W-M-trackX;
+  var axisY=chartTop, rowsTop=axisY+axisH;
+  var availH=H-(M+30)-rowsTop;
+  var n=items.length, rowH=Math.max(22,Math.min(54, n?availH/n:availH));
+  var today=new Date(); today.setHours(0,0,0,0); var todayT=today.getTime();
+  function pxAt(t){ return trackX + (t-minT)/86400000/span*trackW; }
+  if(hasRange){
+    x.fillStyle='#9ca3af'; x.font='500 18px sans-serif'; x.textBaseline='bottom';
+    x.textAlign='left'; x.fillText(kFmtYmd(minT), trackX, axisY+axisH-2);
+    x.textAlign='right'; x.fillText(kFmtYmd(maxT), trackX+trackW, axisY+axisH-2); x.textAlign='left'; x.textBaseline='top';
+  }
+  var showToday=(hasRange&&todayT>=minT&&todayT<=maxT);
+  if(showToday){ var tx=pxAt(todayT); x.strokeStyle='#e0512f'; x.lineWidth=2;
+    x.beginPath(); x.moveTo(tx, axisY+axisH-2); x.lineTo(tx, rowsTop+rowH*n); x.stroke();
+    x.fillStyle='#e0512f'; x.font='bold 16px sans-serif'; x.textAlign='center'; x.textBaseline='bottom'; x.fillText('今日', tx, axisY+16); x.textAlign='left'; x.textBaseline='top';
+  }
+  items.forEach(function(k,i){
+    var ry=rowsTop+rowH*i, bh=rowH*0.6, by=ry+rowH*0.2;
+    var s=parseYmd(k['開始日']),e=parseYmd(k['終了日']), pg=kClampPg(k['進捗']);
+    var overdue=(e&&e.getTime()<todayT&&pg<100), col=overdue?'#c0392b':kColor(k['種別']);
+    x.fillStyle='#374151'; x.font='600 '+Math.max(15,Math.min(22,rowH-10))+'px sans-serif'; x.textBaseline='middle';
+    x.fillText(kClipText(x,k['工程名']||'(無題)',labelW-8), M, ry+rowH/2); x.textBaseline='top';
+    x.fillStyle='#f1f3f5'; kRoundRect(x,trackX,by,trackW,bh,5); x.fill();
+    var bx,bw;
+    if(hasRange&&s&&e){ bx=pxAt(s.getTime()); var ex=pxAt(e.getTime()); bw=Math.max(5,ex-bx); if(bx<trackX){bx=trackX;} if(bx+bw>trackX+trackW){bw=trackX+trackW-bx;} }
+    else { bx=trackX; bw=trackW; }
+    x.fillStyle=hexA(col,0.20); kRoundRect(x,bx,by,bw,bh,5); x.fill();
+    x.fillStyle=col; kRoundRect(x,bx,by,Math.max(0,bw*pg/100),bh,5); x.fill();
+    x.fillStyle='#6b7280'; x.font='600 16px sans-serif'; x.textBaseline='middle'; x.textAlign='right';
+    x.fillText(pg+'%', trackX+trackW-4, ry+rowH/2); x.textAlign='left'; x.textBaseline='top';
+  });
+  x.fillStyle='#9ca3af'; x.font='400 16px sans-serif'; x.textBaseline='top';
+  x.fillText('出力日 '+kFmtYmd(Date.now()), M, H-M+22);
+  return c;
+}
+function loadJsPDF(){
+  return new Promise(function(res,rej){
+    if(window.jspdf&&window.jspdf.jsPDF){ res(); return; }
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+    s.onload=function(){ (window.jspdf&&window.jspdf.jsPDF)?res():rej(new Error('PDFライブラリの初期化に失敗しました')); };
+    s.onerror=function(){ rej(new Error('PDFライブラリを読み込めませんでした（ネット接続をご確認ください）')); };
+    document.head.appendChild(s);
+  });
+}
+function exportKoutei(format){
+  if(!kouteiItems.length){ toast('工程がありません'); return; }
+  var nm=String((curDetail&&curDetail['案件名'])||'工程表').replace(/[\\/:*?"<>|]/g,'_');
+  var canvas;
+  try{ canvas=drawGanttCanvas(); }catch(e){ toast('工程表の作成に失敗しました'); return; }
+  if(format==='png'){
+    try{
+      canvas.toBlob(function(blob){
+        if(!blob){ toast('画像の作成に失敗しました'); return; }
+        var url=URL.createObjectURL(blob), a=document.createElement('a');
+        a.href=url; a.download=nm+'_工程表.png'; document.body.appendChild(a); a.click();
+        document.body.removeChild(a); setTimeout(function(){URL.revokeObjectURL(url);},4000);
+        toast('画像を保存しました');
+      },'image/png');
+    }catch(e){ toast('画像の保存に失敗しました'); }
+  } else {
+    showLoad();
+    loadJsPDF().then(function(){
+      var JP=window.jspdf.jsPDF, pdf=new JP({orientation:'landscape',unit:'mm',format:'a4'});
+      pdf.addImage(canvas.toDataURL('image/png'),'PNG',0,0,297,210);
+      pdf.save(nm+'_工程表.pdf'); hideLoad(); toast('PDFを保存しました');
+    }).catch(function(e){ hideLoad(); toast((e&&e.message)||'PDFの作成に失敗しました'); });
+  }
+}
+function openKouteiForm(id){
+  kouteiEditId=id||'';
+  var it=kouteiEditId?kouteiItems.filter(function(k){return String(k['工程ID'])===String(kouteiEditId);})[0]:null;
+  document.getElementById('k_ttl').textContent=it?'工程を編集':'工程を追加';
+  document.getElementById('k_name').value = it?(it['工程名']||''):'';
+  document.getElementById('k_start').value= it?(dateOnly(it['開始日'])):'';
+  document.getElementById('k_end').value  = it?(dateOnly(it['終了日'])):'';
+  document.getElementById('k_prog').value = (it&&it['進捗']!==''&&it['進捗']!=null)?it['進捗']:'';
+  document.getElementById('k_type').value = it?(it['種別']||''):'';
+  document.getElementById('k_order').value= (it&&it['並び順']!==''&&it['並び順']!=null)?it['並び順']:'';
+  document.getElementById('k_note').value = it?(it['備考']||''):'';
+  document.getElementById('k_del').style.display = it?'block':'none';
+  document.getElementById('ovk').classList.add('show');
+}
+function closeKouteiForm(){ document.getElementById('ovk').classList.remove('show'); }
+function saveKouteiForm(){
+  if(!curDetail){ toast('案件が選択されていません'); return; }
+  var name=document.getElementById('k_name').value.trim();
+  if(!name){ toast('工程名を入力してください'); return; }
+  var sd=document.getElementById('k_start').value, ed=document.getElementById('k_end').value;
+  if(sd&&ed&&ed<sd){ toast('終了日は開始日より後にしてください'); return; }
+  var prog=document.getElementById('k_prog').value;
+  prog=prog===''?0:Math.max(0,Math.min(100,Number(prog)||0));
+  var ord=document.getElementById('k_order').value;
+  if(ord===''){ var mx=0; kouteiItems.forEach(function(k){var n=Number(k['並び順']||0); if(n>mx)mx=n;}); ord=mx+1; }
+  else { ord=Number(ord)||0; }
+  var data={'案件ID':curDetail['案件ID'],'工程名':name,'開始日':sd,'終了日':ed,
+    '進捗':prog,'種別':document.getElementById('k_type').value.trim(),
+    '並び順':ord,'備考':document.getElementById('k_note').value.trim()};
+  var payload=kouteiEditId?{action:'updateKoutei',id:kouteiEditId,data:data}:{action:'addKoutei',data:data};
+  callGAS(payload).then(function(res){
+    if(res&&res.ok){ toast(kouteiEditId?'工程を更新しました':'工程を追加しました'); closeKouteiForm(); loadKoutei(); }
+    else { toast((res&&res.error)||'保存に失敗しました'); }
+  }).catch(function(e){ toast('通信エラー：'+((e&&e.message)||'')); });
+}
+function deleteKouteiCur(){
+  if(!kouteiEditId)return;
+  if(!confirm('この工程を削除しますか？'))return;
+  callGAS({action:'deleteKoutei',id:kouteiEditId}).then(function(res){
+    if(res&&res.ok){ toast('工程を削除しました'); closeKouteiForm(); loadKoutei(); }
+    else { toast((res&&res.error)||'削除に失敗しました'); }
+  }).catch(function(e){ toast('通信エラー：'+((e&&e.message)||'')); });
+}
 function parseYmd(v){if(!v)return null;var t=String(v).slice(0,10).replace(/\//g,'-');var d=new Date(t+'T00:00:00');return isNaN(d.getTime())?null:d;}
 function termBar(p){
   if(p['ステータス']!=='施工中')return '';
