@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- koutei version 2 (2026-06-25) 横断工程表を月・日・曜日の目盛り付きガントに刷新：左に現場名/工期/状態の固定列(sticky)・画面幅いっぱい・横スクロール・今日へ自動スクロール・土日色分け。GAS変更なし。 -->
+<!-- koutei version 3 (2026-06-25) ガント操作性向上：バー押下での遷移を廃止し左の現場名タップで現場詳細へ／1日の幅を拡大しホイール(PC)・ピンチ(スマホ)・±ボタンでズーム／現場名と月日曜日ヘッダーを固定(フリーズペイン)。GAS変更なし。 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -217,26 +217,37 @@
   .empty{text-align:center;color:var(--sub);padding:42px 16px;font-size:14px;line-height:1.8;}
   .empty a{color:var(--accent);font-weight:700;}
   .ovwrap{padding:2px 0 30px;}
-  .ovhint{font-size:12px;color:var(--sub);margin:0 2px 10px;}
+  .ovhint{font-size:12px;color:var(--sub);margin:0 2px 8px;}
+
+  /* ズーム操作バー */
+  .zoombar{display:flex;align-items:center;gap:8px;margin:0 2px 8px;flex-wrap:wrap;}
+  .zoombar .zlbl{font-size:12px;font-weight:700;color:var(--sub);}
+  .zbtn{width:34px;height:30px;border:none;border-radius:9px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--ink);font-size:18px;font-weight:800;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .zbtn:active{transform:scale(.94);}
+  .zoombar .zhint{font-size:11px;color:var(--sub);}
+
   .krow{cursor:pointer;}
 
-  /* 横断ガント */
-  .gwrap{--labelw:172px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;border:1px solid rgba(0,0,0,.10);border-radius:12px;background:#fff;}
-  @media(max-width:560px){.gwrap{--labelw:124px;}}
+  /* 横断ガント（フリーズペイン） */
+  .gwrap{--labelw:172px;overflow:auto;max-height:78vh;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;border:1px solid rgba(0,0,0,.10);border-radius:12px;background:#fff;}
+  @media(max-width:560px){.gwrap{--labelw:124px;max-height:72vh;}}
   .ginner{display:inline-block;min-width:100%;}
   .grow{display:flex;align-items:stretch;border-bottom:1px solid rgba(0,0,0,.06);}
   .grow:last-child{border-bottom:none;}
   .glabel{position:sticky;left:0;z-index:3;flex:0 0 var(--labelw);width:var(--labelw);box-sizing:border-box;background:#fff;padding:7px 9px;border-right:2px solid rgba(0,0,0,.12);display:flex;flex-direction:column;justify-content:center;gap:3px;overflow:hidden;}
+  .glabel.lck{cursor:pointer;}
+  .glabel.lck:hover .gname{color:var(--accent);}
   .gtime{position:relative;flex:0 0 auto;}
-  .ghead{position:relative;z-index:4;background:#fff;}
-  .ghead .glabel{z-index:5;}
+  /* ヘッダー：縦スクロールでも上に固定 */
+  .ghead{position:sticky;top:0;z-index:4;background:#fff;}
+  .ghead .glabel{z-index:6;top:0;}
   .ghl .gyr{font-size:12px;font-weight:800;color:var(--ink);}
   .ghl .gsub{font-size:10px;font-weight:700;color:var(--sub);}
   .gmonrow{display:flex;height:22px;border-bottom:1px solid rgba(0,0,0,.10);}
-  .gmon{box-sizing:border-box;border-left:1px solid rgba(0,0,0,.10);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;background:rgba(0,0,0,.02);}
+  .gmon{flex:0 0 auto;box-sizing:border-box;border-left:1px solid rgba(0,0,0,.10);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;background:rgba(0,0,0,.02);}
   .gmon:first-child{border-left:none;}
   .gdayrow{display:flex;height:28px;}
-  .gday{box-sizing:border-box;border-left:1px solid rgba(0,0,0,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;overflow:hidden;}
+  .gday{flex:0 0 auto;box-sizing:border-box;border-left:1px solid rgba(0,0,0,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;overflow:hidden;}
   .gday:first-child{border-left:none;}
   .gday .dn{font-size:10px;font-weight:700;color:var(--ink);}
   .gday .wd{font-size:8px;color:var(--sub);margin-top:1px;}
@@ -244,8 +255,7 @@
   .gday.sun .dn,.gday.sun .wd{color:#d8443a;}
   .gday.today{background:rgba(224,81,47,.13);}
   .gday.today .dn{color:#e0512f;}
-  .grow.data{min-height:48px;cursor:pointer;}
-  .grow.data:hover .glabel,.grow.data:hover .gtime,.grow.data:active .glabel,.grow.data:active .gtime{background:rgba(14,165,164,.06);}
+  .grow.data{min-height:48px;}
   .gname{font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .gmeta{display:flex;align-items:center;gap:5px;min-width:0;}
   .gtag{flex:0 0 auto;font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:999px;white-space:nowrap;}
@@ -254,7 +264,7 @@
   .gbar2{position:absolute;top:50%;transform:translateY(-50%);height:18px;border-radius:5px;box-shadow:0 1px 3px rgba(0,0,0,.20);}
   .gtodayline{position:absolute;top:0;bottom:0;width:2px;background:#e0512f;z-index:2;}
 </style>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.25-43.9.28</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.25-43.9.29</div>
 
 <header>
   <div class="hbar">
@@ -270,7 +280,8 @@
 
 <main>
   <div class="ovwrap">
-    <div class="ovhint">各案件の工期を一覧で表示します。バーをタップするとその案件の詳細（工程管理）が開きます。</div>
+    <div class="ovhint">各案件の工期を一覧で表示します。左の現場名をタップすると、その現場の詳細（工程管理）が開きます。</div>
+    <div class="zoombar"><span class="zlbl">表示幅</span><button class="zbtn" onclick="zoomBtn(0.8)" aria-label="縮小">−</button><button class="zbtn" onclick="zoomBtn(1.25)" aria-label="拡大">＋</button><span class="zhint">ホイール／ピンチでも拡大縮小できます</span></div>
     <div id="list"><div class="empty">読み込み中…</div></div>
   </div>
 </main>
@@ -335,7 +346,10 @@ function buildChips(){
     return '<button class="chip'+(s===filterStatus?' active':'')+'" onclick="setFilter(\''+s+'\')">'+esc(s)+' '+n+'</button>';
   }).join('');
 }
-function render(){
+var DAYPX=null, ZMIN=18, ZMAX=120, ZDEFAULT=44;
+function curLabelW(){ return (window.innerWidth<=560)?124:172; }
+
+function render(opt){
   buildChips();
   var box=document.getElementById('list');
   var items=visibleProjects();
@@ -343,7 +357,7 @@ function render(){
   var DAY=86400000, WD=['日','月','火','水','木','金','土'];
   var dated=[], undated=[];
   items.forEach(function(p){ var s=parseYmd(p['工期開始']),e=parseYmd(p['工期完了']); if(s&&e&&e>=s){p.__s=s;p.__e=e;dated.push(p);} else {undated.push(p);} });
-  var h='', dpx=28, todayOff=-1, labelw=(window.innerWidth<=560)?124:172;
+  var h='', todayOff=-1, labelw=curLabelW(), dpx=ZDEFAULT;
   if(dated.length){
     dated.sort(function(a,b){return a.__s-b.__s;});
     var minD=dated[0].__s, maxD=dated[0].__e;
@@ -351,8 +365,8 @@ function render(){
     var rangeStart=new Date(minD.getFullYear(),minD.getMonth(),1);
     var rangeEnd=new Date(maxD.getFullYear(),maxD.getMonth()+1,0);
     var totalDays=Math.round((rangeEnd-rangeStart)/DAY)+1;
-    var avail=(box.clientWidth||760)-labelw-2; if(avail<140)avail=140;
-    dpx=avail/totalDays; if(dpx<22)dpx=22; if(dpx>60)dpx=60; dpx=Math.round(dpx*10)/10;
+    if(DAYPX==null){ var avail=(box.clientWidth||760)-labelw-2; if(avail<140)avail=140; DAYPX=Math.max(ZDEFAULT, avail/totalDays); if(DAYPX>ZMAX)DAYPX=ZMAX; if(DAYPX<ZMIN)DAYPX=ZMIN; DAYPX=Math.round(DAYPX*10)/10; }
+    dpx=DAYPX;
     var today=new Date();today.setHours(0,0,0,0);
     var inRange=(today>=rangeStart&&today<=rangeEnd);
     todayOff=inRange?Math.round((today-rangeStart)/DAY):-1;
@@ -368,7 +382,7 @@ function render(){
     var dayHtml='';
     for(var i=0;i<totalDays;i++){
       var d=new Date(rangeStart.getTime()+i*DAY), w=d.getDay();
-      dayHtml+='<div class="gday'+(w===0?' sun':'')+(w===6?' sat':'')+(i===todayOff?' today':'')+'"><span class="dn">'+d.getDate()+'</span><span class="wd">'+WD[w]+'</span></div>';
+      dayHtml+='<div class="gday'+(w===0?' sun':'')+(w===6?' sat':'')+(i===todayOff?' today':'')+'" style="width:'+dpx+'px"><span class="dn">'+d.getDate()+'</span><span class="wd">'+WD[w]+'</span></div>';
     }
     var grad='repeating-linear-gradient(to right,rgba(0,0,0,.05) 0,rgba(0,0,0,.05) 1px,transparent 1px,transparent '+dpx+'px)';
     var todayLine=inRange?'<div class="gtodayline" style="left:'+(todayOff*dpx+dpx/2)+'px"></div>':'';
@@ -381,8 +395,9 @@ function render(){
       var off=Math.round((p.__s-rangeStart)/DAY), dur=Math.round((p.__e-p.__s)/DAY)+1;
       var left=Math.round(off*dpx), bw=Math.max(Math.round(dpx),Math.round(dur*dpx));
       var period=fmtMd(p.__s)+'〜'+fmtMd(p.__e);
-      return '<div class="grow data" onclick="openCase(\''+esc(String(p['案件ID']))+'\')">'
-        +'<div class="glabel"><div class="gname">'+esc(pname(p))+'</div><div class="gmeta"><span class="gtag" style="background:'+hexA(col,0.15)+';color:'+col+'">'+esc(String(p['ステータス']||''))+'</span><span class="gper">'+esc(period)+'</span></div></div>'
+      var pid=esc(String(p['案件ID']));
+      return '<div class="grow data">'
+        +'<div class="glabel lck" onclick="openCase(\''+pid+'\')" title="現場の詳細（工程管理）を開く"><div class="gname">'+esc(pname(p))+' ›</div><div class="gmeta"><span class="gtag" style="background:'+hexA(col,0.15)+';color:'+col+'">'+esc(String(p['ステータス']||''))+'</span><span class="gper">'+esc(period)+'</span></div></div>'
         +'<div class="gtime" style="width:'+timeW+'px;background-image:'+grad+'"><div class="gtrack2">'+todayLine+'<div class="gbar2" style="left:'+left+'px;width:'+bw+'px;background:'+col+'"></div></div></div>'
         +'</div>';
     }).join('');
@@ -391,17 +406,53 @@ function render(){
   if(undated.length){
     h+='<div class="d-secttl" style="margin-top:16px;">工期未設定</div>';
     h+='<div class="klist gundated">'+undated.map(function(p){
-      var col=statusColor(p['ステータス']);
-      return '<div class="krow" onclick="openCase(\''+esc(String(p['案件ID']))+'\')">'
+      var col=statusColor(p['ステータス']); var pid=esc(String(p['案件ID']));
+      return '<div class="krow" onclick="openCase(\''+pid+'\')">'
         +'<div class="krow-h"><span class="kname">'+esc(pname(p))+'</span><span class="ktag" style="background:'+hexA(col,0.14)+';color:'+col+'">'+esc(String(p['ステータス']||''))+'</span></div>'
         +'<div class="kperiod">工期が未設定です</div></div>';
     }).join('')+'</div>';
   }
   box.innerHTML=h;
-  if(dated.length && todayOff>=0){
-    var gw=box.querySelector('.gwrap');
-    if(gw){ var target=todayOff*dpx+dpx/2-(gw.clientWidth-labelw)/2; gw.scrollLeft=Math.max(0,Math.round(target)); }
+  var gw=box.querySelector('.gwrap');
+  if(gw){
+    attachGanttZoom(gw);
+    if(opt && opt.dayFloat!=null && opt.cx!=null){
+      gw.scrollLeft=Math.max(0, Math.round(labelw + opt.dayFloat*dpx - opt.cx));
+    } else if(todayOff>=0){
+      gw.scrollLeft=Math.max(0, Math.round(todayOff*dpx+dpx/2-(gw.clientWidth-labelw)/2));
+    }
   }
+}
+
+/* ===== ズーム（ホイール／ピンチ／± ボタン） ===== */
+function clampZoom(v){ return Math.max(ZMIN,Math.min(ZMAX,v)); }
+var _zr=false,_zd,_zcx;
+function zoomThrottled(dpx,cx){ _zd=dpx; _zcx=cx; if(!_zr){ _zr=true; requestAnimationFrame(function(){ _zr=false; zoomApply(_zd,_zcx); }); } }
+function zoomApply(newDpx,cx){
+  newDpx=clampZoom(newDpx);
+  if(DAYPX==null) DAYPX=ZDEFAULT;
+  if(Math.abs(newDpx-DAYPX)<0.05) return;
+  var gw=document.querySelector('.gwrap');
+  var labelw=curLabelW();
+  if(!gw){ DAYPX=newDpx; render(); return; }
+  var localOld=(cx - labelw) + gw.scrollLeft; if(localOld<0) localOld=0;
+  var dayFloat=localOld/DAYPX;
+  DAYPX=newDpx;
+  render({dayFloat:dayFloat, cx:cx});
+}
+function zoomBtn(f){ var gw=document.querySelector('.gwrap'); var labelw=curLabelW(); var cx=gw?(labelw+(gw.clientWidth-labelw)/2):(labelw+150); zoomApply((DAYPX||ZDEFAULT)*f, cx); }
+function attachGanttZoom(gw){
+  gw.addEventListener('wheel', function(e){
+    e.preventDefault();
+    var rect=gw.getBoundingClientRect(); var cx=e.clientX-rect.left;
+    var factor=Math.exp(-(e.deltaY)*0.0015);
+    zoomThrottled((DAYPX||ZDEFAULT)*factor, cx);
+  }, {passive:false});
+  var pd=0, pdpx=0;
+  function dist(t){var dx=t[0].clientX-t[1].clientX,dy=t[0].clientY-t[1].clientY;return Math.sqrt(dx*dx+dy*dy);}
+  gw.addEventListener('touchstart', function(e){ if(e.touches.length===2){ pd=dist(e.touches); pdpx=(DAYPX||ZDEFAULT); } }, {passive:false});
+  gw.addEventListener('touchmove', function(e){ if(e.touches.length===2 && pd>0){ e.preventDefault(); var d=dist(e.touches); var rect=gw.getBoundingClientRect(); var cx=((e.touches[0].clientX+e.touches[1].clientX)/2)-rect.left; zoomThrottled(pdpx*(d/pd), cx); } }, {passive:false});
+  gw.addEventListener('touchend', function(e){ if(e.touches.length<2) pd=0; }, {passive:false});
 }
 function load(){
   try{ KP=JSON.parse(localStorage.getItem('genba_projects')||'[]'); if(KP.length){ normKP(); render(); } }catch(e){}
