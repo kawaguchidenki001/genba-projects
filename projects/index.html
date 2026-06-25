@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- projects version 67 (2026-06-25) 重大バグ修正：案件詳細の「連絡」欄(d_ctc)の閉じタグ抜けにより、LINE未設定の案件で案件情報・工程管理・顧客情報・機能・ボタンが丸ごと非表示になっていた問題を修正（</div>を1つ補完）。GAS変更なし。 -->
 <!-- projects version 66 (2026-06-25) 工程管理(Step5/Phase2完了)：工程表をA4横の1枚絵で出力。「画像で保存」(PNG・オフライン可)と「PDFで保存」(jsPDF・要ネット接続)を追加。タイトル/期間/凡例(種別色)/今日ライン/進捗バー/出力日を描画。GAS変更なし。 -->
 <!-- projects version 65 (2026-06-25) 工程管理(Step4/Phase2)：種別名から自動で色分け、終了日超過＆未完了の工程に「遅延」赤バー＋日数表示、各工程の上下ボタンで並び替え（管理者・並び順を保存）。GAS変更なし。 -->
 <!-- projects version 64 (2026-06-25) 工程管理(Step3)：工程一覧を期間に合わせた横バー（ガント）表示に変更し、今日ラインと期間軸ラベル（開始/今日/終了）を追加。日付未設定の工程は淡色の全幅バーで表示。GAS変更なし。 -->
@@ -229,7 +230,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.25-43.9.24</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.25-43.9.25</div>
 <header>
   <div class="hbar">
     <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
@@ -357,6 +358,7 @@
       <div class="d-secttl" id="d_ctcttl">連絡</div>
       <div class="ctc" id="d_ctc">
         <a id="d_line" class="cbtn lw" target="_blank" rel="noopener" style="display:none;"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.3-.5L3 21l1.4-4a8 8 0 0 1-1.4-4.5A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z"/></svg></span>LINE WORKSを開く</a>
+      </div>
       <div class="d-secttl" id="arcTtl" style="display:none;">案件の保管と削除</div>
       <div id="arcPanel" style="display:none;background:#fff7ed;border:1px solid #f0c674;border-radius:12px;padding:13px 15px;">
         <div style="font-size:12.5px;color:#92400e;font-weight:700;line-height:1.7;margin-bottom:10px;">完了した現場のデータをNASなどへ保管してから、システムから削除する手順です。<br>① 保管用Excelを作成 → ② Driveフォルダをダウンロードして保管 → ③ システムから削除</div>
