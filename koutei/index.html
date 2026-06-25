@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- koutei version 3 (2026-06-25) ガント操作性向上：バー押下での遷移を廃止し左の現場名タップで現場詳細へ／1日の幅を拡大しホイール(PC)・ピンチ(スマホ)・±ボタンでズーム／現場名と月日曜日ヘッダーを固定(フリーズペイン)。GAS変更なし。 -->
+<!-- koutei version 4 (2026-06-25) 上部の状態フィルタを削除／工期バーを薄い帯にし、作業日報がある日(=現場に入った日)を濃いセルで重ね表示／濃いセルのタップでその日の作業内容と人員(氏名)をポップアップ。日報は reports API で取得しキャッシュ。GAS変更なし。 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -261,10 +261,27 @@
   .gtag{flex:0 0 auto;font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:999px;white-space:nowrap;}
   .gper{font-size:10px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .gtrack2{position:relative;height:100%;min-height:48px;}
-  .gbar2{position:absolute;top:50%;transform:translateY(-50%);height:18px;border-radius:5px;box-shadow:0 1px 3px rgba(0,0,0,.20);}
+  .gbar2{position:absolute;top:50%;transform:translateY(-50%);height:18px;border-radius:5px;border:1px solid transparent;box-shadow:none;z-index:0;}
   .gtodayline{position:absolute;top:0;bottom:0;width:2px;background:#e0512f;z-index:2;}
+  .gwork{position:absolute;top:50%;transform:translateY(-50%);height:13px;border-radius:3px;cursor:pointer;z-index:1;box-shadow:0 1px 2px rgba(0,0,0,.22);}
+  .gwork:hover,.gwork:active{filter:brightness(1.12);}
+  .dpop{position:fixed;inset:0;background:rgba(20,24,40,.45);display:none;align-items:flex-end;justify-content:center;z-index:1000;}
+  .dpop.show{display:flex;}
+  .dpop-card{background:#fff;width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:18px 18px 26px;position:relative;max-height:80vh;overflow:auto;box-shadow:0 -6px 24px rgba(0,0,0,.22);}
+  @media(min-width:600px){.dpop{align-items:center;} .dpop-card{border-radius:16px;}}
+  .dpop-x{position:absolute;top:10px;right:12px;width:32px;height:32px;border:none;background:rgba(0,0,0,.06);border-radius:50%;font-size:20px;line-height:1;color:var(--ink);cursor:pointer;}
+  .dp-ttl{font-size:17px;font-weight:800;color:var(--ink);padding-right:36px;}
+  .dp-sub{font-size:13px;color:var(--sub);margin-top:2px;}
+  .dp-sec{font-size:12px;font-weight:800;color:var(--sub);margin:14px 0 6px;border-top:1px solid rgba(0,0,0,.08);padding-top:10px;}
+  .dp-names{display:flex;flex-wrap:wrap;gap:6px;}
+  .dp-chip{font-size:12.5px;font-weight:700;background:rgba(14,165,164,.12);color:#0c7c7a;padding:3px 10px;border-radius:999px;}
+  .dp-works{display:flex;flex-direction:column;gap:7px;}
+  .dp-wk{display:flex;gap:8px;align-items:baseline;}
+  .dp-wknm{flex:0 0 auto;font-size:12px;font-weight:800;color:var(--ink);min-width:70px;}
+  .dp-wktx{font-size:13px;color:var(--ink);line-height:1.5;}
+  .dp-empty{font-size:13px;color:var(--sub);}
 </style>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.25-43.9.29</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.25-43.9.30</div>
 
 <header>
   <div class="hbar">
@@ -274,9 +291,6 @@
   </div>
 </header>
 
-<div class="toolbar">
-  <div class="chips" id="chips"></div>
-</div>
 
 <main>
   <div class="ovwrap">
@@ -286,6 +300,7 @@
   </div>
 </main>
 
+<div class="dpop" id="dayPop" onclick="if(event.target===this)closeDayPop()"><div class="dpop-card"><button class="dpop-x" onclick="closeDayPop()" aria-label="閉じる">×</button><div id="dpBody"></div></div></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
 
@@ -331,6 +346,7 @@ function hexA(hex,a){ var n=parseInt(String(hex).slice(1),16); return 'rgba('+((
 var STATUSES=['見積中','受注','段取済','施工中','完了','請求済'];
 var SCOLOR={'見積中':'#e0a800','受注':'#3b82f6','段取済':'#8b5cf6','施工中':'#16a085','完了':'#6b7280','請求済':'#9ca3af'};
 var KP=[], filterStatus='すべて';
+var REPORTS=[], repIndex={};
 function statusColor(s){ return SCOLOR[String(s||'').trim()]||'#5b6b8c'; }
 function pname(p){ return p['現場名']||p['案件名']||'(無題)'; }
 function visibleProjects(){ return KP.filter(function(p){ return filterStatus==='すべて' || String(p['ステータス']||'').trim()===filterStatus; }); }
@@ -350,7 +366,6 @@ var DAYPX=null, ZMIN=18, ZMAX=120, ZDEFAULT=44;
 function curLabelW(){ return (window.innerWidth<=560)?124:172; }
 
 function render(opt){
-  buildChips();
   var box=document.getElementById('list');
   var items=visibleProjects();
   if(!items.length){ box.innerHTML='<div class="empty">該当する案件がありません。</div>'; return; }
@@ -361,7 +376,11 @@ function render(opt){
   if(dated.length){
     dated.sort(function(a,b){return a.__s-b.__s;});
     var minD=dated[0].__s, maxD=dated[0].__e;
-    dated.forEach(function(p){ if(p.__s<minD)minD=p.__s; if(p.__e>maxD)maxD=p.__e; });
+    dated.forEach(function(p){
+      if(p.__s<minD)minD=p.__s; if(p.__e>maxD)maxD=p.__e;
+      var wd=repIndex[String(p['案件ID'])];
+      if(wd){ Object.keys(wd).forEach(function(ymd){ var d=parseYmd(ymd); if(d){ if(d<minD)minD=d; if(d>maxD)maxD=d; } }); }
+    });
     var rangeStart=new Date(minD.getFullYear(),minD.getMonth(),1);
     var rangeEnd=new Date(maxD.getFullYear(),maxD.getMonth()+1,0);
     var totalDays=Math.round((rangeEnd-rangeStart)/DAY)+1;
@@ -396,9 +415,19 @@ function render(opt){
       var left=Math.round(off*dpx), bw=Math.max(Math.round(dpx),Math.round(dur*dpx));
       var period=fmtMd(p.__s)+'〜'+fmtMd(p.__e);
       var pid=esc(String(p['案件ID']));
+      var bar='<div class="gbar2" style="left:'+left+'px;width:'+bw+'px;background:'+hexA(col,0.16)+';border-color:'+hexA(col,0.42)+'"></div>';
+      var work='';
+      var wd=repIndex[String(p['案件ID'])];
+      if(wd){
+        Object.keys(wd).forEach(function(ymd){
+          var d=parseYmd(ymd); if(!d)return;
+          var wo=Math.round((d-rangeStart)/DAY); if(wo<0||wo>=totalDays)return;
+          work+='<div class="gwork" style="left:'+Math.round(wo*dpx)+'px;width:'+Math.round(dpx)+'px;background:'+col+'" onclick="showDay(\''+pid+'\',\''+ymd+'\')" title="'+ymd+' の作業内容・人員"></div>';
+        });
+      }
       return '<div class="grow data">'
         +'<div class="glabel lck" onclick="openCase(\''+pid+'\')" title="現場の詳細（工程管理）を開く"><div class="gname">'+esc(pname(p))+' ›</div><div class="gmeta"><span class="gtag" style="background:'+hexA(col,0.15)+';color:'+col+'">'+esc(String(p['ステータス']||''))+'</span><span class="gper">'+esc(period)+'</span></div></div>'
-        +'<div class="gtime" style="width:'+timeW+'px;background-image:'+grad+'"><div class="gtrack2">'+todayLine+'<div class="gbar2" style="left:'+left+'px;width:'+bw+'px;background:'+col+'"></div></div></div>'
+        +'<div class="gtime" style="width:'+timeW+'px;background-image:'+grad+'"><div class="gtrack2">'+todayLine+bar+work+'</div></div>'
         +'</div>';
     }).join('');
     h+='</div></div>';
@@ -418,6 +447,8 @@ function render(opt){
     attachGanttZoom(gw);
     if(opt && opt.dayFloat!=null && opt.cx!=null){
       gw.scrollLeft=Math.max(0, Math.round(labelw + opt.dayFloat*dpx - opt.cx));
+    } else if(opt && opt.keepScroll!=null){
+      gw.scrollLeft=opt.keepScroll;
     } else if(todayOff>=0){
       gw.scrollLeft=Math.max(0, Math.round(todayOff*dpx+dpx/2-(gw.clientWidth-labelw)/2));
     }
@@ -454,16 +485,53 @@ function attachGanttZoom(gw){
   gw.addEventListener('touchmove', function(e){ if(e.touches.length===2 && pd>0){ e.preventDefault(); var d=dist(e.touches); var rect=gw.getBoundingClientRect(); var cx=((e.touches[0].clientX+e.touches[1].clientX)/2)-rect.left; zoomThrottled(pdpx*(d/pd), cx); } }, {passive:false});
   gw.addEventListener('touchend', function(e){ if(e.touches.length<2) pd=0; }, {passive:false});
 }
+function buildRepIndex(){
+  repIndex={};
+  REPORTS.forEach(function(r){
+    var pid=String(r['案件ID']||''); if(!pid) return;
+    var ymd=String(r['日付']||'').slice(0,10).replace(/\//g,'-'); if(!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return;
+    if(!repIndex[pid]) repIndex[pid]={};
+    if(!repIndex[pid][ymd]) repIndex[pid][ymd]=[];
+    repIndex[pid][ymd].push(r);
+  });
+}
+function showDay(pid, ymd){
+  var rows=(repIndex[pid]&&repIndex[pid][ymd])?repIndex[pid][ymd]:[];
+  var proj=KP.filter(function(p){return String(p['案件ID'])===String(pid);})[0];
+  var pn=proj?pname(proj):'';
+  var names=[]; rows.forEach(function(r){ var nm=String(r['氏名']||'').trim(); if(nm&&names.indexOf(nm)<0)names.push(nm); });
+  var works=rows.map(function(r){ return {nm:String(r['氏名']||'').trim(), w:(String(r['作業内容']||'').trim()||'（記載なし）')}; });
+  var d=parseYmd(ymd), WD=['日','月','火','水','木','金','土'];
+  var dlabel=d?((d.getMonth()+1)+'月'+d.getDate()+'日（'+WD[d.getDay()]+'）'):esc(ymd);
+  var html='<div class="dp-ttl">'+dlabel+'</div>'
+    +'<div class="dp-sub">'+esc(pn)+'</div>'
+    +'<div class="dp-sec">人員（'+names.length+'名）</div>'
+    +'<div class="dp-names">'+(names.length?names.map(function(n){return '<span class="dp-chip">'+esc(n)+'</span>';}).join(''):'<span class="dp-empty">記録なし</span>')+'</div>'
+    +'<div class="dp-sec">作業内容</div>'
+    +'<div class="dp-works">'+(works.length?works.map(function(o){return '<div class="dp-wk"><span class="dp-wknm">'+esc(o.nm||'—')+'</span><span class="dp-wktx">'+esc(o.w)+'</span></div>';}).join(''):'<div class="dp-empty">記録なし</div>')+'</div>';
+  document.getElementById('dpBody').innerHTML=html;
+  document.getElementById('dayPop').classList.add('show');
+}
+function closeDayPop(){ document.getElementById('dayPop').classList.remove('show'); }
+
 function load(){
-  try{ KP=JSON.parse(localStorage.getItem('genba_projects')||'[]'); if(KP.length){ normKP(); render(); } }catch(e){}
+  try{ KP=JSON.parse(localStorage.getItem('genba_projects')||'[]'); if(KP.length){ normKP(); } }catch(e){}
+  try{ REPORTS=JSON.parse(localStorage.getItem('genba_reports')||'[]'); if(REPORTS.length) buildRepIndex(); }catch(e){}
+  if(KP.length) render();
   callGAS({action:'all'},null,KP.length>0).then(function(res){
-    if(!res||!res.ok){ document.getElementById('list').innerHTML='<div class="empty">読み込みに失敗しました。ログインが必要かもしれません。<br><a href="'+BASE+'">メニューへ戻る</a></div>'; return; }
+    if(!res||!res.ok){ if(!KP.length) document.getElementById('list').innerHTML='<div class="empty">読み込みに失敗しました。ログインが必要かもしれません。<br><a href="'+BASE+'">メニューへ戻る</a></div>'; return; }
     KP=res.projects||[]; normKP();
     try{localStorage.setItem('genba_projects',JSON.stringify(KP));}catch(e){}
     render();
+    loadReports();
   }).catch(function(e){
     if(!KP.length) document.getElementById('list').innerHTML='<div class="empty">オフライン、または読み込みに失敗しました。<br><a href="'+BASE+'">メニューへ戻る</a></div>';
   });
+}
+function loadReports(){
+  callGAS({action:'reports'},null,true).then(function(res){
+    if(res&&res.ok&&res.reports){ REPORTS=res.reports; buildRepIndex(); try{localStorage.setItem('genba_reports',JSON.stringify(REPORTS));}catch(e){} render(); }
+  }).catch(function(){});
 }
 function normKP(){ KP.forEach(function(p){ if(String(p['ステータス']||'').trim()==='進行中') p['ステータス']='施工中'; }); }
 window.addEventListener('DOMContentLoaded', load);
