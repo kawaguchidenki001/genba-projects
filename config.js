@@ -1,6 +1,7 @@
 // Gen-Can 共通設定 v146
 // ファイル更新時は APP_VERSION / BUILD を必ず変更します。
 // ★ バージョンはこのファイルで一元管理。APP_VERSION を変えれば全ページのバッジに反映されます。
+// v2026.06.25-43.9.28 横断工程表を月・日・曜日の目盛り付きガントに刷新（左に現場名/工期の固定列・画面幅いっぱい・今日へ自動スクロール）
 // v2026.06.25-43.9.27 工程表タイルが権限メニュー表(genbaAllowedMenu)未登録で非表示だったバグ修正（kouteiを管理者・責任者・社員に追加）
 // v2026.06.25-43.9.26 工程表：横断工程表ページ(/koutei/)を新設しホームにタイル追加・案件詳細の表示バグ修正(projects v67)・GAS v157(工程データ)
 // v2026.06.22-43.9.23 案件画面：タイル3列をFlexbox方式に変更（端末差なく確実に3列）・状態/区分チップを折り返し表示（完了・請求済の切れを解消）
@@ -29,8 +30,8 @@
 // GASを再デプロイしてURLが変わった場合は GAS_URL だけ変更します。
 window.GENBA_CONFIG = {
   APP_NAME: 'Gen-Can',
-  APP_VERSION: 'v2026.06.25-43.9.27',
-  BUILD: '20260625-v43-9-27',
+  APP_VERSION: 'v2026.06.25-43.9.28',
+  BUILD: '20260625-v43-9-28',
   TEST_LOGIN_ENABLED: false, // 2026-06-20 販売準備としてテストログイン無効化済み
   GAS_URL: 'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec'
 };

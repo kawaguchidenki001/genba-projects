@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- koutei version 1 (2026-06-25) 横断工程表（新規ページ）：全案件の工期バーを共通の時間軸に並べて表示・今日ライン・ステータス色・状態フィルタ。案件タップで projects/?case=ID を開く。projectsのheadを流用。GAS変更なし。 -->
+<!-- koutei version 2 (2026-06-25) 横断工程表を月・日・曜日の目盛り付きガントに刷新：左に現場名/工期/状態の固定列(sticky)・画面幅いっぱい・横スクロール・今日へ自動スクロール・土日色分け。GAS変更なし。 -->
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
@@ -213,13 +213,48 @@
 </head>
 <body>
 <style>
+  main{max-width:none!important;padding:4px 8px 22px!important;}
   .empty{text-align:center;color:var(--sub);padding:42px 16px;font-size:14px;line-height:1.8;}
   .empty a{color:var(--accent);font-weight:700;}
-  .ovwrap{padding:4px 2px 30px;}
-  .ovhint{font-size:12px;color:var(--sub);margin:2px 2px 12px;}
+  .ovwrap{padding:2px 0 30px;}
+  .ovhint{font-size:12px;color:var(--sub);margin:0 2px 10px;}
   .krow{cursor:pointer;}
+
+  /* 横断ガント */
+  .gwrap{--labelw:172px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;border:1px solid rgba(0,0,0,.10);border-radius:12px;background:#fff;}
+  @media(max-width:560px){.gwrap{--labelw:124px;}}
+  .ginner{display:inline-block;min-width:100%;}
+  .grow{display:flex;align-items:stretch;border-bottom:1px solid rgba(0,0,0,.06);}
+  .grow:last-child{border-bottom:none;}
+  .glabel{position:sticky;left:0;z-index:3;flex:0 0 var(--labelw);width:var(--labelw);box-sizing:border-box;background:#fff;padding:7px 9px;border-right:2px solid rgba(0,0,0,.12);display:flex;flex-direction:column;justify-content:center;gap:3px;overflow:hidden;}
+  .gtime{position:relative;flex:0 0 auto;}
+  .ghead{position:relative;z-index:4;background:#fff;}
+  .ghead .glabel{z-index:5;}
+  .ghl .gyr{font-size:12px;font-weight:800;color:var(--ink);}
+  .ghl .gsub{font-size:10px;font-weight:700;color:var(--sub);}
+  .gmonrow{display:flex;height:22px;border-bottom:1px solid rgba(0,0,0,.10);}
+  .gmon{box-sizing:border-box;border-left:1px solid rgba(0,0,0,.10);display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;background:rgba(0,0,0,.02);}
+  .gmon:first-child{border-left:none;}
+  .gdayrow{display:flex;height:28px;}
+  .gday{box-sizing:border-box;border-left:1px solid rgba(0,0,0,.05);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;overflow:hidden;}
+  .gday:first-child{border-left:none;}
+  .gday .dn{font-size:10px;font-weight:700;color:var(--ink);}
+  .gday .wd{font-size:8px;color:var(--sub);margin-top:1px;}
+  .gday.sat .dn,.gday.sat .wd{color:#2d7dd2;}
+  .gday.sun .dn,.gday.sun .wd{color:#d8443a;}
+  .gday.today{background:rgba(224,81,47,.13);}
+  .gday.today .dn{color:#e0512f;}
+  .grow.data{min-height:48px;cursor:pointer;}
+  .grow.data:hover .glabel,.grow.data:hover .gtime,.grow.data:active .glabel,.grow.data:active .gtime{background:rgba(14,165,164,.06);}
+  .gname{font-size:13px;font-weight:800;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .gmeta{display:flex;align-items:center;gap:5px;min-width:0;}
+  .gtag{flex:0 0 auto;font-size:9.5px;font-weight:800;padding:1px 6px;border-radius:999px;white-space:nowrap;}
+  .gper{font-size:10px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .gtrack2{position:relative;height:100%;min-height:48px;}
+  .gbar2{position:absolute;top:50%;transform:translateY(-50%);height:18px;border-radius:5px;box-shadow:0 1px 3px rgba(0,0,0,.20);}
+  .gtodayline{position:absolute;top:0;bottom:0;width:2px;background:#e0512f;z-index:2;}
 </style>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.25-43.9.26</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.25-43.9.28</div>
 
 <header>
   <div class="hbar">
@@ -305,33 +340,57 @@ function render(){
   var box=document.getElementById('list');
   var items=visibleProjects();
   if(!items.length){ box.innerHTML='<div class="empty">該当する案件がありません。</div>'; return; }
+  var DAY=86400000, WD=['日','月','火','水','木','金','土'];
   var dated=[], undated=[];
-  items.forEach(function(p){ var s=parseYmd(p['工期開始']),e=parseYmd(p['工期完了']); if(s&&e){p.__s=s;p.__e=e;dated.push(p);} else {undated.push(p);} });
-  var h='';
+  items.forEach(function(p){ var s=parseYmd(p['工期開始']),e=parseYmd(p['工期完了']); if(s&&e&&e>=s){p.__s=s;p.__e=e;dated.push(p);} else {undated.push(p);} });
+  var h='', dpx=28, todayOff=-1, labelw=(window.innerWidth<=560)?124:172;
   if(dated.length){
-    var ts=[]; dated.forEach(function(p){ts.push(p.__s.getTime());ts.push(p.__e.getTime());});
-    var minT=Math.min.apply(null,ts), maxT=Math.max.apply(null,ts), span=Math.max(1,(maxT-minT)/86400000);
-    var today=new Date();today.setHours(0,0,0,0);var todayT=today.getTime();
-    var todayPct=(todayT>=minT&&todayT<=maxT)?((todayT-minT)/86400000/span*100):-1;
-    h+='<div class="gaxis"><span class="gx-min">'+esc(fmtMd(new Date(minT)))+'</span>'
-      +(todayPct>=0?'<span class="gx-today" style="left:'+todayPct+'%">▼今日</span>':'')
-      +'<span class="gx-max">'+esc(fmtMd(new Date(maxT)))+'</span></div>';
-    h+='<div class="klist">'+dated.map(function(p){
+    dated.sort(function(a,b){return a.__s-b.__s;});
+    var minD=dated[0].__s, maxD=dated[0].__e;
+    dated.forEach(function(p){ if(p.__s<minD)minD=p.__s; if(p.__e>maxD)maxD=p.__e; });
+    var rangeStart=new Date(minD.getFullYear(),minD.getMonth(),1);
+    var rangeEnd=new Date(maxD.getFullYear(),maxD.getMonth()+1,0);
+    var totalDays=Math.round((rangeEnd-rangeStart)/DAY)+1;
+    var avail=(box.clientWidth||760)-labelw-2; if(avail<140)avail=140;
+    dpx=avail/totalDays; if(dpx<22)dpx=22; if(dpx>60)dpx=60; dpx=Math.round(dpx*10)/10;
+    var today=new Date();today.setHours(0,0,0,0);
+    var inRange=(today>=rangeStart&&today<=rangeEnd);
+    todayOff=inRange?Math.round((today-rangeStart)/DAY):-1;
+    var timeW=Math.round(totalDays*dpx);
+    var monHtml='', cur=new Date(rangeStart);
+    while(cur<=rangeEnd){
+      var mEnd=new Date(cur.getFullYear(),cur.getMonth()+1,0);
+      var upto=(mEnd<rangeEnd)?mEnd:rangeEnd;
+      var dim=Math.round((upto-cur)/DAY)+1;
+      monHtml+='<div class="gmon" style="width:'+Math.round(dim*dpx)+'px">'+(cur.getMonth()+1)+'月</div>';
+      cur=new Date(cur.getFullYear(),cur.getMonth()+1,1);
+    }
+    var dayHtml='';
+    for(var i=0;i<totalDays;i++){
+      var d=new Date(rangeStart.getTime()+i*DAY), w=d.getDay();
+      dayHtml+='<div class="gday'+(w===0?' sun':'')+(w===6?' sat':'')+(i===todayOff?' today':'')+'"><span class="dn">'+d.getDate()+'</span><span class="wd">'+WD[w]+'</span></div>';
+    }
+    var grad='repeating-linear-gradient(to right,rgba(0,0,0,.05) 0,rgba(0,0,0,.05) 1px,transparent 1px,transparent '+dpx+'px)';
+    var todayLine=inRange?'<div class="gtodayline" style="left:'+(todayOff*dpx+dpx/2)+'px"></div>':'';
+    var startY=rangeStart.getFullYear(), endY=rangeEnd.getFullYear();
+    var yLabel=(startY===endY)?startY+'年':startY+'–'+endY;
+    h+='<div class="gwrap"><div class="ginner">';
+    h+='<div class="grow ghead"><div class="glabel ghl"><span class="gyr">'+yLabel+'</span><span class="gsub">現場 / 工期</span></div><div class="gtime" style="width:'+timeW+'px"><div class="gmonrow">'+monHtml+'</div><div class="gdayrow">'+dayHtml+'</div></div></div>';
+    h+=dated.map(function(p){
       var col=statusColor(p['ステータス']);
-      var L=(p.__s.getTime()-minT)/86400000/span*100, W=(p.__e.getTime()-p.__s.getTime())/86400000/span*100;
-      if(L<0)L=0; if(W<1.5)W=1.5; if(L+W>100)W=100-L;
-      var todayLine=(todayPct>=0)?'<div class="gtoday" style="left:'+todayPct+'%"></div>':'';
-      var period=(dateOnly(p['工期開始'])||'')+' 〜 '+(dateOnly(p['工期完了'])||'');
-      return '<div class="krow" onclick="openCase(\''+esc(String(p['案件ID']))+'\')">'
-        +'<div class="krow-h"><span class="kname">'+esc(pname(p))+'</span><span class="ktag" style="background:'+hexA(col,0.14)+';color:'+col+'">'+esc(String(p['ステータス']||''))+'</span></div>'
-        +'<div class="kperiod">'+esc(period)+'</div>'
-        +'<div class="gtrack">'+todayLine+'<div class="gbar" style="left:'+L+'%;width:'+W+'%;background:'+col+'"></div></div>'
+      var off=Math.round((p.__s-rangeStart)/DAY), dur=Math.round((p.__e-p.__s)/DAY)+1;
+      var left=Math.round(off*dpx), bw=Math.max(Math.round(dpx),Math.round(dur*dpx));
+      var period=fmtMd(p.__s)+'〜'+fmtMd(p.__e);
+      return '<div class="grow data" onclick="openCase(\''+esc(String(p['案件ID']))+'\')">'
+        +'<div class="glabel"><div class="gname">'+esc(pname(p))+'</div><div class="gmeta"><span class="gtag" style="background:'+hexA(col,0.15)+';color:'+col+'">'+esc(String(p['ステータス']||''))+'</span><span class="gper">'+esc(period)+'</span></div></div>'
+        +'<div class="gtime" style="width:'+timeW+'px;background-image:'+grad+'"><div class="gtrack2">'+todayLine+'<div class="gbar2" style="left:'+left+'px;width:'+bw+'px;background:'+col+'"></div></div></div>'
         +'</div>';
-    }).join('')+'</div>';
+    }).join('');
+    h+='</div></div>';
   }
   if(undated.length){
     h+='<div class="d-secttl" style="margin-top:16px;">工期未設定</div>';
-    h+='<div class="klist">'+undated.map(function(p){
+    h+='<div class="klist gundated">'+undated.map(function(p){
       var col=statusColor(p['ステータス']);
       return '<div class="krow" onclick="openCase(\''+esc(String(p['案件ID']))+'\')">'
         +'<div class="krow-h"><span class="kname">'+esc(pname(p))+'</span><span class="ktag" style="background:'+hexA(col,0.14)+';color:'+col+'">'+esc(String(p['ステータス']||''))+'</span></div>'
@@ -339,6 +398,10 @@ function render(){
     }).join('')+'</div>';
   }
   box.innerHTML=h;
+  if(dated.length && todayOff>=0){
+    var gw=box.querySelector('.gwrap');
+    if(gw){ var target=todayOff*dpx+dpx/2-(gw.clientWidth-labelw)/2; gw.scrollLeft=Math.max(0,Math.round(target)); }
+  }
 }
 function load(){
   try{ KP=JSON.parse(localStorage.getItem('genba_projects')||'[]'); if(KP.length){ normKP(); render(); } }catch(e){}
