@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.06.25-43.9.26 / 毎日使うに「工程表」タイル追加・タイトルから旧社名削除・案件詳細バグ修正(projects v67) / Code_v157 -->
+<!-- Gen-Can root app v2026.06.25-43.9.27 / 工程表タイルが権限メニュー表(genbaAllowedMenu)未登録で全ロール非表示だったバグを修正（koutei を管理者・責任者・社員に追加）。タイトル社名削除・案件詳細バグ修正(projects v67) / Code_v157 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -281,9 +281,9 @@ function genbaRoleFromUser(u){
 function genbaRoleLabel(role){return {admin:'管理者',manager:'現場責任者',staff:'社員',field:'現場作業員',viewer:'閲覧のみ',disabled:'停止'}[role]||'社員';}
 function genbaAllowedMenu(role){
   var sets={
-    admin:['projects','report','timecard','photos','calendar','files','estimate','daicho','safety','material','vehicles','tools','aitools','toolbox','faq','support','admin','operations'],
-    manager:['projects','report','timecard','photos','calendar','files','estimate','daicho','safety','material','vehicles','tools','aitools','toolbox','faq','support'],
-    staff:['projects','report','timecard','photos','calendar','files','material','vehicles','tools','aitools','toolbox','faq','support'],
+    admin:['projects','report','timecard','photos','calendar','koutei','files','estimate','daicho','safety','material','vehicles','tools','aitools','toolbox','faq','support','admin','operations'],
+    manager:['projects','report','timecard','photos','calendar','koutei','files','estimate','daicho','safety','material','vehicles','tools','aitools','toolbox','faq','support'],
+    staff:['projects','report','timecard','photos','calendar','koutei','files','material','vehicles','tools','aitools','toolbox','faq','support'],
     field:['projects','report','timecard','photos','files','toolbox','faq','support'],
     viewer:['projects','files','photos','faq','support'],
     disabled:['faq','support']
