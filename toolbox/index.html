@@ -6,6 +6,7 @@
 <!-- toolbox version 45 (2026-06-19) 工事写真メニューから小黒板カメラを直接起動。ツールボックスの一瞬表示・戻る先・黒板非表示を修正。 -->
 <!-- toolbox version 43 (2026-06-19) 小黒板カメラを工事写真メニューへ移動し、ツールボックスの入口から削除。 -->
 <!DOCTYPE html>
+<!-- toolbox v43.18.0 (2026-07-04) 道具アイコンが全部同じ青紫だった問題を修正。各ツールに機能別グラデ8色を付与（memo緑/check青/rem橙/rec薔薇/elec黄/meas青緑/book紫/mag藍・common_uiのデフォルトを!importantで上書き）。GAS変更なし。 -->
 <!-- toolbox v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- toolbox version 66 (2026-06-15) ヘッダーを案A(2段)化。.head .hbar をCSSグリッドで再配置(上段=メニュー左/Gen-Can右、下段=アイコン+タイトル中央)。h1の改行禁止解除。タイルのグリッド(v64)は不変。CSSのみ・HTML/機能/id不変・GAS変更なし。 -->
 <!-- toolbox version 65 (2026-06-15) ホーム画面の道具アイコンをルートメニューと同じ意匠に変更。.sq .ic を「角丸四角＋ベタ塗りカラー＋白線」から「まん丸(border-radius:50%)＋背景var(--bg)＋凹み影var(--well)＋各色の線画」に。各タイルの .t-○○ .ic を background指定からcolor(線色)指定へ変更(12タイル)。CSSのみ・SVG/機能/id不変・GAS変更なし。 -->
@@ -22,7 +23,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
-<script src="../config.js?v=20260704-v43-17-1"></script>
+<script src="../config.js?v=20260704-v43-18-0"></script>
 <script>
 (function(){
   try{
@@ -72,10 +73,16 @@
   .sq .cor{position:absolute;top:10px;right:11px;font-size:14px;color:var(--sub);}
   .sq.soon{opacity:.7;}
   .sq.soon .cor{font-size:10px;letter-spacing:.08em;background:var(--bg);box-shadow:var(--well-soft);border-radius:999px;padding:2px 7px;font-family:"Manrope",sans-serif;color:var(--sub);}
-  .t-memo .ic{color:#22a06b;} .t-check .ic{color:#2d7dd2;} .t-draw .ic{color:#7c3ab4;}
-  .t-mat .ic{color:#0f766e;} .t-rec .ic{color:#d64646;} .t-rem .ic{color:#d97706;}
-  .t-book .ic{color:#7c3ab4;} .t-board .ic{color:#e8910b;} .t-elec .ic{color:#bd941c;}
-  .t-mag .ic{color:#4f46e5;} .t-area .ic{color:#0d9aa0;} .t-meas .ic{color:#0d9aa0;}
+  /* v43.18.0 各ツールのアイコンを機能別グラデーションに（ホーム画面と同じ配色体系）。
+     共通UI(common_ui.js)のデフォルト青紫グラデを上書きするため .sq.t-XX .ic を !important で指定。 */
+  body.gc-emc-theme .sq.t-memo .ic{background:linear-gradient(135deg,#10b981,#047857)!important;box-shadow:3px 3px 8px rgba(4,120,87,.4),-2px -2px 6px rgba(255,255,255,.5)!important;}
+  body.gc-emc-theme .sq.t-check .ic{background:linear-gradient(135deg,#3b82f6,#1d4ed8)!important;box-shadow:3px 3px 8px rgba(29,78,216,.4),-2px -2px 6px rgba(255,255,255,.5)!important;}
+  body.gc-emc-theme .sq.t-rem .ic{background:linear-gradient(135deg,#f97316,#c2410c)!important;box-shadow:3px 3px 8px rgba(194,65,12,.4),-2px -2px 6px rgba(255,255,255,.5)!important;}
+  body.gc-emc-theme .sq.t-rec .ic{background:linear-gradient(135deg,#f43f5e,#be123c)!important;box-shadow:3px 3px 8px rgba(190,18,60,.4),-2px -2px 6px rgba(255,255,255,.5)!important;}
+  body.gc-emc-theme .sq.t-elec .ic{background:linear-gradient(135deg,#eab308,#a16207)!important;box-shadow:3px 3px 8px rgba(161,98,7,.4),-2px -2px 6px rgba(255,255,255,.5)!important;}
+  body.gc-emc-theme .sq.t-meas .ic{background:linear-gradient(135deg,#14b8a6,#0d9488)!important;box-shadow:3px 3px 8px rgba(13,148,136,.4),-2px -2px 6px rgba(255,255,255,.5)!important;}
+  body.gc-emc-theme .sq.t-book .ic{background:linear-gradient(135deg,#a855f7,#6d28d9)!important;box-shadow:3px 3px 8px rgba(109,40,217,.4),-2px -2px 6px rgba(255,255,255,.5)!important;}
+  body.gc-emc-theme .sq.t-mag .ic{background:linear-gradient(135deg,#6366f1,#4338ca)!important;box-shadow:3px 3px 8px rgba(67,56,202,.4),-2px -2px 6px rgba(255,255,255,.5)!important;}
   .bk-srch{width:100%;padding:12px 13px;border:none;border-radius:12px;font-size:15.5px;margin-bottom:10px;background:var(--bg);box-shadow:var(--well);color:var(--ink);}
   /* 工事手帳：業種タブ（tb v55追加） */
   .bk-tabs{display:flex;gap:7px;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:10px;padding-bottom:4px;scrollbar-width:none;}
@@ -4090,6 +4097,6 @@ function openBoardForCase(id){
 (function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){document.title='小黒板カメラ｜Gen-Can';boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-17-1"></script>
+<script src="../common_ui.js?v=20260704-v43-18-0"></script>
 </body>
 </html>

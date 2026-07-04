@@ -4,6 +4,7 @@
 <!-- files version 53 (2026-06-21) 区分の用語を統一：官公庁→公共／民間→法人（正規化キー・アイコン・並び順・絞り込みドロップダウンを公共/法人/個人に。旧値は同義語として読み取り維持）。GAS変更なし。 -->
 <!-- files version 52 (2026-06-21) 写真表示にGAS getPhotoB64フォールバックを追加（非オーナーでも確実閲覧） -->
 <!DOCTYPE html>
+<!-- files v43.18.0 (2026-07-04) 公共🏛️/法人🏢/個人🏠等の絵文字アイコンを線画SVG＋機能別グラデに刷新（公共=青/法人=青緑/個人=琥珀/顧客=緑/現場=橙/PDF=赤/Excel=緑等）。フォルダ・ファイル・戻る・ヘッダーの絵文字も全て線画SVGに統一。categoryIcon/driveFileIcon_/makeFolderCard等を改修。GAS変更なし。 -->
 <!-- files v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- files version 51 (2026-06-18) 写真ドライブを階層型に変更：官公庁/民間など → 顧客 → 現場 → 写真フォルダの順に開く。 -->
 <!-- files version 50 (2026-06-18) 初期画面からGoogleドライブ風：現場フォルダをカード表示し、タップで写真フォルダを開く。 -->
@@ -71,8 +72,7 @@
   .fileAddDock button{border:none;border-radius:14px;background:var(--grad);color:#fff;box-shadow:var(--rise-sm);padding:14px 24px;font-size:15.5px;font-weight:900;cursor:pointer;min-width:170px;}
   .fileAddDock button:active{box-shadow:var(--well);}
   .fileAddDock button:disabled{background:#b7c0cc;color:#eef2f7;box-shadow:var(--well);cursor:not-allowed;}
-  .projectFolderCard.file .projectFolderIcon{background:#edf3fb;}
-  .projectFolderCard.image .projectFolderIcon{background:#edf3fb;overflow:hidden;}
+  .projectFolderCard.image .projectFolderIcon{background:#edf3fb;overflow:hidden;box-shadow:var(--rise-sm);}
   .projectFolderCard.image .projectFolderIcon img{width:100%;height:100%;object-fit:cover;display:block;}
   .projectFolderCard .projectFolderSub{font-size:11px;color:var(--sub);margin-top:2px;line-height:1.35;word-break:break-word;}
   .hint{font-size:13px;color:var(--sub);margin-top:10px;line-height:1.7;}
@@ -93,14 +93,24 @@
   .folderCards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:8px 0 12px;}
   .folderCard{border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);padding:12px;display:flex;align-items:center;gap:11px;text-align:left;color:var(--ink);cursor:pointer;min-height:66px;}
   .folderCard:active{box-shadow:var(--well);}
-  .folderIcon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#fff8e8,#f4b84a);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:var(--rise-sm);flex:0 0 auto;}
+  /* v43.18.0 写真フォルダ／ドライブ内のアイコンも線画SVG＋グラデ角丸に統一 */
+  .folderIcon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:3px 3px 8px rgba(2,132,199,.38),-2px -2px 6px rgba(255,255,255,.5);flex:0 0 auto;}
+  .folderIcon svg{width:23px;height:23px;stroke:#fff;}
+  .folderIcon.back{background:linear-gradient(135deg,#94a3b8,#64748b);box-shadow:3px 3px 8px rgba(100,116,139,.32),-2px -2px 6px rgba(255,255,255,.5);}
   .folderName{font-weight:800;font-size:14.5px;line-height:1.35;word-break:break-word;}
   .folderMeta{font-size:11px;color:var(--sub);margin-top:2px;}
   .driveItems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px;}
   .driveItem{border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);padding:12px;display:flex;align-items:center;gap:11px;text-align:left;color:var(--ink);cursor:pointer;min-height:72px;text-decoration:none;}
   .driveItem:active{box-shadow:var(--well);}
-  .driveItemIcon{width:44px;height:44px;border-radius:12px;background:#edf3fb;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:var(--rise-sm);flex:0 0 auto;overflow:hidden;}
-  .driveItemIcon.folder{background:linear-gradient(135deg,#fff8e8,#f4b84a);}
+  .driveItemIcon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#94a3b8,#475569);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:3px 3px 8px rgba(71,85,105,.3),-2px -2px 6px rgba(255,255,255,.5);flex:0 0 auto;overflow:hidden;}
+  .driveItemIcon svg{width:24px;height:24px;stroke:#fff;}
+  .driveItemIcon.folder{background:linear-gradient(135deg,#38bdf8,#0284c7);box-shadow:3px 3px 8px rgba(2,132,199,.38),-2px -2px 6px rgba(255,255,255,.5);}
+  .driveItemIcon.ft-pdf{background:linear-gradient(135deg,#f87171,#dc2626);}
+  .driveItemIcon.ft-sheet{background:linear-gradient(135deg,#34d399,#059669);}
+  .driveItemIcon.ft-doc{background:linear-gradient(135deg,#60a5fa,#2563eb);}
+  .driveItemIcon.ft-slide{background:linear-gradient(135deg,#fb923c,#ea580c);}
+  .driveItemIcon.ft-zip{background:linear-gradient(135deg,#a8a29e,#57534e);}
+  .driveItemIcon.image{background:#edf3fb;}
   .driveItemIcon img{width:100%;height:100%;object-fit:cover;display:block;}
   .driveItemName{font-weight:900;font-size:13.5px;line-height:1.35;word-break:break-word;color:var(--ink);}
   .driveItemMeta{font-size:11px;color:var(--sub);margin-top:3px;line-height:1.35;}
@@ -111,7 +121,8 @@
   .driveHome{background:var(--bg);border-radius:18px;box-shadow:var(--rise);padding:14px;margin-top:12px;}
   .driveHomeHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;}
   .driveHomeTitle{font-size:15px;font-weight:900;color:var(--ink);display:flex;align-items:center;gap:8px;}
-  .driveHomeTitle .miniFolder{width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg,#fff8e8,#f4b84a);display:inline-flex;align-items:center;justify-content:center;box-shadow:var(--rise-sm);}
+  .driveHomeTitle .miniFolder{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff;display:inline-flex;align-items:center;justify-content:center;box-shadow:3px 3px 8px rgba(2,132,199,.36),-2px -2px 6px rgba(255,255,255,.5);}
+  .driveHomeTitle .miniFolder svg{width:19px;height:19px;stroke:#fff;}
   .driveHomeNote{font-size:12px;color:var(--sub);font-weight:700;line-height:1.45;margin-top:2px;}
   .driveHomeActions{display:flex;gap:8px;align-items:center;}
   .driveHomeActions button{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);padding:8px 12px;font-size:12px;font-weight:900;color:var(--accent-d);cursor:pointer;}
@@ -121,14 +132,27 @@
   .projectFolderGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
   .projectFolderCard{border:none;border-radius:16px;background:var(--bg);box-shadow:var(--rise-sm);padding:12px;display:flex;align-items:center;gap:12px;text-align:left;color:var(--ink);cursor:pointer;min-height:78px;width:100%;}
   .projectFolderCard:active{box-shadow:var(--well);}
-  .projectFolderIcon{width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,#fff8e8,#f4b84a);display:flex;align-items:center;justify-content:center;font-size:27px;box-shadow:var(--rise-sm);flex:0 0 auto;}
+  /* v43.18.0 フォルダ／ファイルのアイコンを線画SVG＋機能別グラデーション角丸に統一（白線・ホーム画面と同じ意匠） */
+  .projectFolderIcon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#94a3b8,#475569);color:#fff;display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:3px 3px 8px rgba(71,85,105,.3),-2px -2px 6px rgba(255,255,255,.5);flex:0 0 auto;}
+  .projectFolderIcon svg{width:26px;height:26px;stroke:#fff;}
   .projectFolderName{font-weight:900;font-size:15px;line-height:1.35;word-break:break-word;color:var(--ink);}
   .projectFolderMeta{font-size:11.5px;color:var(--sub);margin-top:3px;line-height:1.4;}
   .projectFolderBadge{display:inline-flex;align-items:center;border-radius:999px;background:var(--accent-soft);color:var(--accent-d);font-size:10.5px;font-weight:900;padding:3px 7px;margin-top:6px;}
   .projectFolderCard.back{background:linear-gradient(145deg,#eef3fb,#e6edf6);}
-  .projectFolderCard.category .projectFolderIcon{background:linear-gradient(135deg,#e9f8ff,#74c0fc);}
-  .projectFolderCard.customer .projectFolderIcon{background:linear-gradient(135deg,#eefcf2,#83d89a);}
-  .projectFolderCard.project .projectFolderIcon{background:linear-gradient(135deg,#fff8e8,#f4b84a);}
+  .projectFolderCard.back .projectFolderIcon{background:linear-gradient(135deg,#94a3b8,#64748b);box-shadow:3px 3px 8px rgba(100,116,139,.32),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.cat-public .projectFolderIcon{background:linear-gradient(135deg,#3b82f6,#1d4ed8);box-shadow:3px 3px 8px rgba(29,78,216,.4),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.cat-corp .projectFolderIcon{background:linear-gradient(135deg,#14b8a6,#0d9488);box-shadow:3px 3px 8px rgba(13,148,136,.4),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.cat-person .projectFolderIcon{background:linear-gradient(135deg,#f59e0b,#b45309);box-shadow:3px 3px 8px rgba(180,83,9,.4),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.cat-other .projectFolderIcon{background:linear-gradient(135deg,#38bdf8,#0284c7);box-shadow:3px 3px 8px rgba(2,132,199,.4),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.customer .projectFolderIcon{background:linear-gradient(135deg,#10b981,#047857);box-shadow:3px 3px 8px rgba(4,120,87,.4),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.project .projectFolderIcon{background:linear-gradient(135deg,#f59e0b,#b45309);box-shadow:3px 3px 8px rgba(180,83,9,.4),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.folder .projectFolderIcon{background:linear-gradient(135deg,#38bdf8,#0284c7);box-shadow:3px 3px 8px rgba(2,132,199,.4),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.ft-pdf .projectFolderIcon{background:linear-gradient(135deg,#f87171,#dc2626);box-shadow:3px 3px 8px rgba(220,38,38,.4),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.ft-sheet .projectFolderIcon{background:linear-gradient(135deg,#34d399,#059669);box-shadow:3px 3px 8px rgba(5,150,105,.4),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.ft-doc .projectFolderIcon{background:linear-gradient(135deg,#60a5fa,#2563eb);box-shadow:3px 3px 8px rgba(37,99,235,.4),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.ft-slide .projectFolderIcon{background:linear-gradient(135deg,#fb923c,#ea580c);box-shadow:3px 3px 8px rgba(234,88,12,.4),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.ft-zip .projectFolderIcon{background:linear-gradient(135deg,#a8a29e,#57534e);box-shadow:3px 3px 8px rgba(87,83,78,.35),-2px -2px 6px rgba(255,255,255,.5);}
+  .projectFolderCard.ft-file .projectFolderIcon{background:linear-gradient(135deg,#94a3b8,#475569);box-shadow:3px 3px 8px rgba(71,85,105,.32),-2px -2px 6px rgba(255,255,255,.5);}
   .driveHomeLevel{display:inline-flex;align-items:center;border-radius:999px;background:rgba(30,136,229,.10);color:#1b6fb8;font-size:10.5px;font-weight:900;padding:4px 8px;margin-left:6px;}
   .driveHomeEmpty{padding:28px 10px;text-align:center;color:var(--sub);font-size:14px;line-height:1.7;}
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px;}
@@ -343,7 +367,7 @@
   <div class="driveHome" id="driveHome">
     <div class="driveHomeHead">
       <div>
-        <div class="driveHomeTitle"><span class="miniFolder">📁</span><span>ファイルドライブ</span><span class="driveHomeLevel" id="driveHomeLevel">区分</span></div>
+        <div class="driveHomeTitle"><span class="miniFolder"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span><span>ファイルドライブ</span><span class="driveHomeLevel" id="driveHomeLevel">区分</span></div>
         <div class="driveHomeNote">公共・法人などのフォルダから、顧客フォルダ、現場フォルダの順に開けます。現場フォルダ内もGoogleドライブのように閲覧できます。</div>
       </div>
       <div class="driveHomeActions"><button type="button" onclick="resetDriveHome()">最初へ</button><button type="button" onclick="refreshFileScreen()">更新</button></div>
@@ -459,7 +483,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-17-1"></script>
+<script src="../config.js?v=20260704-v43-18-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.21-43.9.12';
@@ -691,7 +715,17 @@ function categoryKey(v){
   if(s==='法人'||s==='民間'||s==='会社'||s==='企業')return '法人';
   return s;
 }
-function categoryIcon(cat){return cat==='公共'?'🏛️':(cat==='法人'?'🏢':(cat==='個人'?'🏠':'📁'));}
+/* v43.18.0 絵文字アイコンを線画SVGに刷新（ホーム画面と統一したビビッドグラデ角丸＋白線） */
+var SVG_GOV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M12 3 4 7.2h16Z"/><path d="M4 10h16"/><path d="M5.5 10v9M9.7 10v9M14.3 10v9M18.5 10v9"/></svg>';
+var SVG_CORP='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1.2"/><path d="M9 7h1.4M13.6 7h1.4M9 11h1.4M13.6 11h1.4M9 15h1.4M13.6 15h1.4"/><path d="M10 21v-3.4h4V21"/></svg>';
+var SVG_HOUSE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11 12 4l8.5 7"/><path d="M5.5 9.6V19.5h13V9.6"/><path d="M10 19.5V14h4v5.5"/></svg>';
+var SVG_FOLDER='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>';
+var SVG_BACK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 5 3 12l7 7"/><path d="M3 12h17"/></svg>';
+var SVG_DOC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.5h8l4 4v15H6z"/><path d="M14 2.5v4h4"/><path d="M9 13h6M9 16.5h4.5"/></svg>';
+var SVG_SHEET='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="1.5"/><path d="M4 9.5h16M4 14.7h16M9.5 4v16M14.5 4v16"/></svg>';
+var SVG_ARCHIVE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M10 3v4.5M14 3v4.5"/><rect x="10.3" y="11" width="3.4" height="3.6" rx=".7"/></svg>';
+function categoryIcon(cat){return cat==='公共'?SVG_GOV:(cat==='法人'?SVG_CORP:(cat==='個人'?SVG_HOUSE:SVG_FOLDER));}
+function categoryClass(cat){return cat==='公共'?'cat-public':(cat==='法人'?'cat-corp':(cat==='個人'?'cat-person':'cat-other'));}
 function customerCategoryByName(name){
   var n=String(name||'');
   for(var i=0;i<(customers||[]).length;i++){
@@ -768,7 +802,12 @@ function backDriveHome(){
 }
 function makeFolderCard(opts){
   var b=document.createElement('button'); b.type='button'; b.className='projectFolderCard '+(opts.cls||''); b.onclick=opts.onclick;
-  b.innerHTML='<span class="projectFolderIcon">'+escText(opts.icon||'📁')+'</span><span><div class="projectFolderName">'+escText(opts.name||'名称未設定')+'</div><div class="projectFolderMeta">'+escText(opts.meta||'')+'</div>'+(opts.badge?'<span class="projectFolderBadge">'+escText(opts.badge)+'</span>':'')+'</span>';
+  var ic=String(opts.icon==null?'📁':opts.icon), icHtml;
+  if(/^\s*<svg/i.test(ic))icHtml=ic;               // SVG文字列はそのまま
+  else if(ic==='📁')icHtml=SVG_FOLDER;             // 旧フォルダ絵文字→線画
+  else if(ic==='↩')icHtml=SVG_BACK;                // 旧戻る絵文字→線画
+  else icHtml=escText(ic);
+  b.innerHTML='<span class="projectFolderIcon">'+icHtml+'</span><span><div class="projectFolderName">'+escText(opts.name||'名称未設定')+'</div><div class="projectFolderMeta">'+escText(opts.meta||'')+'</div>'+(opts.badge?'<span class="projectFolderBadge">'+escText(opts.badge)+'</span>':'')+'</span>';
   return b;
 }
 function renderDriveHome(){
@@ -782,7 +821,7 @@ function renderDriveHome(){
     var order=['公共','法人','個人','未設定']; Object.keys(counts).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
     var any=false;
     order.forEach(function(cat){var n=counts[cat]||0; if(!n)return; any=true;
-      box.appendChild(makeFolderCard({cls:'category',icon:categoryIcon(cat),name:cat,meta:n+'件の現場',badge:'開く',onclick:function(){openDriveHomeCategory(cat);}}));
+      box.appendChild(makeFolderCard({cls:'category '+categoryClass(cat),icon:categoryIcon(cat),name:cat,meta:n+'件の現場',badge:'開く',onclick:function(){openDriveHomeCategory(cat);}}));
     });
     if(!any)box.innerHTML='<div class="driveHomeEmpty">現場フォルダがありません。</div>';
     return;
@@ -893,8 +932,8 @@ function makeHomeDriveFileCard(f){
   var ic=driveFileIcon_(f), iconHtml;
   if(ic==='image'){
     a.className+=' image';
-    iconHtml='<img loading="lazy" data-gcfb="'+encodeURIComponent(f.id)+'" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w300" onerror="(function(e){var pn=e.parentNode;gcImgFallback(e,decodeURIComponent(e.getAttribute(\'data-gcfb\')||\'\'),function(){pn.textContent=\'🖼\';});})(this);">';
-  }else iconHtml=ic;
+    iconHtml='<img loading="lazy" data-gcfb="'+encodeURIComponent(f.id)+'" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w300" onerror="(function(e){var pn=e.parentNode;gcImgFallback(e,decodeURIComponent(e.getAttribute(\'data-gcfb\')||\'\'),function(){pn.innerHTML=SVG_DOC;});})(this);">';
+  }else{ var m=FILE_ICON_MAP[ic]||FILE_ICON_MAP.file; a.className+=' '+m.cls; iconHtml=m.svg; }
   a.innerHTML='<span class="projectFolderIcon">'+iconHtml+'</span><span><div class="projectFolderName">'+escText(f.name||'ファイル')+'</div><div class="projectFolderSub">'+escText(fmtSize_(f.size)||f.mime||'ファイル')+'</div><span class="projectFolderBadge">開く</span></span>';
   return a;
 }
@@ -1301,14 +1340,14 @@ function renderFolderCards(isRoot){
   box.innerHTML='';
   if(!isRoot){
     var b=document.createElement('button');b.type='button';b.className='folderCard';b.onclick=function(){showDriveRoot();};
-    b.innerHTML='<span class="folderIcon">↩</span><span><div class="folderName">上のフォルダへ戻る</div><div class="folderMeta">写真フォルダ</div></span>';
+    b.innerHTML='<span class="folderIcon back">'+SVG_BACK+'</span><span><div class="folderName">上のフォルダへ戻る</div><div class="folderMeta">写真フォルダ</div></span>';
     box.appendChild(b); box.style.display='grid'; return;
   }
   if(!driveFolders.length){box.style.display='none';return;}
   driveFolders.forEach(function(f){
     var b=document.createElement('button');b.type='button';b.className='folderCard';
     b.onclick=function(){openDriveFolder(f.id,f.name,false);};
-    b.innerHTML='<span class="folderIcon">📁</span><span><div class="folderName">'+esc(f.name||'フォルダ')+'</div><div class="folderMeta">タップして開く</div></span>';
+    b.innerHTML='<span class="folderIcon">'+SVG_FOLDER+'</span><span><div class="folderName">'+esc(f.name||'フォルダ')+'</div><div class="folderMeta">タップして開く</div></span>';
     box.appendChild(b);
   });
   box.style.display='grid';
@@ -1355,13 +1394,15 @@ function loadPhotos(){
 function driveFileIcon_(it){
   var mt=String((it&&it.mime)||''); var nm=String((it&&it.name)||'');
   if(mt.indexOf('image/')===0)return 'image';
-  if(mt.indexOf('pdf')>=0||/\.pdf$/i.test(nm))return '📕';
-  if(/spreadsheet|excel|xlsx|csv/i.test(mt+' '+nm))return '📊';
-  if(/document|word|docx/i.test(mt+' '+nm))return '📄';
-  if(/presentation|powerpoint|pptx/i.test(mt+' '+nm))return '📑';
-  if(/zip|compressed/i.test(mt+' '+nm))return '🗜️';
-  return '📄';
+  if(mt.indexOf('pdf')>=0||/\.pdf$/i.test(nm))return 'pdf';
+  if(/spreadsheet|excel|xlsx|csv/i.test(mt+' '+nm))return 'sheet';
+  if(/document|word|docx/i.test(mt+' '+nm))return 'doc';
+  if(/presentation|powerpoint|pptx/i.test(mt+' '+nm))return 'slide';
+  if(/zip|compressed/i.test(mt+' '+nm))return 'zip';
+  return 'file';
 }
+/* v43.18.0 ファイル種別ごとの線画SVG＋色クラス（拡張子の絵文字を廃止） */
+var FILE_ICON_MAP={pdf:{cls:'ft-pdf',svg:SVG_DOC},sheet:{cls:'ft-sheet',svg:SVG_SHEET},doc:{cls:'ft-doc',svg:SVG_DOC},slide:{cls:'ft-slide',svg:SVG_DOC},zip:{cls:'ft-zip',svg:SVG_ARCHIVE},file:{cls:'ft-file',svg:SVG_DOC}};
 function fmtSize_(n){n=Number(n||0); if(!n)return ''; if(n<1024)return n+'B'; if(n<1024*1024)return Math.round(n/102.4)/10+'KB'; return Math.round(n/1024/102.4)/10+'MB';}
 function setGenericDriveHeader(){
   var bar=document.getElementById('driveBar'), op=document.getElementById('driveOpenCurrent'), cr=document.getElementById('driveCrumb');
@@ -1406,13 +1447,15 @@ function renderGenericDriveItems(folders,files){
   var box=document.createElement('div'); box.className='driveItems'; el.appendChild(box);
   (folders||[]).forEach(function(f){
     var b=document.createElement('button'); b.type='button'; b.className='driveItem'; b.onclick=function(){openGenericFolder(f.id,f.name,false);};
-    b.innerHTML='<span class="driveItemIcon folder">📁</span><span><div class="driveItemName">'+esc(f.name||'フォルダ')+'</div><div class="driveItemMeta">フォルダ</div></span>';
+    b.innerHTML='<span class="driveItemIcon folder">'+SVG_FOLDER+'</span><span><div class="driveItemName">'+esc(f.name||'フォルダ')+'</div><div class="driveItemMeta">フォルダ</div></span>';
     box.appendChild(b);
   });
   (files||[]).forEach(function(f){
     var a=document.createElement('a'); a.className='driveItem'; a.href=f.url||'#'; a.target='_blank'; a.rel='noopener';
-    var ic=driveFileIcon_(f), iconHtml=(ic==='image')?'<img loading="lazy" data-gcfb="'+encodeURIComponent(f.id)+'" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w300" onerror="(function(e){var pn=e.parentNode;gcImgFallback(e,decodeURIComponent(e.getAttribute(\'data-gcfb\')||\'\'),function(){pn.textContent=\'🖼\';});})(this);">':ic;
-    a.innerHTML='<span class="driveItemIcon">'+iconHtml+'</span><span><div class="driveItemName">'+esc(f.name||'ファイル')+'</div><div class="driveItemMeta">'+esc(fmtSize_(f.size)||f.mime||'ファイル')+'</div></span>';
+    var ic=driveFileIcon_(f), iconHtml, itemCls='';
+    if(ic==='image'){ itemCls=' image'; iconHtml='<img loading="lazy" data-gcfb="'+encodeURIComponent(f.id)+'" src="https://drive.google.com/thumbnail?id='+encodeURIComponent(f.id)+'&sz=w300" onerror="(function(e){var pn=e.parentNode;gcImgFallback(e,decodeURIComponent(e.getAttribute(\'data-gcfb\')||\'\'),function(){pn.innerHTML=SVG_DOC;});})(this);">'; }
+    else{ var m=FILE_ICON_MAP[ic]||FILE_ICON_MAP.file; itemCls=' '+m.cls; iconHtml=m.svg; }
+    a.innerHTML='<span class="driveItemIcon'+itemCls+'">'+iconHtml+'</span><span><div class="driveItemName">'+esc(f.name||'ファイル')+'</div><div class="driveItemMeta">'+esc(fmtSize_(f.size)||f.mime||'ファイル')+'</div></span>';
     box.appendChild(a);
   });
 }
@@ -1835,6 +1878,6 @@ if(!genbaSessionTok()){
   loadProjects(true);
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-17-1"></script>
+<script src="../common_ui.js?v=20260704-v43-18-0"></script>
 </body>
 </html>
