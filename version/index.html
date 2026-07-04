@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--blue:#2563eb;--ok:#15803d;--warn:#b45309;--ng:#dc2626;--line:#d4e4f0;}
+:root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--blue:#2563eb;--ok:#15803d;--warn:#b45309;--ng:#dc2626;--line:#dbe2ea;}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;}
 body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.65;}
 .wrap{max-width:960px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 100px;}
@@ -38,7 +38,7 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
 .err{background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:800;display:none;}
 @media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr);} h1{font-size:22px;}}
 </style>
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 </head>
 <body>
 <div class="wrap">
@@ -75,6 +75,7 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
   <div class="card">
     <h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">更新履歴</h2>
     <div class="list">
+      <div class="item"><div class="date">2026.07.04 / v43.17.0</div><h3>デザイン統一（第2弾・完結）</h3><ul><li>残り24画面の配色を青（#2d7dd2）に統一（見積の金・写真の赤・ファイルの橙・工程表の紫などを解消）</li><li>文字色・罫線・角丸・影も全画面で共通化</li><li>状態色（同期中=橙、OK=緑、ステータス色）とホームタイル・ツール入口の色分けは従来どおり</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.16.0</div><h3>体感速度アップ＆デザイン統一（第1弾）</h3><ul><li>読み込みスピナーの人工的な待ち時間（最大0.6秒）を14画面で撤去</li><li>現場管理・作業日報の読み込みを並列化（初回が最大半分に）＋スケルトン表示</li><li>ホーム・現場管理・作業日報・タイムカードの配色を青系に統一（状態色は従来どおり）</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.15.0</div><h3>用語の統一</h3><ul><li>画面の「案件」を「現場」に統一（ホームは「現場管理」に）</li><li>「取引先」を「顧客」に統一（工事台帳の支払先表記は除く）</li><li>データや操作方法の変更はありません</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.14.0</div><h3>使いやすさ改善（第5弾）</h3><ul><li>ホームからワンタップ打刻（出勤・退勤）</li><li>夕方の打刻忘れ・日報忘れ通知</li><li>ホームタイルの並び替え（端末ごとに記憶）</li></ul></div>
@@ -132,7 +133,7 @@ function checkGas(){
 }
 render({},null);checkGas();
 </script>
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 
 </body>
 </html>

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- daicho v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- daicho v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- daicho version 7 (2026-06-15) ヘッダー案A化(2段・CSSグリッド)。ログアウトボタンを非表示。 CSSのみ・HTML/JS/id不変・GAS変更なし。 -->
 <!-- daicho version 6 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。操作行hd2は保持。更新はloadAll()。機能・id不変 -->
@@ -13,8 +14,8 @@
 <style>
   :root{
     --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
-    --accent:#0f766e;--accent-d:#115e59;--accent-soft:#d2ece9;
-    --radius:13px;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;
+    --radius:14px;
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
     --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
     --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
@@ -56,7 +57,7 @@
   .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14.5px;}
   .yen{font-variant-numeric:tabular-nums;}
   .pos{color:#15803d;} .neg{color:#dc2626;}
-  .total{background:linear-gradient(135deg,#0f766e,#155e75);color:#fff;border-radius:15px;padding:15px 17px;margin-bottom:12px;box-shadow:5px 6px 16px rgba(15,118,110,.32),-4px -4px 10px #ffffff;}
+  .total{background:linear-gradient(135deg,#2d7dd2,#1f5fa8);color:#fff;border-radius:15px;padding:15px 17px;margin-bottom:12px;box-shadow:5px 6px 16px rgba(15,118,110,.32),-4px -4px 10px #ffffff;}
   .total .t1{font-size:12.5px;opacity:.88;}
   .total .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:7px;}
   .total .v{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;}
@@ -197,7 +198,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -494,6 +495,6 @@ function exportCsv(){
 document.getElementById('ov').addEventListener('click',function(e){if(e.target===this)closeSheet();});
 init();
 </script>
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- order v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- order v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- order v43.11.0 (2026-07-04) 差出人の既定値をconfig.js(COMPANY_SHORT)から取得（河口電機固定を解消）。GAS変更なし。 -->
 <!-- order version 5 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
@@ -14,8 +15,8 @@
 <style>
   :root{
     --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
-    --accent:#4f46e5;--accent-d:#4338ca;--accent-soft:#e4e7fb;
-    --radius:13px;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;
+    --radius:14px;
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
     --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
     --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
@@ -57,7 +58,7 @@
   .it .nm{flex:1;min-width:0;font-size:14.5px;color:var(--ink);}
   .it .nm small{color:var(--sub);font-size:11.5px;}
   .it .q{font-size:12.5px;color:var(--sub);white-space:nowrap;}
-  .it .sup{font-size:11px;color:#4338ca;background:#eaecfc;border-radius:999px;padding:2px 9px;white-space:nowrap;max-width:42%;overflow:hidden;text-overflow:ellipsis;}
+  .it .sup{font-size:11px;color:#1f5fa8;background:#e3f0fb;border-radius:999px;padding:2px 9px;white-space:nowrap;max-width:42%;overflow:hidden;text-overflow:ellipsis;}
   .it .sup.none{color:#b45309;background:#fbeed6;}
   .revrow{display:grid;grid-template-columns:1fr 70px 1fr 30px;gap:6px;align-items:center;padding:8px 0;border-top:1px dashed var(--line);}
   .revrow:first-child{border-top:none;}
@@ -79,9 +80,9 @@
   .sendrow{display:flex;gap:7px;margin-top:11px;flex-wrap:wrap;}
   .sendrow button{flex:1;min-width:30%;padding:12px 6px;border:none;border-radius:11px;font-size:13.5px;font-weight:800;cursor:pointer;}
   .sendrow button:active{transform:translateY(1px);}
-  .b-mail{background:#4f46e5;color:#fff;box-shadow:3px 4px 9px rgba(79,70,229,.4),-2px -2px 6px #ffffff;}
+  .b-mail{background:#2d7dd2;color:#fff;box-shadow:3px 4px 9px rgba(45,125,210,.4),-2px -2px 6px #ffffff;}
   .b-line{background:#06c755;color:#fff;box-shadow:3px 4px 9px rgba(6,199,85,.4),-2px -2px 6px #ffffff;}
-  .b-copy{background:var(--bg);color:#4338ca;box-shadow:var(--rise-sm);}
+  .b-copy{background:var(--bg);color:#1f5fa8;box-shadow:var(--rise-sm);}
   .b-copy:active{box-shadow:var(--well);}
   .b-rec{background:#0f766e;color:#fff;width:100%;flex:1 0 100%;box-shadow:3px 4px 9px rgba(15,118,110,.4),-2px -2px 6px #ffffff;}
   .b-mail:disabled{background:#c7c9d6;color:#fff;box-shadow:none;}
@@ -93,7 +94,7 @@
   .stickybar .cnt b{color:var(--accent-d);font-size:17px;}
   .stickybar button{border:none;border-radius:11px;padding:12px 18px;font-size:14.5px;font-weight:800;cursor:pointer;background:var(--accent);color:#fff;box-shadow:3px 4px 10px rgba(79,70,229,.4),-2px -2px 6px #ffffff;}
   .stickybar button:active{transform:translateY(1px);}
-  .stickybar button.sub{background:var(--bg);color:#4338ca;box-shadow:var(--rise-sm);}
+  .stickybar button.sub{background:var(--bg);color:#1f5fa8;box-shadow:var(--rise-sm);}
   .stickybar button.sub:active{box-shadow:var(--well);}
   .ord{background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise-sm);padding:13px 15px;margin-bottom:10px;cursor:pointer;}
   .ord:active{box-shadow:var(--well);}
@@ -248,7 +249,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -736,6 +737,6 @@ renderSrc();
 applyHandoff();
 refresh(false);
 </script>
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 </body>
 </html>

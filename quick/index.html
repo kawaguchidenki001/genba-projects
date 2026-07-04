@@ -9,14 +9,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800;900&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--blue:#2563eb;--cyan:#06b6d4;--purple:#7c3aed;--line:#d4e4f0;--card:#f7fbff;--shadow:6px 6px 13px #cdd3dc,-6px -6px 13px #fff;--shadow-sm:4px 4px 9px #cdd3dc,-4px -4px 9px #fff;}
+:root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--blue:#2563eb;--cyan:#06b6d4;--purple:#7c3aed;--line:#dbe2ea;--card:#f7fbff;--shadow:6px 6px 13px #cdd3dc,-6px -6px 13px #fff;--shadow-sm:4px 4px 9px #cdd3dc,-4px -4px 9px #fff;}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent;}html{scroll-behavior:smooth;}body{min-height:100vh;background:linear-gradient(145deg,#eaf4fb 0%,#f5fbff 54%,#eef3fb 100%);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16px;line-height:1.6;padding-bottom:calc(84px + env(safe-area-inset-bottom));}
 .wrap{max-width:980px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 28px;}.top{display:flex;align-items:center;gap:12px;margin-bottom:16px;}.back{width:46px;height:46px;border:0;border-radius:16px;background:#e8ecf2;box-shadow:var(--shadow-sm);font-size:22px;font-weight:900;color:#1f5fa8;cursor:pointer;}.head{flex:1;min-width:0;}.kicker{font-family:Manrope,sans-serif;font-size:10px;font-weight:900;letter-spacing:.18em;color:var(--sub);text-transform:uppercase;}h1{font-size:26px;line-height:1.22;color:#1f5fa8;font-weight:900;}.badge{font-family:Manrope,sans-serif;font-size:10.5px;font-weight:900;color:#fff;background:linear-gradient(92deg,var(--cyan),var(--blue) 60%,var(--purple));border-radius:999px;padding:5px 10px;white-space:nowrap;}
 .hero{background:#e8ecf2;border-radius:24px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px;}.hero h2{font-size:20px;color:#173b5d;margin-bottom:4px;}.hero p{font-size:13.5px;color:var(--sub);}.user{margin-top:10px;font-size:12.5px;color:#607d96;font-weight:800;}.section{margin:18px 0 10px;font-family:Manrope,sans-serif;font-weight:900;letter-spacing:.12em;font-size:11px;color:var(--sub);text-transform:uppercase;}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}.card{position:relative;display:flex;flex-direction:column;justify-content:space-between;gap:10px;min-height:150px;text-decoration:none;color:var(--ink);background:#e8ecf2;border-radius:24px;box-shadow:var(--shadow);padding:17px;border:1px solid rgba(255,255,255,.45);}.card:active{transform:translateY(1px);box-shadow:inset 4px 4px 9px #cdd3dc,inset -4px -4px 9px #fff;}.ic{width:46px;height:46px;border-radius:18px;background:#f5f9fd;border:1px solid #dce8f3;display:flex;align-items:center;justify-content:center;color:var(--blue);}.ic svg{width:25px;height:25px;}.nm{font-size:21px;font-weight:900;letter-spacing:.02em;color:#173b5d;}.ds{font-size:12.5px;color:var(--sub);line-height:1.45;margin-top:3px;}.go{position:absolute;right:14px;top:13px;color:#7a8da1;font-weight:900;}.wide{grid-column:span 2;}.primary{background:linear-gradient(135deg,#eff9ff,#e8ecf2 50%,#eef1ff);}.primary .ic{background:linear-gradient(135deg,#06b6d4,#2563eb 70%,#7c3aed);color:#fff;border:0;}.note{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:18px;padding:13px;color:#526f88;font-size:13px;margin-top:14px;}.bottom{position:fixed;left:0;right:0;bottom:0;z-index:50;background:rgba(247,251,255,.94);backdrop-filter:blur(12px);border-top:1px solid #d8e6f2;padding:8px 10px calc(8px + env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}.bottom a{min-height:50px;border-radius:15px;text-decoration:none;color:#43637e;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:900;line-height:1.2;}.bottom a b{font-size:18px;line-height:1;}.bottom a.active{background:#e8ecf2;color:#1f5fa8;box-shadow:inset 3px 3px 7px #cdd3dc,inset -3px -3px 7px #fff;}
 @media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr);gap:11px;}.card{min-height:136px;padding:15px;border-radius:21px;}.wide{grid-column:span 2;}.nm{font-size:19px;}h1{font-size:24px;}.wrap{padding-left:14px;padding-right:14px;}}
 @media(max-width:420px){.grid{grid-template-columns:1fr;}.wide{grid-column:span 1;}.card{min-height:118px;}.bottom a{font-size:10.5px;}.hero{border-radius:21px;}}
 </style>
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 </head>
 <body>
 <div class="wrap">
@@ -64,6 +64,6 @@ document.getElementById('appBadge').textContent=APP_VERSION;
   else line.textContent='ログイン済みでない場合は、メニューへ戻ってログインしてください';
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 </body>
 </html>

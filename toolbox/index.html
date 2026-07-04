@@ -6,6 +6,7 @@
 <!-- toolbox version 45 (2026-06-19) 工事写真メニューから小黒板カメラを直接起動。ツールボックスの一瞬表示・戻る先・黒板非表示を修正。 -->
 <!-- toolbox version 43 (2026-06-19) 小黒板カメラを工事写真メニューへ移動し、ツールボックスの入口から削除。 -->
 <!DOCTYPE html>
+<!-- toolbox v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- toolbox version 66 (2026-06-15) ヘッダーを案A(2段)化。.head .hbar をCSSグリッドで再配置(上段=メニュー左/Gen-Can右、下段=アイコン+タイトル中央)。h1の改行禁止解除。タイルのグリッド(v64)は不変。CSSのみ・HTML/機能/id不変・GAS変更なし。 -->
 <!-- toolbox version 65 (2026-06-15) ホーム画面の道具アイコンをルートメニューと同じ意匠に変更。.sq .ic を「角丸四角＋ベタ塗りカラー＋白線」から「まん丸(border-radius:50%)＋背景var(--bg)＋凹み影var(--well)＋各色の線画」に。各タイルの .t-○○ .ic を background指定からcolor(線色)指定へ変更(12タイル)。CSSのみ・SVG/機能/id不変・GAS変更なし。 -->
 <!-- toolbox version 64 (2026-06-15) ホーム画面の道具グリッドを grid-template-columns:repeat(3,minmax(0,1fr)) に変更。細い画面(Galaxy A21等/横360px以下)で3列の正方形タイルが画面からはみ出し左右スクロールしていた不具合を修正。タイルが画面幅に合わせて縮むようになり横はみ出しが解消。CSSのみ変更・機能/id不変・GAS変更なし。 -->
@@ -17,11 +18,11 @@
 <title>ツールボックス｜現場管理</title>
 <link rel="apple-touch-icon" href="../icon180.png">
 <meta name="apple-mobile-web-app-title" content="ツールボックス">
-<meta name="theme-color" content="#1f5f8b">
+<meta name="theme-color" content="#2563eb">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 <script>
 (function(){
   try{
@@ -33,9 +34,9 @@
 </script>
 <style>
   :root{
-    --bg:#e8ecf2;--bg1:#e3f7f7;--bg2:#f3fcfc;--ink:#173a3c;--sub:#5a8284;
-    --accent:#0d9aa0;--accent-d:#0a7d82;--accent-soft:#dff5f5;
-    --line:#cce9e9;--card:#ffffff;--shadow:0 2px 10px rgba(40,60,100,.10);--shadow-lg:0 8px 24px rgba(40,60,100,.16);
+    --bg:#e8ecf2;--bg1:#e3f7f7;--bg2:#f3fcfc;--ink:#1f3a52;--sub:#5e7a92;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;
+    --line:#dbe2ea;--card:#ffffff;--shadow:0 2px 10px rgba(40,60,100,.10);--shadow-lg:0 8px 24px rgba(40,60,100,.16);
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
     --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
     --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
@@ -315,7 +316,7 @@
   .mag-btns{display:flex;gap:12px;margin:14px 4px 12px;}
   .mag-btn{flex:1;font-size:16px;font-weight:800;padding:18px 8px;border-radius:16px;border:none;background:var(--bg);box-shadow:var(--rise-sm);color:var(--ink);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
   .mag-btn:active{box-shadow:var(--well);transform:scale(.97);}
-  .mag-btn.freeze.on{background:#0d9aa0;color:#fff;box-shadow:var(--well-soft);}
+  .mag-btn.freeze.on{background:#2d7dd2;color:#fff;box-shadow:var(--well-soft);}
   .mag-btn.hq{background:#fffaf2;color:#a05a00;box-shadow:var(--rise-sm);}
   .mag-btn.hq:active{box-shadow:var(--well);}
   .mag-btn.torch.on{background:#d97b12;color:#fff;box-shadow:var(--well-soft);}
@@ -4089,6 +4090,6 @@ function openBoardForCase(id){
 (function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){document.title='小黒板カメラ｜Gen-Can';boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 </body>
 </html>

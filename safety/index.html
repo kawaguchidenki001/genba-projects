@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- safety v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- safety version 13 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はloadAll()。機能・id不変 -->
 <html lang="ja">
 <head>
@@ -11,8 +12,8 @@
 <style>
   :root{
     --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
-    --accent:#15803d;--accent-d:#166534;--accent-soft:#d6f0df;
-    --radius:13px;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;
+    --radius:14px;
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
     --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
     --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
@@ -351,7 +352,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt" id="ltxt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -876,6 +877,6 @@ function dkDeleteDoc(id){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 </body>
 </html>

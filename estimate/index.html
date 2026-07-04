@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- estimate v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- estimate version 15.3 (2026-06-17) 見積保存をPOST送信に変更：大量明細（AI読取の100行超）で保存時の通信エラーを解消。estSaveの3呼び出し箇所(saveEst/saveAndExport/convertToInvoice)を callGASPost に切替。 -->
 <!-- estimate version 15.2 (2026-06-17) AI読取のデバッグ強化：callGASPostでJSON解析失敗時に詳細エラーを表示。コンソールに応答内容を出力。doAiOcrの0件時メッセージを詳細化。 -->
 <!-- estimate version 15.1 (2026-06-17) AI見積読取の起動を確実化：checkRole完了を待たず即時にモーダルを開く。URLSearchParams非対応端末にも対応。DOM準備を待って確実に表示。 -->
@@ -18,8 +19,8 @@
 <style>
   :root{
     --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
-    --accent:#9d7a18;--accent-d:#7c5e0f;--accent-soft:#f0e7c8;
-    --radius:13px;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;
+    --radius:14px;
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
     --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
     --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
@@ -359,7 +360,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt" id="ltxt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -952,6 +953,6 @@ function doAiOcr(){
     });
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 </body>
 </html>

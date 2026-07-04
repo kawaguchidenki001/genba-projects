@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- translate v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- translate version 8 (2026-07-04) v43.10.1 重大バグ修正：genbaSessionTok未定義で翻訳が必ず失敗していた問題を修正（定義を追加）。GAS変更なし。 -->
 <!-- translate version 7 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- translate version 6 (2026-06-15) 画面再訪時に前回テキストを復元しないよう変更（戻る→再訪で空白から始まる）。言語選択（原文・訳文）は引き継ぎ。読み上げ・二重化修正は維持 -->
@@ -13,7 +14,7 @@
 <style>
   :root{
     --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
-    --accent:#f97316;--accent-d:#ea580c;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;
     --grad:linear-gradient(92deg,#fb923c 10%,#ea580c 95%);
     --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
     --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
@@ -84,7 +85,7 @@
   .b-cp{color:#475569;} .b-cp svg{color:#475569;}
   .b-ln{color:#06c755;} .b-ln svg{color:#06c755;}
   .b-ml{color:#2563eb;} .b-ml svg{color:#2563eb;}
-  .b-sm{color:#f97316;} .b-sm svg{color:#f97316;}
+  .b-sm{color:#1f5fa8;} .b-sm svg{color:#1f5fa8;}
 
   /* 補助 */
   .util-row{display:flex;gap:8px;justify-content:flex-end;margin-top:6px;}
@@ -116,7 +117,7 @@
   .err-bar{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;padding:10px 12px;border-radius:10px;font-size:13px;margin-top:10px;display:none;}
   .err-bar.show{display:block;}
 </style>
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 </head>
 <body>
 <div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
@@ -572,6 +573,6 @@ window.addEventListener('beforeunload',function(){ if(synth) synth.cancel(); });
 updateCnt();
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 </body>
 </html>

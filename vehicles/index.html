@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- vehicles v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- vehicles v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- vehicles version 5 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- vehicles version 4 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はload()。 機能・id不変 -->
@@ -13,8 +14,8 @@
 <style>
   :root{
     --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
-    --accent:#b45309;--accent-d:#92400e;--accent-soft:#f3e2cf;
-    --radius:13px;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;
+    --radius:14px;
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
     --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
     --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
@@ -40,7 +41,7 @@
   .hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:13px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;flex:0 0 auto;}
   main{padding:12px;max-width:760px;margin:0 auto;}
   .empty{text-align:center;color:var(--sub);padding:34px 10px;font-size:14.5px;}
-  .total{background:linear-gradient(135deg,#b45309,#92400e);color:#fff;border-radius:15px;padding:14px 17px;margin-bottom:12px;box-shadow:5px 6px 16px rgba(180,83,9,.32),-4px -4px 10px #ffffff;display:flex;gap:18px;align-items:center;}
+  .total{background:linear-gradient(135deg,#2d7dd2,#1f5fa8);color:#fff;border-radius:15px;padding:14px 17px;margin-bottom:12px;box-shadow:5px 6px 16px rgba(180,83,9,.32),-4px -4px 10px #ffffff;display:flex;gap:18px;align-items:center;}
   .total .v{font-size:22px;font-weight:800;line-height:1.1;}
   .total .k{font-size:11px;opacity:.85;}
   .total .ok .v{color:#bbf7d0;}
@@ -113,7 +114,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -282,6 +283,6 @@ function doOil(id){
 loadCache();
 if(vehicles.length){render();load(true);}else{load();}
 </script>
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 </body>
 </html>

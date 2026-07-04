@@ -4,6 +4,7 @@
 <!-- files version 53 (2026-06-21) 区分の用語を統一：官公庁→公共／民間→法人（正規化キー・アイコン・並び順・絞り込みドロップダウンを公共/法人/個人に。旧値は同義語として読み取り維持）。GAS変更なし。 -->
 <!-- files version 52 (2026-06-21) 写真表示にGAS getPhotoB64フォールバックを追加（非オーナーでも確実閲覧） -->
 <!DOCTYPE html>
+<!-- files v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- files version 51 (2026-06-18) 写真ドライブを階層型に変更：官公庁/民間など → 顧客 → 現場 → 写真フォルダの順に開く。 -->
 <!-- files version 50 (2026-06-18) 初期画面からGoogleドライブ風：現場フォルダをカード表示し、タップで写真フォルダを開く。 -->
 <!-- files version 49 (2026-06-18) ドライブ風＋サムネイルカード型：アプリ内でフォルダを開いて写真を確認できる画面を追加。 -->
@@ -22,12 +23,12 @@
 <style>
   :root{
     --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;--card:#e8ecf2;
-    --accent:#e8910b;--accent-d:#b06f0c;--accent-soft:#fbeed6;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
     --radius:14px;
-    --rise:5px 5px 11px #ccd2db,-5px -5px 11px #ffffff;
-    --rise-sm:3px 3px 7px #d0d6df,-3px -3px 7px #fbfdff;
-    --well:inset 3px 3px 6px #ccd2db,inset -3px -3px 6px #ffffff;
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
     --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -458,7 +459,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.21-43.9.12';
@@ -1834,6 +1835,6 @@ if(!genbaSessionTok()){
   loadProjects(true);
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 </body>
 </html>

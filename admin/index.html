@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- admin v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- admin v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- admin version 58 (2026-07-04) v43.10.1 セキュリティ改善：作業員パスワードを画面に表示せず（変更時のみ入力）・localStorageキャッシュから除外。距離更新日をローカル日付に修正。GAS変更なし（応答からのパスワード除外はGAS側で別途対応推奨）。 -->
 <!-- admin version 57 (2026-06-21) 区分の用語を統一：官公庁→公共。表示文言・選択肢・判定配列・並び順・CSSクラスをすべて公共に。GAS変更なし。 -->
@@ -24,8 +25,8 @@
 <style>
   :root{
     --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
-    --accent:#475569;--accent-d:#334155;--accent-soft:#dde3ec;
-    --radius:13px;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;
+    --radius:14px;
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
     --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
     --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
@@ -147,13 +148,13 @@
   .setup-card .hint{font-size:12.5px;color:#64748b;line-height:1.55;margin:0 0 10px;}
   .setup-card textarea{min-height:96px;font-family:inherit;}
   .setup-mini{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 10px;}
-  .setup-pill{background:#fff;border:1px solid #dbe2ea;color:#334155;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800;box-shadow:var(--rise-sm);}
+  .setup-pill{background:#fff;border:1px solid #dbe2ea;color:#1f5fa8;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800;box-shadow:var(--rise-sm);}
   .setup-pill b{color:#0f766e;}
   .setup-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
   .setup-actions .btn{flex:1;min-width:130px;}
   .setup-finish{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;border-radius:12px;padding:12px;font-size:13px;line-height:1.6;margin-top:10px;}
   .setup-links{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px;}
-  .setup-link{display:block;text-align:center;text-decoration:none;background:#fff;border:1px solid #dbe2ea;border-radius:10px;padding:10px 6px;font-size:13px;font-weight:800;color:#334155;box-shadow:var(--rise-sm);}
+  .setup-link{display:block;text-align:center;text-decoration:none;background:#fff;border:1px solid #dbe2ea;border-radius:10px;padding:10px 6px;font-size:13px;font-weight:800;color:#1f5fa8;box-shadow:var(--rise-sm);}
   @media(max-width:620px){.setup-progress{grid-template-columns:1fr 1fr}.setup-links{grid-template-columns:1fr}.setup-actions .btn{min-width:100%;}}
 
   /* 管理ホーム v56 */
@@ -412,7 +413,7 @@
     <div class="sec">自社情報・会社書類</div>
     <p style="font-size:13px;color:#64748b;margin:0 0 12px;">建退共許可票・建設業許可票などの会社書類を保管します。</p>
     <div class="card" style="margin-bottom:12px;">
-      <div style="font-size:13px;font-weight:700;margin-bottom:10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;color:#475569;"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>会社書類一覧</div>
+      <div style="font-size:13px;font-weight:700;margin-bottom:10px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;color:#1f5fa8;"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>会社書類一覧</div>
       <div id="compDocList" style="display:flex;flex-direction:column;gap:7px;min-height:20px;"><div style="font-size:12.5px;color:#64748b;">読込中…</div></div>
       <label style="display:flex;align-items:center;gap:8px;background:#eff4ff;border:1px dashed #93c5fd;border-radius:10px;padding:10px 12px;font-size:13.5px;font-weight:700;color:#1d4ed8;cursor:pointer;margin-top:10px;" for="compDocFile">
         ＋ ファイルを追加（建退共許可票・建設業許可票・PDF・画像）
@@ -588,7 +589,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -1320,6 +1321,6 @@ function deleteCompDoc(id){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 </body>
 </html>

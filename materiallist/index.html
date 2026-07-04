@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- materiallist v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- materiallist v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- materiallist version 7 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- materiallist version 5 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はrefresh()。機能・id不変 -->
@@ -12,8 +13,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#d4e4f0;
-    --accent:#2563eb;--accent-d:#1d4ed8;
+    --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
     --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
     --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
@@ -213,7 +214,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div style="font-size:14px;font-weight:700;">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-16-0"></script>
+<script src="../config.js?v=20260704-v43-17-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -521,6 +522,6 @@ function chkGoOrder(){
   refresh(false);
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-16-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-0"></script>
 </body>
 </html>
