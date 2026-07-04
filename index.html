@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.07.04-43.14.0 / ワンタップ打刻（勤務状態ボタン→打刻シート）・打刻/日報のセルフ通知・タイル並び替え / Code_v157 -->
+<!-- Gen-Can root app v2026.07.04-43.16.0 / 罫線色トークン統一(#dbe2ea)・スピナー人工待ち撤去(150ms遅延表示方式) / Code_v157 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -16,7 +16,7 @@
 <style>
   :root{
     --bg1:#eaf4fb;--bg2:#f5fbff;--ink:#1f3a52;--sub:#5e7a92;
-    --line:#d4e4f0;--card:#ffffff;--shadow:0 2px 10px rgba(45,125,210,.10);--shadow-lg:0 10px 30px rgba(31,90,168,.16);
+    --line:#dbe2ea;--card:#ffffff;--shadow:0 2px 10px rgba(45,125,210,.10);--shadow-lg:0 10px 30px rgba(31,90,168,.16);
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
   body{min-height:100vh;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16.5px;line-height:1.6;
@@ -305,7 +305,7 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260704-v43-15-0"></script>
+<script src="./config.js?v=20260704-v43-16-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
@@ -590,9 +590,9 @@ function showMenu(u){var lg=document.getElementById('login');if(lg)lg.style.disp
   var _edD=(window.GENBA_CONFIG&&String(window.GENBA_CONFIG.EDITION||'vendor').toLowerCase())||'vendor';
   if(_edD!=='vendor' && (role==='admin'||role==='manager')){try{loadDash();}catch(e){}}}
 function showLogin(){var w=document.querySelector('.wrap');if(w)w.style.display='none';var lg=document.getElementById('login');if(lg)lg.style.display='flex';}
-var loadCnt=0,loadShownAt=0;
-function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
-function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+var loadCnt=0,loadShownAt=0,loadTmr=null;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();clearTimeout(loadTmr);loadTmr=setTimeout(function(){if(loadCnt>0)document.getElementById('loading').classList.add('show');},150);}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){clearTimeout(loadTmr);document.getElementById('loading').classList.remove('show');}}
 function maybeStorePasswordCredential(id,pw){
   // ブラウザのパスワード保存機能に渡すだけです。アプリ側にはパスワードを保存しません。
   try{
@@ -860,6 +860,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260704-v43-15-0"></script>
+<script src="./common_ui.js?v=20260704-v43-16-0"></script>
 </body>
 </html>

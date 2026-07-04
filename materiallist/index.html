@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- materiallist v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- materiallist version 7 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- materiallist version 5 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はrefresh()。機能・id不変 -->
 <html lang="ja">
@@ -212,7 +213,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div style="font-size:14px;font-weight:700;">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-15-0"></script>
+<script src="../config.js?v=20260704-v43-16-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -238,9 +239,9 @@ function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null
 function num(v){if(v==null||v==='')return 0;var n=Number(String(v).replace(/[,，]/g,''));return isNaN(n)?0:n;}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(t._tm);t._tm=setTimeout(function(){t.classList.remove('show');},2400);}
-var lc=0,ls=0;
-function showLoad(){lc++;if(lc===1){ls=Date.now();document.getElementById('loading').classList.add('show');}}
-function hideLoad(){lc=Math.max(0,lc-1);if(lc===0){var w=Math.max(0,400-(Date.now()-ls));setTimeout(function(){if(lc===0)document.getElementById('loading').classList.remove('show');},w);}}
+var lc=0,ls=0,lt=null;
+function showLoad(){lc++;if(lc===1){ls=Date.now();clearTimeout(lt);lt=setTimeout(function(){if(lc>0)document.getElementById('loading').classList.add('show');},150);}}
+function hideLoad(){lc=Math.max(0,lc-1);if(lc===0){clearTimeout(lt);document.getElementById('loading').classList.remove('show');}}
 function callGAS(params,silent){
   return new Promise(function(resolve,reject){
     if(!silent)showLoad();
@@ -520,6 +521,6 @@ function chkGoOrder(){
   refresh(false);
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-15-0"></script>
+<script src="../common_ui.js?v=20260704-v43-16-0"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- calendar v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- calendar v43.11.0 (2026-07-04) 出力表題の社名と天気の地点をconfig.jsから取得（河口電機・岐阜固定を解消）。GAS変更なし。 -->
 <!-- calendar version 59 (2026-06-21) 区分の用語を統一：官公庁→公共（区分フィルタ）。GAS変更なし。 -->
 <!-- calendar version 58 (2026-06-17) ヘッダー隠し時に月バー・曜日バーを確実に最上部へ移動。updatePositionsをピンチ後に即時実行・DOMContentLoadedでinitTopsを早期実行・offsetHeight取得タイミングを修正。GAS変更なし。 -->
@@ -334,7 +335,7 @@
 <div class="rangebar" id="rangeBar"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="../config.js?v=20260704-v43-15-0"></script>
+<script src="../config.js?v=20260704-v43-16-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 /* v43.11.0: 出力表題の社名をconfig.js(COMPANY_SHORT)から設定 */
@@ -360,9 +361,9 @@ var holidays={},holLoaded={};
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||genbaSessionTok();}
 
-var loadCnt=0,loadShownAt=0;
-function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
-function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+var loadCnt=0,loadShownAt=0,loadTmr=null;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();clearTimeout(loadTmr);loadTmr=setTimeout(function(){if(loadCnt>0)document.getElementById('loading').classList.add('show');},150);}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){clearTimeout(loadTmr);document.getElementById('loading').classList.remove('show');}}
 function callGAS(params,silent){return new Promise(function(res,rej){
   if(!silent) showLoad();
   var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
@@ -922,6 +923,6 @@ render();reload(hadCache);
   offUpd();
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-15-0"></script>
+<script src="../common_ui.js?v=20260704-v43-16-0"></script>
 </body>
 </html>

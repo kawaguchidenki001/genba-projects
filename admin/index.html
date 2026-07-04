@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- admin v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- admin version 58 (2026-07-04) v43.10.1 セキュリティ改善：作業員パスワードを画面に表示せず（変更時のみ入力）・localStorageキャッシュから除外。距離更新日をローカル日付に修正。GAS変更なし（応答からのパスワード除外はGAS側で別途対応推奨）。 -->
 <!-- admin version 57 (2026-06-21) 区分の用語を統一：官公庁→公共。表示文言・選択肢・判定配列・並び順・CSSクラスをすべて公共に。GAS変更なし。 -->
 <!-- admin version 56 (2026-06-19) 管理ホーム追加。各マスタ件数・ログイン未設定・停止ユーザー・車両期限アラート・横断検索・よく使う登録導線を1画面に整理。 -->
@@ -587,7 +588,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-15-0"></script>
+<script src="../config.js?v=20260704-v43-16-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -611,9 +612,9 @@ function admLoadCache(){try{var c=JSON.parse(localStorage.getItem(ADMCACHE)||'{}
 function admSaveCache(){try{var ws=(workers||[]).map(function(w){var c={};for(var k in w){if(k!=='パスワード')c[k]=w[k];}return c;});localStorage.setItem(ADMCACHE,JSON.stringify({workers:ws,customers:customers,contacts:contacts,vehicles:vehicles}));}catch(e){}}
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 
-var loadCnt=0,loadShownAt=0;
-function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
-function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+var loadCnt=0,loadShownAt=0,loadTmr=null;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();clearTimeout(loadTmr);loadTmr=setTimeout(function(){if(loadCnt>0)document.getElementById('loading').classList.add('show');},150);}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){clearTimeout(loadTmr);document.getElementById('loading').classList.remove('show');}}
 function callGAS(params,secretOverride,silent){
   return new Promise(function(resolve,reject){
     if(!silent) showLoad();
@@ -1319,6 +1320,6 @@ function deleteCompDoc(id){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-15-0"></script>
+<script src="../common_ui.js?v=20260704-v43-16-0"></script>
 </body>
 </html>

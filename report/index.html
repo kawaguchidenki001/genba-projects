@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- report v43.16.0 (2026-07-04) reload内のcheckRoleとreportDataを並列化（読み込み最大半減）。初回読み込み中はスケルトン表示。アクセント色を緑→青(#2d7dd2)に統一。スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- report v43.14.0 (2026-07-04) 日報保存時に保存日を端末に記録（ホームの「日報がまだ」通知用）。GAS変更なし。 -->
 <!-- report v43.11.0 (2026-07-04) 日報PDFの社名をconfig.jsから取得。写真ページ遷移を相対パス化。GAS変更なし。 -->
 <!-- report version 67 (2026-07-04) v43.10.1 重大バグ修正：日付をUTCで生成していたため日本時間の朝9時前に前日になる問題を修正（初期日付・今日/今月フィルタ・複製・CSVファイル名をローカル日付に統一）。GAS変更なし。 -->
@@ -17,14 +18,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --accent:#0e9f6e;--accent-d:#0b7d57;--accent-soft:#e3f2ec;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;
     --bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;--card:#e8ecf2;
     --kyo:#e8910b;--kyo-soft:#fbeed6;--kyo-d:#b06f0c;
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
-    --radius:15px;
-    --rise:5px 5px 11px #ccd2db,-5px -5px 11px #ffffff;
-    --rise-sm:3px 3px 7px #d0d6df,-3px -3px 7px #fbfdff;
-    --well:inset 3px 3px 6px #ccd2db,inset -3px -3px 6px #ffffff;
+    --radius:14px;
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
     --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   body{margin:0;color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:17px;line-height:1.55;padding-bottom:80px;background:var(--bg);min-height:100vh;}
@@ -77,6 +78,11 @@
   .pill.kyo{background:var(--kyo-soft);color:var(--kyo-d);}
   .desc{font-size:14px;color:var(--ink);}
   .empty{text-align:center;color:var(--sub);padding:38px 10px;font-size:15px;}
+  /* v43.16.0 スケルトン（初回読み込み中の仮表示） */
+  .skl{display:inline-block;vertical-align:middle;height:12px;border-radius:6px;background:#dde3ec;position:relative;overflow:hidden;}
+  .skl::after{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.7),rgba(255,255,255,0));transform:translateX(-100%);animation:sklmv 1.3s infinite;}
+  @keyframes sklmv{100%{transform:translateX(100%);}}
+  @media (prefers-reduced-motion: reduce){.skl::after{animation:none;}}
   .lhead,.lrow{display:grid;grid-template-columns:1.5fr 1fr 50px 24px;gap:9px;align-items:center;}
   .lhead{font-size:12px;color:var(--sub);font-weight:700;letter-spacing:.04em;padding:2px 11px 6px;}
   .lhead .r{text-align:right;}
@@ -214,7 +220,7 @@
   .quickbar{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:2px 0 14px;}
   .quickbtn{border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);padding:11px 10px;color:var(--ink);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:5px;cursor:pointer;}
   .quickbtn:active{box-shadow:var(--well);}
-  .quickbtn.main{color:#0b7d57;background:#e5f4ee;}
+  .quickbtn.main{color:var(--accent-d);background:var(--accent-soft);}
   .tplcats{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
   .tplcat{border-radius:16px;background:#f7fbff;box-shadow:var(--well);overflow:hidden;}
   .tplcat summary{list-style:none;cursor:pointer;padding:10px 12px;font-weight:900;color:#31536b;display:flex;align-items:center;justify-content:space-between;gap:8px;}
@@ -229,7 +235,7 @@
   .tpldel{border:none;background:rgba(49,83,107,.12);color:#31536b;border-radius:999px;width:20px;height:20px;line-height:20px;font-size:14px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;padding:0;margin:-2px -3px -2px 1px;cursor:pointer;}
   .tpltools{display:grid;grid-template-columns:1fr auto;gap:7px;margin-top:9px;align-items:center;}
   .tpltools input{height:38px;border:none;border-radius:12px;background:#f7fbff;box-shadow:var(--well);padding:8px 10px;font-size:14px;}
-  .tpladd{height:38px;border:none;border-radius:12px;background:#e5f4ee;color:#0b7d57;font-weight:900;padding:0 12px;box-shadow:var(--rise-sm);cursor:pointer;}
+  .tpladd{height:38px;border:none;border-radius:12px;background:var(--accent-soft);color:var(--accent-d);font-weight:900;padding:0 12px;box-shadow:var(--rise-sm);cursor:pointer;}
   .tplsubtools{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px;}
   .tplsmall{border:none;border-radius:999px;background:var(--bg);box-shadow:var(--rise-sm);color:#557084;font-weight:800;font-size:12px;padding:7px 10px;cursor:pointer;}
   .tplsmall:active,.tpladd:active,.tpldel:active{box-shadow:var(--well);}
@@ -322,7 +328,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-15-0"></script>
+<script src="../config.js?v=20260704-v43-16-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -341,6 +347,7 @@ function genbaSaveSession(res){
 function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
 var T_GENERAL='';
 var ROLE='general';
+var firstSyncDone=false;   /* v43.16.0 初回同期が終わるまでスケルトン表示 */
 var projects=[],workers=[],reports=[],vehicles=[],dateFilter='month',view='list';
 var CACHE='genba_reports_cache';
 
@@ -348,9 +355,9 @@ function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||genbaSessionTok();}
 function isAdmin(){return ROLE==='admin';}
 
-var loadCnt=0,loadShownAt=0;
-function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
-function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+var loadCnt=0,loadShownAt=0,loadTmr=null;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();clearTimeout(loadTmr);loadTmr=setTimeout(function(){if(loadCnt>0)document.getElementById('loading').classList.add('show');},150);}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){clearTimeout(loadTmr);document.getElementById('loading').classList.remove('show');}}
 function callGAS(params,secretOverride,silent){
   return new Promise(function(resolve,reject){
     if(!silent) showLoad();
@@ -380,11 +387,13 @@ function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');pro
 function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,workers:workers,reports:reports,vehicles:vehicles}));}catch(e){}}
 function reload(silent){
   setSync('busy','同期中…');
-  callGAS({action:'checkRole'},null,silent).then(function(r){ ROLE=(r&&r.ok)?r.role:'general'; if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin'); updateAdmBtn(); })
-    .then(function(){return callGAS({action:'reportData'},null,silent);})
+  /* v43.16.0 権限確認とデータ取得を並行実行（従来は直列で待ち時間が2倍だった） */
+  callGAS({action:'checkRole'},null,true).then(function(r){ ROLE=(r&&r.ok)?r.role:'general'; if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin'); updateAdmBtn(); render(); }).catch(function(){});
+  callGAS({action:'reportData'},null,silent)
     .then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
+      firstSyncDone=true;
       projects=res.projects||[];workers=res.workers||[];reports=res.reports||[];vehicles=res.vehicles||[];saveCache();buildProjOptions();render();setSync('ok','同期済み');trySchedPre(); })
-    .catch(function(err){setSync('off','オフライン'); if(!silent){render();toast('読込失敗：'+err.message);} else if(/認証|ログイン|セッション|権限|secret|auth/i.test(String(err&&err.message||''))){toast('ログインの有効期限が切れた可能性があります。メニューへ戻って入り直してください');} });
+    .catch(function(err){firstSyncDone=true; setSync('off','オフライン'); if(!silent){render();toast('読込失敗：'+err.message);} else if(/認証|ログイン|セッション|権限|secret|auth/i.test(String(err&&err.message||''))){toast('ログインの有効期限が切れた可能性があります。メニューへ戻って入り直してください');} });
 }
 
 function buildDateChips(){var defs=[['today','今日'],['month','今月'],['all','すべて']],w=document.getElementById('dateChips');w.innerHTML='';
@@ -578,11 +587,19 @@ function exportPDF(){
   document.getElementById('printArea').innerHTML=h;
   window.print();
 }
+/* v43.16.0 初回読み込み中のスケルトン */
+function skelHTML(){
+  var h='<div class="lhead"><span>現場名</span><span>社員</span><span class="r">人工</span><span></span></div>';
+  for(var i=0;i<5;i++){
+    h+='<div class="lrow" style="pointer-events:none;"><span class="lr-site"><span class="skl" style="width:'+(55+((i*13)%30))+'%"></span></span><span><span class="skl" style="width:62%"></span></span><span><span class="skl" style="width:26px"></span></span><span></span></div>';
+  }
+  return h;
+}
 function render(){
   var list=filtered();document.getElementById('count').textContent=list.length+' 件';
   if(view==='sum'){renderSum(list);return;}
   var el=document.getElementById('list');
-  if(!list.length){el.innerHTML='<div class="empty">この期間の日報はありません。<br>右下の「＋日報」から登録できます。</div>';return;}
+  if(!list.length){el.innerHTML=(!firstSyncDone&&!reports.length)?skelHTML():'<div class="empty">この期間の日報はありません。<br>右下の「＋日報」から登録できます。</div>';return;}
   var gmap={},order=[];
   list.forEach(function(r){
     var d=String(r['日付']||'').slice(0,10),pid=r['案件ID']||'__none__';
@@ -957,6 +974,6 @@ loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadC
   offUpd();
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-15-0"></script>
+<script src="../common_ui.js?v=20260704-v43-16-0"></script>
 </body>
 </html>

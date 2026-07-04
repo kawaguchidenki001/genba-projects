@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- projects v43.16.0 (2026-07-04) 起動時の権限確認とデータ取得を並列化（初回読み込み最大半減）。初回読み込み中はスケルトン表示。配色を統一トークン（青 #2d7dd2・紺文字）に変更（状態色は据え置き）。スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- projects v43.11.0 (2026-07-04) config.jsを先頭読み込みに変更（GAS URL差し替え対応）。メニューリンク相対化。GAS変更なし。 -->
 <!-- projects version 68 (2026-07-04) v43.10.1 重大バグ修正：アーカイブ（保管Excel作成・削除）がcallGASの引数誤りで常に認証失敗していた問題を修正。GAS変更なし。 -->
 <!-- projects version 67 (2026-06-25) 重大バグ修正：案件詳細の「連絡」欄(d_ctc)の閉じタグ抜けにより、LINE未設定の案件で案件情報・工程管理・顧客情報・機能・ボタンが丸ごと非表示になっていた問題を修正（</div>を1つ補完）。GAS変更なし。 -->
@@ -31,10 +32,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#e8ecf2;--bg1:#eef0fb;--bg2:#f7f8ff;--card:#ffffff;--line:#dcdcf2;--ink:#272752;--sub:#6d6d9a;
-    --accent:#5b5bd6;--accent-d:#4444b8;--accent-soft:#ecebfb;
+    --bg:#e8ecf2;--bg1:#eaf4fb;--bg2:#f5fbff;--card:#ffffff;--line:#dbe2ea;--ink:#1f3a52;--sub:#5e7a92;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;
     --s-見積中:#6b7280;--s-受注:#2563eb;--s-施工中:#ea580c;--s-完了:#16a34a;--s-請求:#7c3aed;--s-入金:#0d9488;
-    --radius:13px;--shadow:0 2px 10px rgba(40,60,100,.10);--shadow-lg:0 8px 24px rgba(40,60,100,.16);
+    --radius:14px;--shadow:0 2px 10px rgba(40,60,100,.10);--shadow-lg:0 8px 24px rgba(40,60,100,.16);
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
     --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
     --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
@@ -95,6 +96,14 @@
   .yen{font-variant-numeric:tabular-nums;}
   .flag{font-size:11px;color:#b45309;font-weight:700;}
   .empty{text-align:center;color:var(--sub);padding:40px 10px;font-size:14.5px;}
+  /* v43.16.0 スケルトン（初回読み込み中の仮表示） */
+  .skl{display:block;height:12px;border-radius:6px;background:#dde3ec;position:relative;overflow:hidden;}
+  .skl::after{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.7),rgba(255,255,255,0));transform:translateX(-100%);animation:sklmv 1.3s infinite;}
+  @keyframes sklmv{100%{transform:translateX(100%);}}
+  @media (prefers-reduced-motion: reduce){.skl::after{animation:none;}}
+  .skel-hd .skl{width:38%;height:13px;}
+  .skel-t{pointer-events:none;min-height:86px;}
+  .skel-t .skl{margin:4px auto;}
   .group{margin-bottom:18px;}
   .ghd{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--ink);margin:2px 2px 11px;padding-bottom:7px;border-bottom:2px solid var(--line);}
   .ghd .gc{flex:0 0 auto;width:9px;height:9px;border-radius:50%;background:var(--accent);}
@@ -230,7 +239,7 @@
   .hmark{font-size:15px;}
   .back{font-size:11.5px;padding:9px 14px;}
 </style>
-<script src="../config.js?v=20260704-v43-15-0"></script>
+<script src="../config.js?v=20260704-v43-16-0"></script>
 </head>
 <body>
 <div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
@@ -249,7 +258,7 @@
 
 <div id="gate" style="position:fixed;inset:0;z-index:100;background:#fff;display:none;align-items:center;justify-content:center;">
   <div style="max-width:360px;text-align:center;padding:0 18px;">
-    <div><svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#5b5bd6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10a10 10 0 0 1 15 0M7.5 13a6 6 0 0 1 9 0"/><circle cx="12" cy="16.5" r="1.6"/></svg></div>
+    <div><svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#2d7dd2" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10a10 10 0 0 1 15 0M7.5 13a6 6 0 0 1 9 0"/><circle cx="12" cy="16.5" r="1.6"/></svg></div>
     <h2 style="font-size:18px;margin:10px 0 6px;">現場管理</h2>
     <p id="gateMsg" style="color:#6b7280;font-size:14px;margin:0 0 16px;">確認中…</p>
     <button onclick="location.reload()" style="width:100%;padding:13px;border:none;border-radius:11px;background:#0f5fb5;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">再読み込み</button>
@@ -443,12 +452,13 @@ function tok(){return admTok()||genbaSessionTok();}
 
 var STATUSES = ['見積中','受注','段取済','施工中','完了','請求済'];
 var projects = [], customers = [], contacts = [], filterStatus = 'すべて', filterKubun = 'すべて';
+var firstSyncDone = false;   /* v43.16.0 初回同期が終わるまでスケルトン表示 */
 var CACHE_P = 'genba_projects', CACHE_C = 'genba_customers', CACHE_K = 'genba_contacts';
 
 /* ===== JSONP 通信 ===== */
-var loadCnt=0,loadShownAt=0;
-function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
-function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+var loadCnt=0,loadShownAt=0,loadTmr=null;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();clearTimeout(loadTmr);loadTmr=setTimeout(function(){if(loadCnt>0)document.getElementById('loading').classList.add('show');},150);}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){clearTimeout(loadTmr);document.getElementById('loading').classList.remove('show');}}
 function callGAS(params,secretOverride,silent){
   return new Promise(function(resolve,reject){
     if(!GAS_URL){ reject(new Error('GAS_URL が未設定です')); return; }
@@ -489,10 +499,12 @@ function reload(silent){
   setSync('busy','同期中…');
   callGAS({action:'all'},null,silent).then(function(res){
     if(!res.ok){throw new Error(res.error||'エラー');}
+    firstSyncDone=true;
     projects=res.projects||[]; customers=res.customers||[]; contacts=res.contacts||[]; normStatuses_();
     saveCache(); buildChips(); buildCustList(); render();
     setSync('ok','同期済み'); openCaseFromUrl();
   }).catch(function(err){
+    firstSyncDone=true;
     setSync('off','オフライン'); if(!silent){ render(); toast('読込失敗：'+err.message); }
   });
 }
@@ -983,13 +995,23 @@ function highlightCard(pid){
   el.classList.add('hl');
   setTimeout(function(){el.classList.remove('hl');},2600);
 }
+/* v43.16.0 初回読み込み中のスケルトン */
+function skelHTML(){
+  var t='';
+  for(var g=0;g<2;g++){
+    t+='<div class="group"><div class="ghd skel-hd"><span class="gc"></span><span class="gn"><span class="skl"></span></span></div><div class="tiles">';
+    for(var i=0;i<3;i++) t+='<div class="tile skel-t"><span class="skl" style="width:72%"></span><span class="skl" style="width:46%;height:9px"></span></div>';
+    t+='</div></div>';
+  }
+  return t;
+}
 function render(){
   var list=projects.slice();
   if(filterStatus!=='すべて') list=list.filter(function(p){return p['ステータス']===filterStatus;});
   if(filterKubun!=='すべて') list=list.filter(function(p){return String(p['種別']||'').trim()===filterKubun;});
   document.getElementById('count').textContent= list.length+' 件';
   var el=document.getElementById('list');
-  if(!list.length){el.innerHTML='<div class="empty">該当する現場がありません。<br>右下の「＋新規現場」から登録できます。</div>';return;}
+  if(!list.length){el.innerHTML=(!firstSyncDone&&!projects.length)?skelHTML():'<div class="empty">該当する現場がありません。<br>右下の「＋新規現場」から登録できます。</div>';return;}
   // 会社名・自治体名ごとにグループ化
   var groups={},order=[];
   list.forEach(function(p){var k=custKey(p);if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(p);});
@@ -1256,17 +1278,19 @@ function toggleAdmin(){
 }
 
 /* 起動：全員が閲覧可。管理者のみ追加・編集ができる */
+/* v43.16.0 権限確認とデータ取得を並行実行（従来は直列で待ち時間が2倍だった） */
 loadCache();
 buildChips(); render(); applyAdminUI();
 var hadCacheP=(projects&&projects.length>0)||(customers&&customers.length>0);
-callGAS({action:'checkRole'},null,hadCacheP).then(function(res){
+reload(hadCacheP);
+callGAS({action:'checkRole'},null,true).then(function(res){
   ROLE=(res&&res.ok)?res.role:'';
   if(!ROLE){ if(admTok())localStorage.removeItem('genba_admin'); showGate('認証できませんでした。共通リンクから開き直してください。'); return; }
   if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin');
-  hideGate(); applyAdminUI(); buildChips(); buildCustList(); render(); reload(hadCacheP);
+  hideGate(); applyAdminUI();
 }).catch(function(){ setSync('off','オフライン'); });
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-15-0"></script>
+<script src="../common_ui.js?v=20260704-v43-16-0"></script>
 </body>
 </html>

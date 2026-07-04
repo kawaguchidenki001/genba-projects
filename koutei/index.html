@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- koutei v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- koutei v43.11.0 (2026-07-04) config.jsを先頭読み込みに変更（GAS URL差し替え対応）。リンク相対化。GAS変更なし。 -->
 <!-- koutei version 4 (2026-06-25) 上部の状態フィルタを削除／工期バーを薄い帯にし、作業日報がある日(=現場に入った日)を濃いセルで重ね表示／濃いセルのタップでその日の作業内容と人員(氏名)をポップアップ。日報は reports API で取得しキャッシュ。GAS変更なし。 -->
 <html lang="ja">
@@ -211,7 +212,7 @@
   .hmark{font-size:15px;}
   .back{font-size:11.5px;padding:9px 14px;}
 </style>
-<script src="../config.js?v=20260704-v43-15-0"></script>
+<script src="../config.js?v=20260704-v43-16-0"></script>
 </head>
 <body>
 <style>
@@ -315,9 +316,9 @@ function admTok(){ return localStorage.getItem('genba_admin')||''; }
 function tok(){ return admTok()||genbaSessionTok(); }
 
 /* ===== JSONP 通信 ===== */
-var loadCnt=0,loadShownAt=0;
-function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
-function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+var loadCnt=0,loadShownAt=0,loadTmr=null;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();clearTimeout(loadTmr);loadTmr=setTimeout(function(){if(loadCnt>0)document.getElementById('loading').classList.add('show');},150);}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){clearTimeout(loadTmr);document.getElementById('loading').classList.remove('show');}}
 function callGAS(params,secretOverride,silent){
   return new Promise(function(resolve,reject){
     if(!GAS_URL){ reject(new Error('GAS_URL が未設定です')); return; }
@@ -538,6 +539,6 @@ function loadReports(){
 function normKP(){ KP.forEach(function(p){ if(String(p['ステータス']||'').trim()==='進行中') p['ステータス']='施工中'; }); }
 window.addEventListener('DOMContentLoaded', load);
 </script>
-<script src="../common_ui.js?v=20260704-v43-15-0"></script>
+<script src="../common_ui.js?v=20260704-v43-16-0"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- timecard v43.16.0 (2026-07-04) アクセント色を紫→青(#2d7dd2)に統一（出勤=緑・退勤=橙などの状態色は据え置き）。theme-colorも青に。スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- timecard v43.11.0 (2026-07-04) 会社名の既定値をconfig.jsから取得。メニュー戻り先を相対パス化。GAS変更なし。 -->
 <!-- timecard version 42 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置)。長い名称でも重なり/切れなし。タイトル(nm/h1)の改行禁止解除。CSSのみ・HTML/機能/id不変・GAS変更なし。 -->
 <!-- timecard version 41 (2026-06-14) ヘッダー統一（メニュー左/時計アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。氏名・日付・時計はヘッダー下のカードとして保持。更新はreload()。機能・id不変 -->
@@ -11,19 +12,19 @@
 <link rel="icon" type="image/png" href="../icon192.png">
 <link rel="manifest" href="../manifest.json">
 <meta name="apple-mobile-web-app-title" content="現場管理">
-<meta name="theme-color" content="#7c3aed">
+<meta name="theme-color" content="#2563eb">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{ --bg:#e8ecf2;--card:#e8ecf2;--line:#dbe2ea;--ink:#1f3a52;--sub:#5e7a92;
     --green:#22a06b;--greenbg:#dcf3e7;--orange:#e8910b;--orangebg:#fbeed6;--blue:#2d7dd2;--bluebg:#e3f0fb;--red:#e2574c;
-    --teal1:#8b5cf6;--teal2:#7c3aed;
-    --accent:#7c3aed;--accent-d:#6d28d9;--accent-soft:#efe7fd;
+    --teal1:#4f92dc;--teal2:#2d7dd2;
+    --accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;
     --grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);
-    --rise:5px 5px 11px #ccd2db,-5px -5px 11px #ffffff;
-    --rise-sm:3px 3px 7px #d0d6df,-3px -3px 7px #fbfdff;
-    --well:inset 3px 3px 6px #ccd2db,inset -3px -3px 6px #ffffff;
+    --rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;
+    --rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;
+    --well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;
     --well-soft:inset 2px 2px 5px #d3d9e1,inset -2px -2px 5px #fbfdff;}
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
   select,input,textarea,button{font-family:inherit;}
@@ -306,7 +307,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-15-0"></script>
+<script src="../config.js?v=20260704-v43-16-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -340,9 +341,9 @@ function callGAS(params){return new Promise(function(res,rej){
   var q=Object.assign({secret:tok(),callback:cb},params);if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
   s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
   s.onerror=function(){cl();rej(new Error('通信エラー'));};document.head.appendChild(s);});}
-var loadCnt=0,loadShownAt=0;
-function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
-function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){var w=Math.max(0,600-(Date.now()-loadShownAt));setTimeout(function(){if(loadCnt===0)document.getElementById('loading').classList.remove('show');},w);}}
+var loadCnt=0,loadShownAt=0,loadTmr=null;
+function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();clearTimeout(loadTmr);loadTmr=setTimeout(function(){if(loadCnt>0)document.getElementById('loading').classList.add('show');},150);}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){clearTimeout(loadTmr);document.getElementById('loading').classList.remove('show');}}
 
 function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function hm(d){return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);}
@@ -748,6 +749,6 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden&&me)
   Promise.all([reload(hadTC),loadSettings()]).then(loadAlerts);
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-15-0"></script>
+<script src="../common_ui.js?v=20260704-v43-16-0"></script>
 </body>
 </html>
