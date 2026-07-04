@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- report v43.11.0 (2026-07-04) 日報PDFの社名をconfig.jsから取得。写真ページ遷移を相対パス化。GAS変更なし。 -->
 <!-- report version 67 (2026-07-04) v43.10.1 重大バグ修正：日付をUTCで生成していたため日本時間の朝9時前に前日になる問題を修正（初期日付・今日/今月フィルタ・複製・CSVファイル名をローカル日付に統一）。GAS変更なし。 -->
 <!-- report version 66 (2026-06-21) 区分の用語を統一：官公庁→公共（KINDS）。GAS変更なし。 -->
 <!-- report version 65 config.js共通化 -->
@@ -240,7 +241,7 @@
 <div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.21-43.9.12</div>
 <header>
   <div class="hbar">
-    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <a class="back" href="../">← メニュー</a>
     <div class="hcenter">
       <span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span>
       <div class="htxt"><span class="en">Daily report</span><h1>作業日報</h1></div>
@@ -320,7 +321,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-10-1"></script>
+<script src="../config.js?v=20260704-v43-11-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -533,7 +534,7 @@ function deleteDescTemplate(idx){var t=DESC_TPLS[idx];if(t!=null)deleteDescTempl
 function deleteDescTemplateByText(t){if(t==null)return;if(!confirm('「'+t+'」を定型文から削除しますか？'))return;DESC_TPLS=DESC_TPLS.filter(function(v){return v!==t;});saveDescTemplates();renderDescTemplates();toast('定型文を削除しました');}
 function resetDescTemplates(){if(!confirm('作業内容の定型文を初期値に戻しますか？\n自分で追加した定型文もこの端末から削除されます。'))return;DESC_TPLS=DEFAULT_DESC_TPLS.slice();saveDescTemplates();renderDescTemplates();toast('定型文を初期値に戻しました');}
 function addDescTpl(t){var el=document.getElementById('f_desc'),cur=el.value.trim();if(!cur){el.value=t;}else if(cur.indexOf(t)<0){el.value=cur.replace(/[、,\s]+$/,'')+'、'+t;}el.focus();}
-function goPhotoPage(pid){location.href='https://kawaguchidenki001.github.io/genba-projects/files/?case='+encodeURIComponent(pid||'');}
+function goPhotoPage(pid){location.href='../files/?case='+encodeURIComponent(pid||'');}
 function copyFromDetail(){if(!detailCtx)return;var pid=detailCtx.pid,date=detailCtx.date;closeDetail();
   openForm(pid,date);editGroup=null;
   var g=function(id){return document.getElementById(id);};
@@ -572,7 +573,7 @@ function exportPDF(){
   sorted.forEach(function(r){var pid=r['案件ID']||'';
     var tm=(r['開始']?String(r['開始']).slice(0,5)+'〜'+(String(r['翌日'])==='1'?'翌':'')+String(r['終了']||'').slice(0,5):'');
     h+='<tr><td>'+esc(String(r['日付']||'').slice(0,10))+'</td><td>'+esc(projFull(pid,r['案件名']))+'</td><td>'+esc(r['氏名']||'')+'</td><td>'+esc(r['区分']||'')+'</td><td>'+esc(tm)+'</td><td class="r">'+esc(String(r['人工']||''))+'</td><td class="r">'+esc(String(r['深夜人工']||''))+'</td><td>'+esc(r['作業内容']||'')+'</td></tr>';});
-  h+='</tbody></table><div class="pfoot">河口電機株式会社　出力日：'+new Date().toLocaleDateString('ja-JP')+'</div>';
+  h+='</tbody></table><div class="pfoot">'+esc((window.GENBA_CONFIG&&window.GENBA_CONFIG.COMPANY_NAME)||'')+'　出力日：'+new Date().toLocaleDateString('ja-JP')+'</div>';
   document.getElementById('printArea').innerHTML=h;
   window.print();
 }
@@ -953,6 +954,6 @@ loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadC
   offUpd();
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-10-1"></script>
+<script src="../common_ui.js?v=20260704-v43-11-0"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- koutei v43.11.0 (2026-07-04) config.jsを先頭読み込みに変更（GAS URL差し替え対応）。リンク相対化。GAS変更なし。 -->
 <!-- koutei version 4 (2026-06-25) 上部の状態フィルタを削除／工期バーを薄い帯にし、作業日報がある日(=現場に入った日)を濃いセルで重ね表示／濃いセルのタップでその日の作業内容と人員(氏名)をポップアップ。日報は reports API で取得しキャッシュ。GAS変更なし。 -->
 <html lang="ja">
 <head>
@@ -210,6 +211,7 @@
   .hmark{font-size:15px;}
   .back{font-size:11.5px;padding:9px 14px;}
 </style>
+<script src="../config.js?v=20260704-v43-11-0"></script>
 </head>
 <body>
 <style>
@@ -285,7 +287,7 @@
 
 <header>
   <div class="hbar">
-    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <a class="back" href="../">← メニュー</a>
     <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16"/></svg></span><span class="htxt"><span class="en">Schedule</span><span class="nm">工程表</span></span></div>
     <div class="hright"><span class="hmark">Gen-Can</span><button class="hrf" onclick="load()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
   </div>
@@ -307,7 +309,7 @@
 <script>
 /* ===== 設定・認証（projectsと共通方式） ===== */
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
-var BASE='https://kawaguchidenki001.github.io/genba-projects/';
+var BASE=new URL('../',location.href).href;
 function genbaSessionTok(){ try{ var s=JSON.parse(localStorage.getItem('genba_session')||'null'); if(s&&s.token&&(!s.expiresAt||Date.now()<Number(s.expiresAt)))return s.token; }catch(e){} return ''; }
 function admTok(){ return localStorage.getItem('genba_admin')||''; }
 function tok(){ return admTok()||genbaSessionTok(); }
@@ -536,7 +538,6 @@ function loadReports(){
 function normKP(){ KP.forEach(function(p){ if(String(p['ステータス']||'').trim()==='進行中') p['ステータス']='施工中'; }); }
 window.addEventListener('DOMContentLoaded', load);
 </script>
-<script src="../config.js?v=20260625-v43-9-25"></script>
-<script src="../common_ui.js?v=20260625-v43-9-25"></script>
+<script src="../common_ui.js?v=20260704-v43-11-0"></script>
 </body>
 </html>

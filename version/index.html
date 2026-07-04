@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- version v43.11.0 (2026-07-04) 更新履歴をv43.11.0まで追記・「今回の更新」刷新・孤立セクション削除。GAS変更なし。 -->
 <!-- version page app v2026.06.20-43.8.3 Code_v143 ops center -->
 <html lang="ja">
 <head>
@@ -37,7 +38,7 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
 .err{background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:800;display:none;}
 @media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr);} h1{font-size:22px;}}
 </style>
-<script src="../config.js?v=20260620-v43-8-3-cache-lock"></script>
+<script src="../config.js?v=20260704-v43-11-0"></script>
 </head>
 <body>
 <div class="wrap">
@@ -64,16 +65,20 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
   <div class="card">
     <h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">今回の更新</h2>
     <ul>
-      <li><b>Code_v143.gs</b> に変更しました。</li>
-      <li><b>導入チェック</b> 画面を追加しました。</li>
-      <li>販売前・お客様引き渡し前の確認項目をチェックリスト化しました。</li>
-      <li>進捗表示、引き渡しメモコピー、印刷に対応しました。</li>
+      <li><b>販売準備</b>：社名・天気地点・GAS版数を <b>config.js</b> で一元管理するようにしました（販売先ごとの書き換えが1ファイルで完了）。</li>
+      <li>ホームに「今日やること」カードとダッシュボードを追加しました（管理者・現場責任者）。</li>
+      <li>日報の日付が朝9時前に前日になる問題、AIチャット・文字起こし・翻訳が失敗する問題など致命的な不具合を修正しました。</li>
+      <li>ログアウト時に業務データのキャッシュを消去するようにしました。</li>
     </ul>
   </div>
 
   <div class="card">
     <h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">更新履歴</h2>
     <div class="list">
+      <div class="item"><div class="date">2026.07.04 / v43.11.0</div><h3>販売準備・設定の一元化</h3><ul><li>社名・天気地点・GAS版数をconfig.jsで管理（河口電機固定を解消）</li><li>開発者URL直書きを相対パス化</li><li>旧バージョン表記・誤判定を一掃</li><li>ログアウト時に業務キャッシュを消去</li><li>在庫画面の表示崩れ修正</li></ul></div>
+      <div class="item"><div class="date">2026.07.04 / v43.10.1</div><h3>致命バグ修正第1弾</h3><ul><li>AIチャット・文字起こし整文・翻訳が必ず失敗する問題を修正</li><li>日報の日付が朝9時前に前日になるUTCバグ修正</li><li>管理画面のパスワード表示を廃止（変更時のみ入力）</li><li>案件アーカイブの認証失敗を修正</li><li>黒板カメラ・録音の保存を実確認方式に</li></ul></div>
+      <div class="item"><div class="date">2026.07.04 / v43.10.0</div><h3>ホーム刷新</h3><ul><li>「今日やること」カード＋折りたたみダッシュボード</li><li>全ページ共通のオフライン通知バナー</li><li>ログインにパスワード表示切替</li><li>PWAショートカット（日報・打刻・写真・予定）</li></ul></div>
+      <div class="item"><div class="date">2026.06.21〜25 / v43.9</div><h3>工程表・案件画面の強化</h3><ul><li>横断工程表（ガントチャート）を新設</li><li>案件詳細の表示バグ修正・顧客情報セクション追加</li><li>区分の用語統一（官公庁→公共／民間→法人）</li></ul></div>
       <div class="item"><div class="date">2026.06.19 / v42</div><h3>ログイン列ズレ修正</h3><ul><li>Code_v143化</li><li>materialOcr / materialSearch / materialIdentifyをGAS側に追加</li><li>古いコメント内のバージョン表記を整理</li></ul></div><div class="item"><div class="date">2026.06.19 / v41</div><h3>導入チェックリスト追加</h3><ul><li>Code_v141化</li><li>販売前・引き渡し前の確認項目を追加</li><li>チェック進捗・引き渡しメモコピー・印刷に対応</li></ul></div>
       <div class="item"><div class="date">2026.06.19 / v40</div><h3>利用開始ガイド追加</h3><ul><li>Code_v143化</li><li>初めて使う人向けのスタート画面を追加</li><li>現場担当者に渡せる説明文コピー機能を追加</li></ul></div>
       <div class="item"><div class="date">2026.06.19 / v36</div><h3>運用センター追加</h3><ul><li>Code_v143化</li><li>運用センター画面を追加</li><li>販売前・運用前に必要な確認メニューを集約</li><li>GAS/画面バージョンの簡易照合を追加</li></ul></div>
@@ -117,12 +122,11 @@ function checkGas(){
   setErr(''); var st=document.getElementById('gasStatus'); st.className='status warn'; st.textContent='確認中...';
   jsonp({action:'versionInfo'}).then(function(res){
     st.className='status '+(res&&res.ok?'ok':'ng'); st.textContent=(res&&res.ok)?'GAS接続OK':'GAS確認NG'; render({},res||{});
-  }).catch(function(e){st.className='status ng';st.textContent='GAS接続NG';setErr(e.message+'。Code_v143.gsをGAS側に貼り替え、既存デプロイを新バージョンで更新してください。');render({},null);});
+  }).catch(function(e){st.className='status ng';st.textContent='GAS接続NG';setErr(e.message+'。GASのCodeファイル（'+(((window.GENBA_CONFIG||{}).GAS_FILE)||'最新版')+'）を貼り替え、既存デプロイを新バージョンで更新してください。');render({},null);});
 }
 render({},null);checkGas();
 </script>
-<script src="../common_ui.js?v=20260620-v43-8-3-cache-lock"></script>
+<script src="../common_ui.js?v=20260704-v43-11-0"></script>
 
-<section class="card" style="margin-top:14px"><h3>v2026.06.20-43.8.1</h3><p>FAQ・困った時画面を追加しました。問い合わせ前に自己確認できる導線を追加しました。</p><div class="links"><a href="../faq/">FAQ・困った時を開く →</a></div></section>
 </body>
 </html>

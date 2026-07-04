@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- order v43.11.0 (2026-07-04) 差出人の既定値をconfig.js(COMPANY_SHORT)から取得（河口電機固定を解消）。GAS変更なし。 -->
 <!-- order version 5 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- order version 4 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はrefresh()。機能・id不変 -->
 <html lang="ja">
@@ -152,7 +153,7 @@
 <div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.8.3</div>
 <header>
   <div class="hbar">
-    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <a class="back" href="../">← メニュー</a>
     <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.6"/><circle cx="18" cy="20" r="1.6"/><path d="M2 3h3l2.3 12.2a1.5 1.5 0 0 0 1.5 1.3h8.6a1.5 1.5 0 0 0 1.5-1.2L22 7H6"/></svg></span><span class="htxt"><span class="en">Order</span><span class="nm">発注管理</span></span></div>
     <div class="hright"><span class="hmark">Gen-Can</span><button class="hrf" onclick="refresh()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
   </div>
@@ -246,7 +247,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260620-v43-8-3-cache-lock"></script>
+<script src="../config.js?v=20260704-v43-11-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -272,8 +273,9 @@ var matCand={}, prodCand={};
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function tok(){return admTok()||genbaSessionTok();}
-function getSender(){return localStorage.getItem(SENDERK)||'河口電機';}
-function saveSender(){var v=document.getElementById('senderName').value.trim()||'河口電機';localStorage.setItem(SENDERK,v);toast('差出人を保存しました');renderCards();}
+function cfgCompanyShort(){return (window.GENBA_CONFIG&&window.GENBA_CONFIG.COMPANY_SHORT)||'';}
+function getSender(){return localStorage.getItem(SENDERK)||cfgCompanyShort();}
+function saveSender(){var v=document.getElementById('senderName').value.trim()||cfgCompanyShort();localStorage.setItem(SENDERK,v);toast('差出人を保存しました');renderCards();}
 
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
@@ -733,6 +735,6 @@ renderSrc();
 applyHandoff();
 refresh(false);
 </script>
-<script src="../common_ui.js?v=20260620-v43-8-3-cache-lock"></script>
+<script src="../common_ui.js?v=20260704-v43-11-0"></script>
 </body>
 </html>

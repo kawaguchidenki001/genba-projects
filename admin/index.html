@@ -189,7 +189,7 @@
 <div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.21-43.9.12</div>
 <header>
   <div class="hbar">
-    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <a class="back" href="../">← メニュー</a>
     <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></span><span class="htxt"><span class="en">Admin</span><span class="nm">管理画面</span></span></div>
     <div class="hright"><span class="hmark">Gen-Can</span><button class="hrf" onclick="loadAll()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
   </div>
@@ -327,9 +327,9 @@
         <p class="hint">最低限の登録ができたら、現場登録・予定登録・日報入力へ進めます。</p>
         <div class="setup-finish" id="setupFinishText">登録状況を確認中…</div>
         <div class="setup-links">
-          <a class="setup-link" href="https://kawaguchidenki001.github.io/genba-projects/projects/">案件管理へ</a>
-          <a class="setup-link" href="https://kawaguchidenki001.github.io/genba-projects/calendar/">予定表へ</a>
-          <a class="setup-link" href="https://kawaguchidenki001.github.io/genba-projects/report/">日報へ</a>
+          <a class="setup-link" href="../projects/">案件管理へ</a>
+          <a class="setup-link" href="../calendar/">予定表へ</a>
+          <a class="setup-link" href="../report/">日報へ</a>
         </div>
         <div class="setup-actions">
           <button class="btn sub" onclick="setupRefreshProgress()">登録状況を更新</button>
@@ -587,7 +587,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-10-1"></script>
+<script src="../config.js?v=20260704-v43-11-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -1319,6 +1319,6 @@ function deleteCompDoc(id){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-10-1"></script>
+<script src="../common_ui.js?v=20260704-v43-11-0"></script>
 </body>
 </html>

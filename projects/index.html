@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- projects v43.11.0 (2026-07-04) config.jsを先頭読み込みに変更（GAS URL差し替え対応）。メニューリンク相対化。GAS変更なし。 -->
 <!-- projects version 68 (2026-07-04) v43.10.1 重大バグ修正：アーカイブ（保管Excel作成・削除）がcallGASの引数誤りで常に認証失敗していた問題を修正。GAS変更なし。 -->
 <!-- projects version 67 (2026-06-25) 重大バグ修正：案件詳細の「連絡」欄(d_ctc)の閉じタグ抜けにより、LINE未設定の案件で案件情報・工程管理・顧客情報・機能・ボタンが丸ごと非表示になっていた問題を修正（</div>を1つ補完）。GAS変更なし。 -->
 <!-- projects version 66 (2026-06-25) 工程管理(Step5/Phase2完了)：工程表をA4横の1枚絵で出力。「画像で保存」(PNG・オフライン可)と「PDFで保存」(jsPDF・要ネット接続)を追加。タイトル/期間/凡例(種別色)/今日ライン/進捗バー/出力日を描画。GAS変更なし。 -->
@@ -229,12 +230,13 @@
   .hmark{font-size:15px;}
   .back{font-size:11.5px;padding:9px 14px;}
 </style>
+<script src="../config.js?v=20260704-v43-11-0"></script>
 </head>
 <body>
 <div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.25-43.9.25</div>
 <header>
   <div class="hbar">
-    <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+    <a class="back" href="../">← メニュー</a>
     <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span><span class="htxt"><span class="en">Projects</span><span class="nm">案件管理</span></span></div>
     <div class="hright"><span class="hmark">Gen-Can</span><button class="hrf" onclick="reload()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
   </div>
@@ -251,7 +253,7 @@
     <h2 style="font-size:18px;margin:10px 0 6px;">案件管理</h2>
     <p id="gateMsg" style="color:#6b7280;font-size:14px;margin:0 0 16px;">確認中…</p>
     <button onclick="location.reload()" style="width:100%;padding:13px;border:none;border-radius:11px;background:#0f5fb5;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">再読み込み</button>
-    <p style="margin-top:14px;"><a href="https://kawaguchidenki001.github.io/genba-projects/" style="color:#6b7280;font-size:13px;">← 現場管理メニューへ戻る</a></p>
+    <p style="margin-top:14px;"><a href="../" style="color:#6b7280;font-size:13px;">← 現場管理メニューへ戻る</a></p>
   </div>
 </div>
 
@@ -575,7 +577,7 @@ function onContactChange(){
   }
 }
 
-var BASE='https://kawaguchidenki001.github.io/genba-projects/';
+var BASE=new URL('../',location.href).href;
 var NOCUST='（未分類）';
 function isAdmin(){return ROLE==='admin';}
 function custKey(p){var c=String(p['顧客']||'').trim();return c||NOCUST;}
@@ -1264,7 +1266,6 @@ callGAS({action:'checkRole'},null,hadCacheP).then(function(res){
 }).catch(function(){ setSync('off','オフライン'); });
 </script>
 
-<script src="../config.js?v=20260704-v43-10-1"></script>
-<script src="../common_ui.js?v=20260704-v43-10-1"></script>
+<script src="../common_ui.js?v=20260704-v43-11-0"></script>
 </body>
 </html>

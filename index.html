@@ -1,13 +1,13 @@
-<!-- Gen-Can root app v2026.07.04-43.10.0 / ホームに「今日やること」カード＋折りたたみダッシュボードを実装（未配線だったrenderDash/renderTodayTodoをHTML側に接続・管理者/責任者のみ表示）。ログインにパスワード表示切替を追加 / Code_v157 -->
+<!-- Gen-Can root app v2026.07.04-43.11.0 / 販売準備：社名表示をconfig.js(COMPANY_NAME)から取得・ログアウト時に業務キャッシュ消去（忘れ物メモは残す）・アイコン/manifestを相対パス化 / Code_v157 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Gen-Can</title>
-<link rel="apple-touch-icon" href="https://kawaguchidenki001.github.io/genba-projects/icon180.png">
-<link rel="icon" type="image/png" href="https://kawaguchidenki001.github.io/genba-projects/icon192.png">
-<link rel="manifest" href="https://kawaguchidenki001.github.io/genba-projects/manifest.json">
+<link rel="apple-touch-icon" href="./icon180.png">
+<link rel="icon" type="image/png" href="./icon192.png">
+<link rel="manifest" href="./manifest.json">
 <meta name="apple-mobile-web-app-title" content="Gen-Can">
 <meta name="theme-color" content="#2563eb">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -163,7 +163,7 @@
 <div id="login">
   <div class="box">
     <div class="lg-t" style="display:flex;align-items:center;justify-content:center;gap:10px;padding-bottom:4px;">
-      <img src="https://kawaguchidenki001.github.io/genba-projects/icon192.png" style="width:40px;height:40px;border-radius:10px;box-shadow:0 2px 6px rgba(31,90,168,.25);">
+      <img src="./icon192.png" style="width:40px;height:40px;border-radius:10px;box-shadow:0 2px 6px rgba(31,90,168,.25);">
       <div style="text-align:left;"><div style="font-family:Montserrat,sans-serif;font-weight:900;font-style:italic;font-size:23px;line-height:1.1;padding-right:3px;background-image:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);-webkit-background-clip:text;background-clip:text;color:transparent;">Gen-Can</div><div style="font-size:9px;color:#7a9ab5;letter-spacing:.2em;font-family:Manrope,sans-serif;text-transform:uppercase;">Smart Site Management</div></div>
     </div>
     <h2>現場管理ログイン</h2>
@@ -186,14 +186,14 @@
 <div class="wrap" style="display:none;">
   <div class="head">
     <div class="head-logo">
-      <img src="https://kawaguchidenki001.github.io/genba-projects/icon192.png" alt="Gen-Can">
+      <img src="./icon192.png" alt="Gen-Can">
       <div class="head-logo-text">
         <div class="gc-name">Gen-Can</div>
         <div class="gc-sub">Smart Site Management</div>
       </div>
       <a class="timeStatus s-none" id="timeStatus" href="./timecard/" aria-label="勤怠状態へ"><span class="dot" id="timeStatusDot">⚪</span><span id="timeStatusLabel">未出勤</span></a>
     </div>
-    <div class="co" id="companyName">河口電機株式会社 <span id="meName" class="userName"></span><span class="adminTag" id="adminTag">管理者</span></div>
+    <div class="co" id="companyName"><span id="coName"></span> <span id="meName" class="userName"></span><span class="adminTag" id="adminTag">管理者</span></div>
     <div class="permBadge" id="permBadge">権限：社員</div>
   </div>
 
@@ -272,12 +272,13 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260704-v43-10-1"></script>
+<script src="./config.js?v=20260704-v43-11-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
 var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'';
-(function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);}catch(e){}})();
+(function(){try{var b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION;var lv=document.getElementById('loginVer');if(lv)lv.textContent=APP_VERSION;localStorage.setItem('gencan_build',BUILD_ID);
+  var cn=document.getElementById('coName');if(cn)cn.textContent=(window.GENBA_CONFIG&&window.GENBA_CONFIG.COMPANY_NAME)||'';}catch(e){}})();
 
 function genbaSessionTok(){
   try{
@@ -473,7 +474,21 @@ function doLogin(){
   }
   tryLogin();
 }
-function logout(){genbaClearSession();localStorage.removeItem('genba_user');location.reload();}
+function logout(){
+  genbaClearSession();
+  localStorage.removeItem('genba_user');
+  // v43.11.0: 共有端末対策。売掛・顧客一覧などの業務キャッシュを消去（忘れ物メモは端末メモとして残す）
+  try{
+    var rm=[];
+    for(var i=0;i<localStorage.length;i++){
+      var k=localStorage.key(i);
+      if(/^(genba_|tb_|gencan_)/.test(k)&&k!=='genba_reminders')rm.push(k);
+    }
+    rm.forEach(function(k){localStorage.removeItem(k);});
+    sessionStorage.clear();
+  }catch(e){}
+  location.reload();
+}
 function jsonpGet(action,onOk,extra){
   var params={action:action,secret:genbaSessionTok()};
   if(extra){
@@ -656,6 +671,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260704-v43-10-1"></script>
+<script src="./common_ui.js?v=20260704-v43-11-0"></script>
 </body>
 </html>

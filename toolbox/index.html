@@ -1,3 +1,4 @@
+<!-- toolbox v43.11.0 (2026-07-04) config.jsを先頭読み込みに。黒板の会社名をconfig.jsから取得。アイコンリンク修正。GAS変更なし。 -->
 <!-- toolbox version 48 (2026-07-04) v43.10.1 重大バグ修正：小黒板カメラ・録音のDrive保存が失敗しても「✓保存しました」と表示されていた問題を修正（ファイル画面と同じconfirmUploadで保存を実確認）。GAS変更なし。 -->
 <!-- toolbox version 47 (2026-06-20) UI監査：小黒板カメラ戻る表示・道具箱表記・バージョン表示を整理。 -->
 <!-- toolbox version 46 (2026-06-20) 小黒板カメラの戻るボタン表示を「工事写真」に変更。工事写真メニューから戻る導線と表示を統一。 -->
@@ -13,12 +14,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ツールボックス｜現場管理</title>
-<link rel="apple-touch-icon" href="https://kawaguchidenki001.github.io/genba-projects/icon-180.png">
+<link rel="apple-touch-icon" href="../icon180.png">
 <meta name="apple-mobile-web-app-title" content="ツールボックス">
 <meta name="theme-color" content="#1f5f8b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<script src="../config.js?v=20260704-v43-11-0"></script>
 <script>
 (function(){
   try{
@@ -361,7 +363,7 @@
   <div class="pane on" id="p-home">
     <div class="head">
       <div class="hbar">
-        <a class="back" href="https://kawaguchidenki001.github.io/genba-projects/">← メニュー</a>
+        <a class="back" href="../">← メニュー</a>
         <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="8" width="18" height="12" rx="2"/><path d="M9 8V6a3 3 0 0 1 6 0v2M3 13h18M12 12v3"/></svg></span><div class="head-tt"><div class="kicker">Toolbox</div><h1>ツールボックス</h1></div></div>
         <div class="hright"><span class="hmark">Gen-Can</span></div>
       </div>
@@ -713,7 +715,7 @@
       <div class="brow"><span class="blbl3">自由1</span><input class="enum binp" id="boardFree1" oninput="bov()" placeholder="自由記入（例 施工前）"><button class="bfs" onclick="boardFontStep('c',-0.1)">−</button><button class="bfs" onclick="boardFontStep('c',0.1)">＋</button></div>
       <div class="brow"><span class="blbl3">自由2</span><input class="enum binp" id="boardFree2" oninput="bov()" placeholder="自由記入"><button class="bfs" onclick="boardFontStep('d',-0.1)">−</button><button class="bfs" onclick="boardFontStep('d',0.1)">＋</button></div>
       <div class="brow"><span class="blbl3">自由3</span><input class="enum binp" id="boardFree3" oninput="bov()" placeholder="自由記入"><button class="bfs" onclick="boardFontStep('e',-0.1)">−</button><button class="bfs" onclick="boardFontStep('e',0.1)">＋</button></div>
-      <div class="brow"><span class="blbl3">会社名</span><input class="enum binp" id="boardCompany" oninput="bov()" value="河口電機株式会社"><button class="bfs" onclick="boardFontStep('f',-0.1)">−</button><button class="bfs" onclick="boardFontStep('f',0.1)">＋</button></div>
+      <div class="brow"><span class="blbl3">会社名</span><input class="enum binp" id="boardCompany" oninput="bov()" value=""><button class="bfs" onclick="boardFontStep('f',-0.1)">−</button><button class="bfs" onclick="boardFontStep('f',0.1)">＋</button></div>
     </div>
     <div class="enote" style="margin:12px 2px 84px;">黒板はドラッグで移動／ダブルタップで入力欄の表示切替。各行の −／＋ で文字サイズを調整できます。</div>
     <div class="bshoot-bar two" id="boardBarLive"><button class="savebtn hqbtn" id="boardHQBtn" onclick="boardShoot(true)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>最高画質</button><button class="savebtn" style="background:#d97b12;flex:1;" onclick="boardShoot(false)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3"/></svg>撮影してDriveに保存</button></div>
@@ -2844,6 +2846,8 @@ function aConv(from){
 
 /* ===== 共通 POST（アップロード用） ===== */
 function tbPost(obj){obj.secret=genbaSessionTok();return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)});}
+/* v43.11.0: 黒板の会社名既定値をconfig.js(COMPANY_NAME)から設定 */
+(function(){try{var bc=document.getElementById('boardCompany');if(bc&&!bc.value)bc.value=(window.GENBA_CONFIG&&window.GENBA_CONFIG.COMPANY_NAME)||'';}catch(e){}})();
 /* v43.10.1: no-cors POSTは結果が読めず失敗しても成功表示になっていたため、
    ファイル画面と同じ confirmUpload をJSONPでポーリングしてDrive保存を実確認する */
 function tbConfirmUpload(siteId,dest,name,tries,delay){
@@ -3494,7 +3498,7 @@ function boardShootCore(srcEl,vw,vh){
   rowFree(val('boardFree1'),'c',0.18);
   rowFree(val('boardFree2'),'d',0.18);
   rowFree(val('boardFree3'),'e',0.18);
-  rowCo(val('boardCompany')||'河口電機株式会社','f',0.16);
+  rowCo(val('boardCompany')||((window.GENBA_CONFIG&&window.GENBA_CONFIG.COMPANY_NAME)||''),'f',0.16);
   var jpegQ=(vw>=2000)?0.92:0.88; var withData=cvs.toDataURL('image/jpeg',jpegQ).split(',')[1];
   if(!withData||withData.length<200){toast('エラー：画像データの取得に失敗しました。');return;}
   var ts=Date.now();
@@ -4080,7 +4084,6 @@ function openBoardForCase(id){
 (function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){document.title='小黒板カメラ｜Gen-Can';boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
 
-<script src="../config.js?v=20260704-v43-10-1"></script>
-<script src="../common_ui.js?v=20260704-v43-10-1"></script>
+<script src="../common_ui.js?v=20260704-v43-11-0"></script>
 </body>
 </html>
