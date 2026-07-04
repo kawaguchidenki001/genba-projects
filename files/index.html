@@ -1,4 +1,5 @@
 <!-- Gen-Can files app v2026.06.21-43.9.12 / 案1-A 写真B64フォールバック / Code_v144 -->
+<!-- files v43.12.0 (2026-07-04) アップロード二重実行ガード追加。旧クライアントPDF台帳（写真削除処理付きデッドコード）とjspdf CDN依存を削除。GAS変更なし。 -->
 <!-- files version 53 (2026-06-21) 区分の用語を統一：官公庁→公共／民間→法人（正規化キー・アイコン・並び順・絞り込みドロップダウンを公共/法人/個人に。旧値は同義語として読み取り維持）。GAS変更なし。 -->
 <!-- files version 52 (2026-06-21) 写真表示にGAS getPhotoB64フォールバックを追加（非オーナーでも確実閲覧） -->
 <!DOCTYPE html>
@@ -317,7 +318,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.21-43.9.12</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
 <header>
   <div class="hbar">
     <a class="back" id="mainBack" href="../">← メニュー</a>
@@ -456,7 +457,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-11-0"></script>
+<script src="../config.js?v=20260704-v43-12-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.21-43.9.12';
@@ -1638,78 +1639,7 @@ function drawBoard(ctx,cw,ch){
   while(t.length>1&&ctx.measureText(t).width>vM)t=t.slice(0,-1);if(t!==r[1]&&t.length>1)t=t.slice(0,-1)+'…';
   ctx.fillText(t,x+lw,ry);});
 }
-function ledgerCover(nm){
- var W=1240,H=1754,c=document.createElement('canvas');c.width=W;c.height=H;var x=c.getContext('2d');
- var F='"Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
- x.fillStyle='#fff';x.fillRect(0,0,W,H);x.fillStyle='#14532d';x.fillRect(0,0,W,20);x.fillRect(0,H-20,W,20);
- x.textAlign='center';x.fillStyle='#1f2733';x.font='bold 66px '+F;x.fillText('工事写真台帳',W/2,H*0.30);
- x.font='bold 40px '+F;x.fillText(nm||'',W/2,H*0.42);
- x.font='28px '+F;x.fillStyle='#6b7280';x.fillText('作成日　'+bdToday().replace(/-/g,'/'),W/2,H*0.52);
- x.font='bold 32px '+F;x.fillStyle='#1f2733';x.fillText((window.GENBA_CONFIG&&window.GENBA_CONFIG.COMPANY_SHORT)||'',W/2,H*0.60);
- return c.toDataURL('image/jpeg',0.9);
-}
-function makeLedger(){
-  if(!curId){toast('案件を選んでください');return;}
-  var sd={};
-  document.querySelectorAll('#photos .ph.selected, #projectFolderGrid .ph.selected').forEach(function(el){sd[el.dataset.id]=1;});
-  if(!Object.keys(sd).length){toast('写真を選択してください');return;}
-  if(!window.jspdf||!window.jspdf.jsPDF){toast('PDF機能の読込に失敗しました');return;}
-  if(!confirm('選択した写真で台帳を作成します。\n作成後、その写真は一覧から削除（ゴミ箱へ移動）します。\nよろしいですか？'))return;
-  showLoad();
-  callGAS({action:'listPhotos',id:curId}).then(function(lp){
-    var all=(lp&&lp.photos)||[];
-    var sel=all.filter(function(x){return sd[x.id];});
-    sel.sort(function(a,b){return String(a.name||'').localeCompare(String(b.name||''));});
-    if(!sel.length){hideLoad();toast('写真を選択してください');return;}
-    var nm=(document.getElementById('pName')||{}).textContent||'';
-    var doc=new window.jspdf.jsPDF('p','mm','a4');
-    try{doc.addImage(ledgerCover(nm),'JPEG',0,0,210,297);}catch(e){}
-    var M=10,rows=3,per=rows;
-    var cellW=210-M*2,cellH=(297-M*2)/rows,capH=9,gap=3,imgH=cellH-capH-gap;
-    var SC=5,fail=0,okIds=[];
-    function step(i){
-      if(i>=sel.length){
-        var saved=false;
-        try{doc.save((nm||'写真台帳')+'_写真台帳.pdf');saved=true;}catch(e){}
-        hideLoad();
-        if(saved&&okIds.length){
-          callGAS({action:'deletePhotos',ids:okIds.join(',')}).then(function(){loadPhotos();}).catch(function(){loadPhotos();});
-          toast('台帳を作成し、'+okIds.length+'枚をゴミ箱へ移動しました'+(fail?'（'+fail+'枚は取得失敗）':''));
-        }else{
-          toast(saved?'台帳を作成しました':'台帳の作成に失敗しました');
-        }
-        return;
-      }
-      if(i%per===0)doc.addPage();
-      var pos=i%per,x=M,y=M+pos*cellH;
-      callGAS({action:'getPhotoB64',fileId:sel[i].id}).then(function(res){
-        if(!res||!res.ok||!res.b64){fail++;return step(i+1);}
-        var im=new Image();
-        im.onload=function(){
-          var cwp=Math.round(cellW*SC),ihp=Math.round(imgH*SC),chp=Math.round(capH*SC);
-          var cv=document.createElement('canvas');cv.width=cwp;cv.height=ihp+chp;
-          var g=cv.getContext('2d');
-          g.fillStyle='#fff';g.fillRect(0,0,cwp,ihp+chp);
-          var r=(im.naturalWidth/im.naturalHeight)||1.333,w=cwp,h=w/r;
-          if(h>ihp){h=ihp;w=h*r;}
-          g.drawImage(im,(cwp-w)/2,(ihp-h)/2,w,h);
-          g.fillStyle='#0f3d2e';g.fillRect(0,ihp,cwp,chp);
-          g.fillStyle='#fff';g.textBaseline='middle';
-          var fp=Math.round(chp*0.46);
-          g.font='bold '+fp+'px "Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif';
-          var cap=sel[i].name||'';
-          while(cap.length>1&&g.measureText(cap).width>cwp-24)cap=cap.slice(0,-1);
-          g.fillText(cap,14,ihp+chp/2);
-          try{doc.addImage(cv.toDataURL('image/jpeg',0.85),'JPEG',x,y,cellW,imgH+capH);okIds.push(sel[i].id);}catch(e){fail++;}
-          step(i+1);
-        };
-        im.onerror=function(){fail++;step(i+1);};
-        im.src='data:image/jpeg;base64,'+res.b64;
-      }).catch(function(){fail++;step(i+1);});
-    }
-    step(0);
-  }).catch(function(){hideLoad();toast('写真の取得に失敗しました');});
-}
+/* v43.12.0: 旧クライアントPDF台帳（写真削除処理付き）はGAS方式(makeLedgerFiles)へ移行済みのため削除 */
 function delSelected(){var ids=[];document.querySelectorAll('#photos .ph.selected, #projectFolderGrid .ph.selected').forEach(function(el){ids.push(el.dataset.id);});if(!ids.length){toast('写真を選択してください');return;}if(!confirm('選択した'+ids.length+'枚をゴミ箱に移動します。よろしいですか？'))return;callGAS({action:'deletePhotos',ids:ids.join(',')}).then(function(res){toast(((res&&res.deleted)||0)+'枚をゴミ箱に移動しました');loadPhotos();}).catch(function(){toast('削除に失敗しました');});}function togglePhSel(e){
   if(ledgerMode||initialMode==='ledger'){
     ledgerUserChangedSelection=true;
@@ -1750,7 +1680,10 @@ function confirmUploadedName(dest,name,tries,delay){
   });
 }
 
+var uploading=false;
 function uploadAll(files){
+  if(uploading){toast('アップロード中です。完了までお待ちください');return;}
+  uploading=true;
   var upPanel=document.getElementById('panel'); if(upPanel)upPanel.style.display='block';
   var arr=Array.prototype.slice.call(files),done=0,fail=0,i=0;
   var prog=document.getElementById('prog');prog.style.display='block';
@@ -1778,6 +1711,7 @@ function uploadAll(files){
   function mark(idx,ok,msg){var b=items[idx]&&items[idx].querySelector('.upst');if(b)b.textContent=ok?'✅':'❌'; if(msg){var n=items[idx]&&items[idx].querySelector('.upnm'); if(n)n.title=msg;}}
   function next(){
     if(i>=arr.length){
+      uploading=false;
       prog.textContent='アップロード完了（'+done+'件'+(fail?'／失敗'+fail:'')+'）';
       var tt=document.getElementById('upTtl');
       if(tt)tt.textContent='今回アップロードしたファイル（'+done+'件'+(fail?'／失敗'+fail:'')+'）— Drive保存確認済み';
@@ -1899,7 +1833,6 @@ if(!genbaSessionTok()){
   loadProjects(true);
 }
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="../common_ui.js?v=20260704-v43-11-0"></script>
+<script src="../common_ui.js?v=20260704-v43-12-0"></script>
 </body>
 </html>

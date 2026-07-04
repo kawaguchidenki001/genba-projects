@@ -110,7 +110,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.8.3</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
@@ -203,7 +203,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt" id="ltxt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-11-0"></script>
+<script src="../config.js?v=20260704-v43-12-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -223,7 +223,7 @@ function genbaClearSession(){try{localStorage.removeItem('genba_session');localS
 var T_GENERAL='';
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
-function esc(s){return(s==null?'':String(s)).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function esc(s){return(s==null?'':String(s)).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 var toastT;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2800);}
 var loadCnt=0;
@@ -343,7 +343,12 @@ function doLend(){
   var wsel=document.getElementById('lWorker'),wid=wsel.value,wname=wsel.selectedOptions[0]?wsel.selectedOptions[0].textContent:'';
   if(!wid){toast('持ち出す人を選んでください');return;}
   var csel=document.getElementById('lCase'),cid=csel.value,cname=csel.selectedOptions[0]?(csel.selectedOptions[0].getAttribute('data-name')||''):'';
-  var data={'道具ID':lendToolId,'道具名':t['道具名'],'数量':Number(document.getElementById('lQty').value)||1,
+  var lentQ=0;lendsOf(lendToolId).forEach(function(l){lentQ+=Number(l['数量'])||1;});
+  var restQ=(Number(t['保有数'])||1)-lentQ;
+  var qty=Number(document.getElementById('lQty').value)||1;
+  if(qty<1){toast('数量は1以上で入力してください');return;}
+  if(qty>restQ){toast('貸出可能数（'+restQ+'）を超えています');return;}
+  var data={'道具ID':lendToolId,'道具名':t['道具名'],'数量':qty,
     '作業員ID':wid,'作業員名':wname,'現場ID':cid,'現場名':cname,
     '貸出日':todayS(),'返却予定日':document.getElementById('lDue').value,'備考':document.getElementById('lNote').value.trim()};
   callGAS({action:'toolLend',data:data}).then(function(res){
@@ -427,6 +432,6 @@ function saveCache(){try{localStorage.setItem(CACHE_KEY,JSON.stringify({ok:true,
   if(c){applyData(c);loadAll(true);}else loadAll(false);
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-11-0"></script>
+<script src="../common_ui.js?v=20260704-v43-12-0"></script>
 </body>
 </html>

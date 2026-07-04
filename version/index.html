@@ -38,14 +38,14 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
 .err{background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:800;display:none;}
 @media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr);} h1{font-size:22px;}}
 </style>
-<script src="../config.js?v=20260704-v43-11-0"></script>
+<script src="../config.js?v=20260704-v43-12-0"></script>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <button class="back" onclick="location.href='../'">← メニュー</button>
     <div class="head"><div class="kicker">Gen-Can Version</div><h1>更新履歴・バージョン確認</h1></div>
-    <span class="badge" id="appBadge">v2026.06.20-43.8.3</span>
+    <span class="badge" id="appBadge">…</span>
   </div>
 
   <div class="card">
@@ -75,6 +75,7 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
   <div class="card">
     <h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">更新履歴</h2>
     <div class="list">
+      <div class="item"><div class="date">2026.07.04 / v43.12.0</div><h3>品質改善（オフライン対応ほか）</h3><ul><li>オフラインで開くと真っ白になる問題を解消（案内ページを表示）</li><li>セッション失効時にトーストで通知</li><li>アップロードの二重実行防止</li><li>不要ファイル・危険な旧コードの削除</li><li>細かな不具合修正・表記適正化</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.11.0</div><h3>販売準備・設定の一元化</h3><ul><li>社名・天気地点・GAS版数をconfig.jsで管理（河口電機固定を解消）</li><li>開発者URL直書きを相対パス化</li><li>旧バージョン表記・誤判定を一掃</li><li>ログアウト時に業務キャッシュを消去</li><li>在庫画面の表示崩れ修正</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.10.1</div><h3>致命バグ修正第1弾</h3><ul><li>AIチャット・文字起こし整文・翻訳が必ず失敗する問題を修正</li><li>日報の日付が朝9時前に前日になるUTCバグ修正</li><li>管理画面のパスワード表示を廃止（変更時のみ入力）</li><li>案件アーカイブの認証失敗を修正</li><li>黒板カメラ・録音の保存を実確認方式に</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.10.0</div><h3>ホーム刷新</h3><ul><li>「今日やること」カード＋折りたたみダッシュボード</li><li>全ページ共通のオフライン通知バナー</li><li>ログインにパスワード表示切替</li><li>PWAショートカット（日報・打刻・写真・予定）</li></ul></div>
@@ -126,7 +127,7 @@ function checkGas(){
 }
 render({},null);checkGas();
 </script>
-<script src="../common_ui.js?v=20260704-v43-11-0"></script>
+<script src="../common_ui.js?v=20260704-v43-12-0"></script>
 
 </body>
 </html>

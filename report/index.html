@@ -238,7 +238,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.21-43.9.12</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
@@ -321,7 +321,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-11-0"></script>
+<script src="../config.js?v=20260704-v43-12-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -383,7 +383,7 @@ function reload(silent){
     .then(function(){return callGAS({action:'reportData'},null,silent);})
     .then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
       projects=res.projects||[];workers=res.workers||[];reports=res.reports||[];vehicles=res.vehicles||[];saveCache();buildProjOptions();render();setSync('ok','同期済み');trySchedPre(); })
-    .catch(function(err){setSync('off','オフライン'); if(!silent){render();toast('読込失敗：'+err.message);} });
+    .catch(function(err){setSync('off','オフライン'); if(!silent){render();toast('読込失敗：'+err.message);} else if(/認証|ログイン|セッション|権限|secret|auth/i.test(String(err&&err.message||''))){toast('ログインの有効期限が切れた可能性があります。メニューへ戻って入り直してください');} });
 }
 
 function buildDateChips(){var defs=[['today','今日'],['month','今月'],['all','すべて']],w=document.getElementById('dateChips');w.innerHTML='';
@@ -954,6 +954,6 @@ loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadC
   offUpd();
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-11-0"></script>
+<script src="../common_ui.js?v=20260704-v43-12-0"></script>
 </body>
 </html>

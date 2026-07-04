@@ -1,3 +1,4 @@
+<!-- toolbox v43.12.0 (2026-07-04) 録音一覧の白文字修正・畳換算表記の適正化・esc強化・draw系は未使用のまま。GAS変更なし。 -->
 <!-- toolbox v43.11.0 (2026-07-04) config.jsを先頭読み込みに。黒板の会社名をconfig.jsから取得。アイコンリンク修正。GAS変更なし。 -->
 <!-- toolbox version 48 (2026-07-04) v43.10.1 重大バグ修正：小黒板カメラ・録音のDrive保存が失敗しても「✓保存しました」と表示されていた問題を修正（ファイル画面と同じconfirmUploadで保存を実確認）。GAS変更なし。 -->
 <!-- toolbox version 47 (2026-06-20) UI監査：小黒板カメラ戻る表示・道具箱表記・バージョン表示を整理。 -->
@@ -20,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
-<script src="../config.js?v=20260704-v43-11-0"></script>
+<script src="../config.js?v=20260704-v43-12-0"></script>
 <script>
 (function(){
   try{
@@ -355,7 +356,7 @@
   .citem .micbtn{position:static;transform:none;width:32px;height:32px;}
 </style>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.20-43.8.3</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
 
 <div class="wrap">
 
@@ -759,7 +760,7 @@
     <!-- 保存済み一覧 -->
     <div style="margin-top:20px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;">
-        <span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85);">保存済みの録音</span>
+        <span style="font-size:13px;font-weight:700;color:#5e7a92;">保存済みの録音</span>
         <button class="back2" onclick="recLoadList()">↻ 更新</button>
       </div>
       <div id="recList"><div class="empty">「↻ 更新」で一覧を読み込みます</div></div>
@@ -2014,14 +2015,14 @@
           <div id="aTo_m2_right"></div>
         </div>
         <div class="aconv">
-          <div><div class="aunit">畳（江戸間）</div><input class="afrom" id="aFrom_jou" inputmode="decimal" oninput="aConv('jou')" placeholder="例 6"></div>
+          <div><div class="aunit">畳（1畳=0.5坪換算）</div><input class="afrom" id="aFrom_jou" inputmode="decimal" oninput="aConv('jou')" placeholder="例 6"></div>
           <div class="aconv-eq">=</div>
           <div id="aTo_jou_right"></div>
         </div>
       </div>
       <div class="asep"></div>
       <div id="areaTable"></div>
-      <div class="enote" style="margin-top:10px;">1坪 ≒ 3.30579 ㎡ ／ 1畳（江戸間）≒ 1.65289 ㎡。建物の規格により畳サイズは異なります。</div>
+      <div class="enote" style="margin-top:10px;">1坪 ≒ 3.30579 ㎡ ／ 1畳 ≒ 1.65289 ㎡（1畳=0.5坪換算）。江戸間・中京間など建物の規格により実際の畳サイズは異なります。</div>
     </div>
   </div>
 
@@ -2031,7 +2032,7 @@
 <div class="toast" id="toast"></div>
 <script>
 /* ===== 共通 ===== */
-function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 var toastT;
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
 function go(id){
@@ -2769,7 +2770,7 @@ function calcKansen(){
 
 /* ===== ⑦ 坪・㎡・畳 換算 ===== */
 var A_TSUBO=3.30579;   // 1坪 = 3.30579 m2
-var A_JOU  =1.65289;   // 1畳(江戸間) = 1.65289 m2
+var A_JOU  =1.65289;   // 1畳 = 0.5坪 = 1.65289 m2（換算基準）
 
 function aFmt(n){
   if(!isFinite(n))return '—';
@@ -2792,7 +2793,7 @@ function aRenderTable(m2){
     '<tbody>'+
     '<tr><td>坪</td><td class="av">'+aFmt(tsubo)+'<div class="au">坪</div></td></tr>'+
     '<tr><td>㎡（平米）</td><td class="av">'+aFmt(m2)+'<div class="au">㎡</div></td></tr>'+
-    '<tr><td>畳（江戸間）</td><td class="av">'+aFmt(jou)+'<div class="au">畳</div></td></tr>'+
+    '<tr><td>畳（0.5坪換算）</td><td class="av">'+aFmt(jou)+'<div class="au">畳</div></td></tr>'+
     '</tbody></table>';
 }
 function setAreaMode(m){
@@ -2806,7 +2807,7 @@ function aClearAll(){
   ['tsubo','m2','jou'].forEach(function(k){
     var el=document.getElementById('aFrom_'+k); if(el)el.value='';
     var rt=document.getElementById('aTo_'+k+'_right');
-    if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(255,255,255,.45);font-size:13px;">―</span>';}
+    if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(31,58,82,.4);font-size:13px;">―</span>';}
   });
   var t=document.getElementById('areaTable'); if(t)t.innerHTML='';
 }
@@ -2816,14 +2817,14 @@ function aConv(from){
     if(k!==from){
       var el=document.getElementById('aFrom_'+k); if(el)el.value='';
       var rt=document.getElementById('aTo_'+k+'_right');
-      if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(255,255,255,.45);font-size:13px;">―</span>';}
+      if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(31,58,82,.4);font-size:13px;">―</span>';}
     }
   });
   var input=document.getElementById('aFrom_'+from);
   var v=input?parseFloat(input.value):NaN;
   if(isNaN(v)||v<0){
     var rt=document.getElementById('aTo_'+from+'_right');
-    if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(255,255,255,.45);font-size:13px;">―</span>';}
+    if(rt){rt.className='ato';rt.innerHTML='<span style="color:rgba(31,58,82,.4);font-size:13px;">―</span>';}
     document.getElementById('areaTable').innerHTML=''; return;
   }
   var m2 = from==='tsubo'?v*A_TSUBO:(from==='jou'?v*A_JOU:v);
@@ -3610,7 +3611,7 @@ function recLoadList(){
     if(!files.length){el.innerHTML='<div class="empty">この現場の録音ファイルはまだありません。</div>';return;}
     el.innerHTML=files.map(function(f){
       return '<div class="memo"><div class="m-t">'+esc(f.name)+'</div>'+
-        '<div class="m-d"><a href="'+esc(f.url)+'" target="_blank" style="color:#a8d8ff;font-size:12px;">Driveで開く／再生 →</a></div></div>';
+        '<div class="m-d"><a href="'+esc(f.url)+'" target="_blank" style="color:#1849a9;font-size:12px;font-weight:700;">Driveで開く／再生 →</a></div></div>';
     }).join('');
   }).catch(function(){el.innerHTML='<div class="empty">読み込みに失敗しました。</div>';});
 }
@@ -4084,6 +4085,6 @@ function openBoardForCase(id){
 (function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){document.title='小黒板カメラ｜Gen-Can';boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-11-0"></script>
+<script src="../common_ui.js?v=20260704-v43-12-0"></script>
 </body>
 </html>

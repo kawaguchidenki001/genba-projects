@@ -228,7 +228,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.21-43.9.12</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
@@ -334,7 +334,7 @@
 <div class="rangebar" id="rangeBar"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="../config.js?v=20260704-v43-11-0"></script>
+<script src="../config.js?v=20260704-v43-12-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 /* v43.11.0: 出力表題の社名をconfig.js(COMPANY_SHORT)から設定 */
@@ -379,7 +379,7 @@ function reload(silent){ setSync('busy','同期中…');
     projects=res.projects||[];schedules=res.schedules||[];workers=res.workers||[];customers=res.customers||[];vehicles=res.vehicles||[];
     try{localStorage.setItem('genba_cal',JSON.stringify({projects:projects,schedules:schedules,workers:workers,customers:customers,vehicles:vehicles}));}catch(e){}
     render();setSync('ok','同期済み');
-  }).catch(function(err){ if(!silent){ try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];workers=c.workers||[];customers=c.customers||[];vehicles=c.vehicles||[];}catch(e){} render(); } setSync('off','オフライン'); if(!silent)toast('読込失敗：'+err.message); }); }
+  }).catch(function(err){ if(!silent){ try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];workers=c.workers||[];customers=c.customers||[];vehicles=c.vehicles||[];}catch(e){} render(); } setSync('off','オフライン'); if(!silent)toast('読込失敗：'+err.message); else if(/認証|ログイン|セッション|権限|secret|auth/i.test(String(err&&err.message||''))){toast('ログインの有効期限が切れた可能性があります。メニューへ戻って入り直してください');} }); }
 
 function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
 function kindColor(k){return getComputedStyle(document.documentElement).getPropertyValue('--k'+k).trim()||'#6b7280';}
@@ -859,7 +859,7 @@ render();reload(hadCache);
       currentScale=s;
       mv.style.setProperty('--cal-s', String(s));
       /* v57: ピンチ拡大でヘッダー隠す */
-      if(window.innerWidth<=767){ if(s>1.0) setHdrHidden(true); else setHdrHidden(false); }
+      if(window.innerWidth<=767&&window.setHdrHidden){ if(s>1.0) window.setHdrHidden(true); else window.setHdrHidden(false); }
     }
   },{passive:false});
   function endPinch(){ if(pinching){ pinching=false; try{ localStorage.setItem(KEY, String(currentScale)); }catch(e){} } }
@@ -922,6 +922,6 @@ render();reload(hadCache);
   offUpd();
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-11-0"></script>
+<script src="../common_ui.js?v=20260704-v43-12-0"></script>
 </body>
 </html>

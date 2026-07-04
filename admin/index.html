@@ -186,7 +186,7 @@
 </style>
 </head>
 <body>
-<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">v2026.06.21-43.9.12</div>
+<div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
@@ -587,7 +587,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-11-0"></script>
+<script src="../config.js?v=20260704-v43-12-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -883,7 +883,7 @@ function setupBulkWorkers(){
   lines.reduce(function(p,line){return p.then(function(){
     var a=setupParts(line),name=a[0]||''; if(!name){failed++;return;}
     var sp=name.split(/[\s　]+/),sei=sp[0]||name,mei=sp.slice(1).join(' ');
-    var d={'氏名':name,'氏':sei,'名':mei,'略称':a[1]||sei,'区分':a[2]||'社員','所属':(a[2]==='常用'?'':'') ,'権限':(/常用|協力|外注|応援|下請/.test(a[2]||'')?'現場作業員':'社員'),'利用状態':'有効','標準単価':a[5]||'','ログインID':a[3]||'','パスワード':a[4]||''};
+    var d={'氏名':name,'氏':sei,'名':mei,'略称':a[1]||sei,'区分':a[2]||'社員','所属':'','権限':(/常用|協力|外注|応援|下請/.test(a[2]||'')?'現場作業員':'社員'),'利用状態':'有効','標準単価':a[5]||'','ログインID':a[3]||'','パスワード':a[4]||''};
     return callGAS({action:'addWorker',data:d},null,true).then(function(res){if(res&&res.ok){workers.push(res.worker);added++;}else failed++;}).catch(function(){failed++;});
   });},Promise.resolve()).then(function(){
     admSaveCache();render();document.getElementById('su_workers').value='';setupRefreshProgress();toast('作業員を追加：'+added+'件'+(failed?' / 失敗 '+failed+'件':''));
@@ -1319,6 +1319,6 @@ function deleteCompDoc(id){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-11-0"></script>
+<script src="../common_ui.js?v=20260704-v43-12-0"></script>
 </body>
 </html>
