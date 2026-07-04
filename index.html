@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.07.04-43.13.0 / 自社用・販売用エディション切替（config.jsのEDITION）。販売用では自社専用ページを非表示＋ブロック。自社用はログイン画面に「自社用モード」目印 / Code_v157 -->
+<!-- Gen-Can root app v2026.07.04-43.13.1 / 自社用の簡素化：こまったとき(FAQ・サポート)非表示・デモボタン削除・管理者ダッシュボード非表示（自社用のみ。販売用は維持） / Code_v157 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -175,7 +175,6 @@
         <button type="button" id="pwEye" onclick="togglePw()" aria-label="パスワードを表示" style="position:absolute;right:5px;top:50%;transform:translateY(-50%);width:44px;height:44px;padding:0;border:none;border-radius:10px;background:transparent;box-shadow:none;color:#5e7a92;font-size:19px;cursor:pointer;">👁</button>
       </div>
       <button id="lgbtn" type="submit">ログイン</button>
-      <button type="button" onclick="location.href='./demo/'" style="margin-top:10px;background:#edf3fa;color:#1f5fa8;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #ffffff;">デモモードで確認</button>
     </form>
     <div style="font-size:11px;color:#6b7280;margin-top:10px;line-height:1.55;">Chrome・Edge等で保存すると、次回から指紋・顔認証で自動入力できます。</div>
     <div id="loginVer" style="font-size:10.5px;color:#7a8da1;margin-top:6px;font-family:Manrope,sans-serif;letter-spacing:.04em;">…</div>
@@ -272,7 +271,7 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260704-v43-13-0"></script>
+<script src="./config.js?v=20260704-v43-13-1"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
@@ -330,6 +329,8 @@ function applyRootPermissions(u){
   // v43.13.0: 販売用(customer)では自社専用ページ(config.jsのVENDOR_PAGES)をホームから除外
   var _ed=(window.GENBA_CONFIG&&String(window.GENBA_CONFIG.EDITION||'vendor').toLowerCase())||'vendor';
   if(_ed==='customer'){ ((window.GENBA_CONFIG&&window.GENBA_CONFIG.VENDOR_PAGES)||[]).forEach(function(k){delete allow[String(k).toLowerCase()];}); }
+  // v43.13.1: 自社用(vendor)では「こまったとき」のFAQ・サポート依頼を非表示（開発元自身には不要）
+  if(_ed==='vendor'){ delete allow['faq']; delete allow['support']; }
   document.querySelectorAll('a.sq').forEach(function(a){
     var k=genbaMenuKeyFromHref(a.getAttribute('href')||'');
     if(!k)return;
@@ -411,8 +412,10 @@ function setErr(m){document.getElementById('lgerr').textContent=m||'';}
 function showMenu(u){var lg=document.getElementById('login');if(lg)lg.style.display='none';var w=document.querySelector('.wrap');if(w)w.style.display='block';
   document.getElementById('meName').textContent=u&&u['氏名']?u['氏名']+' さん':'';applyRootPermissions(u);
   // 今日やること・ダッシュボード（売掛など経営情報を含むため管理者・現場責任者のみ）
+  // v43.13.1: 自社用(vendor)ではダッシュボードを表示しない（不要とのご要望）。販売用は従来どおり表示。
   var role=genbaRoleFromUser(u);
-  if(role==='admin'||role==='manager'){try{loadDash();}catch(e){}}}
+  var _edD=(window.GENBA_CONFIG&&String(window.GENBA_CONFIG.EDITION||'vendor').toLowerCase())||'vendor';
+  if(_edD!=='vendor' && (role==='admin'||role==='manager')){try{loadDash();}catch(e){}}}
 function showLogin(){var w=document.querySelector('.wrap');if(w)w.style.display='none';var lg=document.getElementById('login');if(lg)lg.style.display='flex';}
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
@@ -674,6 +677,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260704-v43-13-0"></script>
+<script src="./common_ui.js?v=20260704-v43-13-1"></script>
 </body>
 </html>
