@@ -1,32 +1,36 @@
 {
   "appName": "Gen-Can",
-  "appVersion": "v2026.07.04-43.12.1",
-  "build": "20260704-v43-12-1",
+  "appVersion": "v2026.07.04-43.13.0",
+  "build": "20260704-v43-13-0",
   "gasFile": "Code_v157.gs",
   "updatedAt": "2026-07-04",
-  "summary": "v43.12.1 仕上げ（README納品手順書・別ドメイン対応のホーム判定・残骸コードのガード）",
+  "summary": "v43.13.0 自社用/販売用エディション切替（config.jsのEDITIONで自社専用ページを表示/非表示）",
   "changedFiles": [
-    "README.md",
-    "common_ui.js",
-    "toolbox/index.html",
-    "projects/index.html",
     "config.js",
+    "common_ui.js",
+    "index.html",
+    "version/index.html",
+    "README.md",
     "version.json",
     "（全ページ）キャッシュバスター更新"
   ],
   "changes": [
-    "README.md（アプリ概要・納品手順書・更新手順・販売前必須確認）を追加",
-    "別ドメイン・別リポジトリ名で配信してもホーム画面の判定が働くようcommon_ui.jsを改善",
-    "ツールボックスの図面メモ残骸・案件画面の共有UI残骸にクラッシュ防止ガードを追加"
+    "config.jsに EDITION 設定を追加：'vendor'（自社用・全ページ）/ 'customer'（販売用・自社専用ページを非表示）",
+    "販売用では自社専用ページ（sales/demo/legal/rollout/finalcheck/operations/update/diagnosis/backup）をホームと各画面のリンクから隠す",
+    "販売用で自社専用ページを直リンクで開いた場合はブロック画面を表示（メニューへ戻る導線つき）",
+    "ログイン画面のデモボタン・お客様向けページ内の該当リンクも販売用では自動で非表示",
+    "自社用のときはログイン画面に「自社用モード」の目印を表示（販売用への切替忘れ防止）",
+    "隠すページ一覧は config.js の VENDOR_PAGES で調整可能"
   ],
-  "fileBadge": "v2026.07.04-43.12.1",
+  "fileBadge": "v2026.07.04-43.13.0",
   "updated": "2026-07-04",
   "gasVersion": "v157",
   "highlights": [
     "GAS側の変更は不要です",
-    "納品手順はリポジトリ直下の README.md を参照してください"
+    "販売先へ納品するパッケージを作るときは config.js の EDITION を 'customer' に変更してください",
+    "自社（河口電機）用はこれまで通り EDITION: 'vendor' のままで全機能が使えます"
   ],
   "requiredFiles": [],
-  "version": "v2026.07.04-43.12.1",
+  "version": "v2026.07.04-43.13.0",
   "gas": "Code_v157.gs"
 }

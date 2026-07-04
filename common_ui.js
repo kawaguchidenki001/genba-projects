@@ -10,6 +10,50 @@
   var isSub = !isRoot;
   var rootHref = isRoot ? './' : '../';
 
+  // ===== v43.13.0: 自社用/販売用エディション =====
+  // 'customer'（販売用）では自社専用ページを隠し・直リンクをブロックする。
+  var GC_EDITION = String(cfg.EDITION || 'vendor').toLowerCase();
+  var GC_VENDOR = {};
+  (cfg.VENDOR_PAGES || []).forEach(function(p){ GC_VENDOR[String(p).toLowerCase()] = 1; });
+  function gcSeg_(loc){
+    var pn = String(loc || '').replace(/[?#].*$/, '').replace(/\/index\.html?$/i, '');
+    var parts = pn.split('/').filter(Boolean);
+    return parts.length ? parts[parts.length - 1].toLowerCase() : '';
+  }
+  if(GC_EDITION === 'customer'){
+    // (1) 自社専用ページを直接開いた場合はブロック画面に差し替え
+    if(GC_VENDOR[gcSeg_(path)]){
+      try{
+        document.title = 'ご利用いただけません';
+        document.body.innerHTML =
+          '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px;'
+          + 'font-family:\'Zen Kaku Gothic New\',sans-serif;color:#1f3a52;background:#e8ecf2;">'
+          + '<div><div style="font-size:40px;margin-bottom:10px;">🔒</div>'
+          + '<div style="font-size:18px;font-weight:800;margin-bottom:6px;">この画面はご利用いただけません</div>'
+          + '<div style="font-size:13.5px;color:#5e7a92;line-height:1.7;margin-bottom:18px;">管理用の画面です。<br>ご不明な点は担当者へお問い合わせください。</div>'
+          + '<a href="' + rootHref + '" style="display:inline-block;padding:12px 26px;border-radius:12px;'
+          + 'background:linear-gradient(92deg,#06b6d4,#2563eb 60%,#7c3aed);color:#fff;font-weight:800;text-decoration:none;">メニューへ戻る</a>'
+          + '</div></div>';
+      }catch(e){ try{ location.replace(rootHref); }catch(_){} }
+      return; // 以降の共通UI処理は実行しない
+    }
+    // (2) お客様向けページ内の自社専用ページへのリンク・ボタンを隠す
+    var gcHideVendorEntries = function(){
+      try{
+        Array.prototype.forEach.call(document.querySelectorAll('a[href]'), function(a){
+          if(GC_VENDOR[gcSeg_(a.getAttribute('href') || '')]) a.style.display = 'none';
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('button[onclick],[data-href],[onclick]'), function(b){
+          var s = (b.getAttribute('onclick') || '') + ' ' + (b.getAttribute('data-href') || '');
+          var m = s.match(/['"]([^'"]*\/([a-z]+)\/[^'"]*)['"]/i);
+          if(m && GC_VENDOR[String(m[2]).toLowerCase()]) b.style.display = 'none';
+        });
+      }catch(e){}
+    };
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', gcHideVendorEntries);
+    else gcHideVendorEntries();
+  }
+
   // viewport未指定ページのスマホ縮小表示を防ぐ
   var viewport = document.querySelector('meta[name="viewport"]');
   if(!viewport){
@@ -31,6 +75,11 @@
     var el = document.getElementById(id);
     if(el) el.textContent = appVersion;
   });
+  // v43.13.0: 自社用モードのときだけログイン画面に控えめな目印（販売用への切替忘れ防止）
+  if(GC_EDITION === 'vendor'){
+    var _lv = document.getElementById('loginVer');
+    if(_lv) _lv.textContent = appVersion + '　自社用モード';
+  }
 
   // 既存の「メニュー」「更新」ボタンを見た目だけ少し統一
   Array.prototype.slice.call(document.querySelectorAll('a,button')).forEach(function(el){

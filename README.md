@@ -24,10 +24,21 @@ Googleスプレッドシート（データ） ＋ Googleドライブ（ファイ
 | 項目 | 内容 |
 |---|---|
 | `APP_VERSION` / `BUILD` | アプリのバージョン。**ファイルを更新したら必ず変更**（全ページのバッジに反映） |
+| `EDITION` | **自社用／販売用の切替**。`'vendor'`=自社用（全ページ表示）／`'customer'`=販売用（自社専用ページを非表示） |
+| `VENDOR_PAGES` | 販売用で隠す自社専用ページ一覧（通常は変更不要） |
 | `GAS_URL` | Google Apps Script のデプロイURL |
 | `COMPANY_NAME` / `COMPANY_SHORT` | 会社名（帳票・画面表示に使用） |
 | `WEATHER_LAT` / `WEATHER_LON` / `WEATHER_PLACE` | 天気予報の地点 |
 | `GAS_FILE` | 使用中のGASファイル名（診断画面が照合に使用） |
+
+### 自社用 / 販売用エディション（EDITION）
+
+同じコードベースで、開発元（自社）用と販売先（お客様）用を切り替えられます。
+
+- **`EDITION: 'vendor'`（自社用）**：全ページ表示。ログイン画面に「自社用モード」の目印が出ます。河口電機の日常利用はこちら。
+- **`EDITION: 'customer'`（販売用）**：`VENDOR_PAGES` に挙げた自社専用ページ（料金メモ `sales`、営業デモ `demo`、規約たたき台 `legal`、導入/最終チェック `rollout`/`finalcheck`、運用センター `operations`、更新手順 `update`、診断 `diagnosis`、バックアップ `backup`）を**ホーム・各画面のリンクから隠し、直リンクで開いてもブロック画面**を表示します。ログインのデモボタンも消えます。
+
+**販売先へ納品するときは `EDITION: 'customer'` に変更**してから配信してください（他の `COMPANY_*` 等と一緒に config.js を書き換えるだけです）。
 
 ## 販売先への納品手順（新規セットアップ）
 

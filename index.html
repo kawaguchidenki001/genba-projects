@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.07.04-43.11.0 / 販売準備：社名表示をconfig.js(COMPANY_NAME)から取得・ログアウト時に業務キャッシュ消去（忘れ物メモは残す）・アイコン/manifestを相対パス化 / Code_v157 -->
+<!-- Gen-Can root app v2026.07.04-43.13.0 / 自社用・販売用エディション切替（config.jsのEDITION）。販売用では自社専用ページを非表示＋ブロック。自社用はログイン画面に「自社用モード」目印 / Code_v157 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -272,7 +272,7 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260704-v43-12-1"></script>
+<script src="./config.js?v=20260704-v43-13-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
@@ -327,6 +327,9 @@ function genbaMenuKeyFromHref(href){
 }
 function applyRootPermissions(u){
   var role=genbaRoleFromUser(u), allow=genbaAllowedMenu(role);
+  // v43.13.0: 販売用(customer)では自社専用ページ(config.jsのVENDOR_PAGES)をホームから除外
+  var _ed=(window.GENBA_CONFIG&&String(window.GENBA_CONFIG.EDITION||'vendor').toLowerCase())||'vendor';
+  if(_ed==='customer'){ ((window.GENBA_CONFIG&&window.GENBA_CONFIG.VENDOR_PAGES)||[]).forEach(function(k){delete allow[String(k).toLowerCase()];}); }
   document.querySelectorAll('a.sq').forEach(function(a){
     var k=genbaMenuKeyFromHref(a.getAttribute('href')||'');
     if(!k)return;
@@ -671,6 +674,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260704-v43-12-1"></script>
+<script src="./common_ui.js?v=20260704-v43-13-0"></script>
 </body>
 </html>
