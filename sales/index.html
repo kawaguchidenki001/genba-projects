@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- sales v43.14.1 (2026-07-04) 特商法の表示情報6項目（運営責任者・所在地・電話・支払方法・支払時期・解約条件）の入力欄を追加。既存saveSettingsで保存、GAS変更なし。 -->
 <!-- sales settings page app v2026.06.20-43.8.3 Code_v143 -->
 <html lang="ja">
 <head>
@@ -12,7 +13,7 @@
 :root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--blue:#2563eb;--pink:#db2777;--ok:#15803d;--warn:#b45309;--ng:#dc2626;--line:#d4e4f0}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15px;line-height:1.65}.wrap{max-width:980px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 110px}.top{display:flex;align-items:center;gap:10px;margin-bottom:14px}.back{width:42px;height:42px;border-radius:14px;border:0;background:#e8ecf2;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #fff;color:#1f5fa8;font-size:20px;font-weight:900;cursor:pointer}.head{flex:1;min-width:0}.kicker{font-family:Manrope,sans-serif;font-weight:900;letter-spacing:.18em;font-size:10px;color:var(--sub);text-transform:uppercase}h1{font-size:24px;color:#1f5fa8;line-height:1.25}.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;background:#dfeaf6;color:#1f5fa8;font-family:Manrope,sans-serif;font-size:11px;font-weight:900;padding:5px 10px}.card{background:#e8ecf2;border-radius:18px;box-shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #fff;padding:16px;margin:14px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:grid;gap:5px}.field.full{grid-column:1/-1}label{font-size:12px;color:var(--sub);font-weight:900}input,textarea,select{width:100%;border:0;border-radius:13px;background:#f5f9fd;color:var(--ink);font-size:15px;padding:12px 13px;box-shadow:inset 3px 3px 7px #d5dbe4,inset -3px -3px 7px #fff}textarea{min-height:92px;resize:vertical}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}.btn{border:0;border-radius:14px;padding:12px 16px;font-weight:900;background:linear-gradient(92deg,#06b6d4,#2563eb 62%,#7c3aed);color:#fff;box-shadow:4px 4px 9px #cdd3dc,-4px -4px 9px #fff;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px}.btn.secondary{background:#edf3fa;color:#1f5fa8}.btn.pink{background:linear-gradient(92deg,#ec4899,#db2777)}.status{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:900}.status.ok{background:#dcfce7;color:var(--ok)}.status.warn{background:#fef3c7;color:var(--warn)}.status.ng{background:#fee2e2;color:var(--ng)}.note{background:#edf7ff;border:1px solid #d7e7f8;border-radius:14px;padding:12px;color:#35566f;font-size:13px;font-weight:700}.check{display:grid;gap:9px}.check .row{display:flex;align-items:flex-start;gap:10px;background:#f5f9fd;border:1px solid #dbe8f3;border-radius:14px;padding:11px}.mark{width:26px;height:26px;border-radius:999px;background:#dbeafe;color:#1f5fa8;display:flex;align-items:center;justify-content:center;font-weight:900;flex:0 0 26px}.small{font-size:12.5px;color:var(--sub)}.err{display:none;background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px;margin-top:12px;font-weight:900}.okbox{display:none;background:#dcfce7;color:#166534;border-radius:14px;padding:12px;margin-top:12px;font-weight:900}.loading{position:fixed;inset:0;background:rgba(232,236,242,.72);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(3px)}.loading.show{display:flex}.spin{width:44px;height:44px;border-radius:999px;border:5px solid #dbe8f3;border-top-color:#2563eb;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}@media(max-width:760px){.grid,.form{grid-template-columns:1fr}.actions .btn{flex:1 1 100%}h1{font-size:22px}.top{align-items:flex-start}}
 </style>
-<script src="../config.js?v=20260704-v43-14-0"></script>
+<script src="../config.js?v=20260704-v43-14-1"></script>
 </head>
 <body>
 <div class="loading" id="loading"><div class="spin"></div></div>
@@ -30,6 +31,14 @@
       <div class="field full"><label>サポート範囲</label><textarea id="supportScope">初期設定、基本操作説明、軽微な不具合確認、Google Drive/スプレッドシート連携の確認</textarea></div>
       <div class="field full"><label>対象外の作業</label><textarea id="outOfScope">お客様側Googleアカウントの契約管理、端末故障、通信環境不良、個別大規模カスタム、第三者サービス仕様変更による影響</textarea></div>
     </div></div>
+    <div class="card"><h2 style="font-size:18px;color:#1f5fa8;margin-bottom:10px">特定商取引法の表示情報</h2><p class="small" style="margin-bottom:10px">有料販売では法律上の必須表示です。すべて記入して保存すると、規約プレビューの特商法たたき台に自動反映されます。</p><div class="form">
+      <div class="field"><label>運営責任者</label><input id="opsManager" placeholder="例）河口 太郎"></div>
+      <div class="field"><label>電話番号</label><input id="sellerTel" placeholder="例）058-000-0000"></div>
+      <div class="field full"><label>所在地</label><input id="sellerAddr" placeholder="例）岐阜県岐阜市〇〇町1-2-3"></div>
+      <div class="field full"><label>支払方法</label><input id="payMethod" placeholder="例）銀行振込"></div>
+      <div class="field full"><label>支払時期</label><input id="payTiming" placeholder="例）当月利用分を翌月末日までにお支払い"></div>
+      <div class="field full"><label>解約条件</label><textarea id="cancelTerms" placeholder="例）解約を希望する月の前月末日までにご連絡ください。日割り精算は行いません。"></textarea></div>
+    </div></div>
     <div class="card"><h2 style="font-size:18px;color:#1f5fa8;margin-bottom:10px">規約・販売リンク</h2><div class="form">
       <div class="field full"><label>利用規約URL</label><input id="termsUrl" placeholder="https://..."></div>
       <div class="field full"><label>プライバシーポリシーURL</label><input id="privacyUrl" placeholder="https://..."></div>
@@ -42,7 +51,7 @@
 </div>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.20-43.8.3';var BUILD_ID=(window.GENBA_CONFIG&&window.GENBA_CONFIG.BUILD)||'20260620-v43-8-3-cache-lock';document.getElementById('appBadge').textContent=APP_VERSION;
-var map={serviceName:'販売_サービス名',monthlyFee:'販売_月額料金',initialFee:'販売_初期設定費',trial:'販売_無料お試し',sellerName:'販売_販売会社名',supportEmail:'販売_問い合わせメール',supportScope:'販売_サポート範囲',outOfScope:'販売_対象外作業',termsUrl:'販売_利用規約URL',privacyUrl:'販売_プライバシーポリシーURL',commerceUrl:'販売_特商法URL',orderUrl:'販売_申込フォームURL',salesMemo:'販売_メモ'};
+var map={serviceName:'販売_サービス名',monthlyFee:'販売_月額料金',initialFee:'販売_初期設定費',trial:'販売_無料お試し',sellerName:'販売_販売会社名',supportEmail:'販売_問い合わせメール',supportScope:'販売_サポート範囲',outOfScope:'販売_対象外作業',termsUrl:'販売_利用規約URL',privacyUrl:'販売_プライバシーポリシーURL',commerceUrl:'販売_特商法URL',orderUrl:'販売_申込フォームURL',salesMemo:'販売_メモ',opsManager:'販売_運営責任者',sellerAddr:'販売_所在地',sellerTel:'販売_電話番号',payMethod:'販売_支払方法',payTiming:'販売_支払時期',cancelTerms:'販売_解約条件'};
 function showLoad(v){document.getElementById('loading').classList.toggle('show',!!v)}function setErr(t){var e=document.getElementById('err');e.style.display=t?'block':'none';e.textContent=t||''}function setOk(t){var e=document.getElementById('okbox');e.style.display=t?'block':'none';e.textContent=t||''}
 function session(){try{return JSON.parse(localStorage.getItem('genba_session')||'null');}catch(e){return null}}function getSecret(){var s=session();return (s&&(s.token||s.secret))||localStorage.getItem('genba_admin')||''}
 function jsonp(params){return new Promise(function(resolve,reject){if(!GAS_URL){reject(new Error('config.js の GAS_URL が空です'));return}var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6);params=params||{};params.callback=cb;params.secret=getSecret();params._ts=Date.now();params._build=BUILD_ID;var s=document.createElement('script'),timer=setTimeout(function(){finish('timeout')},30000),done=false;function finish(kind,res){if(done)return;done=true;clearTimeout(timer);try{delete window[cb]}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);if(kind==='ok'){if(res&&res.ok===false)reject(new Error(res.error||'GASエラー'));else resolve(res||{})}else reject(new Error(kind==='timeout'?'タイムアウト':'通信エラー'))}window[cb]=function(res){finish('ok',res)};s.onerror=function(){finish('error')};s.src=GAS_URL+'?'+Object.keys(params).map(function(k){var v=params[k];if(typeof v==='object')v=JSON.stringify(v);return encodeURIComponent(k)+'='+encodeURIComponent(v)}).join('&');document.head.appendChild(s)})}
@@ -50,6 +59,6 @@ function loadSettings(){setErr('');setOk('');showLoad(true);jsonp({action:'setti
 function saveSales(){setErr('');setOk('');var data={};Object.keys(map).forEach(function(id){data[map[id]]=document.getElementById(id).value||''});showLoad(true);jsonp({action:'saveSettings',data:data}).then(function(){showLoad(false);setOk('販売設定を保存しました。規約プレビューにも反映されます。');document.getElementById('mainStatus').className='status ok';document.getElementById('mainStatus').textContent='保存済み';}).catch(function(e){showLoad(false);setErr(e.message+'。保存には管理者権限が必要です。')})}
 loadSettings();
 </script>
-<script src="../common_ui.js?v=20260704-v43-14-0"></script>
+<script src="../common_ui.js?v=20260704-v43-14-1"></script>
 </body>
 </html>
