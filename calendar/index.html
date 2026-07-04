@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- calendar v43.17.1 (2026-07-04) 不具合修正：スマホで月表示が縦一列に崩れる問題を修正。共通UI(common_ui.js)の「スマホで.gridを1列化」ルールが月マス(7列 .grid)を巻き込んでいたため、月グリッドにcal-gridクラスを付与し除外(:not(.cal-grid))。GAS変更なし。 -->
 <!-- calendar v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- calendar v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- calendar v43.11.0 (2026-07-04) 出力表題の社名と天気の地点をconfig.jsから取得（河口電機・岐阜固定を解消）。GAS変更なし。 -->
@@ -260,7 +261,7 @@
     <div class="cap-head"><span class="cap-co" id="capCo">スケジュール</span><span class="cap-period" id="capPeriod"></span></div>
     <div class="wk" id="wkRow"><div class="sun">日</div><div>月</div><div>火</div><div>水</div><div>木</div><div>金</div><div class="sat">土</div></div>
     <div id="monthView">
-      <div class="grid" id="grid"></div>
+      <div class="grid cal-grid" id="grid"></div>
     </div>
     <div id="agendaView" style="display:none;"></div>
   </div>
@@ -336,7 +337,7 @@
 <div class="rangebar" id="rangeBar"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="../config.js?v=20260704-v43-17-0"></script>
+<script src="../config.js?v=20260704-v43-17-1"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 /* v43.11.0: 出力表題の社名をconfig.js(COMPANY_SHORT)から設定 */
@@ -924,6 +925,6 @@ render();reload(hadCache);
   offUpd();
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-17-0"></script>
+<script src="../common_ui.js?v=20260704-v43-17-1"></script>
 </body>
 </html>

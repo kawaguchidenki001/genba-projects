@@ -1,6 +1,7 @@
 /* Gen-Can common UI / E-Multicolor v1.1 (2026-07-04) / バージョンはconfig.jsで一元管理 */
 /* 既存ニューモーフィズム維持 + タイルアイコンを機能別カラーグラデーション化 */
 /* v1.1: 全ページ共通のオフライン通知バナーを追加（現場の電波切れ対策） */
+/* v43.17.1: スマホの.grid一列化ルールにカレンダー月グリッド(.cal-grid)の除外を追加（月表示の縦一列崩れを修正） */
 (function(){
   'use strict';
   var cfg = window.GENBA_CONFIG || {};
@@ -249,7 +250,7 @@
       .gc-common-ui button,.gc-common-ui .btn,.gc-common-ui a.btn,.gc-common-ui [role="button"]{min-height:44px}
       .gc-common-ui table{min-width:720px}
       .gc-common-ui .gc-table-scroll + .gc-scroll-hint{display:block}
-      .gc-common-ui .grid:not(.ledger-photo-grid):not(.photo-grid),.gc-common-ui .cards,.gc-common-ui .tiles,.gc-common-ui .list-grid{grid-template-columns:1fr!important}
+      .gc-common-ui .grid:not(.ledger-photo-grid):not(.photo-grid):not(.cal-grid),.gc-common-ui .cards,.gc-common-ui .tiles,.gc-common-ui .list-grid{grid-template-columns:1fr!important}
       .gc-common-ui .hide-mobile{display:none!important}
       .gc-common-ui .show-mobile{display:block!important}
     }
