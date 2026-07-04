@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
-<script src="../config.js?v=20260704-v43-14-1"></script>
+<script src="../config.js?v=20260704-v43-15-0"></script>
 <script>
 (function(){
   try{
@@ -400,7 +400,7 @@
       <h2>現場メモ</h2>
     </div>
     <div class="sitebar" id="memoSiteBar"></div>
-    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この案件情報を開く</button>
+    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この現場情報を開く</button>
     <button class="addbtn" onclick="newNote()">＋ 新しいメモ</button>
     <div id="noteList"></div>
   </div>
@@ -413,7 +413,7 @@
       <span class="del" onclick="deleteNote()">削除</span>
     </div>
     <div class="sitebar" id="editSiteBar"></div>
-    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この案件情報を開く</button>
+    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この現場情報を開く</button>
     <label class="slbl">タイトル（何のメモか）</label>
     <div class="micwrap"><input id="noteTitle" placeholder="例：配線確認のメモ" autocapitalize="off"><button type="button" class="micbtn" data-mic="noteTitle" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div>
     <div class="modeseg">
@@ -448,7 +448,7 @@
       <h2>現場チェックリスト</h2>
     </div>
     <div class="sitebar" id="checkSiteBar"></div>
-    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この案件情報を開く</button>
+    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この現場情報を開く</button>
     <button class="addbtn" onclick="newCheck()">＋ 新しいチェックリスト</button>
     <div id="checkList"></div>
   </div>
@@ -461,7 +461,7 @@
       <span class="del" onclick="deleteCheck()">削除</span>
     </div>
     <div class="sitebar" id="checkEditSiteBar"></div>
-    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この案件情報を開く</button>
+    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この現場情報を開く</button>
     <label class="slbl">タイトル（何のチェックか）</label>
     <div class="micwrap"><input id="checkTitle" placeholder="例：着工前チェック" autocapitalize="off"><button type="button" class="micbtn" data-mic="checkTitle" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div>
     <label class="slbl">項目（チェックを入れると完了）</label>
@@ -479,7 +479,7 @@
       <span style="width:36px;"></span>
     </div>
     <div class="sitebar" id="matSiteBar"></div>
-    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この案件情報を開く</button>
+    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この現場情報を開く</button>
     <button class="additem" onclick="newMat()">＋ 新しい材料リスト</button>
     <div id="matList"></div>
   </div>
@@ -492,7 +492,7 @@
       <span class="del" onclick="deleteMat()">削除</span>
     </div>
     <div class="sitebar" id="matEditSiteBar"></div>
-    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この案件情報を開く</button>
+    <button class="linkbtn" onclick="openCaseInProjects()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/></svg>この現場情報を開く</button>
     <label class="slbl">タイトル（何の材料か）</label>
     <input id="matTitle" placeholder="例：1F配線材料" autocapitalize="off">
     <label class="slbl">材料（チェックで手配済み）</label>
@@ -2237,7 +2237,7 @@ function renderSelStep(){
     if(lead)lead.textContent='種別を選んでください。';
     if(crumb)crumb.style.display='none';
     var kinds=uniqVals(tbProjects.filter(isActiveProj).map(function(p){return p['種別'];}));
-    if(!kinds.length){list.innerHTML='<div class="empty">案件データがありません。</div>';return;}
+    if(!kinds.length){list.innerHTML='<div class="empty">現場データがありません。</div>';return;}
     list.innerHTML=kinds.map(function(k){return '<button class="linkbtn" data-v="'+esc(k)+'" onclick="selPickKindBtn(this)">'+esc(k)+'</button>';}).join('');
   } else if(selStep===1){
     if(lead)lead.textContent='会社を選んでください。';
@@ -3212,7 +3212,7 @@ function boardEasyPicked(input){
 }
 function boardEasySave(){
   if(!boardEasyImg){toast('先に「写真を撮る」で撮影してください');return;}
-  if(!boardSiteId){toast('エラー：案件が未選択です。← で戻って選び直してください。');return;}
+  if(!boardSiteId){toast('エラー：現場が未選択です。← で戻って選び直してください。');return;}
   boardShootCore(boardEasyImg, boardEasyImg.naturalWidth, boardEasyImg.naturalHeight);
 }
 function startBoardCamera(){
@@ -3423,7 +3423,7 @@ function shutterSound(){
 function boardShoot(hq){
   var vid=document.getElementById('boardVideo');
   if(!vid||!vid.videoWidth){toast('カメラが準備できていません');return;}
-  if(!boardSiteId){toast('エラー：案件が未選択です。← で戻って選び直してください。');return;}
+  if(!boardSiteId){toast('エラー：現場が未選択です。← で戻って選び直してください。');return;}
   /* 高画質モード：ImageCapture でフル解像度静止画を取得してから描画 */
   if(hq&&boardTrack&&typeof ImageCapture!=='undefined'){
     toast('最高画質で撮影中…');
@@ -3449,7 +3449,7 @@ function boardShoot(hq){
   boardShootCore(vid,vid.videoWidth,vid.videoHeight);
 }
 function boardShootCore(srcEl,vw,vh){
-  if(!boardSiteId){toast('エラー：案件が未選択です。');return;}
+  if(!boardSiteId){toast('エラー：現場が未選択です。');return;}
   var sw,sh,sx,sy;
   if(vw/vh>=4/3){ sh=vh; sw=Math.round(vh*4/3); } else { sw=vw; sh=Math.round(vw*3/4); }
   sx=Math.round((vw-sw)/2); sy=Math.round((vh-sh)/2);
@@ -3959,7 +3959,7 @@ function openBoardForCase(id){
     try{localStorage.setItem(PROJ_KEY,JSON.stringify(ps));}catch(e){}
     var p=ps.filter(function(x){return String(x['案件ID'])===String(id);})[0];
     if(p){ curSite={id:p['案件ID'],name:p['案件名']||'',cust:p['顧客']||''}; openBoardCamera(); }
-    else { toast('案件が見つかりませんでした'); go('p-home'); }
+    else { toast('現場が見つかりませんでした'); go('p-home'); }
   }).catch(function(){ toast('読み込みに失敗しました'); go('p-home'); }).then(function(){hideLoad();});
 }
 
@@ -4089,6 +4089,6 @@ function openBoardForCase(id){
 (function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){document.title='小黒板カメラ｜Gen-Can';boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-14-1"></script>
+<script src="../common_ui.js?v=20260704-v43-15-0"></script>
 </body>
 </html>

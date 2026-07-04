@@ -1,7 +1,7 @@
 {
   "name": "Gen-Can 現場管理",
   "short_name": "Gen-Can",
-  "description": "案件・作業日報・勤怠・工事写真・工程表をひとつで管理する現場管理アプリ",
+  "description": "現場・作業日報・勤怠・工事写真・工程表をひとつで管理する現場管理アプリ",
   "lang": "ja",
   "start_url": "/genba-projects/",
   "scope": "/genba-projects/",

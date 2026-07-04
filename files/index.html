@@ -457,7 +457,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-14-1"></script>
+<script src="../config.js?v=20260704-v43-15-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.21-43.9.12';
@@ -673,7 +673,7 @@ function loadProjects(silent){
 function buildSel(){ buildCand(); buildProj(); renderDriveHome(); }
 function buildCand(){ var t=document.getElementById('f_ctype').value,sel=document.getElementById('f_cand'),cur=sel.value;
   var list=customers.filter(function(c){return !t||categoryKey(c['区分'])===categoryKey(t);});
-  sel.innerHTML='<option value="">（取引先を選択）</option>';
+  sel.innerHTML='<option value="">（顧客を選択）</option>';
   list.forEach(function(c){var nm=String(c['顧客名']||'');if(!nm)return;var o=document.createElement('option');o.value=nm;o.textContent=nm;sel.appendChild(o);}); sel.value=cur; }
 function buildProj(){ var cust=document.getElementById('f_cand').value,s=document.getElementById('projSel'),cur=s.value;
   var list=projects.filter(function(p){return !cust||String(p['顧客']||'')===cust;});
@@ -1175,7 +1175,7 @@ function clearLedgerResult(){
   var dock=document.getElementById('ledgerDock'); if(dock)dock.classList.remove('hasResult');
 }
 function buildLedgerFiles(fmt){
-  if(!curId){toast('案件を選んでください');return;}
+  if(!curId){toast('現場を選んでください');return;}
   var ids=collectLedgerSelectedIds();
   if(!ids.length){toast('写真を選択してください');return;}
   var nm=(document.getElementById('pName')||{}).textContent||'';
@@ -1233,7 +1233,7 @@ function renderLedgerHistory_(rows){
 
 function showPhotos(){showDriveBrowser();}
 function showDriveBrowser(){
-  if(!curId){toast('案件を選んでください');return;}
+  if(!curId){toast('現場を選んでください');return;}
   if(!folderReady){toast('準備中です。少し待ってください');return;}
   ledgerMode=false; ledgerCandidateOnly=false;
   document.getElementById('gridArea').style.display='block';
@@ -1245,7 +1245,7 @@ function showDriveBrowser(){
   loadGenericDriveRoot();
 }
 function showLedger(){
-  if(!curId){toast('案件を選んでください');return;}
+  if(!curId){toast('現場を選んでください');return;}
   if(!folderReady){toast('準備中です。少し待ってください');return;}
   ledgerMode=true; ledgerCandidateOnly=false;
   updateFileAddDock();
@@ -1833,6 +1833,6 @@ if(!genbaSessionTok()){
   loadProjects(true);
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-14-1"></script>
+<script src="../common_ui.js?v=20260704-v43-15-0"></script>
 </body>
 </html>

@@ -196,7 +196,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-14-1"></script>
+<script src="../config.js?v=20260704-v43-15-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -344,7 +344,7 @@ function renderList(){
     '<div><div class="k">原価合計</div><div class="v">'+yen(tCost)+'</div></div>'+
     '<div><div class="k">粗利（'+tRate.toFixed(1)+'%）</div><div class="v">'+yen(tProf)+'</div></div></div>';
   var el=document.getElementById('list');
-  if(!rows.length){el.innerHTML='<div class="empty">該当する案件がありません。</div>';return;}
+  if(!rows.length){el.innerHTML='<div class="empty">該当する現場がありません。</div>';return;}
   rows.sort(function(a,b){return String(b['案件ID']).localeCompare(String(a['案件ID']));});
   el.innerHTML=rows.map(function(p){
     var c=calc(p),st=String(p['ステータス']||'受注');
@@ -420,7 +420,7 @@ function renderDetail(){
 // ===== 原価の登録・編集 =====
 function costById(id){for(var i=0;i<costs.length;i++)if(String(costs[i]['原価ID'])===String(id))return costs[i];return null;}
 function openCostSheet(id){
-  if(!curId){toast('案件を選んでください');return;}
+  if(!curId){toast('現場を選んでください');return;}
   editId=id||'';
   var x=editId?costById(editId):null;
   document.getElementById('shTitle').textContent=x?'原価の編集':'原価の登録';
@@ -493,6 +493,6 @@ function exportCsv(){
 document.getElementById('ov').addEventListener('click',function(e){if(e.target===this)closeSheet();});
 init();
 </script>
-<script src="../common_ui.js?v=20260704-v43-14-1"></script>
+<script src="../common_ui.js?v=20260704-v43-15-0"></script>
 </body>
 </html>

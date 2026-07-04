@@ -322,7 +322,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-14-1"></script>
+<script src="../config.js?v=20260704-v43-15-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -631,7 +631,7 @@ function renderSum(list){
     if(isKyo(r['区分'])){var k=r['所属']||r['氏名']||'協力業者';if(!byKyo[k])byKyo[k]={nk:0};byKyo[k].nk+=numv(r['人工']);}});
   var el=document.getElementById('sum'),html='';
   var ps=Object.keys(byProj).sort(function(a,b){return byProj[b].nk-byProj[a].nk;});
-  html+='<div class="sumcard"><h3>案件別 人工</h3>';
+  html+='<div class="sumcard"><h3>現場別 人工</h3>';
   if(!ps.length)html+='<div class="empty" style="padding:14px;">データなし</div>';
   ps.forEach(function(k){var o=byProj[k];html+='<div class="srow"><span class="nm">'+esc(o.name)+'</span><span class="ry">'+round2(o.nk)+' 人工'+(o.ynk>0?'（深夜 '+round2(o.ynk)+'）':'')+'</span></div>';});
   html+='</div>';
@@ -692,7 +692,7 @@ function checkedWorkers(){var cbs=document.querySelectorAll('#wmFld .wcb:checked
   return out;}
 
 function openForm(pid,date){   // pid・date 指定で編集、未指定で新規
-  if(!projects.length){toast('先に案件管理で現場を登録してください');return;}
+  if(!projects.length){toast('先に現場管理で現場を登録してください');return;}
   if(!workers.length){toast('作業員が未登録です。管理画面で登録してください');return;}
   var g=function(id){return document.getElementById(id);};
   var editing=!!(pid!=null&&date);
@@ -957,6 +957,6 @@ loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadC
   offUpd();
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-14-1"></script>
+<script src="../common_ui.js?v=20260704-v43-15-0"></script>
 </body>
 </html>

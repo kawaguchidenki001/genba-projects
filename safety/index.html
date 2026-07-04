@@ -281,9 +281,9 @@
       <button onclick="tab('edit')">作業員情報を編集</button>
       <button class="on" onclick="tab('taisei')">施工体制台帳</button>
     </div>
-    <p class="lead">案件を選ぶと、その案件の下請業者を登録して施工体制台帳・再下請負通知書のPDFを作成できます。</p>
-    <label class="lbl">案件を選ぶ</label>
-    <select class="inp" id="dkCaseSelect" onchange="dkSelectCase()"><option value="">（案件を選択）</option></select>
+    <p class="lead">現場を選ぶと、その現場の下請業者を登録して施工体制台帳・再下請負通知書のPDFを作成できます。</p>
+    <label class="lbl">現場を選ぶ</label>
+    <select class="inp" id="dkCaseSelect" onchange="dkSelectCase()"><option value="">（現場を選択）</option></select>
     <div id="dkCaseContent" style="display:none;">
       <button class="pdfbtn" onclick="dkMakePdf()" style="margin-top:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5"/></svg>施工体制台帳 PDFを作成</button>
       <div class="dk-sec-hd">一次下請業者</div>
@@ -351,7 +351,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt" id="ltxt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-14-1"></script>
+<script src="../config.js?v=20260704-v43-15-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -705,7 +705,7 @@ function dkInit(){
 function dkRenderCaseSelect(){
   var sel=document.getElementById('dkCaseSelect'); if(!sel)return;
   var prev=sel.value;
-  sel.innerHTML='<option value="">（案件を選択）</option>'+(dkDB.projects||[]).map(function(p){return '<option value="'+esc(p['案件ID'])+'">'+esc(p['案件名']||p['案件ID'])+'</option>';}).join('');
+  sel.innerHTML='<option value="">（現場を選択）</option>'+(dkDB.projects||[]).map(function(p){return '<option value="'+esc(p['案件ID'])+'">'+esc(p['案件名']||p['案件ID'])+'</option>';}).join('');
   if(prev)sel.value=prev;
 }
 function dkSelectCase(){
@@ -818,7 +818,7 @@ function dkDeleteSub(id){
   }).catch(function(e){toast('削除失敗：'+e.message);});
 }
 function dkMakePdf(){
-  if(!dkCurCase){toast('案件を選択してください');return;}
+  if(!dkCurCase){toast('現場を選択してください');return;}
   callGAS({action:'taiseiPdf',caseId:dkCurCase},admTok(),false).then(function(r){
     if(!r.ok)throw new Error(r.error||'失敗');
     toast('PDF作成完了');setTimeout(function(){window.open(r.pdfUrl,'_blank');},400);
@@ -876,6 +876,6 @@ function dkDeleteDoc(id){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-14-1"></script>
+<script src="../common_ui.js?v=20260704-v43-15-0"></script>
 </body>
 </html>

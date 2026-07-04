@@ -282,7 +282,7 @@
       <div id="evdBody"></div>
       <div class="evd-side">
         <button class="btn primary" onclick="evdEdit()">編集</button>
-        <button class="btn sub" id="evdLinkBtn" onclick="evdOpenProject()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>案件情報</button>
+        <button class="btn sub" id="evdLinkBtn" onclick="evdOpenProject()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg>現場情報</button>
       </div>
     </div>
     <div class="acts"><button class="btn sub" onclick="closeEvD()">閉じる</button></div>
@@ -334,7 +334,7 @@
 <div class="rangebar" id="rangeBar"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="../config.js?v=20260704-v43-14-1"></script>
+<script src="../config.js?v=20260704-v43-15-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 /* v43.11.0: 出力表題の社名をconfig.js(COMPANY_SHORT)から設定 */
@@ -586,7 +586,7 @@ function openDay(ds){ window._selDate=ds; hideRangeBar();
     var who=ownerShort(e['担当']);
     var info='<div class="dc-title"><span class="cdot" style="background:'+projAccent(e['案件ID'])+'"></span>'+esc(e['案件名']||projShort(e['案件ID'],e['案件名'])||'(予定)')+'</div>'+
       '<div class="det-time">'+esc(timeLabel(e))+(e['区分']?' ・ '+esc(e['区分']):'')+'</div>'+
-      (p['顧客']?'<div class="det-row"><span class="det-lbl">取引先</span>'+esc(p['顧客'])+'</div>':'')+
+      (p['顧客']?'<div class="det-row"><span class="det-lbl">顧客</span>'+esc(p['顧客'])+'</div>':'')+
       (p['場所']?'<div class="det-row"><span class="det-lbl">場所</span>'+esc(p['場所'])+'</div>':'')+
       (e['予定内容']?'<div class="det-row"><span class="det-lbl">作業内容</span>'+esc(e['予定内容'])+'</div>':'')+
       (who?'<div class="det-row"><span class="det-lbl">作業員</span>'+esc(who)+'</div>':'')+
@@ -595,7 +595,7 @@ function openDay(ds){ window._selDate=ds; hideRangeBar();
     card.innerHTML='<div class="dc-info">'+info+'</div>'+
       '<div class="evd-side"><button class="btn dc-copy">📋 コピー</button>'+
       '<button class="btn dc-edit">編集</button>'+
-      (e['案件ID']?'<button class="btn dc-link">📁 案件情報</button>':'')+
+      (e['案件ID']?'<button class="btn dc-link">📁 現場情報</button>':'')+
       (e['案件ID']?'<button class="btn dc-rep" style="color:#1a7a4a;border-color:#9fd4b8;">📝 日報作成</button>':'')+
       '<button class="btn dc-del">予定削除</button></div>';
     card.querySelector('.dc-copy').onclick=(function(ev){return function(){copyEvent(ev);};})(e);
@@ -723,7 +723,7 @@ function openEventDetail(e){ evdCur=e;
   var p=projects.filter(function(x){return String(x['案件ID'])===String(e['案件ID']);})[0]||{};
   var h='<div class="det-time">'+esc(timeLabel(e))+(e['区分']?' ・ '+esc(e['区分']):'')+'</div>';
   h+='<div class="det-row"><span class="det-lbl">日付</span>'+esc(fmtDate(e))+'</div>';
-  if(p['顧客'])h+='<div class="det-row"><span class="det-lbl">取引先</span>'+esc(p['顧客'])+'</div>';
+  if(p['顧客'])h+='<div class="det-row"><span class="det-lbl">顧客</span>'+esc(p['顧客'])+'</div>';
   if(p['場所'])h+='<div class="det-row"><span class="det-lbl">場所</span>'+esc(p['場所'])+'</div>';
   if(e['予定内容'])h+='<div class="det-row"><span class="det-lbl">作業内容</span>'+esc(e['予定内容'])+'</div>';
   var who=ownerShort(e['担当']);if(who)h+='<div class="det-row"><span class="det-lbl">作業員</span>'+esc(who)+'</div>';
@@ -755,7 +755,7 @@ function openEvent(e,presetDate){
 /* 種別 → 候補（取引先）→ 現場名 のカスケード */
 function buildCand(){ var t=document.getElementById('f_ctype').value,s=document.getElementById('f_cand');
   var list=customers.filter(function(c){return !t||String(c['区分']||'')===t;});
-  s.innerHTML='<option value="">（取引先を選択）</option>';
+  s.innerHTML='<option value="">（顧客を選択）</option>';
   list.forEach(function(c){var nm=String(c['顧客名']||'');if(!nm)return;var o=document.createElement('option');o.value=nm;o.textContent=nm;s.appendChild(o);}); }
 function isActiveProj(p){var st=String(p['ステータス']||'').trim();return st!=='完了'&&st!=='請求済';}
 function buildProjByCust(keepId){ var cust=document.getElementById('f_cand').value,s=document.getElementById('f_proj');
@@ -922,6 +922,6 @@ render();reload(hadCache);
   offUpd();
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-14-1"></script>
+<script src="../common_ui.js?v=20260704-v43-15-0"></script>
 </body>
 </html>

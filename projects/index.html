@@ -25,7 +25,7 @@
 <meta charset="UTF-8">
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>案件管理｜Gen-Can</title>
+<title>現場管理｜Gen-Can</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
@@ -230,14 +230,14 @@
   .hmark{font-size:15px;}
   .back{font-size:11.5px;padding:9px 14px;}
 </style>
-<script src="../config.js?v=20260704-v43-14-1"></script>
+<script src="../config.js?v=20260704-v43-15-0"></script>
 </head>
 <body>
 <div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
 <header>
   <div class="hbar">
     <a class="back" href="../">← メニュー</a>
-    <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span><span class="htxt"><span class="en">Projects</span><span class="nm">案件管理</span></span></div>
+    <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h8M8 15h5"/></svg></span><span class="htxt"><span class="en">Projects</span><span class="nm">現場管理</span></span></div>
     <div class="hright"><span class="hmark">Gen-Can</span><button class="hrf" onclick="reload()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
   </div>
   <div class="hd2">
@@ -250,7 +250,7 @@
 <div id="gate" style="position:fixed;inset:0;z-index:100;background:#fff;display:none;align-items:center;justify-content:center;">
   <div style="max-width:360px;text-align:center;padding:0 18px;">
     <div><svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#5b5bd6" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10a10 10 0 0 1 15 0M7.5 13a6 6 0 0 1 9 0"/><circle cx="12" cy="16.5" r="1.6"/></svg></div>
-    <h2 style="font-size:18px;margin:10px 0 6px;">案件管理</h2>
+    <h2 style="font-size:18px;margin:10px 0 6px;">現場管理</h2>
     <p id="gateMsg" style="color:#6b7280;font-size:14px;margin:0 0 16px;">確認中…</p>
     <button onclick="location.reload()" style="width:100%;padding:13px;border:none;border-radius:11px;background:#0f5fb5;color:#fff;font-size:15px;font-weight:700;cursor:pointer;">再読み込み</button>
     <p style="margin-top:14px;"><a href="../" style="color:#6b7280;font-size:13px;">← 現場管理メニューへ戻る</a></p>
@@ -268,7 +268,7 @@
   <div id="list"></div>
 </main>
 
-<button class="fab" id="fab" onclick="openProject()" style="display:none;">＋ 新規案件</button>
+<button class="fab" id="fab" onclick="openProject()" style="display:none;">＋ 新規現場</button>
 
 <!-- ドライブ取込モーダル -->
 <div class="ov" id="ovImport">
@@ -285,13 +285,13 @@
 <!-- 案件モーダル -->
 <div class="ov" id="ov">
   <div class="sheet">
-    <h2 id="mTitle">新規案件</h2>
+    <h2 id="mTitle">新規現場</h2>
     <input type="hidden" id="f_id">
     <div class="fld"><label>区分 *</label><select id="f_type">
       <option>公共</option><option>法人</option><option>個人</option></select></div>
-    <div class="fld"><label>顧客 ／ 取引先</label>
+    <div class="fld"><label>顧客</label>
       <select id="f_cust" onchange="onCustChange()"></select>
-      <input id="f_cust_other" style="display:none;margin-top:6px;" placeholder="一覧にない取引先を直接入力"></div>
+      <input id="f_cust_other" style="display:none;margin-top:6px;" placeholder="一覧にない顧客を直接入力"></div>
     <div class="fld"><label>現場名 *</label><input id="f_name" placeholder="例）不破高等学校空調設備更新工事"></div>
     <div class="fld"><label>略称（日報・予定表に表示）</label><input id="f_short" placeholder="例）不破高 空調"></div>
     <div class="two">
@@ -321,7 +321,7 @@
       <button class="btn sub" onclick="closeOv()">キャンセル</button>
       <button class="btn primary" id="saveBtn" onclick="saveProject()">保存</button>
     </div>
-    <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="delProject(event)">この案件を削除</a></div>
+    <div class="row-del" id="delRow" style="display:none;"><a href="#" onclick="delProject(event)">この現場を削除</a></div>
   </div>
 </div>
 
@@ -362,17 +362,17 @@
       <div class="ctc" id="d_ctc">
         <a id="d_line" class="cbtn lw" target="_blank" rel="noopener" style="display:none;"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-3.3-.5L3 21l1.4-4a8 8 0 0 1-1.4-4.5A8.4 8.4 0 0 1 12 3.1a8.4 8.4 0 0 1 9 8.4Z"/></svg></span>LINE WORKSを開く</a>
       </div>
-      <div class="d-secttl" id="arcTtl" style="display:none;">案件の保管と削除</div>
+      <div class="d-secttl" id="arcTtl" style="display:none;">現場の保管と削除</div>
       <div id="arcPanel" style="display:none;background:#fff7ed;border:1px solid #f0c674;border-radius:12px;padding:13px 15px;">
         <div style="font-size:12.5px;color:#92400e;font-weight:700;line-height:1.7;margin-bottom:10px;">完了した現場のデータをNASなどへ保管してから、システムから削除する手順です。<br>① 保管用Excelを作成 → ② Driveフォルダをダウンロードして保管 → ③ システムから削除</div>
         <button class="cbtn" style="width:100%;justify-content:center;margin-bottom:7px;" onclick="arcExport()"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 8 9-4 9 4v8l-9 4-9-4Z"/><path d="m3 8 9 4 9-4M12 12v8"/></svg></span>① 保管用Excelを作成</button>
         <a id="arcFolder" class="cbtn" target="_blank" rel="noopener" style="width:100%;justify-content:center;margin-bottom:7px;display:none;"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></svg></span>② Driveフォルダを開く（右上⋮→ダウンロード）</a>
         <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:4px 2px 10px;"><input type="checkbox" id="arcTrash" checked style="width:18px;height:18px;">削除時にDriveのフォルダもゴミ箱に入れる</label>
-        <button class="cbtn" style="width:100%;justify-content:center;color:#c0392b;border-color:#e3b7b0;" onclick="arcPurge()"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M10 11v6M14 11v6"/></svg></span>③ この案件をシステムから削除</button>
+        <button class="cbtn" style="width:100%;justify-content:center;color:#c0392b;border-color:#e3b7b0;" onclick="arcPurge()"><span class="ci"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13M10 11v6M14 11v6"/></svg></span>③ この現場をシステムから削除</button>
         <div style="font-size:11.5px;color:#92400e;margin-top:7px;">※③は元に戻せません。必ず②の保管が終わってから実行してください。</div>
       </div>
 
-      <div class="d-secttl">案件情報</div>
+      <div class="d-secttl">現場情報</div>
       <div class="d-rows" id="d_rows"></div>
 
       <div class="d-secttl">工程管理</div>
@@ -545,7 +545,7 @@ function buildCustList(){
     arr.sort(function(a,b){return String(a['顧客名']||'').localeCompare(String(b['顧客名']||''),'ja');});
     arr.forEach(function(c){var o=document.createElement('option');o.value=c['顧客名'];o.textContent=c['顧客名'];og.appendChild(o);});
     sel.appendChild(og);});
-  var ot=document.createElement('option');ot.value='__other__';ot.textContent='＋ 一覧にない取引先を直接入力';sel.appendChild(ot);
+  var ot=document.createElement('option');ot.value='__other__';ot.textContent='＋ 一覧にない顧客を直接入力';sel.appendChild(ot);
   if(keep){ sel.value=keep; }
 }
 function buildContactSelect(partner){
@@ -581,7 +581,7 @@ var BASE=new URL('../',location.href).href;
 var NOCUST='（未分類）';
 function isAdmin(){return ROLE==='admin';}
 function custKey(p){var c=String(p['顧客']||'').trim();return c||NOCUST;}
-function openPhotos(p){ if(!p||!p['案件ID']){toast('案件IDがありません');return;} location.href=BASE+'files/?case='+encodeURIComponent(p['案件ID']); }
+function openPhotos(p){ if(!p||!p['案件ID']){toast('現場IDがありません');return;} location.href=BASE+'files/?case='+encodeURIComponent(p['案件ID']); }
 function editProjectById(id){var p=projects.filter(function(x){return String(x['案件ID'])===String(id);})[0];if(p)openProject(p);}
 function openCaseFromUrl(){ try{ var m=location.search.match(/[?&]case=([^&]+)/); if(!m)return; var id=decodeURIComponent(m[1]);
   var p=projects.filter(function(x){return String(x['案件ID'])===String(id);})[0];
@@ -933,7 +933,7 @@ function openKouteiForm(id){
 }
 function closeKouteiForm(){ document.getElementById('ovk').classList.remove('show'); }
 function saveKouteiForm(){
-  if(!curDetail){ toast('案件が選択されていません'); return; }
+  if(!curDetail){ toast('現場が選択されていません'); return; }
   var name=document.getElementById('k_name').value.trim();
   if(!name){ toast('工程名を入力してください'); return; }
   var sd=document.getElementById('k_start').value, ed=document.getElementById('k_end').value;
@@ -989,7 +989,7 @@ function render(){
   if(filterKubun!=='すべて') list=list.filter(function(p){return String(p['種別']||'').trim()===filterKubun;});
   document.getElementById('count').textContent= list.length+' 件';
   var el=document.getElementById('list');
-  if(!list.length){el.innerHTML='<div class="empty">該当する現場がありません。<br>右下の「＋新規案件」から登録できます。</div>';return;}
+  if(!list.length){el.innerHTML='<div class="empty">該当する現場がありません。<br>右下の「＋新規現場」から登録できます。</div>';return;}
   // 会社名・自治体名ごとにグループ化
   var groups={},order=[];
   list.forEach(function(p){var k=custKey(p);if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(p);});
@@ -1021,7 +1021,7 @@ function render(){
 
 /* ===== 案件モーダル ===== */
 function openProject(p){
-  document.getElementById('mTitle').textContent= p?'案件の編集':'新規案件';
+  document.getElementById('mTitle').textContent= p?'現場の編集':'新規現場';
   document.getElementById('delRow').style.display= p?'block':'none';
   var g=function(id){return document.getElementById(id);};
   g('f_id').value   = p?(p['案件ID']||''):'';
@@ -1088,7 +1088,7 @@ function delProject(ev){
   ev.preventDefault();
   var id=document.getElementById('f_id').value;
   if(!id)return;
-  if(!confirm('この案件を削除します。よろしいですか？'))return;
+  if(!confirm('この現場を削除します。よろしいですか？'))return;
   callGAS({action:'deleteProject',id:id}).then(function(res){
     if(!res.ok)throw new Error(res.error||'削除失敗');
     projects=projects.filter(function(p){return p['案件ID']!==id;});
@@ -1267,6 +1267,6 @@ callGAS({action:'checkRole'},null,hadCacheP).then(function(res){
 }).catch(function(){ setSync('off','オフライン'); });
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-14-1"></script>
+<script src="../common_ui.js?v=20260704-v43-15-0"></script>
 </body>
 </html>

@@ -216,7 +216,7 @@
     <button class="tab on" id="tab-adminhome" onclick="switchTab('adminhome')">管理ホーム</button>
     <button class="tab" id="tab-worker" onclick="switchTab('worker')">作業員</button>
     <button class="tab" id="tab-setup" onclick="switchTab('setup')">初期設定</button>
-    <button class="tab" id="tab-partner" onclick="switchTab('partner')">取引先</button>
+    <button class="tab" id="tab-partner" onclick="switchTab('partner')">顧客</button>
     <button class="tab" id="tab-contact" onclick="switchTab('contact')">先方担当者</button>
     <button class="tab" id="tab-vehicle" onclick="switchTab('vehicle')">車両</button>
     <button class="tab" id="tab-supplier" onclick="switchTab('supplier')">仕入先</button>
@@ -228,11 +228,11 @@
   <div id="sec-adminhome">
     <div class="admin-home-hero">
       <h2>管理ホーム</h2>
-      <p>作業員・取引先・担当者・車両などの登録状況をまとめて確認できます。販売前・導入時の確認にも使いやすいように整理しました。</p>
+      <p>作業員・顧客・担当者・車両などの登録状況をまとめて確認できます。販売前・導入時の確認にも使いやすいように整理しました。</p>
     </div>
     <div class="admin-metrics" id="adminMetrics">
       <div class="admin-metric"><div class="label">作業員</div><div class="num">-</div><div class="mini">読込中</div></div>
-      <div class="admin-metric"><div class="label">取引先</div><div class="num">-</div><div class="mini">読込中</div></div>
+      <div class="admin-metric"><div class="label">顧客</div><div class="num">-</div><div class="mini">読込中</div></div>
       <div class="admin-metric"><div class="label">担当者</div><div class="num">-</div><div class="mini">読込中</div></div>
       <div class="admin-metric"><div class="label">車両</div><div class="num">-</div><div class="mini">読込中</div></div>
     </div>
@@ -240,16 +240,16 @@
       <h3>すぐに登録</h3>
       <div class="admin-action-grid">
         <button class="admin-action" onclick="switchTab('worker');openWorker();">＋ 作業員<small>社員・常用・ログイン権限を登録</small></button>
-        <button class="admin-action" onclick="switchTab('partner');openPartner();">＋ 取引先<small>公共・法人・個人を登録</small></button>
+        <button class="admin-action" onclick="switchTab('partner');openPartner();">＋ 顧客<small>公共・法人・個人を登録</small></button>
         <button class="admin-action" onclick="switchTab('vehicle');openVehicle();">＋ 車両<small>車検・保険・オイル交換を管理</small></button>
-        <button class="admin-action" onclick="switchTab('contact');openContact();">＋ 担当者<small>取引先ごとの連絡先を登録</small></button>
+        <button class="admin-action" onclick="switchTab('contact');openContact();">＋ 担当者<small>顧客ごとの連絡先を登録</small></button>
         <button class="admin-action" onclick="switchTab('supplier');setTimeout(function(){openSupplier('');},250);">＋ 仕入先<small>電材店・外注・リース会社を登録</small></button>
         <button class="admin-action" onclick="switchTab('setup');">初期設定<small>導入時のまとめ登録へ</small></button>
       </div>
     </div>
     <div class="admin-panel">
       <h3>マスタ横断検索</h3>
-      <div class="admin-search"><input id="adminSearchInput" placeholder="作業員・取引先・担当者・車両を検索" oninput="adminSearch()"><button onclick="adminSearch()">検索</button></div>
+      <div class="admin-search"><input id="adminSearchInput" placeholder="作業員・顧客・担当者・車両を検索" oninput="adminSearch()"><button onclick="adminSearch()">検索</button></div>
       <div id="adminSearchResults" class="admin-results"><div class="empty" style="padding:12px;">キーワードを入れると、各マスタをまとめて検索できます。</div></div>
     </div>
     <div class="admin-panel">
@@ -261,12 +261,12 @@
   <div id="sec-setup" style="display:none;">
     <div class="setup-hero">
       <h2>初期設定ウィザード</h2>
-      <p>導入時に最低限必要な「会社情報・作業員・車両・取引先」を順番に登録します。あとから各マスタ画面で編集できます。</p>
+      <p>導入時に最低限必要な「会社情報・作業員・車両・顧客」を順番に登録します。あとから各マスタ画面で編集できます。</p>
       <div class="setup-progress" id="setupProgress">
         <div class="setup-step" id="sp-company">1 会社情報</div>
         <div class="setup-step" id="sp-worker">2 作業員</div>
         <div class="setup-step" id="sp-vehicle">3 車両</div>
-        <div class="setup-step" id="sp-partner">4 取引先</div>
+        <div class="setup-step" id="sp-partner">4 顧客</div>
         <div class="setup-step" id="sp-finish">5 完了</div>
       </div>
     </div>
@@ -312,13 +312,13 @@
       </div>
 
       <div class="setup-card" id="setup-partner-card">
-        <h3>4. 取引先をまとめて追加</h3>
-        <p class="hint">取引先名だけでも登録できます。区分は「公共・法人・個人」のいずれかを入れてください。未入力時は法人になります。</p>
-        <div class="setup-mini"><span class="setup-pill">現在 <b id="suPartnerCount">0</b> 件</span><span class="setup-pill">形式：取引先名, 区分, 電話, 住所, 備考</span></div>
+        <h3>4. 顧客をまとめて追加</h3>
+        <p class="hint">顧客名だけでも登録できます。区分は「公共・法人・個人」のいずれかを入れてください。未入力時は法人になります。</p>
+        <div class="setup-mini"><span class="setup-pill">現在 <b id="suPartnerCount">0</b> 件</span><span class="setup-pill">形式：顧客名, 区分, 電話, 住所, 備考</span></div>
         <textarea id="su_partners" placeholder="岐阜市役所, 公共, 058-000-0000, 岐阜県岐阜市〇〇町, 公共工事&#10;〇〇建設株式会社, 法人&#10;△△工場, 法人"></textarea>
         <div class="setup-actions">
           <button class="btn sub" onclick="setupSample('partners')">入力例を入れる</button>
-          <button class="btn primary" id="setupPartnerBtn" onclick="setupBulkPartners()">取引先を追加</button>
+          <button class="btn primary" id="setupPartnerBtn" onclick="setupBulkPartners()">顧客を追加</button>
         </div>
       </div>
 
@@ -327,7 +327,7 @@
         <p class="hint">最低限の登録ができたら、現場登録・予定登録・日報入力へ進めます。</p>
         <div class="setup-finish" id="setupFinishText">登録状況を確認中…</div>
         <div class="setup-links">
-          <a class="setup-link" href="../projects/">案件管理へ</a>
+          <a class="setup-link" href="../projects/">現場管理へ</a>
           <a class="setup-link" href="../calendar/">予定表へ</a>
           <a class="setup-link" href="../report/">日報へ</a>
         </div>
@@ -344,11 +344,11 @@
     <div id="list"><div class="empty">読込中…</div></div>
   </div>
   <div id="sec-partner" style="display:none;">
-    <div class="sec">取引先マスタ（公共／法人／個人）</div>
+    <div class="sec">顧客マスタ（公共／法人／個人）</div>
     <div id="listP"><div class="empty">読込中…</div></div>
   </div>
   <div id="sec-contact" style="display:none;">
-    <div class="sec">先方担当者マスタ（取引先ごとの担当者）</div>
+    <div class="sec">先方担当者マスタ（顧客ごとの担当者）</div>
     <div id="listK"><div class="empty">読込中…</div></div>
   </div>
   <div id="sec-vehicle" style="display:none;">
@@ -371,15 +371,15 @@
 
   <div id="sec-restore" style="display:none;">
     <div class="sec">削除済みデータの復元</div>
-    <p style="font-size:13px;color:#64748b;margin:0 0 12px;line-height:1.6;">v103以降で削除した案件・日報・予定・マスタなどは完全削除せず、ここから復元できます。写真はGoogleドライブのゴミ箱から復元してください。</p>
+    <p style="font-size:13px;color:#64748b;margin:0 0 12px;line-height:1.6;">v103以降で削除した現場・日報・予定・マスタなどは完全削除せず、ここから復元できます。写真はGoogleドライブのゴミ箱から復元してください。</p>
     <div class="rcbar" style="margin-bottom:10px;">
       <button class="rcseg on" data-rtype="" onclick="restoreFilter('')">すべて</button>
-      <button class="rcseg" data-rtype="projects" onclick="restoreFilter('projects')">案件</button>
+      <button class="rcseg" data-rtype="projects" onclick="restoreFilter('projects')">現場</button>
       <button class="rcseg" data-rtype="reports" onclick="restoreFilter('reports')">日報</button>
       <button class="rcseg" data-rtype="schedules" onclick="restoreFilter('schedules')">予定</button>
       <button class="rcseg" data-rtype="workers" onclick="restoreFilter('workers')">作業員</button>
       <button class="rcseg" data-rtype="vehicles" onclick="restoreFilter('vehicles')">車両</button>
-      <button class="rcseg" data-rtype="customers" onclick="restoreFilter('customers')">取引先</button>
+      <button class="rcseg" data-rtype="customers" onclick="restoreFilter('customers')">顧客</button>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:10px;"><button class="btn sub" onclick="loadDeletedRows()">再読み込み</button></div>
     <div id="restoreList"><div class="empty">「復元」を開くと削除済みデータを読み込みます。</div></div>
@@ -458,10 +458,10 @@
 <!-- 取引先モーダル -->
 <div class="ov" id="ovp">
   <div class="sheet">
-    <h2 id="pTitle">取引先の追加</h2>
+    <h2 id="pTitle">顧客の追加</h2>
     <input type="hidden" id="p_id">
     <div class="fld"><label>区分 *</label><select id="p_kind"><option>公共</option><option>法人</option><option>個人</option></select></div>
-    <div class="fld"><label>取引先名 *</label><input id="p_name" placeholder="例）㈱井上デンキ工事 / 岐阜市"></div>
+    <div class="fld"><label>顧客名 *</label><input id="p_name" placeholder="例）㈱井上デンキ工事 / 岐阜市"></div>
     <div class="two">
       <div class="fld"><label>電話</label><input id="p_tel" inputmode="tel"></div>
       <div class="fld"><label>住所</label><input id="p_addr"></div>
@@ -472,7 +472,7 @@
       <button class="btn sub" onclick="closeP()">キャンセル</button>
       <button class="btn primary" id="pSaveBtn" onclick="savePartner()">保存</button>
     </div>
-    <div class="row-del" id="pDelRow" style="display:none;"><a href="#" onclick="delPartner(event)">この取引先を削除</a></div>
+    <div class="row-del" id="pDelRow" style="display:none;"><a href="#" onclick="delPartner(event)">この顧客を削除</a></div>
   </div>
 </div>
 
@@ -481,7 +481,7 @@
   <div class="sheet">
     <h2 id="kTitle">先方担当者の追加</h2>
     <input type="hidden" id="k_id">
-    <div class="fld"><label>取引先 *</label><select id="k_partner"></select></div>
+    <div class="fld"><label>顧客 *</label><select id="k_partner"></select></div>
     <div class="two">
       <div class="fld"><label>担当者名 *</label><input id="k_name" placeholder="例）山田 太郎"></div>
       <div class="fld"><label>役職</label><input id="k_role" placeholder="例）工事課長"></div>
@@ -577,7 +577,7 @@
   <div class="sheet">
     <div style="text-align:center;line-height:1;margin-bottom:8px;"><svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 2 20h20Z"/><path d="M12 9v5M12 17.4v.2"/></svg></div>
     <h2 style="color:#b91c1c;margin-top:0;">全データを削除します</h2>
-    <p class="danger-txt" style="text-align:center;">案件・取引先・先方担当者・作業員・作業日報・スケジュール・勤怠を完全に削除します。<b>元に戻せません。</b><br>※ 写真・ファイル（Google Drive内）は削除されません。</p>
+    <p class="danger-txt" style="text-align:center;">現場・顧客・先方担当者・作業員・作業日報・スケジュール・勤怠を完全に削除します。<b>元に戻せません。</b><br>※ 写真・ファイル（Google Drive内）は削除されません。</p>
     <div class="acts">
       <button class="btn sub" onclick="closeClearModal()">キャンセル</button>
       <button class="btn primary" id="delConfirmBtn" style="background:#dc2626;" onclick="doClearAll()">削除する</button>
@@ -587,7 +587,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-14-1"></script>
+<script src="../config.js?v=20260704-v43-15-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -769,7 +769,7 @@ function switchTab(t){ curTab=t;
   });
   var canAdd=(t==='worker'||t==='partner'||t==='contact'||t==='vehicle'||t==='supplier');
   document.getElementById('fab').style.display=canAdd?'block':'none';
-  document.getElementById('fab').textContent= t==='worker'?'＋ 作業員' : t==='partner'?'＋ 取引先' : t==='contact'?'＋ 担当者' : t==='vehicle'?'＋ 車両' : '＋ 仕入先';
+  document.getElementById('fab').textContent= t==='worker'?'＋ 作業員' : t==='partner'?'＋ 顧客' : t==='contact'?'＋ 担当者' : t==='vehicle'?'＋ 車両' : '＋ 仕入先';
   if(t==='supplier'&&!sLoaded){loadSuppliers();sLoaded=true;}
   if(t==='repcheck'&&!rcLoaded){rcRange(7);rcLoaded=true;}
   if(t==='restore'){loadDeletedRows();}
@@ -845,9 +845,9 @@ function setupRefreshProgress(){
   if(sw)sw.textContent=wc;if(sv)sv.textContent=vc;if(sp)sp.textContent=pc;
   var msg=[];
   msg.push(doneCompany?'会社情報：登録済み':'会社情報：未登録');
-  msg.push('作業員：'+wc+'人');msg.push('車両：'+vc+'台');msg.push('取引先：'+pc+'件');
+  msg.push('作業員：'+wc+'人');msg.push('車両：'+vc+'台');msg.push('顧客：'+pc+'件');
   var ft=document.getElementById('setupFinishText');
-  if(ft)ft.innerHTML=msg.map(esc).join('<br>')+'<br><b>'+(doneCompany&&doneWorker&&donePartner?'最低限の初期設定は完了できます。':'会社情報・作業員・取引先を登録すると使い始めやすくなります。')+'</b>';
+  if(ft)ft.innerHTML=msg.map(esc).join('<br>')+'<br><b>'+(doneCompany&&doneWorker&&donePartner?'最低限の初期設定は完了できます。':'会社情報・作業員・顧客を登録すると使い始めやすくなります。')+'</b>';
 }
 function setupLoadCompany(silent){
   callGAS({action:'estData'},null,true).then(function(d){
@@ -902,8 +902,8 @@ function setupBulkVehicles(){
   }).then(function(){setupSetBusy('setupVehicleBtn',false,'車両を追加');});
 }
 function setupBulkPartners(){
-  var lines=setupLines('su_partners'); if(!lines.length){toast('追加する取引先を入力してください');return;}
-  setupSetBusy('setupPartnerBtn',true,'取引先を追加');
+  var lines=setupLines('su_partners'); if(!lines.length){toast('追加する顧客を入力してください');return;}
+  setupSetBusy('setupPartnerBtn',true,'顧客を追加');
   var added=0,failed=0;
   lines.reduce(function(p,line){return p.then(function(){
     var a=setupParts(line),name=a[0]||''; if(!name){failed++;return;}
@@ -911,8 +911,8 @@ function setupBulkPartners(){
     var d={'顧客名':name,'区分':kind,'電話':a[2]||'','住所':a[3]||'','備考':a[4]||''};
     return callGAS({action:'addCustomer',data:d},null,true).then(function(res){if(res&&res.ok){customers.push(res.customer);added++;}else failed++;}).catch(function(){failed++;});
   });},Promise.resolve()).then(function(){
-    admSaveCache();renderCustomers();document.getElementById('su_partners').value='';setupRefreshProgress();toast('取引先を追加：'+added+'件'+(failed?' / 失敗 '+failed+'件':''));
-  }).then(function(){setupSetBusy('setupPartnerBtn',false,'取引先を追加');});
+    admSaveCache();renderCustomers();document.getElementById('su_partners').value='';setupRefreshProgress();toast('顧客を追加：'+added+'件'+(failed?' / 失敗 '+failed+'件':''));
+  }).then(function(){setupSetBusy('setupPartnerBtn',false,'顧客を追加');});
 }
 function setupMarkDone(){
   localStorage.setItem('genba_setup_done','1');
@@ -959,10 +959,10 @@ function fabAdd(){ if(curTab==='worker')openWorker(); else if(curTab==='partner'
 /* ===== 取引先（区分つき）===== */
 function custKind(c){ return String(c['区分']||'').trim()||'法人'; }   // 空は法人として扱う
 function kindCls(k){ return k==='公共'?'kk':(k==='個人'?'kx':'kg'); }
-function loadCustomers(silent){ callGAS({action:'customers'},null,silent).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); customers=res.customers||[]; admSaveCache(); renderCustomers();renderAdminHome();adminSearch(); }).catch(function(err){if(!silent)toast('取引先の読込失敗：'+err.message);}); }
+function loadCustomers(silent){ callGAS({action:'customers'},null,silent).then(function(res){ if(!res.ok)throw new Error(res.error||'エラー'); customers=res.customers||[]; admSaveCache(); renderCustomers();renderAdminHome();adminSearch(); }).catch(function(err){if(!silent)toast('顧客の読込失敗：'+err.message);}); }
 function renderCustomers(){
   var el=document.getElementById('listP');
-  if(!customers.length){el.innerHTML='<div class="empty">取引先がまだありません。<br>右下の「＋取引先」から登録してください。</div>';return;}
+  if(!customers.length){el.innerHTML='<div class="empty">顧客がまだありません。<br>右下の「＋顧客」から登録してください。</div>';return;}
   var order=['公共','法人','個人'],groups={};
   customers.forEach(function(c){var k=custKind(c);(groups[k]=groups[k]||[]).push(c);});
   Object.keys(groups).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
@@ -979,7 +979,7 @@ function renderCustomers(){
   });
 }
 function openPartner(c){
-  document.getElementById('pTitle').textContent=c?'取引先の編集':'取引先の追加';
+  document.getElementById('pTitle').textContent=c?'顧客の編集':'顧客の追加';
   document.getElementById('pDelRow').style.display=c?'block':'none';
   var g=function(id){return document.getElementById(id);};
   g('p_id').value=c?(c['顧客ID']||''):''; g('p_kind').value=c?custKind(c):'法人';
@@ -990,7 +990,7 @@ function openPartner(c){
 function closeP(){document.getElementById('ovp').classList.remove('show');}
 function savePartner(){
   var g=function(id){return document.getElementById(id).value;},name=g('p_name').trim();
-  if(!name){toast('取引先名を入れてください');return;}
+  if(!name){toast('顧客名を入れてください');return;}
   var id=g('p_id'),isNew=!id;
   var d={'顧客名':name,'区分':g('p_kind'),'電話':g('p_tel').trim(),'住所':g('p_addr').trim(),'ホームページ':g('p_url').trim(),'備考':g('p_note').trim()};
   var btn=document.getElementById('pSaveBtn');btn.disabled=true;btn.textContent='保存中…';
@@ -1001,7 +1001,7 @@ function savePartner(){
   }).catch(function(err){toast('失敗：'+err.message);}).then(function(){btn.disabled=false;btn.textContent='保存';});
 }
 function delPartner(ev){ ev.preventDefault();var id=document.getElementById('p_id').value;if(!id)return;
-  if(!confirm('この取引先を削除します。よろしいですか？\n（ひもづく担当者は残ります）'))return;
+  if(!confirm('この顧客を削除します。よろしいですか？\n（ひもづく担当者は残ります）'))return;
   callGAS({action:'deleteCustomer',id:id}).then(function(res){ if(!res.ok)throw new Error(res.error||'削除失敗');
     closeP();toast('削除しました');loadCustomers();
   }).catch(function(err){toast('失敗：'+err.message);});
@@ -1013,7 +1013,7 @@ function renderContacts(){
   var el=document.getElementById('listK');
   if(!contacts.length){el.innerHTML='<div class="empty">先方担当者がまだいません。<br>右下の「＋担当者」から登録してください。</div>';return;}
   var groups={},order=[];
-  contacts.forEach(function(c){var k=String(c['取引先']||'（取引先未設定）');if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(c);});
+  contacts.forEach(function(c){var k=String(c['取引先']||'（顧客未設定）');if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(c);});
   order.sort(function(a,b){return a.localeCompare(b,'ja');});
   el.innerHTML='';
   order.forEach(function(k){ var arr=groups[k];
@@ -1030,7 +1030,7 @@ function buildPartnerSelect(sel,val){
   var order=['公共','法人','個人'],byKind={};
   customers.forEach(function(c){var k=custKind(c);(byKind[k]=byKind[k]||[]).push(c);});
   Object.keys(byKind).forEach(function(k){if(order.indexOf(k)<0)order.push(k);});
-  sel.innerHTML='<option value="">（取引先を選択）</option>';
+  sel.innerHTML='<option value="">（顧客を選択）</option>';
   order.forEach(function(k){ var arr=byKind[k];if(!arr)return; var og=document.createElement('optgroup');og.label=k;
     arr.sort(function(a,b){return String(a['顧客名']||'').localeCompare(String(b['顧客名']||''),'ja');});
     arr.forEach(function(c){var o=document.createElement('option');o.value=c['顧客名'];o.textContent=c['顧客名'];og.appendChild(o);});
@@ -1050,7 +1050,7 @@ function openContact(c){
 function closeK(){document.getElementById('ovk').classList.remove('show');}
 function saveContact(){
   var g=function(id){return document.getElementById(id).value;},name=g('k_name').trim(),partner=g('k_partner');
-  if(!partner){toast('取引先を選んでください');return;}
+  if(!partner){toast('顧客を選んでください');return;}
   if(!name){toast('担当者名を入れてください');return;}
   var id=g('k_id'),isNew=!id;
   var d={'取引先':partner,'担当者名':name,'役職':g('k_role').trim(),'電話':g('k_tel').trim(),'メール':g('k_mail').trim(),'備考':g('k_note').trim()};
@@ -1095,14 +1095,14 @@ function renderAdminHome(){
   var vehicleWarn=(vehicles||[]).filter(function(v){var s=vDaysLeft(v['車検満了日']);var h=vDaysLeft(v['保険満了日']);return (s!=null&&s<=60)||(h!=null&&h<=60);}).length;
   m.innerHTML=
     '<div class="admin-metric" onclick="adminOpenTab(\'worker\')"><div class="label">作業員</div><div class="num">'+(workers||[]).length+'</div><div class="mini">有効 '+activeWorkers+' / 停止 '+stopped+'</div></div>'+ 
-    '<div class="admin-metric" onclick="adminOpenTab(\'partner\')"><div class="label">取引先</div><div class="num">'+(customers||[]).length+'</div><div class="mini">'+esc(adminMiniCount(custKindMap))+'</div></div>'+ 
+    '<div class="admin-metric" onclick="adminOpenTab(\'partner\')"><div class="label">顧客</div><div class="num">'+(customers||[]).length+'</div><div class="mini">'+esc(adminMiniCount(custKindMap))+'</div></div>'+ 
     '<div class="admin-metric" onclick="adminOpenTab(\'contact\')"><div class="label">担当者</div><div class="num">'+(contacts||[]).length+'</div><div class="mini">先方担当者</div></div>'+ 
     '<div class="admin-metric" onclick="adminOpenTab(\'vehicle\')"><div class="label">車両</div><div class="num">'+(vehicles||[]).length+'</div><div class="mini">期限注意 '+vehicleWarn+' 台</div></div>';
   var alerts=[];
   if(!(workers||[]).length)alerts.push({cls:'ng',msg:'作業員が未登録です。最初に管理者・社員を登録してください。',btn:'作業員登録',tab:'worker'});
   if(noLogin>0)alerts.push({cls:'ng',msg:'ログインID未設定の作業員が '+noLogin+' 人います。タイムカードや権限管理で本人紐づけできません。',btn:'作業員を見る',tab:'worker'});
   if(stopped>0)alerts.push({cls:'',msg:'停止中の作業員が '+stopped+' 人います。退職者・一時停止の確認用です。',btn:'作業員を見る',tab:'worker'});
-  if(!(customers||[]).length)alerts.push({cls:'ng',msg:'取引先が未登録です。案件登録前に主要な取引先を登録すると入力が楽になります。',btn:'取引先登録',tab:'partner'});
+  if(!(customers||[]).length)alerts.push({cls:'ng',msg:'顧客が未登録です。現場登録前に主要な顧客を登録すると入力が楽になります。',btn:'顧客登録',tab:'partner'});
   if(vehicleWarn>0)alerts.push({cls:'ng',msg:'車検・保険の期限が近い車両が '+vehicleWarn+' 台あります。',btn:'車両を見る',tab:'vehicle'});
   if(!(suppliers||[]).length)alerts.push({cls:'',msg:'仕入先が未登録です。材料・外注・リース先を登録すると原価管理に使いやすくなります。',btn:'仕入先登録',tab:'supplier'});
   if(!alerts.length)alerts.push({cls:'ok',msg:'主要マスタの登録状況に大きな問題はありません。',btn:'更新',tab:'adminhome'});
@@ -1116,7 +1116,7 @@ function adminSearch(){
   var rows=[];
   function hit(obj,fields){return fields.some(function(f){return String(obj[f]||'').toLowerCase().indexOf(q)>=0;});}
   (workers||[]).forEach(function(w){if(hit(w,['氏名','略称','区分','所属','ログインID','権限']))rows.push({type:'作業員',name:w['氏名']||'',meta:[w['区分'],w['権限'],w['ログインID']].filter(Boolean).join(' ・ '),open:function(){switchTab('worker');openWorker(w);}});});
-  (customers||[]).forEach(function(c){if(hit(c,['顧客名','区分','電話','住所','備考']))rows.push({type:'取引先',name:c['顧客名']||'',meta:[custKind(c),c['電話'],c['住所']].filter(Boolean).join(' ・ '),open:function(){switchTab('partner');openPartner(c);}});});
+  (customers||[]).forEach(function(c){if(hit(c,['顧客名','区分','電話','住所','備考']))rows.push({type:'顧客',name:c['顧客名']||'',meta:[custKind(c),c['電話'],c['住所']].filter(Boolean).join(' ・ '),open:function(){switchTab('partner');openPartner(c);}});});
   (contacts||[]).forEach(function(c){if(hit(c,['担当者名','取引先','役職','電話','メール','備考']))rows.push({type:'担当者',name:c['担当者名']||'',meta:[c['取引先'],c['役職'],c['電話']].filter(Boolean).join(' ・ '),open:function(){switchTab('contact');openContact(c);}});});
   (vehicles||[]).forEach(function(v){if(hit(v,['車両名','ナンバー','車種','備考']))rows.push({type:'車両',name:v['車両名']||'',meta:[v['ナンバー'],v['車種']].filter(Boolean).join(' ・ '),open:function(){switchTab('vehicle');openVehicle(v);}});});
   (suppliers||[]).forEach(function(s){if(hit(s,['仕入先名','略称','種別','電話番号','担当者名','メールアドレス','メモ']))rows.push({type:'仕入先',name:s['仕入先名']||'',meta:[s['種別'],s['電話番号'],s['担当者名']].filter(Boolean).join(' ・ '),open:function(){switchTab('supplier');openSupplier(s['仕入先ID']||'');}});});
@@ -1319,6 +1319,6 @@ function deleteCompDoc(id){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-14-1"></script>
+<script src="../common_ui.js?v=20260704-v43-15-0"></script>
 </body>
 </html>

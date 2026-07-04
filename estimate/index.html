@@ -238,11 +238,11 @@
     </div>
     <div class="grid2">
       <div>
-        <label class="lbl">顧客（取引先）</label>
+        <label class="lbl">顧客</label>
         <select class="inp" id="fCust" onchange="custChanged()"></select>
       </div>
       <div>
-        <label class="lbl">案件（これが工事名になります）</label>
+        <label class="lbl">現場（これが工事名になります）</label>
         <select class="inp" id="fCase" onchange="caseChanged()"></select>
       </div>
     </div>
@@ -359,7 +359,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt" id="ltxt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-14-1"></script>
+<script src="../config.js?v=20260704-v43-15-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -594,7 +594,7 @@ function fillCust(val){
 function fillCase(custName,val){
   var sel=document.getElementById('fCase');
   var ps=DB.projects.filter(function(p){return !custName||String(p['顧客'])===custName;});
-  sel.innerHTML='<option value="">（案件なし／後で紐付け）</option>'+ps.map(function(p){
+  sel.innerHTML='<option value="">（現場なし／後で紐付け）</option>'+ps.map(function(p){
     return '<option value="'+esc(p['案件ID'])+'"'+(String(p['案件ID'])===String(val)?' selected':'')+'>'+esc(p['案件名'])+'</option>';}).join('');
 }
 function custChanged(){
@@ -952,6 +952,6 @@ function doAiOcr(){
     });
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-14-1"></script>
+<script src="../common_ui.js?v=20260704-v43-15-0"></script>
 </body>
 </html>
