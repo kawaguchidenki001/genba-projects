@@ -6,7 +6,7 @@
   var cfg = window.GENBA_CONFIG || {};
   var appVersion = cfg.APP_VERSION || '—';
   var path = location.pathname || '';
-  var isRoot = /\/genba-projects\/?(?:index\.html)?$/.test(path) || /\/genba-projects$/.test(path);
+  var isRoot = /\/genba-projects\/?(?:index\.html)?$/.test(path) || /\/genba-projects$/.test(path) || !!document.getElementById('gridAdmin'); // v43.12.1: 別ドメイン納品でもルート判定が働くよう、ルート限定要素でも判定
   var isSub = !isRoot;
   var rootHref = isRoot ? './' : '../';
 

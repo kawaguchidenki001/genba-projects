@@ -21,7 +21,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
-<script src="../config.js?v=20260704-v43-12-0"></script>
+<script src="../config.js?v=20260704-v43-12-1"></script>
 <script>
 (function(){
   try{
@@ -2566,6 +2566,7 @@ function toggleEraser(){ drawEraser=!drawEraser; document.getElementById('dBtnE'
 function undoDraw(){ if(!drawHistory.length)return; drawStrokes=JSON.parse(drawHistory.pop()); renderDrawCanvas(drawStrokes); }
 function clearDraw(){ if(!confirm('手書きを全部消しますか？'))return; drawHistory.push(JSON.stringify(drawStrokes)); drawStrokes=[]; renderDrawCanvas(drawStrokes); }
 function openSiteDrawList(){
+  if(!document.getElementById('drawSiteBar')&&!document.getElementById('drawTitle')){toast('この画面では図面メモは使えません');return;} /* v43.12.1: 図面UI未搭載時のクラッシュ防止ガード */
   go('p-draw-list');
   document.getElementById('drawSiteBar').innerHTML=filterBarHtml('drawFilter');
   document.getElementById('drawList').innerHTML='<div class="empty">読み込み中…</div>';
@@ -2602,6 +2603,7 @@ function renderDrawList(list){
   },50);
 }
 function newDraw(){
+  if(!document.getElementById('drawSiteBar')&&!document.getElementById('drawTitle')){toast('この画面では図面メモは使えません');return;} /* v43.12.1: 図面UI未搭載時のクラッシュ防止ガード */
   curDraw=null; drawStrokes=[]; drawHistory=[]; drawInited=false;
   document.getElementById('drawTitle').value='';
   document.getElementById('drawSaved').classList.remove('show');
@@ -2610,6 +2612,7 @@ function newDraw(){
   setTimeout(function(){ initDrawPane(); renderDrawCanvas([]); document.getElementById('drawTitle').focus(); },120);
 }
 function openDraw(id){
+  if(!document.getElementById('drawSiteBar')&&!document.getElementById('drawTitle')){toast('この画面では図面メモは使えません');return;} /* v43.12.1: 図面UI未搭載時のクラッシュ防止ガード */
   var n=drawCache[id]||{}; curDraw=id; drawStrokes=[];
   try{drawStrokes=JSON.parse(n['内容']||'[]');}catch(e){drawStrokes=[];} if(!Array.isArray(drawStrokes))drawStrokes=[]; drawStrokes=normLoad(drawStrokes);
   drawHistory=[]; drawInited=false;
@@ -2620,6 +2623,7 @@ function openDraw(id){
   setTimeout(function(){ initDrawPane(); renderDrawCanvas(drawStrokes); },120);
 }
 function saveDraw(){
+  if(!document.getElementById('drawSiteBar')&&!document.getElementById('drawTitle')){toast('この画面では図面メモは使えません');return;} /* v43.12.1: 図面UI未搭載時のクラッシュ防止ガード */
   var t=document.getElementById('drawTitle').value.trim();
   if(!t){toast('タイトルを入力してください');document.getElementById('drawTitle').focus();return;}
   var sid=editSiteVal('drawSiteSel');
@@ -4085,6 +4089,6 @@ function openBoardForCase(id){
 (function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){document.title='小黒板カメラ｜Gen-Can';boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-12-0"></script>
+<script src="../common_ui.js?v=20260704-v43-12-1"></script>
 </body>
 </html>
