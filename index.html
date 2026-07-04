@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.06.25-43.9.27 / 工程表タイルが権限メニュー表(genbaAllowedMenu)未登録で全ロール非表示だったバグを修正（koutei を管理者・責任者・社員に追加）。タイトル社名削除・案件詳細バグ修正(projects v67) / Code_v157 -->
+<!-- Gen-Can root app v2026.07.04-43.10.0 / ホームに「今日やること」カード＋折りたたみダッシュボードを実装（未配線だったrenderDash/renderTodayTodoをHTML側に接続・管理者/責任者のみ表示）。ログインにパスワード表示切替を追加 / Code_v157 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -170,7 +170,10 @@
     <p>IDとパスワードを入力してください</p>
     <form id="loginForm" autocomplete="on" onsubmit="event.preventDefault();doLogin();return false;">
       <input id="lgid" name="username" type="text" autocapitalize="none" autocorrect="off" spellcheck="false" inputmode="text" autocomplete="username" placeholder="ID" enterkeyhint="next">
-      <input id="lgpw" name="password" type="password" autocomplete="current-password" placeholder="パスワード" enterkeyhint="go">
+      <div style="position:relative;margin-bottom:12px;">
+        <input id="lgpw" name="password" type="password" autocomplete="current-password" placeholder="パスワード" enterkeyhint="go" style="margin-bottom:0;padding-right:56px;">
+        <button type="button" id="pwEye" onclick="togglePw()" aria-label="パスワードを表示" style="position:absolute;right:5px;top:50%;transform:translateY(-50%);width:44px;height:44px;padding:0;border:none;border-radius:10px;background:transparent;box-shadow:none;color:#5e7a92;font-size:19px;cursor:pointer;">👁</button>
+      </div>
       <button id="lgbtn" type="submit">ログイン</button>
       <button type="button" onclick="location.href='./demo/'" style="margin-top:10px;background:#edf3fa;color:#1f5fa8;box-shadow:5px 5px 10px #cdd3dc,-5px -5px 10px #ffffff;">デモモードで確認</button>
     </form>
@@ -195,6 +198,33 @@
   </div>
 
   <div class="permNote" id="permNote">この利用者の権限で使えるメニューだけを表示しています。</div>
+
+  <div class="todoPanel" id="todayTodoPanel">
+    <div class="todoTop">
+      <div class="todoTitle">📋 今日やること</div>
+      <span class="todoBadge" id="todayTodoBadge">確認中…</span>
+    </div>
+    <div class="todoList" id="todayTodoList"></div>
+    <div class="todoActions">
+      <a href="./report/">📝 日報を書く</a>
+      <a href="./timecard/">⏱ 打刻する</a>
+      <a class="sub" href="./photos/?v=43-8-3">📸 工事写真</a>
+      <a class="sub" href="./calendar/">🗓 予定を見る</a>
+    </div>
+  </div>
+
+  <div class="dash" id="dash">
+    <div class="dashHd" onclick="toggleDash()">📊 今日のダッシュボード<span class="cnt" id="dashCnt"></span><span class="arw">▼</span></div>
+    <div class="dbody">
+      <div class="dcard" id="dSched" style="display:none;"></div>
+      <div class="dcard" id="dRep" style="display:none;"></div>
+      <div class="dcard" id="dMe" style="display:none;"></div>
+      <div class="dcard" id="dAR" style="display:none;"></div>
+      <div class="dcard" id="dDue" style="display:none;"></div>
+      <div class="dcard" id="dCheck" style="display:none;"></div>
+      <div class="dcard" id="dAlert" style="display:none;"></div>
+    </div>
+  </div>
 
   <div class="lbl">毎日使う</div>
   <div class="grid">
@@ -242,7 +272,7 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260621-v43-9-10"></script>
+<script src="./config.js?v=20260704-v43-10-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
@@ -364,10 +394,21 @@ function updateTimeStatus_(u){
   }, function(){ /* 失敗時は黙る */ });
 }
 
+function togglePw(){
+  var i=document.getElementById('lgpw'),b=document.getElementById('pwEye');
+  if(!i||!b)return;
+  var show=i.type==='password';
+  i.type=show?'text':'password';
+  b.textContent=show?'🙈':'👁';
+  b.setAttribute('aria-label',show?'パスワードを隠す':'パスワードを表示');
+}
 function gUser(){try{return JSON.parse(localStorage.getItem('genba_user')||'null');}catch(e){return null;}}
 function setErr(m){document.getElementById('lgerr').textContent=m||'';}
 function showMenu(u){var lg=document.getElementById('login');if(lg)lg.style.display='none';var w=document.querySelector('.wrap');if(w)w.style.display='block';
-  document.getElementById('meName').textContent=u&&u['氏名']?u['氏名']+' さん':'';applyRootPermissions(u);}
+  document.getElementById('meName').textContent=u&&u['氏名']?u['氏名']+' さん':'';applyRootPermissions(u);
+  // 今日やること・ダッシュボード（売掛など経営情報を含むため管理者・現場責任者のみ）
+  var role=genbaRoleFromUser(u);
+  if(role==='admin'||role==='manager'){try{loadDash();}catch(e){}}}
 function showLogin(){var w=document.querySelector('.wrap');if(w)w.style.display='none';var lg=document.getElementById('login');if(lg)lg.style.display='flex';}
 var loadCnt=0,loadShownAt=0;
 function showLoad(){loadCnt++;if(loadCnt===1){loadShownAt=Date.now();document.getElementById('loading').classList.add('show');}}
@@ -614,6 +655,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260621-v43-9-10"></script>
+<script src="./common_ui.js?v=20260704-v43-10-0"></script>
 </body>
 </html>

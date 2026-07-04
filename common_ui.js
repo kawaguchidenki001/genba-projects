@@ -1,5 +1,6 @@
-/* Gen-Can common UI / E-Multicolor v1.0 (2026-06-22) / バージョンはconfig.jsで一元管理 */
+/* Gen-Can common UI / E-Multicolor v1.1 (2026-07-04) / バージョンはconfig.jsで一元管理 */
 /* 既存ニューモーフィズム維持 + タイルアイコンを機能別カラーグラデーション化 */
+/* v1.1: 全ページ共通のオフライン通知バナーを追加（現場の電波切れ対策） */
 (function(){
   'use strict';
   var cfg = window.GENBA_CONFIG || {};
@@ -254,6 +255,39 @@
     nav.querySelector('[data-gc-top]').addEventListener('click', function(){window.scrollTo({top:0,behavior:'smooth'});});
     nav.querySelector('[data-gc-reload]').addEventListener('click', function(){location.reload();});
   }
+
+  // オフライン通知バナー（全ページ共通）
+  // 現場は電波が切れやすく、通信失敗が「保存されたつもり」の事故につながるため、
+  // オフラインになった瞬間に画面上部へ表示し、回復したら短く知らせて消す。
+  try{
+    var netBar = document.createElement('div');
+    netBar.id = 'gcNetBar';
+    netBar.setAttribute('role','status');
+    netBar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:140000;display:none;text-align:center;font:800 12.5px "Zen Kaku Gothic New",sans-serif;letter-spacing:.04em;color:#fff;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));background:linear-gradient(92deg,#f43f5e,#b91c1c);box-shadow:0 4px 14px rgba(185,28,28,.3);';
+    var netTimer = null;
+    var showNet = function(offline){
+      if(netTimer){clearTimeout(netTimer);netTimer=null;}
+      if(offline){
+        netBar.textContent = '📡 オフラインです。電波の届く場所に移動するまで保存・読込はできません';
+        netBar.style.background = 'linear-gradient(92deg,#f43f5e,#b91c1c)';
+        netBar.style.boxShadow = '0 4px 14px rgba(185,28,28,.3)';
+        netBar.style.display = 'block';
+      }else{
+        netBar.textContent = '✅ 通信が回復しました';
+        netBar.style.background = 'linear-gradient(92deg,#10b981,#047857)';
+        netBar.style.boxShadow = '0 4px 14px rgba(4,120,87,.3)';
+        netBar.style.display = 'block';
+        netTimer = setTimeout(function(){netBar.style.display='none';}, 2500);
+      }
+    };
+    var mountNet = function(){
+      document.body.appendChild(netBar);
+      if(navigator.onLine === false) showNet(true);
+    };
+    if(document.body) mountNet(); else document.addEventListener('DOMContentLoaded', mountNet);
+    window.addEventListener('offline', function(){showNet(true);});
+    window.addEventListener('online', function(){showNet(false);});
+  }catch(e){}
 
   // デモページ用バッジ（旧版維持）
   try{
