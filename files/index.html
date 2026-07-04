@@ -4,6 +4,7 @@
 <!-- files version 53 (2026-06-21) 区分の用語を統一：官公庁→公共／民間→法人（正規化キー・アイコン・並び順・絞り込みドロップダウンを公共/法人/個人に。旧値は同義語として読み取り維持）。GAS変更なし。 -->
 <!-- files version 52 (2026-06-21) 写真表示にGAS getPhotoB64フォールバックを追加（非オーナーでも確実閲覧） -->
 <!DOCTYPE html>
+<!-- files v43.18.1 (2026-07-04) PCで横幅いっぱいに広がっていた問題を修正（.wrapと下部ドックをmax-width:760px中央寄せに、他画面と統一）。GAS変更なし。 -->
 <!-- files v43.18.0 (2026-07-04) 公共🏛️/法人🏢/個人🏠等の絵文字アイコンを線画SVG＋機能別グラデに刷新（公共=青/法人=青緑/個人=琥珀/顧客=緑/現場=橙/PDF=赤/Excel=緑等）。フォルダ・ファイル・戻る・ヘッダーの絵文字も全て線画SVGに統一。categoryIcon/driveFileIcon_/makeFolderCard等を改修。GAS変更なし。 -->
 <!-- files v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- files version 51 (2026-06-18) 写真ドライブを階層型に変更：官公庁/民間など → 顧客 → 現場 → 写真フォルダの順に開く。 -->
@@ -48,7 +49,7 @@
   .sync{font-size:12.5px;display:flex;align-items:center;gap:5px;color:var(--sub);}
   .dot{width:8px;height:8px;border-radius:50%;background:#9ca3af;display:inline-block;}
   .dot.ok{background:#22a06b;} .dot.busy{background:#e8910b;} .dot.off{background:#e5484d;}
-  .wrap{padding:12px;}
+  .wrap{padding:12px;max-width:760px;margin:0 auto;}   /* v43.18.1 PCで横幅いっぱいに広がらないよう他画面と同じ760px中央寄せに */
   @media(min-width:600px){.sel-row{display:flex;gap:10px;} .sel-row .fld{flex:1;margin-bottom:0;}}
   .fld label{display:block;font-size:13px;color:var(--sub);margin-bottom:4px;font-weight:700;}
   select.f{width:100%;padding:12px 13px;border:none;border-radius:11px;background:var(--bg);color:var(--ink);font-size:16px;box-shadow:var(--well-soft);}
@@ -66,7 +67,7 @@
   #photos{margin-bottom:120px;}
   #panel .btnrow{display:none!important;}
   .fileAddDock{position:fixed;left:0;right:0;bottom:0;z-index:60;background:rgba(232,236,242,.96);backdrop-filter:blur(10px);border-top:1px solid rgba(219,226,234,.9);box-shadow:0 -6px 18px rgba(31,58,82,.12);padding:10px 14px calc(env(safe-area-inset-bottom) + 10px);display:none;}
-  .fileAddDockInner{max-width:980px;margin:0 auto;display:flex;gap:10px;align-items:center;}
+  .fileAddDockInner{max-width:760px;margin:0 auto;display:flex;gap:10px;align-items:center;}
   .fileAddDockText{flex:1;min-width:0;font-size:12.5px;color:var(--sub);font-weight:800;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .fileAddDockText strong{display:block;color:var(--ink);font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .fileAddDock button{border:none;border-radius:14px;background:var(--grad);color:#fff;box-shadow:var(--rise-sm);padding:14px 24px;font-size:15.5px;font-weight:900;cursor:pointer;min-width:170px;}
@@ -273,7 +274,7 @@
   @media(max-width:760px){.photoViewerBox{height:92vh;border-radius:20px;}.photoViewerBody{grid-template-columns:40px 1fr 40px;padding:8px;}.photoViewerNav{height:64px;font-size:22px;border-radius:14px;}.photoViewerFoot{grid-template-columns:1fr 1fr;}.photoViewerCount{grid-column:1/-1;}.photoViewerName{max-width:58vw;}.photoViewerFoot button,.photoViewerFoot a{padding:11px 9px;font-size:12.5px;}}
 
   .ledgerDock{position:fixed;left:0;right:0;bottom:0;z-index:65;background:rgba(232,236,242,.96);backdrop-filter:blur(10px);border-top:1px solid rgba(219,226,234,.9);box-shadow:0 -6px 18px rgba(31,58,82,.12);padding:9px 14px calc(env(safe-area-inset-bottom) + 9px);display:none;}
-  .ledgerDockInner{max-width:860px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;}
+  .ledgerDockInner{max-width:760px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;}
   .ledgerDockInfo{grid-column:1/-1;font-size:12.5px;color:var(--sub);font-weight:800;line-height:1.35;}
   .ledgerDockInfo strong{color:var(--ink);font-size:13.5px;}
   .ledgerDock button{border:none;border-radius:14px;background:var(--bg);box-shadow:var(--rise-sm);padding:13px 14px;font-size:15px;font-weight:900;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;}
@@ -483,7 +484,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-18-0"></script>
+<script src="../config.js?v=20260704-v43-18-1"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.21-43.9.12';
@@ -1878,6 +1879,6 @@ if(!genbaSessionTok()){
   loadProjects(true);
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-18-0"></script>
+<script src="../common_ui.js?v=20260704-v43-18-1"></script>
 </body>
 </html>

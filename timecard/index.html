@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- timecard v43.18.1 (2026-07-04) 出勤/退勤ボタンの色をアプリ共通の配色に統一（単色の緑#22a06b・橙#e8910b→ホーム画面のタイルや各アイコンと同じビビッドなグラデ 出勤=緑/退勤=橙）。GAS変更なし。 -->
 <!-- timecard v43.16.0 (2026-07-04) アクセント色を紫→青(#2d7dd2)に統一（出勤=緑・退勤=橙などの状態色は据え置き）。theme-colorも青に。スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- timecard v43.11.0 (2026-07-04) 会社名の既定値をconfig.jsから取得。メニュー戻り先を相対パス化。GAS変更なし。 -->
 <!-- timecard version 42 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置)。長い名称でも重なり/切れなし。タイトル(nm/h1)の改行禁止解除。CSSのみ・HTML/機能/id不変・GAS変更なし。 -->
@@ -46,8 +47,9 @@
   .pane{display:none;} .pane.on{display:block;}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
   .pbtn{padding:26px 0;border-radius:16px;font-size:25px;font-weight:800;border:none;cursor:pointer;}
-  .b-in{background:var(--green);color:#fff;box-shadow:4px 5px 13px rgba(34,160,107,.4),-3px -3px 8px #ffffff;}
-  .b-out{background:var(--orange);color:#fff;box-shadow:4px 5px 13px rgba(232,145,11,.4),-3px -3px 8px #ffffff;}
+  /* v43.18.1 出勤/退勤ボタンをアプリ共通の配色（ホーム画面のタイルや各アイコンと同じビビッドなグラデーション）に合わせる。出勤=緑・退勤=橙の意味は維持 */
+  .b-in{background:linear-gradient(135deg,#10b981,#047857);color:#fff;box-shadow:4px 5px 13px rgba(4,120,87,.4),-3px -3px 8px #ffffff;}
+  .b-out{background:linear-gradient(135deg,#f97316,#c2410c);color:#fff;box-shadow:4px 5px 13px rgba(194,65,12,.4),-3px -3px 8px #ffffff;}
   .pbtn:disabled{opacity:.4;box-shadow:none;}
   .pbtn:active:not(:disabled){transform:translateY(1px);}
   .stat{display:flex;gap:10px;margin-bottom:14px;}
@@ -307,7 +309,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-18-0"></script>
+<script src="../config.js?v=20260704-v43-18-1"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -749,6 +751,6 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden&&me)
   Promise.all([reload(hadTC),loadSettings()]).then(loadAlerts);
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-18-0"></script>
+<script src="../common_ui.js?v=20260704-v43-18-1"></script>
 </body>
 </html>
