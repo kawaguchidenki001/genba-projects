@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- ai version 14 (2026-07-04) v43.10.1 重大バグ修正：genbaSessionTok未定義で送信が必ず失敗していた問題を修正（定義を追加）。GAS変更なし。 -->
 <!-- ai version 13 (2026-06-17) デザイン刷新（候補1：クリーン＆ライト・青アクセント）。考え中表示を黒四角点滅から青ドット3つのバウンスに変更。ヘッダーアイコンをスパークルに。配色を紫→青系へ統一。 -->
 <!-- ai version 12 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- ai version 11 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can右、少し大きく）。更新ボタンなし（B）。クリアは保持。機能・id不変 -->
@@ -147,6 +148,14 @@
 /* ========== 設定 ========== */
 var API_URL = (window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var SYSTEM_PROMPT = ''; // システムプロンプトはGAS側(AI_SYSTEM_PROMPT)で管理
+/* v43.10.1: genbaSessionTok未定義で送信が必ず失敗していたバグを修正（他ページと同じ定義を追加） */
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
 
 /* ========== 状態 ========== */
 var chatLog = []; // {role:'user'|'assistant', content:'...'}
@@ -445,7 +454,7 @@ function clearChat() {
 }
 </script>
 
-<script src="../config.js?v=20260620-v43-8-3-cache-lock"></script>
-<script src="../common_ui.js?v=20260620-v43-8-3-cache-lock"></script>
+<script src="../config.js?v=20260704-v43-10-1"></script>
+<script src="../common_ui.js?v=20260704-v43-10-1"></script>
 </body>
 </html>

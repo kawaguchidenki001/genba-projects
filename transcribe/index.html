@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- transcribe version 7 (2026-07-04) v43.10.1 重大バグ修正：genbaSessionTok未定義で「整える／要約」が必ず失敗していた問題を修正（定義を追加）。GAS変更なし。 -->
 <!-- transcribe version 6 (2026-06-15) ヘッダー案A化(2段・CSSグリッドで.hbar再配置:上段=メニュー左/Gen-Can・操作右、下段=アイコン+タイトル中央)。長い名称でも重なり/切れなし。.nm改行禁止解除。HTML不変・CSSのみ・機能/id不変・GAS変更なし。 -->
 <!-- transcribe version 5 (2026-06-15) 画面再訪時に前回内容を復元しないよう変更（戻る→再訪で空白から始まる）。loadLocal呼出を廃止し、起動時に古い保存をクリア -->
 <html lang="ja">
@@ -191,6 +192,14 @@
 var API_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var SECRET='';
 var CACHE_KEY='genba_transcribe_memo';
+/* v43.10.1: genbaSessionTok未定義で「整える／要約」が必ず失敗していたバグを修正（他ページと同じ定義を追加） */
+function genbaSessionTok(){
+  try{
+    var s=JSON.parse(localStorage.getItem('genba_session')||'null');
+    if(s&&s.token&&(!s.expiresAt || Date.now()<Number(s.expiresAt)))return s.token;
+  }catch(e){}
+  return '';
+}
 
 /* ========== 要素 ========== */
 var memo=document.getElementById('memo');
@@ -432,7 +441,7 @@ function doSms(){
 updateCnt();
 </script>
 
-<script src="../config.js?v=20260620-v43-8-3-cache-lock"></script>
-<script src="../common_ui.js?v=20260620-v43-8-3-cache-lock"></script>
+<script src="../config.js?v=20260704-v43-10-1"></script>
+<script src="../common_ui.js?v=20260704-v43-10-1"></script>
 </body>
 </html>

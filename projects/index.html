@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- projects version 68 (2026-07-04) v43.10.1 重大バグ修正：アーカイブ（保管Excel作成・削除）がcallGASの引数誤りで常に認証失敗していた問題を修正。GAS変更なし。 -->
 <!-- projects version 67 (2026-06-25) 重大バグ修正：案件詳細の「連絡」欄(d_ctc)の閉じタグ抜けにより、LINE未設定の案件で案件情報・工程管理・顧客情報・機能・ボタンが丸ごと非表示になっていた問題を修正（</div>を1つ補完）。GAS変更なし。 -->
 <!-- projects version 66 (2026-06-25) 工程管理(Step5/Phase2完了)：工程表をA4横の1枚絵で出力。「画像で保存」(PNG・オフライン可)と「PDFで保存」(jsPDF・要ネット接続)を追加。タイトル/期間/凡例(種別色)/今日ライン/進捗バー/出力日を描画。GAS変更なし。 -->
 <!-- projects version 65 (2026-06-25) 工程管理(Step4/Phase2)：種別名から自動で色分け、終了日超過＆未完了の工程に「遅延」赤バー＋日数表示、各工程の上下ボタンで並び替え（管理者・並び順を保存）。GAS変更なし。 -->
@@ -1153,7 +1154,7 @@ function shareOpen(){ var u=document.getElementById('shareUrl').value; if(u)wind
 function arcExport(){
   if(!curDetail)return;
   showLoad('アーカイブExcelを作成中…（10〜20秒かかります）');
-  callGAS({action:'archiveExport',id:curDetail['案件ID']},true).then(function(res){
+  callGAS({action:'archiveExport',id:curDetail['案件ID']},null,true).then(function(res){
     hideLoad();
     if(res&&res.ok){
       var fl=document.getElementById('arcFolder');
@@ -1171,7 +1172,7 @@ function arcPurge(){
   if(!confirm('最終確認：この操作は元に戻せません。\n「'+nm+'」を本当に削除しますか？'))return;
   var trash=document.getElementById('arcTrash').checked?'1':'0';
   showLoad('削除中…');
-  callGAS({action:'archivePurge',id:curDetail['案件ID'],trash:trash},true).then(function(res){
+  callGAS({action:'archivePurge',id:curDetail['案件ID'],trash:trash},null,true).then(function(res){
     hideLoad();
     if(res&&res.ok){
       projects=projects.filter(function(x){return String(x['案件ID'])!==String(curDetail['案件ID']);});
@@ -1263,7 +1264,7 @@ callGAS({action:'checkRole'},null,hadCacheP).then(function(res){
 }).catch(function(){ setSync('off','オフライン'); });
 </script>
 
-<script src="../config.js?v=20260621-v43-9-11"></script>
-<script src="../common_ui.js?v=20260621-v43-9-11"></script>
+<script src="../config.js?v=20260704-v43-10-1"></script>
+<script src="../common_ui.js?v=20260704-v43-10-1"></script>
 </body>
 </html>

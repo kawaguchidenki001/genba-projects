@@ -1,3 +1,4 @@
+<!-- toolbox version 48 (2026-07-04) v43.10.1 重大バグ修正：小黒板カメラ・録音のDrive保存が失敗しても「✓保存しました」と表示されていた問題を修正（ファイル画面と同じconfirmUploadで保存を実確認）。GAS変更なし。 -->
 <!-- toolbox version 47 (2026-06-20) UI監査：小黒板カメラ戻る表示・道具箱表記・バージョン表示を整理。 -->
 <!-- toolbox version 46 (2026-06-20) 小黒板カメラの戻るボタン表示を「工事写真」に変更。工事写真メニューから戻る導線と表示を統一。 -->
 <!-- toolbox version 45 (2026-06-19) 工事写真メニューから小黒板カメラを直接起動。ツールボックスの一瞬表示・戻る先・黒板非表示を修正。 -->
@@ -2843,6 +2844,23 @@ function aConv(from){
 
 /* ===== 共通 POST（アップロード用） ===== */
 function tbPost(obj){obj.secret=genbaSessionTok();return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)});}
+/* v43.10.1: no-cors POSTは結果が読めず失敗しても成功表示になっていたため、
+   ファイル画面と同じ confirmUpload をJSONPでポーリングしてDrive保存を実確認する */
+function tbConfirmUpload(siteId,dest,name,tries,delay){
+  tries=tries||8; delay=delay||900;
+  return new Promise(function(resolve,reject){
+    function poll(n){
+      setTimeout(function(){
+        callGAS({action:'confirmUpload',id:siteId,dest:dest,name:name},true).then(function(res){
+          if(res&&res.ok&&res.found){resolve(res);}
+          else if(n>1){poll(n-1);}
+          else{reject(new Error('Drive保存を確認できませんでした'));}
+        }).catch(function(){ if(n>1)poll(n-1); else reject(new Error('保存確認に失敗しました')); });
+      },delay);
+    }
+    poll(tries);
+  });
+}
 
 /* ===== 虫眼鏡 ===== */
 var magStream=null, magTrack=null, magFrozen=false, magTorchOn=false;
@@ -3481,10 +3499,13 @@ function boardShootCore(srcEl,vw,vh){
   if(!withData||withData.length<200){toast('エラー：画像データの取得に失敗しました。');return;}
   var ts=Date.now();
   toast('Driveに保存中…');
-  var jobs=[ tbPost({action:'uploadPhoto',id:boardSiteId,dest:'photo',name:'board_'+ts+'.jpg',mime:'image/jpeg',data:withData}) ];
-  if(noBoardData) jobs.push(tbPost({action:'uploadPhoto',id:boardSiteId,dest:'photo',name:'photo_'+ts+'.jpg',mime:'image/jpeg',data:noBoardData}));
-  Promise.all(jobs).then(function(){setTimeout(function(){toast('✓ Driveに保存しました'+(noBoardData?'（黒板あり＋なし 2枚）':''));},1500);})
-    .catch(function(){toast('保存に失敗しました');});
+  var ups=[{dest:'photo',name:'board_'+ts+'.jpg',data:withData}];
+  if(noBoardData) ups.push({dest:'photo',name:'photo_'+ts+'.jpg',data:noBoardData});
+  var jobs=ups.map(function(x){return tbPost({action:'uploadPhoto',id:boardSiteId,dest:x.dest,name:x.name,mime:'image/jpeg',data:x.data});});
+  Promise.all(jobs)
+    .then(function(){ toast('Drive保存を確認中…'); return Promise.all(ups.map(function(x){return tbConfirmUpload(boardSiteId,x.dest,x.name);})); })
+    .then(function(){ toast('✓ Driveに保存しました'+(noBoardData?'（黒板あり＋なし 2枚）':'')); })
+    .catch(function(){ toast('⚠ 保存を確認できませんでした。電波の良い場所でもう一度「保存」を押してください'); });
 }
 
 
@@ -3570,8 +3591,9 @@ function recSave(){
     var b64=ev.target.result.split(',')[1];
     toast('Driveに保存中...');
     tbPost({action:'uploadPhoto',id:recSiteId,dest:'file',name:fname,mime:recBlob.type||'audio/webm',data:b64})
-      .then(function(){setTimeout(function(){toast('✓ 保存しました');recReset();recLoadList();},1800);})
-      .catch(function(){toast('保存に失敗しました');});
+      .then(function(){toast('Drive保存を確認中…');return tbConfirmUpload(recSiteId,'file',fname);})
+      .then(function(){toast('✓ 保存しました');recReset();recLoadList();})
+      .catch(function(){toast('⚠ 保存を確認できませんでした。録音は消えていません。もう一度「保存」を押してください');});
   };
   reader.readAsDataURL(recBlob);
 }
@@ -4058,7 +4080,7 @@ function openBoardForCase(id){
 (function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){document.title='小黒板カメラ｜Gen-Can';boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
 
-<script src="../config.js?v=20260620-v43-8-3-cache-lock"></script>
-<script src="../common_ui.js?v=20260620-v43-8-3-cache-lock"></script>
+<script src="../config.js?v=20260704-v43-10-1"></script>
+<script src="../common_ui.js?v=20260704-v43-10-1"></script>
 </body>
 </html>

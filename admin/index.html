@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- admin version 58 (2026-07-04) v43.10.1 セキュリティ改善：作業員パスワードを画面に表示せず（変更時のみ入力）・localStorageキャッシュから除外。距離更新日をローカル日付に修正。GAS変更なし（応答からのパスワード除外はGAS側で別途対応推奨）。 -->
 <!-- admin version 57 (2026-06-21) 区分の用語を統一：官公庁→公共。表示文言・選択肢・判定配列・並び順・CSSクラスをすべて公共に。GAS変更なし。 -->
 <!-- admin version 56 (2026-06-19) 管理ホーム追加。各マスタ件数・ログイン未設定・停止ユーザー・車両期限アラート・横断検索・よく使う登録導線を1画面に整理。 -->
 <!-- admin version 55 config.js共通化 -->
@@ -444,7 +445,7 @@
     <div style="border-top:1px solid var(--line);margin:6px 0 12px;padding-top:10px;font-size:12px;color:var(--sub);font-weight:700;">ログイン（タイムカード等で本人に紐づきます）</div>
     <div class="two">
       <div class="fld"><label>ログインID</label><input id="w_loginid" autocapitalize="off" placeholder="例）taro"></div>
-      <div class="fld"><label>パスワード</label><input id="w_pw" placeholder="簡単でOK"></div>
+      <div class="fld"><label>パスワード</label><input id="w_pw" type="password" autocomplete="new-password" placeholder="変更する場合のみ入力"></div>
     </div>
     <div class="acts">
       <button class="btn sub" onclick="closeOv()">キャンセル</button>
@@ -586,7 +587,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260620-v43-8-3-cache-lock"></script>
+<script src="../config.js?v=20260704-v43-10-1"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 
@@ -606,7 +607,8 @@ function genbaClearSession(){try{localStorage.removeItem('genba_session');localS
 var workers=[],customers=[],contacts=[],vehicles=[],suppliers=[],curTab='adminhome',sLoaded=false,setupLoaded=false;
 var ADMCACHE='genba_admin_cache';
 function admLoadCache(){try{var c=JSON.parse(localStorage.getItem(ADMCACHE)||'{}');workers=c.workers||[];customers=c.customers||[];contacts=c.contacts||[];vehicles=c.vehicles||[];}catch(e){}}
-function admSaveCache(){try{localStorage.setItem(ADMCACHE,JSON.stringify({workers:workers,customers:customers,contacts:contacts,vehicles:vehicles}));}catch(e){}}
+/* v43.10.1: パスワードを端末(localStorage)へ平文保存しないようキャッシュから除外 */
+function admSaveCache(){try{var ws=(workers||[]).map(function(w){var c={};for(var k in w){if(k!=='パスワード')c[k]=w[k];}return c;});localStorage.setItem(ADMCACHE,JSON.stringify({workers:ws,customers:customers,contacts:contacts,vehicles:vehicles}));}catch(e){}}
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 
 var loadCnt=0,loadShownAt=0;
@@ -683,7 +685,7 @@ function openWorker(w){
   g('w_mei').value=w?(w['名']||sp.slice(1).join(' ')||''):'';
   g('w_short').value=w?(w['略称']||''):'';
   g('w_kind').value=w?(w['区分']||'社員'):'社員';g('w_unit').value=w?(numv(w['標準単価'])||''):'';g('w_belong').value=w?(w['所属']||''):'';
-  g('w_loginid').value=w?(w['ログインID']||''):'';g('w_pw').value=w?(w['パスワード']||''):'';
+  g('w_loginid').value=w?(w['ログインID']||''):'';g('w_pw').value='';g('w_pw').placeholder=w?'変更する場合のみ入力':'簡単でOK';
   if(g('w_role'))g('w_role').value=w?(w['権限']||'社員'):'社員';
   if(g('w_status'))g('w_status').value=w?(w['利用状態']||'有効'):'有効';
   wKind();document.getElementById('ov').classList.add('show');
@@ -695,7 +697,11 @@ function saveWorker(){
   if(!sei&&!mei){toast('氏（姓）を入れてください');return;}
   var name=[sei,mei].filter(Boolean).join('　');
   var kind=g('w_kind'),id=g('w_id'),isNew=!id;
-  var d={'氏名':name,'氏':sei,'名':mei,'略称':g('w_short').trim(),'区分':kind,'所属':kind==='常用'?g('w_belong').trim():'','権限':g('w_role')||'社員','利用状態':g('w_status')||'有効','標準単価':g('w_unit'),'ログインID':g('w_loginid').trim(),'パスワード':g('w_pw')};
+  // v43.10.1: パスワード欄は「変更時のみ入力」方式。空欄なら既存パスワードを維持する
+  var exPw='';
+  if(!isNew){var exW=workers.filter(function(x){return String(x['作業員ID'])===String(id);})[0];exPw=exW?String(exW['パスワード']||''):'';}
+  var d={'氏名':name,'氏':sei,'名':mei,'略称':g('w_short').trim(),'区分':kind,'所属':kind==='常用'?g('w_belong').trim():'','権限':g('w_role')||'社員','利用状態':g('w_status')||'有効','標準単価':g('w_unit'),'ログインID':g('w_loginid').trim(),'パスワード':g('w_pw')!==''?g('w_pw'):exPw};
+  if(!isNew&&g('w_pw')===''&&!exPw)delete d['パスワード'];
   var btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='保存中…';
   var params=isNew?{action:'addWorker',data:d}:{action:'updateWorker',id:id,data:d};
   callGAS(params).then(function(res){
@@ -1177,7 +1183,7 @@ function saveVehicle(){
     '保険会社':g('v_hokenCo').trim(),'保険証券番号':g('v_hokenNo').trim(),'保険開始日':g('v_hokenFrom'),'保険満了日':g('v_hokenTo'),
     'オイル交換距離':g('v_oilKm'),'オイル交換月数':g('v_oilMon'),'前回オイル交換日':g('v_oilDate'),'前回オイル交換距離':g('v_oilOdo'),
     '現在距離':g('v_odo'),'日額単価':g('v_rate'),'表示順':g('v_order'),'備考':g('v_note').trim()};
-  if(g('v_odo')!=='')d['距離更新日']=new Date().toISOString().slice(0,10);
+  if(g('v_odo')!=='')d['距離更新日']=(function(x){return x.getFullYear()+'-'+('0'+(x.getMonth()+1)).slice(-2)+'-'+('0'+x.getDate()).slice(-2);})(new Date());
   if(!isNew)d['車両ID']=id;
   var btn=document.getElementById('vSaveBtn');btn.disabled=true;btn.textContent='保存中…';
   callGAS({action:'vehicleSave',data:d}).then(function(res){ if(!res.ok)throw new Error(res.error||'保存失敗');
@@ -1313,6 +1319,6 @@ function deleteCompDoc(id){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 </script>
-<script src="../common_ui.js?v=20260620-v43-8-3-cache-lock"></script>
+<script src="../common_ui.js?v=20260704-v43-10-1"></script>
 </body>
 </html>

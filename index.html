@@ -272,7 +272,7 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260704-v43-10-0"></script>
+<script src="./config.js?v=20260704-v43-10-1"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
@@ -610,7 +610,8 @@ function applyDashOpen(){var d=document.getElementById('dash');if(d)d.classList.
 function toggleDash(){var d=document.getElementById('dash');if(!d)return;var open=!d.classList.contains('open');d.classList.toggle('open',open);try{localStorage.setItem('genba_dash_open',open?'1':'0');}catch(e){}}
 function loadDash(){
   try{var c=JSON.parse(localStorage.getItem('genba_dash')||'null');
-    if(c&&c.today===new Date().toISOString().slice(0,10))renderDash(c);}catch(e){}
+    var _ld=new Date(),_today=_ld.getFullYear()+'-'+('0'+(_ld.getMonth()+1)).slice(-2)+'-'+('0'+_ld.getDate()).slice(-2);
+    if(c&&c.today===_today)renderDash(c);}catch(e){}
   var u=gUser(),wq=(u&&u['作業員ID'])?('&wid='+encodeURIComponent(u['作業員ID'])):'';
   jsonpGet('dashboard',function(res){
     try{localStorage.setItem('genba_dash',JSON.stringify(res));}catch(e){}
@@ -655,6 +656,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260704-v43-10-0"></script>
+<script src="./common_ui.js?v=20260704-v43-10-1"></script>
 </body>
 </html>
