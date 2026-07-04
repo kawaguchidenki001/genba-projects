@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.07.04-43.13.1 / 自社用の簡素化：こまったとき(FAQ・サポート)非表示・デモボタン削除・管理者ダッシュボード非表示（自社用のみ。販売用は維持） / Code_v157 -->
+<!-- Gen-Can root app v2026.07.04-43.14.0 / ワンタップ打刻（勤務状態ボタン→打刻シート）・打刻/日報のセルフ通知・タイル並び替え / Code_v157 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -137,6 +137,38 @@
     .sq .en{font-size:11px;}
   }
 
+  /* v43.14.0 ワンタップ打刻シート */
+  .punch-ov{position:fixed;inset:0;z-index:100001;background:rgba(20,30,50,.55);display:none;align-items:center;justify-content:center;padding:18px;}
+  .punch-ov.show{display:flex;}
+  .punch-box{background:#fff;border-radius:18px;max-width:340px;width:100%;box-shadow:0 16px 50px rgba(0,0,0,.3);padding:22px 18px 16px;text-align:center;}
+  .punch-box .p-ttl{font-size:18px;font-weight:800;color:#1f3a52;margin-bottom:4px;}
+  .punch-box .p-sub{font-size:12.5px;color:#5e7a92;margin-bottom:14px;line-height:1.6;}
+  .punch-box .p-brk{font-size:13.5px;color:#1f3a52;margin-bottom:12px;font-weight:700;}
+  .punch-box .p-brk select{padding:9px 12px;border:1px solid #d4e4f0;border-radius:9px;font-size:15px;margin-left:6px;font-family:inherit;}
+  .punch-box .p-main{width:100%;padding:15px;border:none;border-radius:13px;font-size:16.5px;font-weight:800;color:#fff;cursor:pointer;margin-bottom:10px;}
+  .punch-box .p-main.in{background:linear-gradient(92deg,#10b981,#047857);box-shadow:0 6px 14px rgba(4,120,87,.3);}
+  .punch-box .p-main.out{background:linear-gradient(92deg,#f87171,#dc2626);box-shadow:0 6px 14px rgba(220,38,38,.3);}
+  .punch-box .p-main:disabled{opacity:.6;}
+  .punch-box .p-link{display:block;font-size:13px;color:#1f5fa8;text-decoration:underline;margin-bottom:12px;}
+  .punch-box .p-cancel{width:100%;padding:11px;border:none;border-radius:11px;background:#eef4f9;color:#5e7a92;font-size:14px;font-weight:700;cursor:pointer;}
+  /* v43.14.0 打刻・日報のセルフ通知 */
+  #remindBar{display:grid;gap:8px;}
+  #remindBar:not(:empty){margin:0 0 14px;}
+  .remindItem{display:flex;align-items:center;gap:9px;background:#fff7e6;border:1px solid #f4d9a6;border-radius:13px;padding:11px 13px;font-size:13.5px;color:#7a4e00;font-weight:700;}
+  .remindItem .rTxt{flex:1;line-height:1.5;min-width:0;}
+  .remindItem .rGo{border:none;border-radius:9px;padding:9px 13px;font-size:12.5px;font-weight:800;cursor:pointer;text-decoration:none;white-space:nowrap;background:#b45309;color:#fff;display:inline-block;}
+  .remindItem .rLater{border:none;border-radius:9px;padding:9px 8px;font-size:12.5px;font-weight:800;cursor:pointer;background:transparent;color:#a16207;white-space:nowrap;}
+  /* v43.14.0 トースト */
+  #gcToast{position:fixed;left:50%;transform:translateX(-50%);bottom:26px;z-index:120001;background:#1f3a52;color:#fff;padding:11px 18px;border-radius:999px;font-size:13.5px;opacity:0;transition:opacity .25s;pointer-events:none;box-shadow:0 8px 20px rgba(31,58,82,.3);max-width:90vw;text-align:center;}
+  #gcToast.show{opacity:1;}
+  /* v43.14.0 タイル並び替えモード */
+  .sortBtns{display:none;flex-direction:column;gap:6px;margin-left:8px;flex:0 0 auto;}
+  body.tileEdit .sortBtns{display:flex;}
+  body.tileEdit a.sq .cor{display:none;}
+  body.tileEdit a.sq{outline:2px dashed #9db8d4;outline-offset:-3px;}
+  .sortBtns button{width:40px;height:34px;border:none;border-radius:9px;background:#e8ecf2;box-shadow:3px 3px 6px #cdd3dc,-3px -3px 6px #ffffff;color:#1f5fa8;font-size:13px;font-weight:800;cursor:pointer;}
+  .sortBtns button:active{box-shadow:inset 2px 2px 5px #cdd3dc,inset -2px -2px 5px #ffffff;}
+
   /* v104 今日やることカード */
   .todoPanel{background:#ffffff;border:1px solid #dbe8f5;border-radius:22px;box-shadow:0 8px 24px rgba(31,90,168,.12);padding:16px;margin:0 0 18px;display:none;}
   .todoPanel.show{display:block;}
@@ -190,13 +222,15 @@
         <div class="gc-name">Gen-Can</div>
         <div class="gc-sub">Smart Site Management</div>
       </div>
-      <a class="timeStatus s-none" id="timeStatus" href="./timecard/" aria-label="勤怠状態へ"><span class="dot" id="timeStatusDot">⚪</span><span id="timeStatusLabel">未出勤</span></a>
+      <a class="timeStatus s-none" id="timeStatus" href="./timecard/" onclick="return openPunchSheet();" aria-label="勤怠打刻"><span class="dot" id="timeStatusDot">⚪</span><span id="timeStatusLabel">未出勤</span></a>
     </div>
     <div class="co" id="companyName"><span id="coName"></span> <span id="meName" class="userName"></span><span class="adminTag" id="adminTag">管理者</span></div>
     <div class="permBadge" id="permBadge">権限：社員</div>
   </div>
 
   <div class="permNote" id="permNote">この利用者の権限で使えるメニューだけを表示しています。</div>
+
+  <div id="remindBar"></div>
 
   <div class="todoPanel" id="todayTodoPanel">
     <div class="todoTop">
@@ -267,11 +301,11 @@
     <a class="sq t-admin" href="./admin/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></span><span class="txt"><span class="en">Admin</span><span class="nm">管理画面</span></span><span class="cor lock">🔒</span></a>
     <a class="sq t-ops" href="./operations/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><path d="m15 17 2 2 4-4"/></svg></span><span class="txt"><span class="en">Operations</span><span class="nm">運用センター</span><span class="ds">更新後確認・販売準備・保守画面をまとめて開く</span></span><span class="cor lock">🔒</span></a>
   </div>
-  <div class="foot"><a href="#" onclick="logout();return false;">ログアウト</a></div>
+  <div class="foot"><a href="#" id="tileEditLink" onclick="toggleTileEdit();return false;">タイルの並び替え</a><span style="margin:0 10px;color:#b9c7d4;">|</span><a href="#" onclick="logout();return false;">ログアウト</a></div>
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260704-v43-13-1"></script>
+<script src="./config.js?v=20260704-v43-14-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
@@ -385,6 +419,145 @@ function renderTimeStatus_(status){
   if(status==='working'){ if(dot)dot.textContent='🟢'; if(lab)lab.textContent='勤務中'; if(ts)ts.classList.add('s-work'); }
   else if(status==='done'){ if(dot)dot.textContent='🔴'; if(lab)lab.textContent='退勤後'; if(ts)ts.classList.add('s-done'); }
   else{ if(dot)dot.textContent='⚪'; if(lab)lab.textContent='未出勤'; if(ts)ts.classList.add('s-none'); }
+  // v43.14.0: 最新状態を保持し、打刻・日報のセルフ通知を更新
+  window._tcStatus=status;
+  try{checkReminders(status);}catch(e){}
+}
+
+/* ===== v43.14.0 ホームからワンタップ打刻 ===== */
+function gcLocalYmd_(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+var gcToastT;function gcToast(m){var t=document.getElementById('gcToast');if(!t)return;t.textContent=m;t.classList.add('show');clearTimeout(gcToastT);gcToastT=setTimeout(function(){t.classList.remove('show');},2800);}
+function gcGetPos_(){return new Promise(function(res){ if(!navigator.geolocation){res('');return;}
+  navigator.geolocation.getCurrentPosition(function(p){res(p.coords.latitude.toFixed(5)+','+p.coords.longitude.toFixed(5));},function(){res('');},{enableHighAccuracy:true,timeout:8000,maximumAge:60000}); }); }
+function openPunchSheet(){
+  var st=window._tcStatus;
+  if(!st){return true;} // 状態が未取得のときは従来どおりタイムカード画面へ遷移
+  var ttl=document.getElementById('punchTtl'),sub=document.getElementById('punchSub'),brkRow=document.getElementById('punchBrkRow'),btn=document.getElementById('punchMainBtn');
+  if(!ttl||!btn)return true;
+  btn.disabled=false;
+  if(st==='working'){
+    ttl.textContent='退勤しますか？';sub.textContent='休憩時間を確認して「退勤する」を押してください。';
+    brkRow.style.display='block';btn.textContent='🔴 退勤する';btn.className='p-main out';
+    btn.onclick=function(){homePunch('退勤',Number(document.getElementById('punchBrk').value||0));};
+  }else if(st==='done'){
+    ttl.textContent='本日は退勤済みです';sub.textContent='もう一度出勤する場合は「再出勤する」を押してください。';
+    brkRow.style.display='none';btn.textContent='🟢 再出勤する';btn.className='p-main in';
+    btn.onclick=function(){homePunch('出勤',120);};
+  }else{
+    ttl.textContent='出勤しますか？';sub.textContent='現在時刻で出勤を記録します。';
+    brkRow.style.display='none';btn.textContent='🟢 出勤する';btn.className='p-main in';
+    btn.onclick=function(){homePunch('出勤',120);}; // 休憩分の既定値はタイムカード画面と同じ120分
+  }
+  document.getElementById('punchOv').classList.add('show');
+  return false;
+}
+function closePunchSheet(){var ov=document.getElementById('punchOv');if(ov)ov.classList.remove('show');}
+var punchBusy=false;
+function homePunch(type,brkMin){
+  if(punchBusy)return; punchBusy=true;
+  var u=gUser();
+  if(!u||!u['作業員ID']){punchBusy=false;return;}
+  var btn=document.getElementById('punchMainBtn');
+  if(btn){btn.disabled=true;btn.textContent='記録中…';}
+  gcGetPos_().then(function(pos){
+    var n=new Date(), hmNow=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2);
+    return new Promise(function(resolve,reject){
+      // タイムカード画面の punch と同じ action・同じデータ構成で送信
+      jsonpCall_({action:'punch',secret:genbaSessionTok(),data:JSON.stringify({'作業員ID':u['作業員ID'],'氏名':u['氏名']||'','種別':type,'時刻':hmNow,'日付':gcLocalYmd_(),'位置':pos,'休憩分':Number(brkMin||0)})},
+        function(r){ if(r&&r.ok)resolve(r); else reject(new Error((r&&r.error)||'記録に失敗しました')); },
+        function(kind){ reject(new Error('通信エラー（'+kind+'）')); },20000);
+    });
+  }).then(function(){
+    var st=(type==='退勤')?'done':'working';
+    renderTimeStatus_(st);
+    try{sessionStorage.setItem('tsCache_'+u['作業員ID'],JSON.stringify({status:st,t:Date.now()}));}catch(e){}
+    gcToast('✓ '+type+'を記録しました');
+    closePunchSheet();
+  }).catch(function(err){
+    gcToast('⚠ 失敗：'+err.message+'。タイムカード画面からもお試しください');
+  }).then(function(){punchBusy=false;if(btn)btn.disabled=false;});
+}
+
+/* ===== v43.14.0 打刻忘れ・日報忘れのセルフ通知 ===== */
+var REMIND_REPORT_HOUR=17;  // この時刻以降に日報未提出なら通知
+var REMIND_PUNCH_HOUR=19;   // この時刻以降に勤務中のままなら退勤忘れ通知
+function remindDismissed_(key){
+  try{var d=JSON.parse(localStorage.getItem('gc_pref_remind_dismiss')||'{}');return d.date===gcLocalYmd_()&&d.keys&&d.keys[key];}catch(e){return false;}
+}
+function remindDismiss(key){
+  try{var t=gcLocalYmd_();var d=JSON.parse(localStorage.getItem('gc_pref_remind_dismiss')||'{}');
+    if(d.date!==t)d={date:t,keys:{}}; d.keys=d.keys||{}; d.keys[key]=1;
+    localStorage.setItem('gc_pref_remind_dismiss',JSON.stringify(d));}catch(e){}
+  try{checkReminders(window._tcStatus||'none');}catch(e){}
+}
+function checkReminders(status){
+  var bar=document.getElementById('remindBar'); if(!bar)return;
+  var h=new Date().getHours(), today=gcLocalYmd_(), items=[];
+  if(status==='working' && h>=REMIND_PUNCH_HOUR && !remindDismissed_('punch')){
+    items.push('<div class="remindItem"><span class="rTxt">🕖 退勤の打刻がまだのようです</span><button type="button" class="rGo" onclick="openPunchSheet()">退勤する</button><button type="button" class="rLater" onclick="remindDismiss(\'punch\')">あとで</button></div>');
+  }
+  var last=''; try{last=localStorage.getItem('gc_pref_last_report_date')||'';}catch(e){}
+  if(h>=REMIND_REPORT_HOUR && status!=='none' && last!==today && !remindDismissed_('report')){
+    items.push('<div class="remindItem"><span class="rTxt">📝 今日の日報がまだのようです</span><a class="rGo" href="./report/">日報を書く</a><button type="button" class="rLater" onclick="remindDismiss(\'report\')">あとで</button></div>');
+  }
+  bar.innerHTML=items.join('');
+}
+
+/* ===== v43.14.0 ホームタイルの並び替え（端末ごとに記憶） ===== */
+var TILE_ORDER_KEY='gc_pref_tile_order';
+function applyTileOrder(){
+  try{
+    var saved=JSON.parse(localStorage.getItem(TILE_ORDER_KEY)||'null'); if(!saved)return;
+    document.querySelectorAll('.grid').forEach(function(g,i){
+      var want=saved[i]; if(!want||!want.length)return;
+      var tiles={};
+      Array.prototype.forEach.call(g.querySelectorAll('a.sq'),function(a){var k=genbaMenuKeyFromHref(a.getAttribute('href')||'');if(k)tiles[k]=a;});
+      want.forEach(function(k){ if(tiles[k])g.appendChild(tiles[k]); });
+    });
+  }catch(e){}
+}
+function saveTileOrder(){
+  try{
+    var out=[];
+    document.querySelectorAll('.grid').forEach(function(g){
+      var arr=[];
+      Array.prototype.forEach.call(g.querySelectorAll('a.sq'),function(a){var k=genbaMenuKeyFromHref(a.getAttribute('href')||'');if(k)arr.push(k);});
+      out.push(arr);
+    });
+    localStorage.setItem(TILE_ORDER_KEY,JSON.stringify(out));
+  }catch(e){}
+}
+function tileMove_(a,dir){
+  var sibs=Array.prototype.filter.call(a.parentNode.children,function(x){return x.matches&&x.matches('a.sq')&&x.style.display!=='none';});
+  var i=sibs.indexOf(a), j=i+dir;
+  if(j<0||j>=sibs.length)return;
+  var other=sibs[j];
+  if(dir<0)a.parentNode.insertBefore(a,other); else a.parentNode.insertBefore(other,a);
+  saveTileOrder();
+}
+function toggleTileEdit(){
+  var on=!document.body.classList.contains('tileEdit');
+  document.body.classList.toggle('tileEdit',on);
+  var l=document.getElementById('tileEditLink'); if(l)l.textContent=on?'✓ 並び替えを終了':'タイルの並び替え';
+  if(on&&!window._sortBtnsAdded){
+    window._sortBtnsAdded=true;
+    document.querySelectorAll('.grid a.sq').forEach(function(a){
+      var s=document.createElement('span'); s.className='sortBtns';
+      var up=document.createElement('button');up.type='button';up.textContent='▲';up.setAttribute('aria-label','上へ');
+      var dn=document.createElement('button');dn.type='button';dn.textContent='▼';dn.setAttribute('aria-label','下へ');
+      up.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();tileMove_(a,-1);});
+      dn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();tileMove_(a,1);});
+      s.appendChild(up);s.appendChild(dn);a.appendChild(s);
+    });
+    // 並び替えモード中はタイルのページ遷移を止める（▲▼の操作は生きる）
+    document.addEventListener('click',function(e){
+      if(!document.body.classList.contains('tileEdit'))return;
+      var t=e.target&&e.target.closest&&e.target.closest('a.sq');
+      if(t)e.preventDefault();
+    },true);
+  }
+  if(on){gcToast('▲▼で並び替えできます。終わったら「✓ 並び替えを終了」を押してください');}
+  else{saveTileOrder();gcToast('並び順を保存しました（この端末に記憶されます）');}
 }
 
 // GASに問い合わせて最新状態に更新（応答後にキャッシュも更新）
@@ -669,14 +842,24 @@ function remOK(id){remAddDismiss(id);renderRemPopup();}
 function remDel(id){remSaveArr(remLoad().filter(function(x){return x.id!==id;}));renderRemPopup();}
 
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
-(function(){var u=gUser();if(u&&u['作業員ID']){showMenu(u);renderRemPopup();}else{showLogin();}})();
+(function(){applyTileOrder();var u=gUser();if(u&&u['作業員ID']){showMenu(u);renderRemPopup();}else{showLogin();}})();
 </script>
+
+<div class="punch-ov" id="punchOv"><div class="punch-box">
+  <div class="p-ttl" id="punchTtl">勤怠打刻</div>
+  <div class="p-sub" id="punchSub"></div>
+  <div class="p-brk" id="punchBrkRow" style="display:none;">休憩<select id="punchBrk"><option value="0">0分</option><option value="45">45分</option><option value="60">60分</option><option value="90">90分</option><option value="120" selected>120分</option></select></div>
+  <button class="p-main in" id="punchMainBtn" type="button">出勤する</button>
+  <a class="p-link" href="./timecard/">タイムカードを開く（詳細・修正）</a>
+  <button class="p-cancel" type="button" onclick="closePunchSheet()">キャンセル</button>
+</div></div>
+<div id="gcToast"></div>
 
 <div class="rem-ov" id="remOv"><div class="rem-box">
   <h3>🔔 忘れ物メモ</h3>
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260704-v43-13-1"></script>
+<script src="./common_ui.js?v=20260704-v43-14-0"></script>
 </body>
 </html>
