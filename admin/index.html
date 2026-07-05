@@ -276,7 +276,7 @@
       <div class="setup-card" id="setup-company-card">
         <h3>1. 会社情報を登録</h3>
         <p class="hint">見積書・請求書に印字される基本情報です。分かる範囲だけ入れて保存できます。</p>
-        <div class="fld"><label>会社名</label><input id="su_ci_name" placeholder="例）河口電機株式会社"></div>
+        <div class="fld"><label>会社名</label><input id="su_ci_name" placeholder="例）〇〇電気株式会社"></div>
         <div class="fld"><label>郵便番号</label><input id="su_ci_zip" inputmode="numeric" placeholder="例）501-0000"></div>
         <div class="fld"><label>会社住所</label><input id="su_ci_addr" placeholder="例）岐阜県岐阜市〇〇町1-2-3"></div>
         <div class="two">
@@ -393,8 +393,8 @@
       <div class="sec">会社情報（見積・請求書に印字されます）</div>
       <div style="background:var(--bg);border-radius:var(--radius);box-shadow:var(--rise);padding:14px 16px 12px;margin-bottom:14px;">
         <div class="fld"><label>会社名の上の行（業種・キャッチ等）</label><input id="ci_above" placeholder="例）電気設備工事　設計・施工"></div>
-        <div class="fld"><label>会社名</label><input id="ci_name" placeholder="例）河口電機株式会社"></div>
-        <div class="fld"><label>会社名の下の行（代表者・役職等）</label><input id="ci_below" placeholder="例）代表取締役　河口 安男"></div>
+        <div class="fld"><label>会社名</label><input id="ci_name" placeholder="例）〇〇電気株式会社"></div>
+        <div class="fld"><label>会社名の下の行（代表者・役職等）</label><input id="ci_below" placeholder="例）代表取締役　山田 太郎"></div>
         <div class="fld"><label>郵便番号</label><input id="ci_zip" inputmode="numeric" placeholder="例）501-0000"></div>
         <div class="fld"><label>会社住所</label><input id="ci_addr" placeholder="例）岐阜県岐阜市〇〇町1-2-3"></div>
         <div class="two">
@@ -430,10 +430,10 @@
     <h2 id="mTitle">作業員の追加</h2>
     <input type="hidden" id="w_id">
     <div class="two">
-      <div class="fld"><label>氏（姓） *</label><input id="w_sei" placeholder="例）河口"></div>
+      <div class="fld"><label>氏（姓） *</label><input id="w_sei" placeholder="例）山田"></div>
       <div class="fld"><label>名</label><input id="w_mei" placeholder="例）太郎"></div>
     </div>
-    <div class="fld"><label>略称（日報・予定表に表示）</label><input id="w_short" placeholder="例）河口 / ナンカイ"></div>
+    <div class="fld"><label>略称（日報・予定表に表示）</label><input id="w_short" placeholder="例）山田 / ヤマダ"></div>
     <div class="two">
       <div class="fld"><label>区分</label><select id="w_kind" onchange="wKind()"><option>社員</option><option>常用</option></select></div>
       <div class="fld"><label>標準単価（円/人工）</label><input id="w_unit" type="number" inputmode="numeric" placeholder="例）20000"></div>
@@ -589,9 +589,9 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-18-3"></script>
+<script src="../config.js?v=20260704-v43-19-0"></script>
 <script>
-var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 
 function genbaSessionTok(){
   try{
@@ -1321,6 +1321,6 @@ function deleteCompDoc(id){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-18-3"></script>
+<script src="../common_ui.js?v=20260704-v43-19-0"></script>
 </body>
 </html>

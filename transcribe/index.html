@@ -102,7 +102,7 @@
   .unsupported{margin:20px 14px;padding:14px 16px;background:#fef9c3;border:1px solid #fde68a;color:#854d0e;border-radius:12px;font-size:13.5px;line-height:1.6;display:none;}
   .unsupported.show{display:block;}
 </style>
-<script src="../config.js?v=20260704-v43-18-3"></script>
+<script src="../config.js?v=20260704-v43-19-0"></script>
 </head>
 <body>
 <div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
@@ -191,7 +191,7 @@
 <div class="busy" id="busy"><div class="busy-box"><div class="spin"></div><span id="busyLbl">AIで処理中…</span></div></div>
 <script>
 /* ========== 設定 ========== */
-var API_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'https://script.google.com/macros/s/AKfycbyk8p6_gi6e3wdhQdWL0Oswz4BUtP3gR37PeFJJ9rO5mVhTRt4CikpQhK_bBwt1Ftr-/exec';
+var API_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 var SECRET='';
 var CACHE_KEY='genba_transcribe_memo';
 /* v43.10.1: genbaSessionTok未定義で「整える／要約」が必ず失敗していたバグを修正（他ページと同じ定義を追加） */
@@ -443,6 +443,6 @@ function doSms(){
 updateCnt();
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-18-3"></script>
+<script src="../common_ui.js?v=20260704-v43-19-0"></script>
 </body>
 </html>
