@@ -2,6 +2,7 @@
 /* 既存ニューモーフィズム維持 + タイルアイコンを機能別カラーグラデーション化 */
 /* v1.1: 全ページ共通のオフライン通知バナーを追加（現場の電波切れ対策） */
 /* v43.17.1: スマホの.grid一列化ルールにカレンダー月グリッド(.cal-grid)の除外を追加（月表示の縦一列崩れを修正） */
+/* v43.18.2: 右下の共通ナビ（←メニュー・上へ・更新）を全ページで廃止（左上メニューと重複のため。挿入処理をコメントアウト） */
 (function(){
   'use strict';
   var cfg = window.GENBA_CONFIG || {};
@@ -293,7 +294,10 @@
   }
   if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wrapTables); else wrapTables();
 
-  // 共通ナビゲーション挿入（旧版維持）
+  // v43.18.2 右下の共通ナビ（←メニュー・上へ・更新）は廃止。
+  // 各ページ左上に「← メニュー」があり重複していたため、全ページで非表示にした。
+  // （復活させる場合は下のブロックのコメントを外す）
+  /*
   var hasOwnDock = document.getElementById('fileAddDock') || document.getElementById('ledgerDock') || document.querySelector('.bottom') || document.getElementById('outBar') || document.querySelector('.fab');
   var skipPaths = /\/(files|photos|toolbox)\//.test(path);
   if(isSub && !hasOwnDock && !skipPaths && !document.getElementById('gcCommonNav')){
@@ -305,6 +309,7 @@
     nav.querySelector('[data-gc-top]').addEventListener('click', function(){window.scrollTo({top:0,behavior:'smooth'});});
     nav.querySelector('[data-gc-reload]').addEventListener('click', function(){location.reload();});
   }
+  */
 
   // オフライン通知バナー（全ページ共通）
   // 現場は電波が切れやすく、通信失敗が「保存されたつもり」の事故につながるため、
