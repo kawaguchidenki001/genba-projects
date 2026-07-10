@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- projects v43.21.0 (2026-07-04) 現場詳細（管理者）に「収支・原価を見る」ボタンを追加し、その現場の工事台帳(daicho/?case=)へ遷移。GAS変更なし。 -->
 <!-- projects v43.20.0 (2026-07-04) ?status=（完了等）でステータス絞り込みURLに対応（ホームの請求まだアラートからの遷移用・キャッシュ表示段階から即適用）。GAS変更なし。 -->
 <!-- projects v43.16.0 (2026-07-04) 起動時の権限確認とデータ取得を並列化（初回読み込み最大半減）。初回読み込み中はスケルトン表示。配色を統一トークン（青 #2d7dd2・紺文字）に変更（状態色は据え置き）。スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- projects v43.11.0 (2026-07-04) config.jsを先頭読み込みに変更（GAS URL差し替え対応）。メニューリンク相対化。GAS変更なし。 -->
@@ -240,7 +241,7 @@
   .hmark{font-size:15px;}
   .back{font-size:11.5px;padding:9px 14px;}
 </style>
-<script src="../config.js?v=20260704-v43-20-0"></script>
+<script src="../config.js?v=20260704-v43-21-0"></script>
 </head>
 <body>
 <div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
@@ -398,6 +399,7 @@
         <button class="btn primary" style="width:100%;background:var(--grad);box-shadow:3px 4px 10px rgba(91,91,214,.35),-2px -2px 6px #fff;" onclick="addFilesFromDetail()"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:7px;"><path d="M12 15V4M8 8l4-4 4 4"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg>写真・資料の追加</button>
       </div>
       <div id="d_adminbtns" style="display:none;margin-top:18px;">
+        <button id="d_ledgerBtn" class="btn primary" style="width:100%;display:none;margin-bottom:10px;background:linear-gradient(135deg,#10b981,#047857);box-shadow:3px 4px 10px rgba(4,120,87,.35),-2px -2px 6px #fff;" onclick="openLedgerFromDetail()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M3 21h18M6 21V12M11 21V7M16 21v-7M21 21V4"/></svg>収支・原価を見る（受注−原価＝粗利）</button>
         <button class="btn primary" style="width:100%;" onclick="editFromDetail()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="m4 20 1.2-4.2L16 5l3 3L8.2 18.8Z"/><path d="m13.2 6.8 3 3"/></svg>この現場を編集</button>
       </div>
     </div>
@@ -719,6 +721,8 @@ function openDetail(p){
   }).catch(function(){});
 
   g('d_adminbtns').style.display='block';
+  // v43.21.0 収支・原価は管理者のみ（工事台帳が管理者専用のため）
+  var lb=g('d_ledgerBtn'); if(lb)lb.style.display=isAdmin()?'block':'none';
   loadKoutei();
   document.getElementById('ovd').classList.add('show');
 }
@@ -754,6 +758,8 @@ function openNoteInTB(caseId,noteId){ location.href='../toolbox/?memo='+encodeUR
 function openCheckInTB(caseId,noteId){ location.href='../toolbox/?check='+encodeURIComponent(caseId)+'&note='+encodeURIComponent(noteId); }
 function openDrawInTB(caseId,noteId){ location.href='../toolbox/?draw='+encodeURIComponent(caseId)+'&note='+encodeURIComponent(noteId); }
 function editFromDetail(){ closeDetail(); if(curDetail)openProject(curDetail); }
+/* v43.21.0 この現場の収支・原価（工事台帳）へ深リンク */
+function openLedgerFromDetail(){ if(!curDetail)return; location.href='../daicho/?case='+encodeURIComponent(curDetail['案件ID']); }
 function addFilesFromDetail(){ if(!curDetail)return; location.href='../files/?case='+encodeURIComponent(curDetail['案件ID']); }
 function closeDetail(ev){ if(ev&&ev.preventDefault)ev.preventDefault(); document.getElementById('ovd').classList.remove('show'); }
 /* ===== 工程管理（ガント）Step2：一覧・追加・編集・削除（バー表示はStep3） ===== */
@@ -1300,6 +1306,6 @@ callGAS({action:'checkRole'},null,true).then(function(res){
 }).catch(function(){ setSync('off','オフライン'); });
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-20-0"></script>
+<script src="../common_ui.js?v=20260704-v43-21-0"></script>
 </body>
 </html>

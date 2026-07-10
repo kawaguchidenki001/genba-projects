@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- daicho v43.21.0 (2026-07-04) 深リンク対応：daicho/?case=現場ID で該当現場の収支・原価を直接表示（現場詳細の「収支・原価を見る」ボタンからの遷移用）。収支計算ロジックは既存のまま。GAS変更なし。 -->
 <!-- daicho v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- daicho v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- daicho version 7 (2026-06-15) ヘッダー案A化(2段・CSSグリッド)。ログアウトボタンを非表示。 CSSのみ・HTML/JS/id不変・GAS変更なし。 -->
@@ -198,7 +199,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-20-0"></script>
+<script src="../config.js?v=20260704-v43-21-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 
@@ -217,6 +218,8 @@ function genbaSaveSession(res){
 function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
 var projects=[],customers=[],costs=[],labor={},vehicles=[],vehicleUsage={};
 var curId='',curStatus='進行中',editId='';
+/* v43.21.0 現場詳細からの深リンク（daicho/?case=現場ID で該当現場の収支を直接開く） */
+var _deepCase=null; try{var _dm=location.search.match(/[?&]case=([^&]+)/); if(_dm)_deepCase=decodeURIComponent(_dm[1]);}catch(e){}
 var CACHE='genba_daicho_cache';
 var KBN_ORDER=['材料費','外注費','機械リース','経費','その他'];
 var KBN_LABEL={'機械リース':'機械・リース'};
@@ -276,6 +279,8 @@ function loadAll(silent){
     if(!res.ok)throw new Error(res.error||'エラー');
     projects=res.projects||[];customers=res.customers||[];costs=res.costs||[];labor=res.labor||{};vehicles=res.vehicles||[];vehicleUsage=res.vehicleUsage||{};window.__suppliers=res.suppliers||[];
     saveCache();fillCustList();
+    if(_deepCase){ var dc=_deepCase; _deepCase=null;
+      if(projById(dc)){ openDetail(dc); if(history&&history.replaceState)history.replaceState(null,'',location.pathname); return; } }
     if(curId)renderDetail();else renderList();
   }).catch(function(err){if(!silent)toast('読込失敗：'+err.message);});
 }
@@ -495,6 +500,6 @@ function exportCsv(){
 document.getElementById('ov').addEventListener('click',function(e){if(e.target===this)closeSheet();});
 init();
 </script>
-<script src="../common_ui.js?v=20260704-v43-20-0"></script>
+<script src="../common_ui.js?v=20260704-v43-21-0"></script>
 </body>
 </html>
