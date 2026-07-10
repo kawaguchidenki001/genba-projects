@@ -38,7 +38,7 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
 .err{background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:800;display:none;}
 @media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr);} h1{font-size:22px;}}
 </style>
-<script src="../config.js?v=20260704-v43-19-0"></script>
+<script src="../config.js?v=20260704-v43-20-0"></script>
 </head>
 <body>
 <div class="wrap">
@@ -75,6 +75,7 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
   <div class="card">
     <h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">更新履歴</h2>
     <div class="list">
+      <div class="item"><div class="date">2026.07.04 / v43.20.0</div><h3>請求もれ防止アラート（新機能）</h3><ul><li>ホームに「請求まだ ○件」を表示。完了したのに請求書がまだの現場を検出します</li><li>タップで現場管理を「完了」で絞り込み表示。どの現場を請求すればよいか一目で分かります</li><li>請求書を作ると自動で「請求済」になりアラートから消えます（販売用の管理者ホームに表示）</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.19.0</div><h3>販売前クリーンアップ（個人情報の除去）</h3><ul><li>自社のGAS接続先URLが23ページに予備値として残っていたのを全て除去（config.jsの1箇所に集約）</li><li>入力例に残っていた実名（社名・代表者名など）を一般例に変更</li><li>不要になった内部文書・未使用CSSを削除。動作・見た目は変わりません</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.18.3</div><h3>ホームのAIツールのマークを統一</h3><ul><li>ホーム画面のAIツールのタイルだけ右下が「✨」になっていたのを、他のタイルと同じ「→」に統一しました</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.18.2</div><h3>表示の整理（AIツール・右下ナビ）</h3><ul><li>AIツール画面の「NEW」バッジと下部の「使いどころ」説明を削除してすっきりさせました</li><li>右下の共通ボタン（← メニュー・上へ・更新）を全ページで廃止（左上のメニューと重複のため）</li></ul></div>
@@ -139,7 +140,7 @@ function checkGas(){
 }
 render({},null);checkGas();
 </script>
-<script src="../common_ui.js?v=20260704-v43-19-0"></script>
+<script src="../common_ui.js?v=20260704-v43-20-0"></script>
 
 </body>
 </html>

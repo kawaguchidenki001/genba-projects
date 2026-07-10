@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.07.04-43.18.3 / AIツールタイルの右下を✨→→に統一（他タイルと揃える。FAQの?は据え置き） / Code_v157 -->
+<!-- Gen-Can root app v2026.07.04-43.20.0 / 請求もれ防止アラート（完了だが未請求の現場を「今日やること」＋ダッシュボードに表示・完了絞り込みへ遷移） / Code_v157 -->
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -253,6 +253,7 @@
       <div class="dcard" id="dRep" style="display:none;"></div>
       <div class="dcard" id="dMe" style="display:none;"></div>
       <div class="dcard" id="dAR" style="display:none;"></div>
+      <div class="dcard" id="dBill" style="display:none;"></div>
       <div class="dcard" id="dDue" style="display:none;"></div>
       <div class="dcard" id="dCheck" style="display:none;"></div>
       <div class="dcard" id="dAlert" style="display:none;"></div>
@@ -305,7 +306,7 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260704-v43-19-0"></script>
+<script src="./config.js?v=20260704-v43-20-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
@@ -706,9 +707,12 @@ function renderTodayTodo(d){
   if(va.length){items.push({icon:'🚚',title:'車両アラート '+va.length+'件',text:(va[0]['車両名']||'車両')+'　'+(va[0]['種類']||'期限')+'を確認してください。',url:'./vehicles/'});}
   var ar=d.ar||{};
   if((ar['期限超過']||0)>0){items.push({icon:'💴',title:'入金期限超過 '+ar['期限超過']+'件',text:'未入金の請求を確認してください。',url:'./estimate/'});}
+  // v43.20.0 請求まだ（完了だが請求書未発行の現場）＝請求もれ防止アラート
+  var billN=(d.projCounts||{})['完了']||0;
+  if(billN>0){items.push({icon:'💰',title:'請求まだ '+billN+'件',text:'完了した現場が未請求です。請求もれにご注意ください。',url:'./projects/?status=完了'});}
   var due=d.dueProjects||[];
   if(due.length){items.push({icon:'⏳',title:'工期間近 '+due.length+'件',text:(due[0]['案件名']||'現場')+' の工期を確認してください。',url:'./projects/'});}
-  var warn=(miss.length)+(va.length)+(ar['期限超過']||0)+(due.length);
+  var warn=(miss.length)+(va.length)+(ar['期限超過']||0)+(due.length)+billN;
   badge.textContent=warn?('要確認 '+warn+'件'):'順調です';
   badge.className='todoBadge'+(warn?' warn':'');
   list.innerHTML=items.slice(0,5).map(function(x){return '<div class="todoItem"><div class="todoIcon">'+escD(x.icon)+'</div><div class="todoMain"><b>'+escD(x.title)+'</b><span>'+escD(x.text)+'</span></div><a class="todoLink" href="'+escD(x.url)+'">開く →</a></div>';}).join('');
@@ -761,6 +765,15 @@ function renderDash(d){
       +'</div><a class="dmore" href="./estimate/">見積・請求を開く →</a>';
     arEl.innerHTML=h6;arEl.style.display='block';any=true;
   }else arEl.style.display='none';
+  // 請求まだ（完了だが請求書が未発行の現場）
+  var blEl=document.getElementById('dBill'), billN=pc['完了']||0;
+  if(blEl){ if(billN>0){
+    blEl.innerHTML='<div class="dttl">💰 請求まだ（完了・未請求）</div><div class="dchips">'
+      +'<span class="dchip" style="background:#fde2e2;color:#b91c1c;">完了 '+billN+'件</span></div>'
+      +'<div class="dempty" style="margin-top:6px;">作業が終わった現場です。請求書を作成すると「請求済」に変わります。請求もれにご注意ください。</div>'
+      +'<a class="dmore" href="./projects/?status=完了">完了の現場を見る →</a>';
+    blEl.style.display='block';any=true;
+  }else blEl.style.display='none'; }
   // 工期間近の案件
   var duEl=document.getElementById('dDue'),duArr=d.dueProjects||[];
   if(duArr.length){
@@ -795,7 +808,7 @@ function renderDash(d){
     h3+='<a class="dmore" href="./vehicles/">車両管理を開く →</a>';
     al.innerHTML=h3;al.style.display='block';any=true;
   }else{al.style.display='none';}
-  var todo=(d.dueProjects||[]).length+(d.checklistTotal||(d.checklists||[]).length)+(d.vehicleAlerts||[]).length+((((d.ar||{})['期限超過']))||0);
+  var todo=(d.dueProjects||[]).length+(d.checklistTotal||(d.checklists||[]).length)+(d.vehicleAlerts||[]).length+((((d.ar||{})['期限超過']))||0)+((d.projCounts||{})['完了']||0);
   var cntEl=document.getElementById('dashCnt');
   if(cntEl){if(todo>0){cntEl.textContent='⚠ 要対応 '+todo+'件';cntEl.className='cnt warn';}else{cntEl.textContent='順調です';cntEl.className='cnt ok';}}
   if(any){dash.style.display='block';applyDashOpen();}
@@ -860,6 +873,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260704-v43-19-0"></script>
+<script src="./common_ui.js?v=20260704-v43-20-0"></script>
 </body>
 </html>
