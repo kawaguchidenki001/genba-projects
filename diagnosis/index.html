@@ -24,7 +24,7 @@ h1{font-size:24px;color:#1f5fa8;line-height:1.25}.badge{display:inline-flex;alig
 .checks{display:grid;gap:10px}.check{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:16px;padding:13px 14px;display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start}.check .mark{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:900}.check.ok .mark{background:#dcfce7;color:#15803d}.check.warn .mark{background:#fef3c7;color:#b45309}.check.ng .mark{background:#fee2e2;color:#dc2626}.check h3{font-size:16px;color:#1f5fa8;margin:1px 0 4px}.check .fix{font-size:12.5px;color:#5e7a92;margin-top:6px;font-weight:800}.kv{display:grid;grid-template-columns:170px 1fr;gap:6px 10px;font-size:13px;margin-top:10px}.kv b{color:#5e7a92}.mono{font-family:Manrope,monospace;word-break:break-all}.loading{position:fixed;inset:0;background:rgba(232,236,242,.72);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(3px)}.loading.show{display:flex}.spin{width:44px;height:44px;border-radius:999px;border:5px solid #dbe8f3;border-top-color:#2563eb;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.kv{grid-template-columns:1fr}.actions .btn{flex:1 1 100%}h1{font-size:22px}}
 </style>
-<script src="../config.js?v=20260704-v43-21-0"></script>
+<script src="../config.js?v=20260704-v43-22-0"></script>
 </head>
 <body>
 <div class="loading" id="loading"><div class="spin"></div></div>
@@ -54,6 +54,6 @@ function runAll(){setErr('');setOk('');clientChecks();showLoad(true);jsonp({acti
 function repairSetup(){if(!confirm('不足シート・不足列、Drive親フォルダなどを修復します。既存データは削除しません。実行しますか？'))return;setErr('');setOk('');showLoad(true);jsonp({action:'diagnosisRepair'}).then(function(res){showLoad(false);setOk('修復を実行しました。もう一度診断します。');runAll();}).catch(function(e){showLoad(false);setErr(e.message+'。管理者権限でログインしてください。');});}
 clientChecks();renderMetrics({});renderMemo({});
 </script>
-<script src="../common_ui.js?v=20260704-v43-21-0"></script>
+<script src="../common_ui.js?v=20260704-v43-22-0"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- demo v43.22.0 (2026-07-04) 商談用デモに主要画面の見本を追加（ホーム=今日やること＋現場一覧の状態色分け／収支=受注−原価＝粗利・粗利率・予算バー・原価内訳）。全て静的モックで実データ非接続。GAS変更なし。 -->
 <!-- demo page app v2026.06.20-43.8.3 Code_v143 -->
 <html lang="ja">
 <head>
@@ -12,7 +13,31 @@
 :root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--blue:#2563eb;--cyan:#06b6d4;--purple:#7c3aed;--line:#dbe2ea;--ok:#15803d;--warn:#b45309;--card:#f5f9fd;--shadow:6px 6px 12px #cdd3dc,-6px -6px 12px #fff;}
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}body{background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:15.5px;line-height:1.65;min-height:100vh}.wrap{max-width:1120px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 18px) 16px 120px}.top{display:flex;align-items:center;gap:10px;margin-bottom:14px}.back{width:42px;height:42px;border-radius:14px;border:0;background:#e8ecf2;box-shadow:var(--shadow);color:#1f5fa8;font-size:20px;font-weight:800;cursor:pointer}.head{flex:1;min-width:0}.kicker{font-family:Manrope,sans-serif;font-weight:800;letter-spacing:.18em;font-size:10px;color:var(--sub);text-transform:uppercase}h1{font-size:26px;color:#1f5fa8;line-height:1.25}.badge{display:inline-flex;align-items:center;border-radius:999px;background:#dfeaf6;color:#1f5fa8;font-family:Manrope,sans-serif;font-size:11px;font-weight:800;padding:5px 10px}.hero,.card{background:#e8ecf2;border-radius:22px;box-shadow:var(--shadow);padding:18px;margin:14px 0}.hero{display:grid;grid-template-columns:1.2fr .8fr;gap:16px;align-items:center;background:linear-gradient(135deg,#eef9ff,#f6f0ff)}.hero h2{font-size:25px;color:#123e68;margin-bottom:6px}.small{font-size:12.5px;color:var(--sub)}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px}.btn{border:0;border-radius:14px;padding:12px 16px;font-weight:900;background:linear-gradient(92deg,var(--cyan),var(--blue) 60%,var(--purple));color:#fff;box-shadow:0 8px 18px rgba(37,99,235,.22);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.btn.secondary{background:#edf3fa;color:#1f5fa8;box-shadow:4px 4px 9px #cdd3dc,-4px -4px 9px #fff;border:1px solid #d7e5f2}.heroMock{background:rgba(255,255,255,.65);border:1px solid rgba(255,255,255,.9);border-radius:20px;padding:14px}.mrow{display:flex;gap:8px;margin:8px 0}.mchip{background:#fff;border:1px solid #dbe8f3;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900;color:#1f5fa8}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.feature{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:18px;padding:15px;min-height:150px}.feature .ic{font-size:26px;margin-bottom:8px}.feature h3{font-size:17px;color:#1f5fa8;margin-bottom:5px}.demoStage{display:grid;grid-template-columns:300px 1fr;gap:14px}.side{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:18px;padding:14px}.folderList{display:grid;gap:8px}.folder{border:0;background:#fff;border:1px solid #dbe8f3;border-radius:14px;padding:11px 12px;text-align:left;font-weight:900;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:9px}.folder.active{outline:3px solid #bfdbfe;background:#eff6ff}.stageMain{background:#f5f9fd;border:1px solid #dbe8f3;border-radius:18px;padding:14px}.crumb{display:flex;gap:6px;flex-wrap:wrap;color:#6b7f92;font-size:12px;font-weight:800;margin-bottom:12px}.filesGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.fileCard{background:#fff;border:1px solid #dbe8f3;border-radius:16px;padding:13px;min-height:110px;cursor:pointer}.fileCard b{display:block;font-size:14px;color:#1f3a52;margin-top:5px}.fileCard span{font-size:12px;color:#6b7f92}.photoGrid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}.photo{background:#fff;border:1px solid #dbe8f3;border-radius:14px;overflow:hidden;cursor:pointer;position:relative}.photo.selected{outline:3px solid #2563eb}.photo .img{height:95px;background:linear-gradient(135deg,#dbeafe,#fef3c7);display:flex;align-items:center;justify-content:center;font-size:30px}.photo:nth-child(2n) .img{background:linear-gradient(135deg,#dcfce7,#dbeafe)}.photo:nth-child(3n) .img{background:linear-gradient(135deg,#fce7f3,#e0e7ff)}.photo .cap{font-size:11px;color:#4b6478;padding:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.no{position:absolute;top:6px;left:6px;background:#2563eb;color:#fff;border-radius:999px;width:26px;height:26px;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:900}.photo.selected .no{display:flex}.preview{display:grid;gap:8px}.preRow{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;background:#fff;border:1px solid #dbe8f3;border-radius:14px;padding:8px}.preThumb{height:48px;border-radius:10px;background:linear-gradient(135deg,#dbeafe,#fef3c7);display:flex;align-items:center;justify-content:center}.status{display:inline-flex;border-radius:999px;padding:4px 9px;font-size:12px;font-weight:900}.status.ok{background:#dcfce7;color:var(--ok)}.status.warn{background:#fef3c7;color:var(--warn)}@media(max-width:840px){.hero,.demoStage{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.filesGrid{grid-template-columns:repeat(2,1fr)}.photoGrid{grid-template-columns:repeat(2,1fr)}.btn{width:100%}}
 </style>
-<script src="../config.js?v=20260704-v43-21-0"></script>
+<style>
+  /* v43.22.0 主要画面の見本（実データに触れない静的モック） */
+  .dsec-ttl{font-size:20px;color:#1f5fa8;margin-bottom:12px;}
+  .mgrid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  @media(max-width:840px){.mgrid2{grid-template-columns:1fr;}}
+  .mtodo{display:flex;gap:11px;align-items:center;background:#fff;border:1px solid #dbe8f3;border-radius:14px;padding:11px 13px;margin-bottom:9px;}
+  .mtodo .ic2{width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 auto;background:#eef3fa;}
+  .mtodo b{display:block;font-size:14.5px;color:#1f3a52;}
+  .mtodo em{font-style:normal;font-size:12px;color:#6b7f92;}
+  .msite{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+  .mst{background:#fff;border:1px solid #dbe8f3;border-radius:14px;border-top:4px solid #ccc;padding:10px 8px;text-align:center;}
+  .mst .n{font-size:12px;font-weight:800;color:#1f3a52;line-height:1.3;min-height:31px;}
+  .mst .s{display:inline-block;margin-top:6px;font-size:10.5px;font-weight:800;color:#fff;border-radius:999px;padding:2px 8px;}
+  .mprofit{background:linear-gradient(135deg,#2d7dd2,#1f5fa8);color:#fff;border-radius:16px;padding:15px 17px;}
+  .mprofit .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;}
+  .mprofit .v{font-size:16px;font-weight:800;}
+  .mprofit .k{font-size:10.5px;opacity:.85;}
+  .mbudget{height:9px;border-radius:999px;background:rgba(255,255,255,.3);overflow:hidden;margin-top:11px;}
+  .mbudget i{display:block;height:100%;width:54%;background:#fff;border-radius:999px;}
+  .mbrk{background:#fff;border:1px solid #dbe8f3;border-radius:14px;padding:4px 14px;}
+  .mbrk .r{display:flex;justify-content:space-between;padding:9px 0;font-size:13.5px;border-bottom:1px dashed #e3e9f0;}
+  .mbrk .r:last-child{border-bottom:none;font-weight:800;}
+  .mauto{font-size:10.5px;background:#dcfce7;color:#166534;border-radius:999px;padding:1px 7px;margin-left:6px;font-weight:800;}
+</style>
+<script src="../config.js?v=20260704-v43-22-0"></script>
 </head>
 <body>
 <div class="wrap">
@@ -26,6 +51,60 @@
     <div class="feature"><div class="ic">📸</div><h3>工事写真台帳</h3><p class="small">写真を選択し、選択順・プレビュー・PDF/Excel作成の流れを説明できます。</p></div>
     <div class="feature"><div class="ic">⚡</div><h3>現場クイック</h3><p class="small">現場でよく使う日報・ファイル・工事写真・打刻への導線を確認できます。</p></div>
   </div>
+
+  <div class="card">
+    <h2 class="dsec-ttl">ホーム画面のサンプル（管理者）</h2>
+    <div class="mgrid2">
+      <div>
+        <div class="small" style="font-weight:900;margin-bottom:9px;">📋 今日やること</div>
+        <div class="mtodo"><div class="ic2">💰</div><div><b>請求まだ 2件</b><em>完了した現場が未請求です。請求もれにご注意ください。</em></div></div>
+        <div class="mtodo"><div class="ic2">📝</div><div><b>日報未提出 1名</b><em>佐藤</em></div></div>
+        <div class="mtodo"><div class="ic2">⏳</div><div><b>工期間近 1件</b><em>長良川ビル 幹線更新 の工期を確認</em></div></div>
+        <div class="mtodo"><div class="ic2">💴</div><div><b>未入金（売掛）¥480,000・1件</b><em>入金期限を確認してください</em></div></div>
+      </div>
+      <div>
+        <div class="small" style="font-weight:900;margin-bottom:9px;">🏗 現場管理</div>
+        <div class="msite">
+          <div class="mst" style="border-top-color:#ea580c;"><div class="n">岐阜市役所 電気設備改修</div><div class="s" style="background:#ea580c;">施工中</div></div>
+          <div class="mst" style="border-top-color:#2563eb;"><div class="n">長良川ビル 幹線更新</div><div class="s" style="background:#2563eb;">受注</div></div>
+          <div class="mst" style="border-top-color:#16a34a;"><div class="n">山田様邸 分電盤交換</div><div class="s" style="background:#16a34a;">完了</div></div>
+          <div class="mst" style="border-top-color:#6b7280;"><div class="n">柳ヶ瀬商店街 LED化</div><div class="s" style="background:#6b7280;">見積中</div></div>
+          <div class="mst" style="border-top-color:#ea580c;"><div class="n">〇〇工場 動力盤増設</div><div class="s" style="background:#ea580c;">施工中</div></div>
+          <div class="mst" style="border-top-color:#16a34a;"><div class="n">△△店 照明改修</div><div class="s" style="background:#16a34a;">完了</div></div>
+        </div>
+      </div>
+    </div>
+    <p class="small" style="margin-top:11px;">「請求もれアラート」で完了なのに未請求の現場を知らせ、現場は状態ごとに色分け表示。（この画面はサンプルです）</p>
+  </div>
+
+  <div class="card">
+    <h2 class="dsec-ttl">収支・原価のサンプル（受注 − 原価 ＝ 粗利）</h2>
+    <div class="mgrid2">
+      <div>
+        <div class="mprofit">
+          <div class="small" style="color:#fff;opacity:.9;">岐阜市役所 電気設備改修</div>
+          <div class="g3">
+            <div><div class="v">¥3,000,000</div><div class="k">受注（税抜）</div></div>
+            <div><div class="v">¥1,300,000</div><div class="k">原価合計</div></div>
+            <div><div class="v">¥1,700,000</div><div class="k">粗利（56.7%）</div></div>
+          </div>
+          <div class="mbudget"><i></i></div>
+          <div class="k" style="margin-top:6px;">実行予算 ¥2,400,000（予算消化 54%）</div>
+        </div>
+      </div>
+      <div>
+        <div class="small" style="font-weight:900;margin-bottom:9px;">原価内訳</div>
+        <div class="mbrk">
+          <div class="r"><span>労務費<span class="mauto">日報から自動</span> 人工40</span><b>¥800,000</b></div>
+          <div class="r"><span>材料費</span><b>¥350,000</b></div>
+          <div class="r"><span>外注費</span><b>¥150,000</b></div>
+          <div class="r"><span>原価合計</span><b>¥1,300,000</b></div>
+        </div>
+      </div>
+    </div>
+    <p class="small" style="margin-top:10px;">※ 労務費は作業日報の人工から自動計算。材料費・外注費などは工事台帳で管理します。（この画面はサンプルです）</p>
+  </div>
+
   <div class="card">
     <h2 style="font-size:20px;color:#1f5fa8;margin-bottom:8px;">ファイル・工事写真台帳の操作デモ</h2>
     <div class="demoStage">
@@ -66,6 +145,6 @@ function startGuidedDemo(){cur='project';stack=['root','cust','project'];render(
 function mockOutput(fmt){var m=document.getElementById('outMsg');m.style.display='inline-flex';m.textContent=selected.length?fmt+'台帳を作成する流れを確認しました（デモ）':'先に写真を選択してください';}
 render();
 </script>
-<script src="../common_ui.js?v=20260704-v43-21-0"></script>
+<script src="../common_ui.js?v=20260704-v43-22-0"></script>
 </body>
 </html>
