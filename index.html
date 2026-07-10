@@ -1,3 +1,4 @@
+<!-- Gen-Can root app v2026.07.04-43.23.0 / 文字サイズ設定（標準/大きめ/特大・アクセシビリティ・全ページ保持）／ホーム下部に追加 / Code_v157 -->
 <!-- Gen-Can root app v2026.07.04-43.20.0 / 請求もれ防止アラート（完了だが未請求の現場を「今日やること」＋ダッシュボードに表示・完了絞り込みへ遷移） / Code_v157 -->
 <!DOCTYPE html>
 <html lang="ja">
@@ -79,7 +80,13 @@
 
 
 
-  .foot{text-align:center;color:var(--sub);font-size:13px;margin-top:24px;}
+  .foot{text-align:center;color:var(--sub);font-size:13px;margin-top:16px;}
+  /* v43.23.0 文字サイズ切替 */
+  .fsrow{display:flex;align-items:center;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:24px;}
+  .fsrow .fslbl{font-size:12.5px;color:var(--sub);font-weight:700;margin-right:2px;}
+  .fsbtn{border:none;border-radius:999px;background:#e8ecf2;box-shadow:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;color:#1f5fa8;font-weight:800;font-size:13px;padding:8px 15px;cursor:pointer;}
+  .fsbtn:active{box-shadow:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
+  .fsbtn.on{background:#2d7dd2;color:#fff;box-shadow:inset 2px 2px 5px rgba(0,0,0,.15);}
   .foot a{color:#1f5fa8;text-decoration:underline;}
   #login{position:fixed;inset:0;z-index:100;background:#e8ecf2;display:none;align-items:center;justify-content:center;padding:20px;}
   #login .box{width:100%;max-width:340px;text-align:center;color:var(--ink);}
@@ -302,11 +309,12 @@
     <a class="sq t-admin" href="./admin/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg></span><span class="txt"><span class="en">Admin</span><span class="nm">管理画面</span></span><span class="cor lock">🔒</span></a>
     <a class="sq t-ops" href="./operations/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v14H4z"/><path d="M8 9h8M8 13h5"/><path d="m15 17 2 2 4-4"/></svg></span><span class="txt"><span class="en">Operations</span><span class="nm">運用センター</span><span class="ds">更新後確認・販売準備・保守画面をまとめて開く</span></span><span class="cor lock">🔒</span></a>
   </div>
+  <div class="fsrow"><span class="fslbl">文字サイズ</span><button type="button" class="fsbtn" data-fs="1" onclick="setFontScale('1')">標準</button><button type="button" class="fsbtn" data-fs="1.12" onclick="setFontScale('1.12')">大きめ</button><button type="button" class="fsbtn" data-fs="1.25" onclick="setFontScale('1.25')">特大</button></div>
   <div class="foot"><a href="#" id="tileEditLink" onclick="toggleTileEdit();return false;">タイルの並び替え</a><span style="margin:0 10px;color:#b9c7d4;">|</span><a href="#" onclick="logout();return false;">ログアウト</a></div>
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260704-v43-22-0"></script>
+<script src="./config.js?v=20260704-v43-23-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
@@ -502,6 +510,18 @@ function checkReminders(status){
     items.push('<div class="remindItem"><span class="rTxt">📝 今日の日報がまだのようです</span><a class="rGo" href="./report/">日報を書く</a><button type="button" class="rLater" onclick="remindDismiss(\'report\')">あとで</button></div>');
   }
   bar.innerHTML=items.join('');
+}
+
+/* ===== v43.23.0 文字サイズ設定（年配の作業員向けに大きく表示） ===== */
+function setFontScale(v){
+  if(window.gcSetFontScale){window.gcSetFontScale(v);}
+  else{try{localStorage.setItem('gc_pref_fontscale',v);document.documentElement.style.zoom=(v!=='1'?v:'');}catch(e){}}
+  markFontScale();
+}
+function markFontScale(){
+  var cur=(function(){try{return localStorage.getItem('gc_pref_fontscale')||'1';}catch(e){return '1';}})();
+  var bs=document.querySelectorAll('.fsrow .fsbtn');
+  for(var i=0;i<bs.length;i++){bs[i].classList.toggle('on',bs[i].getAttribute('data-fs')===cur);}
 }
 
 /* ===== v43.14.0 ホームタイルの並び替え（端末ごとに記憶） ===== */
@@ -855,7 +875,7 @@ function remOK(id){remAddDismiss(id);renderRemPopup();}
 function remDel(id){remSaveArr(remLoad().filter(function(x){return x.id!==id;}));renderRemPopup();}
 
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
-(function(){applyTileOrder();var u=gUser();if(u&&u['作業員ID']){showMenu(u);renderRemPopup();}else{showLogin();}})();
+(function(){try{var _fs=localStorage.getItem('gc_pref_fontscale');if(_fs&&_fs!=='1')document.documentElement.style.zoom=_fs;}catch(e){}applyTileOrder();markFontScale();var u=gUser();if(u&&u['作業員ID']){showMenu(u);renderRemPopup();}else{showLogin();}})();
 </script>
 
 <div class="punch-ov" id="punchOv"><div class="punch-box">
@@ -873,6 +893,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260704-v43-22-0"></script>
+<script src="./common_ui.js?v=20260704-v43-23-0"></script>
 </body>
 </html>

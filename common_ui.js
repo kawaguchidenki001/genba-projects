@@ -3,9 +3,16 @@
 /* v1.1: 全ページ共通のオフライン通知バナーを追加（現場の電波切れ対策） */
 /* v43.17.1: スマホの.grid一列化ルールにカレンダー月グリッド(.cal-grid)の除外を追加（月表示の縦一列崩れを修正） */
 /* v43.18.2: 右下の共通ナビ（←メニュー・上へ・更新）を全ページで廃止（左上メニューと重複のため。挿入処理をコメントアウト） */
+/* v43.23.0: 文字サイズ設定（端末ごと・ログアウトしても保持）。全ページに適用。 */
 (function(){
   'use strict';
   var cfg = window.GENBA_CONFIG || {};
+  // ===== 文字サイズ（アクセシビリティ：年配の作業員向けに大きく表示できる） =====
+  // px指定が多いためズームで拡大（1=標準 / 1.12=大きめ / 1.25=特大）。全ページ共通。
+  window.gcApplyFontScale = function(){ try{ var v=localStorage.getItem('gc_pref_fontscale')||'1';
+    document.documentElement.style.zoom = (v && v!=='1') ? v : ''; }catch(e){} };
+  window.gcSetFontScale = function(v){ try{ localStorage.setItem('gc_pref_fontscale', String(v||'1')); }catch(e){} window.gcApplyFontScale(); };
+  try{ window.gcApplyFontScale(); }catch(e){}
   var appVersion = cfg.APP_VERSION || '—';
   var path = location.pathname || '';
   var isRoot = /\/genba-projects\/?(?:index\.html)?$/.test(path) || /\/genba-projects$/.test(path) || !!document.getElementById('gridAdmin'); // v43.12.1: 別ドメイン納品でもルート判定が働くよう、ルート限定要素でも判定
