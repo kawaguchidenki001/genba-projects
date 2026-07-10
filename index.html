@@ -1,3 +1,4 @@
+<!-- Gen-Can root app v2026.07.04-43.24.0 / 週間人員配置ボード（人員配置タイル追加→/board/・誰がどの現場か週表で一覧・人で見る/現場で見る・空きが一目） / Code_v157 -->
 <!-- Gen-Can root app v2026.07.04-43.23.0 / 文字サイズ設定（標準/大きめ/特大・アクセシビリティ・全ページ保持）／ホーム下部に追加 / Code_v157 -->
 <!-- Gen-Can root app v2026.07.04-43.20.0 / 請求もれ防止アラート（完了だが未請求の現場を「今日やること」＋ダッシュボードに表示・完了絞り込みへ遷移） / Code_v157 -->
 <!DOCTYPE html>
@@ -52,7 +53,7 @@
   /* 色分け（アイコンの線色） */
   .t-proj .ic{color:#5b5bd6;} .t-report .ic{color:#0e9f6e;} .t-time .ic{color:#7c3aed;}
   .t-sched .ic{color:#2d7dd2;}
-.t-koutei .ic{color:#0ea5a4;} .t-files .ic{color:#e8910b;} .t-photo .ic{color:#dc2626;} .t-tool .ic{color:#0d9aa0;}
+.t-koutei .ic{color:#0ea5a4;} .t-board .ic{color:#7c3aed;} .t-files .ic{color:#e8910b;} .t-photo .ic{color:#dc2626;} .t-tool .ic{color:#0d9aa0;}
   .t-veh .ic{color:#b45309;} .t-tool2 .ic{color:#a16207;} .t-safety .ic{color:#15803d;}
   .t-est .ic{color:#9d7a18;} .t-cost .ic{color:#0f766e;} .t-admin .ic{color:#475569;} .t-faq .ic{color:#0f766e;}
   .t-material .ic{color:#2563eb;}
@@ -275,6 +276,7 @@
     <a class="sq t-photo" href="./photos/?v=43-8-3"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5a2 2 0 0 1 2-2h1.6l1.4-2h6l1.4 2H19a2 2 0 0 1 2 2V18a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><circle cx="12" cy="12.5" r="3.2"/><path d="M16.5 9.2h.01"/></svg></span><span class="txt"><span class="en">Construction Photos</span><span class="nm">工事写真</span><span class="ds">小黒板カメラ・工事写真台帳</span></span><span class="cor">→</span></a>
     <a class="sq t-sched" href="./calendar/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 10h18"/></svg></span><span class="txt"><span class="en">Schedule</span><span class="nm">スケジュール</span><span class="ds">現場の予定をカレンダーで管理</span></span><span class="cor">→</span></a>
     <a class="sq t-koutei" href="./koutei/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16"/><path d="M11 12.5h6M11 15.5h4"/></svg></span><span class="txt"><span class="en">Schedule Chart</span><span class="nm">工程表</span><span class="ds">全現場の工期を一覧・現場ごとの工程管理</span></span><span class="cor">→</span></a>
+    <a class="sq t-board" href="./board/"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></span><span class="txt"><span class="en">Staffing Board</span><span class="nm">人員配置</span><span class="ds">誰がどの現場か1週間の表で一覧（空きが一目で）</span></span><span class="cor">→</span></a>
     <a class="sq t-files" href="./files/?v=43-8-3"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M3 10h18"/></svg></span><span class="txt"><span class="en">Files</span><span class="nm">ファイル</span><span class="ds">Googleドライブ風に現場フォルダを開いて閲覧</span></span><span class="cor">→</span></a>
   </div>
 
@@ -314,7 +316,7 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260704-v43-23-0"></script>
+<script src="./config.js?v=20260704-v43-24-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
@@ -354,9 +356,9 @@ function genbaRoleFromUser(u){
 function genbaRoleLabel(role){return {admin:'管理者',manager:'現場責任者',staff:'社員',field:'現場作業員',viewer:'閲覧のみ',disabled:'停止'}[role]||'社員';}
 function genbaAllowedMenu(role){
   var sets={
-    admin:['projects','report','timecard','photos','calendar','koutei','files','estimate','daicho','safety','material','vehicles','tools','aitools','toolbox','faq','support','admin','operations'],
-    manager:['projects','report','timecard','photos','calendar','koutei','files','estimate','daicho','safety','material','vehicles','tools','aitools','toolbox','faq','support'],
-    staff:['projects','report','timecard','photos','calendar','koutei','files','material','vehicles','tools','aitools','toolbox','faq','support'],
+    admin:['projects','report','timecard','photos','calendar','koutei','board','files','estimate','daicho','safety','material','vehicles','tools','aitools','toolbox','faq','support','admin','operations'],
+    manager:['projects','report','timecard','photos','calendar','koutei','board','files','estimate','daicho','safety','material','vehicles','tools','aitools','toolbox','faq','support'],
+    staff:['projects','report','timecard','photos','calendar','koutei','board','files','material','vehicles','tools','aitools','toolbox','faq','support'],
     field:['projects','report','timecard','photos','files','toolbox','faq','support'],
     viewer:['projects','files','photos','faq','support'],
     disabled:['faq','support']
@@ -893,6 +895,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260704-v43-23-0"></script>
+<script src="./common_ui.js?v=20260704-v43-24-0"></script>
 </body>
 </html>

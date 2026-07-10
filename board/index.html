@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<!-- board v43.24.0 (2026-07-04) 週間人員配置ボードを新設。誰がどの現場に入るかを1週間の表で一覧（人で見る／現場で見る 切替・前週/今週/次週）。データはカレンダーと同じcalendarData（予定の担当）を再利用し、空き（手が空く人）が一目でわかる。GAS変更なし。 -->
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>人員配置｜Gen-Can</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8ecf2;--ink:#1f3a52;--sub:#5e7a92;--line:#dbe2ea;--accent:#2d7dd2;--accent-d:#1f5fa8;--accent-soft:#e3f0fb;--grad:linear-gradient(92deg,#06b6d4 10%,#2563eb 55%,#7c3aed 95%);--rise:6px 6px 12px #cdd3dc,-6px -6px 12px #ffffff;--rise-sm:4px 4px 8px #cdd3dc,-4px -4px 8px #ffffff;--well:inset 3px 3px 6px #cdd3dc,inset -3px -3px 6px #ffffff;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;}
+body{min-height:100vh;background:var(--bg);color:var(--ink);font-family:"Zen Kaku Gothic New",sans-serif;font-size:16px;line-height:1.6;padding-bottom:32px;}
+header{position:sticky;top:0;z-index:20;background:var(--bg);padding:calc(env(safe-area-inset-top) + 12px) 14px 12px;box-shadow:0 6px 14px -10px rgba(31,90,168,.4);}
+.hbar{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"back . right" "title title title";align-items:center;row-gap:12px;column-gap:8px;max-width:1100px;margin:0 auto;}
+.back{grid-area:back;font-family:"Manrope",sans-serif;font-weight:700;font-size:11.5px;letter-spacing:.05em;color:var(--accent-d);background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:9px 14px;text-decoration:none;white-space:nowrap;}
+.back:active{box-shadow:var(--well);}
+.hright{grid-area:right;justify-self:end;display:flex;align-items:center;gap:9px;}
+.hrf{border:none;background:var(--bg);box-shadow:var(--rise-sm);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--accent-d);cursor:pointer;}
+.hrf:active{box-shadow:var(--well);}
+.hrf svg{width:20px;height:20px;}
+.hcenter{grid-area:title;justify-self:center;display:flex;align-items:center;gap:11px;min-width:0;text-align:center;}
+.hic{width:44px;height:44px;border-radius:50%;background:var(--bg);box-shadow:var(--well);display:flex;align-items:center;justify-content:center;color:var(--accent);}
+.hic svg{width:23px;height:23px;}
+.en{font-family:"Manrope",sans-serif;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--sub);display:block;}
+h1{font-size:20px;margin:0;font-weight:800;letter-spacing:.02em;color:var(--ink);line-height:1.15;}
+.hmark{font-family:"Montserrat",sans-serif;font-weight:900;font-style:italic;font-size:15px;background-image:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.wrap{max-width:1100px;margin:0 auto;padding:16px 14px 36px;}
+
+/* コントロール */
+.ctrls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.wknav{display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:999px;box-shadow:var(--rise-sm);padding:5px 6px;}
+.wkbtn{border:none;background:var(--bg);box-shadow:var(--rise-sm);border-radius:50%;width:34px;height:34px;font-size:17px;font-weight:900;color:var(--accent-d);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.wkbtn:active{box-shadow:var(--well);}
+.wktoday{border:none;background:var(--bg);box-shadow:var(--rise-sm);border-radius:999px;padding:7px 14px;font-size:12.5px;font-weight:800;color:var(--accent-d);cursor:pointer;}
+.wktoday:active{box-shadow:var(--well);}
+.wkrange{font-weight:800;font-size:14.5px;color:var(--ink);min-width:150px;text-align:center;}
+.seg{display:flex;background:var(--bg);border-radius:999px;box-shadow:var(--well);padding:4px;margin-left:auto;}
+.seg button{border:none;background:transparent;border-radius:999px;padding:8px 15px;font-size:12.5px;font-weight:800;color:var(--sub);cursor:pointer;white-space:nowrap;}
+.seg button.on{background:var(--accent);color:#fff;box-shadow:2px 2px 5px rgba(31,90,168,.35);}
+
+.lead{background:var(--bg);border-radius:14px;box-shadow:var(--rise-sm);padding:11px 14px;margin-bottom:12px;color:var(--sub);font-weight:700;font-size:12.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.lead b{color:var(--accent-d);}
+
+/* 表 */
+.tbox{background:var(--bg);border-radius:16px;box-shadow:var(--rise);padding:10px;}
+.scroll{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;}
+table.board{border-collapse:separate;border-spacing:0;width:100%;min-width:660px;background:#fff;border-radius:10px;overflow:hidden;}
+.board th,.board td{border-bottom:1px solid var(--line);padding:7px 8px;vertical-align:top;font-size:13px;}
+.board thead th{position:sticky;top:0;background:#eef2f7;z-index:3;text-align:center;white-space:nowrap;font-weight:800;color:var(--sub);font-size:12px;padding:8px 6px;}
+.board thead th .dn{font-size:15px;color:var(--ink);font-weight:900;display:block;line-height:1.2;}
+.board thead th.sat .dn,.board thead th.sat{color:#2563eb;}
+.board thead th.sun .dn,.board thead th.sun{color:#e24b4a;}
+.board thead th.today{background:var(--accent-soft);}
+.board thead th.today .dn{color:var(--accent-d);}
+.board tbody th.rh{position:sticky;left:0;background:#fff;z-index:2;text-align:left;font-weight:800;color:var(--ink);min-width:92px;max-width:140px;box-shadow:2px 0 6px -4px rgba(31,90,168,.35);}
+.board thead th.corner{position:sticky;left:0;z-index:4;background:#eef2f7;text-align:left;box-shadow:2px 0 6px -4px rgba(31,90,168,.35);}
+.board td.today{background:rgba(45,125,210,.05);}
+.board td.wend{background:rgba(100,116,139,.05);}
+.board tbody tr:last-child th,.board tbody tr:last-child td{border-bottom:none;}
+.rh .sub{display:block;font-size:10.5px;color:var(--sub);font-weight:600;}
+.grprow th{background:#f1f5fa;color:var(--accent-d);font-weight:900;font-size:12px;letter-spacing:.03em;text-align:left;padding-left:12px;}
+.grprow th .gcount{position:sticky;left:12px;display:inline-block;}
+.chip{display:inline-block;margin:2px 3px 2px 0;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;color:#fff;line-height:1.55;text-decoration:none;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:top;}
+.chip .tm{opacity:.85;font-weight:600;font-size:10px;margin-right:2px;}
+.wname{display:inline-block;margin:1px 4px 1px 0;font-size:12px;font-weight:700;color:var(--ink);white-space:nowrap;}
+.free{color:#b6c1cd;font-size:14px;font-weight:700;}
+.emptyrow{color:var(--sub);font-weight:700;text-align:center;padding:26px 10px;}
+
+.note{font-size:11.5px;color:var(--sub);margin-top:12px;text-align:center;line-height:1.6;}
+.legend{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:10px;font-size:11.5px;color:var(--sub);font-weight:700;}
+.legend span{display:inline-flex;align-items:center;gap:5px;}
+.lgdot{width:12px;height:12px;border-radius:4px;display:inline-block;}
+
+.loading{position:fixed;inset:0;background:rgba(232,236,242,.72);display:none;align-items:center;justify-content:center;z-index:60;}
+.loading.show{display:flex;}
+.lbox{background:var(--bg);border-radius:16px;box-shadow:var(--rise);padding:20px 26px;text-align:center;}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;margin:0 auto 10px;animation:sp 1s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg);}}
+.lbox .txt{font-size:13px;color:var(--sub);font-weight:700;}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:#1f3a52;color:#fff;padding:11px 18px;border-radius:12px;font-size:13px;font-weight:700;opacity:0;pointer-events:none;transition:.25s;z-index:70;max-width:90vw;text-align:center;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.sync{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--sub);font-weight:700;}
+.dot{width:8px;height:8px;border-radius:50%;background:#9aa7b4;}
+.dot.ok{background:#1d9e75;}.dot.busy{background:#e8910b;}.dot.off{background:#e24b4a;}
+@media (max-width:520px){.wrap{padding:12px 10px 30px;}.wkrange{min-width:120px;font-size:13.5px;}.seg{margin-left:0;}.ctrls{gap:8px;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hbar">
+    <a class="back" href="../">← メニュー</a>
+    <div class="hcenter"><span class="hic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></span><div><span class="en">Staffing Board</span><h1>人員配置</h1></div></div>
+    <div class="hright"><span class="hmark">Gen-Can</span><button class="hrf" onclick="reload()" aria-label="更新"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 4v5h-5"/></svg></button></div>
+  </div>
+</header>
+<div class="wrap">
+  <div class="ctrls">
+    <div class="wknav">
+      <button class="wkbtn" onclick="move(-1)" aria-label="前週">‹</button>
+      <button class="wktoday" onclick="goToday()">今週</button>
+      <button class="wkbtn" onclick="move(1)" aria-label="次週">›</button>
+    </div>
+    <div class="wkrange" id="wkRange">—</div>
+    <div class="seg" id="seg">
+      <button data-mode="worker" class="on" onclick="setMode('worker')">人で見る</button>
+      <button data-mode="site" onclick="setMode('site')">現場で見る</button>
+    </div>
+  </div>
+  <div class="lead"><span>👷 <b id="cntEmp">0</b>名（社員）／<b id="cntPart">0</b>名（協力）</span><span class="sync"><span class="dot" id="dot"></span><span id="syncTxt">読み込み中…</span></span></div>
+  <div class="tbox">
+    <div class="scroll"><table class="board" id="board"><thead id="bhead"></thead><tbody id="bbody"></tbody></table></div>
+  </div>
+  <div class="legend" id="legend"></div>
+  <div class="note">予定（担当）をもとに自動集計しています。追加・変更は<a href="../calendar/" style="color:var(--accent-d);font-weight:800;">スケジュール</a>から。現場名をタップするとその現場を開けます。</div>
+</div>
+
+<div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="../config.js?v=20260704-v43-24-0"></script>
+<script>
+var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
+
+function genbaSessionTok(){try{var s=JSON.parse(localStorage.getItem('genba_session')||'null');if(s&&s.token&&(!s.expiresAt||Date.now()<Number(s.expiresAt)))return s.token;}catch(e){}return '';}
+function admTok(){return localStorage.getItem('genba_admin')||'';}
+function tok(){return admTok()||genbaSessionTok();}
+
+var projects=[],schedules=[],workers=[],vehicles=[],cur=new Date(),mode='worker';
+try{var _mv=localStorage.getItem('gc_pref_boardview');if(_mv==='site'||_mv==='worker')mode=_mv;}catch(e){}
+
+var loadCnt=0,loadTmr=null;
+function showLoad(){loadCnt++;if(loadCnt===1){clearTimeout(loadTmr);loadTmr=setTimeout(function(){if(loadCnt>0)document.getElementById('loading').classList.add('show');},150);}}
+function hideLoad(){loadCnt=Math.max(0,loadCnt-1);if(loadCnt===0){clearTimeout(loadTmr);document.getElementById('loading').classList.remove('show');}}
+function callGAS(params,silent){return new Promise(function(res,rej){
+  if(!silent)showLoad();
+  var cb='cb_'+Date.now()+'_'+Math.floor(Math.random()*1e6),s=document.createElement('script');
+  var t=setTimeout(function(){cl();rej(new Error('タイムアウト'));},20000);
+  function cl(){if(!silent)hideLoad();try{delete window[cb];}catch(e){}if(s.parentNode)s.parentNode.removeChild(s);clearTimeout(t);}
+  window[cb]=function(r){cl();res(r);};
+  var q=Object.assign({secret:tok(),callback:cb},params);
+  s.src=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+  s.onerror=function(){cl();rej(new Error('通信エラー'));};document.head.appendChild(s);});}
+
+function setSync(st,t){var d=document.getElementById('dot');d.className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+var toastT;function toast(m){var t=document.getElementById('toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(function(){t.classList.remove('show');},2600);}
+
+function ymd(d){return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function normName(s){return String(s||'').replace(/[\s　]+/g,'');}
+function hashStr(s){s=String(s||'');var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))>>>0;}return h;}
+var PROJ_ACCENT=['#378ADD','#E24B4A','#639922','#BA7517','#7F77DD','#1D9E75','#D4537E','#888780','#0EA5E9','#D85A30','#7C3AED','#9333EA','#0D9488','#DB2777'];
+function projAccent(pid){if(!pid)return '#9aa7b4';return PROJ_ACCENT[hashStr(pid)%PROJ_ACCENT.length];}
+function projById(pid){return projects.filter(function(x){return String(x['案件ID'])===String(pid);})[0];}
+function projShort(pid,fallback){var p=projById(pid);return (p&&p['略称'])?p['略称']:((p&&p['案件名'])||fallback||'');}
+function hm(t){t=String(t||'').slice(0,5);var m=t.match(/^(\d{1,2}):(\d{2})$/);if(!m)return '';return parseInt(m[1],10)+':'+m[2];}
+function isKyoW(w){return String(w['区分']||'').indexOf('協力')>=0;}
+
+/* 月曜はじまりの週 */
+function weekStart(d){var s=new Date(d.getFullYear(),d.getMonth(),d.getDate());var dow=(s.getDay()+6)%7;s.setDate(s.getDate()-dow);return s;}
+function weekDays(){var s=weekStart(cur),arr=[];for(var i=0;i<7;i++){arr.push(new Date(s.getFullYear(),s.getMonth(),s.getDate()+i));}return arr;}
+function move(n){cur=new Date(cur.getFullYear(),cur.getMonth(),cur.getDate()+n*7);render();}
+function goToday(){cur=new Date();render();}
+function setMode(m){mode=m;try{localStorage.setItem('gc_pref_boardview',m);}catch(e){}
+  var bs=document.querySelectorAll('#seg button');for(var i=0;i<bs.length;i++)bs[i].classList.toggle('on',bs[i].getAttribute('data-mode')===m);
+  render();}
+
+/* 担当文字列 → トークン配列 */
+function ownerTokens(str){return String(str||'').split(/[・、,，\/\s　]+/).map(normName).filter(Boolean);}
+/* トークン → 作業員（略称/氏名一致）*/
+var _wlookup=null;
+function buildWLookup(){_wlookup={};workers.forEach(function(w){var a=normName(w['略称']),b=normName(w['氏名']);if(a&&!_wlookup[a])_wlookup[a]=w;if(b&&!_wlookup[b])_wlookup[b]=w;});}
+function workerByToken(tk){if(!_wlookup)buildWLookup();return _wlookup[tk]||null;}
+
+function reload(silent){setSync('busy','同期中…');
+  callGAS({action:'calendarData'},silent).then(function(res){if(!res||!res.ok)throw new Error((res&&res.error)||'エラー');
+    projects=res.projects||[];schedules=res.schedules||[];workers=res.workers||[];vehicles=res.vehicles||[];_wlookup=null;
+    try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');c.projects=projects;c.schedules=schedules;c.workers=workers;c.vehicles=vehicles;localStorage.setItem('genba_cal',JSON.stringify(c));}catch(e){}
+    render();setSync('ok','同期済み');
+  }).catch(function(err){
+    if(!silent){toast('読込失敗：'+err.message);
+      if(/認証|ログイン|セッション|権限|secret|auth/i.test(String(err&&err.message||'')))toast('ログインの有効期限が切れた可能性があります。メニューへ戻って入り直してください');}
+    setSync('off','オフライン');});}
+
+/* 週内の予定を、日インデックス別に整理 */
+function collectWeek(days){
+  var ds0=ymd(days[0]),ds6=ymd(days[6]);
+  var out=[];
+  schedules.forEach(function(s){
+    var a=String(s['日付']||'').slice(0,10);if(!a)return;
+    var b=String(s['終了日']||'').slice(0,10)||a;
+    if(b<ds0||a>ds6)return; // 週と重ならない
+    var pid=String(s['案件ID']||'');
+    var siteKey=pid||('t:'+(s['予定内容']||'予定'));
+    var label=projShort(pid,s['案件名'])||s['予定内容']||'(予定)';
+    var accent=projAccent(pid||siteKey);
+    var toks=ownerTokens(s['担当']);
+    var idxs=[];for(var i=0;i<7;i++){var d=ymd(days[i]);if(d>=a&&d<=b)idxs.push(i);}
+    out.push({s:s,pid:pid,siteKey:siteKey,label:label,accent:accent,toks:toks,idxs:idxs,tm:hm(s['開始'])});
+  });
+  return out;
+}
+
+function render(){
+  var days=weekDays();
+  var todayS=ymd(new Date());
+  var wk='日月火水木金土';
+  // 週レンジ表示
+  var d0=days[0],d6=days[6];
+  document.getElementById('wkRange').textContent=(d0.getMonth()+1)+'/'+d0.getDate()+'（月）〜 '+(d6.getMonth()+1)+'/'+d6.getDate()+'（日）';
+
+  // ヘッダー
+  var firstLbl=(mode==='worker')?'作業員':'現場';
+  var head='<tr><th class="corner">'+firstLbl+'</th>';
+  for(var i=0;i<7;i++){var d=days[i],dow=d.getDay();
+    var cls=(dow===6?'sat':(dow===0?'sun':''));if(ymd(d)===todayS)cls+=' today';
+    head+='<th class="'+cls+'"><span class="dn">'+d.getDate()+'</span>'+wk[dow]+'</th>';}
+  head+='</tr>';
+  document.getElementById('bhead').innerHTML=head;
+
+  var items=collectWeek(days);
+
+  // 作業員カウント
+  var seen={},emp=0,part=0;
+  workers.forEach(function(w){var k=String(w['作業員ID']);if(!k||seen[k])return;seen[k]=1;if(isKyoW(w))part++;else emp++;});
+  document.getElementById('cntEmp').textContent=emp;
+  document.getElementById('cntPart').textContent=part;
+
+  var body='';
+  function tdCls(i){var d=days[i],dow=d.getDay();var c=[];if(ymd(d)===todayS)c.push('today');else if(dow===0||dow===6)c.push('wend');return c.length?' class="'+c.join(' ')+'"':'';}
+
+  if(mode==='worker'){
+    // 作業員ID -> 日 -> [{label,accent,pid,tm}]
+    var byW={};
+    items.forEach(function(it){
+      it.toks.forEach(function(tk){var w=workerByToken(tk);if(!w)return;var id=String(w['作業員ID']);
+        it.idxs.forEach(function(di){(byW[id]=byW[id]||{});(byW[id][di]=byW[id][di]||[]).push({label:it.label,accent:it.accent,pid:it.pid,tm:it.tm});});});
+    });
+    var groups=[{t:'社員',arr:[]},{t:'協力業者',arr:[]}];
+    var seen2={};
+    workers.forEach(function(w){var k=String(w['作業員ID']);if(!k||seen2[k])return;seen2[k]=1;(isKyoW(w)?groups[1]:groups[0]).arr.push(w);});
+    var any=false;
+    groups.forEach(function(g){
+      if(!g.arr.length)return;
+      body+='<tr class="grprow"><th colspan="8"><span class="gcount">'+esc(g.t)+'（'+g.arr.length+'）</span></th></tr>';
+      g.arr.forEach(function(w){
+        any=true;
+        var id=String(w['作業員ID']),nm=w['略称']||w['氏名']||'';
+        var sub=(w['略称']&&w['氏名']&&w['略称']!==w['氏名'])?w['氏名']:(w['所属']||'');
+        body+='<tr><th class="rh">'+esc(nm)+(sub?'<span class="sub">'+esc(sub)+'</span>':'')+'</th>';
+        for(var i=0;i<7;i++){
+          var cell=(byW[id]&&byW[id][i])||[];
+          body+='<td'+tdCls(i)+'>';
+          if(cell.length){
+            var seenC={};
+            cell.forEach(function(c){var key=c.pid+'|'+c.label;if(seenC[key])return;seenC[key]=1;
+              var inner=(c.tm?'<span class="tm">'+esc(c.tm)+'</span>':'')+esc(c.label);
+              if(c.pid)body+='<a class="chip" href="../projects/?case='+encodeURIComponent(c.pid)+'" style="background:'+c.accent+'">'+inner+'</a>';
+              else body+='<span class="chip" style="background:'+c.accent+'">'+inner+'</span>';});
+          }else{body+='<span class="free">・</span>';}
+          body+='</td>';
+        }
+        body+='</tr>';
+      });
+    });
+    if(!any)body='<tr><td class="emptyrow" colspan="8">作業員が登録されていません。管理画面から登録してください。</td></tr>';
+  }else{
+    // 現場 -> 日 -> [作業員略称]
+    var order=[],sMap={};
+    items.forEach(function(it){if(!sMap[it.siteKey]){sMap[it.siteKey]={label:it.label,accent:it.accent,pid:it.pid,days:{}};order.push(it.siteKey);}
+      var rec=sMap[it.siteKey];
+      it.idxs.forEach(function(di){rec.days[di]=rec.days[di]||[];
+        if(it.toks.length){it.toks.forEach(function(tk){var w=workerByToken(tk);var lb=w?(w['略称']||w['氏名']):tk;if(rec.days[di].indexOf(lb)<0)rec.days[di].push(lb);});}
+      });});
+    if(!order.length){body='<tr><td class="emptyrow" colspan="8">この週に予定はありません。</td></tr>';}
+    else{
+      order.forEach(function(sk){var rec=sMap[sk];
+        var head2=rec.pid?'<a href="../projects/?case='+encodeURIComponent(rec.pid)+'" style="color:var(--accent-d);text-decoration:none;">'+esc(rec.label)+'</a>':esc(rec.label);
+        body+='<tr><th class="rh"><span class="lgdot" style="background:'+rec.accent+';margin-right:5px;"></span>'+head2+'</th>';
+        for(var i=0;i<7;i++){body+='<td'+tdCls(i)+'>';
+          var ws=rec.days[i]||[];
+          if(ws.length){ws.forEach(function(lb){body+='<span class="wname">'+esc(lb)+'</span>';});}
+          else{body+='<span class="free">・</span>';}
+          body+='</td>';}
+        body+='</tr>';});
+    }
+  }
+  document.getElementById('bbody').innerHTML=body;
+
+  // 凡例
+  var lg=document.getElementById('legend');
+  if(mode==='worker')lg.innerHTML='<span><span class="lgdot" style="background:var(--accent)"></span>色＝現場ごと</span><span><span class="free" style="font-size:13px">・</span> 空き（予定なし）</span>';
+  else lg.innerHTML='<span>現場ごとに、その日に入る作業員を表示</span>';
+}
+
+document.addEventListener('visibilitychange',function(){if(!document.hidden)reload(true);});
+(function(){try{var c=JSON.parse(localStorage.getItem('genba_cal')||'{}');projects=c.projects||[];schedules=c.schedules||[];workers=c.workers||[];vehicles=c.vehicles||[];}catch(e){}})();
+setMode(mode);
+var hadCache=(schedules&&schedules.length>0)||(workers&&workers.length>0);
+render();reload(hadCache);
+</script>
+<script src="../common_ui.js?v=20260704-v43-24-0"></script>
+</body>
+</html>
