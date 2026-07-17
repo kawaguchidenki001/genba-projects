@@ -191,6 +191,21 @@
     <div class="mnav"><button onclick="moveM(-1)">‹</button><span class="ym" id="mym"></span><button onclick="moveM(1)">›</button></div>
     <div id="mTable"></div>
     <button class="csv" onclick="downloadCSV()">この月をCSVで保存</button>
+    <!-- v43.25.0 出勤簿の出力（管理者のみ表示） -->
+    <div class="setbox" id="expBox" style="display:none;margin-top:18px;">
+      <h3 style="font-size:14px;color:var(--teal2);margin:0 0 4px;">出勤簿の出力（管理者）</h3>
+      <div style="font-size:12px;color:var(--sub);margin-bottom:10px;" id="expPeriod">対象期間は上の「‹ ›」で表示中の月度（締め日設定を反映）です。</div>
+      <div class="krrow"><label>対象</label>
+        <select id="expTarget" style="width:190px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;font-size:15px;background:#fff;">
+          <option value="__all__">全員（社員全体）</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:12px;">
+        <button class="csv" style="margin-top:0;color:#15803d;" onclick="exportBook('xlsx')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg>Excelで保存</button>
+        <button class="csv" style="margin-top:0;color:#c0392b;" onclick="exportBook('pdf')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:17px;height:17px;"><path d="M6 2h9l4 4v16H6z"/><path d="M14 2v5h5M9 13h6M9 17h6"/></svg>PDFで保存</button>
+      </div>
+      <div style="font-size:11px;color:var(--sub);margin-top:9px;line-height:1.6;">全員＝社員は全員、協力業者はこの月度に記録がある人だけ。Excelは1人1シート（先頭に集計）、PDFは1人1ページ（先頭に集計）。土曜・日曜・祝日は色分けされます。</div>
+    </div>
   </div>
 
   <!-- 全員（今日） -->
@@ -375,7 +390,7 @@ function stB(k,d){brk[k]=Math.max(0,Math.min(180,brk[k]+d));try{localStorage.set
 
 function reload(silent){ if(!me)return Promise.resolve(); if(!silent)showLoad();
   return callGAS({action:'punchData',date:ymd(new Date())}).then(function(res){if(!res.ok)throw new Error(res.error||'エラー');
-    workers=res.workers||[];todayK=res.kintai||[];try{localStorage.setItem('genba_tc',JSON.stringify({date:ymd(new Date()),workers:workers,kintai:todayK}));}catch(e){}renderHome();if(tab==='all')renderAll();
+    workers=res.workers||[];todayK=res.kintai||[];try{localStorage.setItem('genba_tc',JSON.stringify({date:ymd(new Date()),workers:workers,kintai:todayK}));}catch(e){}renderHome();setupExportBox();if(tab==='all')renderAll();
   }).catch(function(err){if(!silent)toast('読込失敗：'+err.message);}).then(function(){if(!silent)hideLoad();}); }
 
 function mySessions(){ if(!me)return []; var wid=String(me['作業員ID']);
@@ -544,6 +559,261 @@ function downloadCSV(){
   var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\r\n');
   var blob=new Blob(['\uFEFF'+csv],{type:'text/csv'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download='勤怠_'+(me?me['氏名']:'')+'_'+mCur.getFullYear()+('0'+(mCur.getMonth()+1)).slice(-2)+'.csv';a.click();URL.revokeObjectURL(url);
+}
+
+/* ===== v43.25.0 出勤簿の出力（Excel/PDF・管理者のみ） ===== */
+function isAdminLogin(){
+  try{ var u=gUser(); var r=String((u&&(u.appRole||u.role||u['権限']))||'').trim().toLowerCase();
+    if(r==='管理者'||r==='admin')return true; }catch(e){}
+  return !!admTok();
+}
+function isCoopW(w){ var k=String((w&&w['区分'])||''); return k.indexOf('協力')>=0; }
+function setupExportBox(){
+  var box=document.getElementById('expBox'); if(!box)return;
+  if(!isAdminLogin()){ box.style.display='none'; return; }
+  box.style.display='block';
+  var sel=document.getElementById('expTarget'); if(!sel)return;
+  var cur=sel.value;
+  var emp=[],coop=[],seen={};
+  workers.forEach(function(w){ var id=String(w['作業員ID']); if(!id||seen[id])return; seen[id]=1; (isCoopW(w)?coop:emp).push(w); });
+  var h='<option value="__all__">全員（社員全体）</option>';
+  function grp(t,arr){ if(!arr.length)return ''; var s='<optgroup label="'+esc(t)+'">';
+    arr.forEach(function(w){ s+='<option value="'+esc(w['作業員ID'])+'">'+esc(w['氏名']||w['略称']||w['作業員ID'])+'</option>'; }); return s+'</optgroup>'; }
+  h+=grp('社員',emp)+grp('協力業者',coop);
+  sel.innerHTML=h;
+  if(cur){ for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value===cur){ sel.value=cur; break; } } }
+}
+var LIB_XLSX='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+var LIB_H2C='https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+var LIB_JSPDF='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+var _libP={};
+function loadLib(src){ if(_libP[src])return _libP[src];
+  _libP[src]=new Promise(function(res,rej){ var s=document.createElement('script'); s.src=src;
+    s.onload=function(){res();};
+    s.onerror=function(){delete _libP[src]; rej(new Error('部品の読み込みに失敗しました。通信環境をご確認ください'));};
+    document.head.appendChild(s); });
+  return _libP[src]; }
+function mtitle(){ return mCur.getFullYear()+'年'+(mCur.getMonth()+1)+'月度'; }
+function coName(){ return gset('会社名',(window.GENBA_CONFIG&&(window.GENBA_CONFIG.COMPANY_NAME||window.GENBA_CONFIG.COMPANY_SHORT))||''); }
+// 1人分の出勤簿データ（期間の全日付・打刻なしの日は空欄）
+function buildBook(wid,allK,pr){
+  var days=[],t={days:0,work:0,ot:0,night:0,late:0,early:0};
+  var d=new Date(pr.start.getFullYear(),pr.start.getMonth(),pr.start.getDate());
+  var end=new Date(pr.end.getFullYear(),pr.end.getMonth(),pr.end.getDate());
+  var byDate={};
+  allK.forEach(function(k){ if(String(k['作業員ID'])!==String(wid))return;
+    var ds=String(k['日付']).slice(0,10); (byDate[ds]=byDate[ds]||[]).push(k); });
+  while(d<=end){
+    var ds=ymd(d), row={date:ds,dow:d.getDay()};
+    var sess=byDate[ds];
+    if(sess&&sess.length){
+      var c=calcDay(sess);
+      row.in=c.firstIn||''; row.out=c.lastOut||'';
+      row.brk=sess.reduce(function(s,k){var v=parseFloat(k['休憩分']);return s+(isNaN(v)?0:v);},0);
+      row.work=c.workMin; row.ot=c.otMin; row.night=c.nightMin; row.late=c.lateMin; row.early=c.earlyMin;
+      row.next=!!(c.firstIn&&c.lastOut&&toMinC(c.lastOut)<toMinC(c.firstIn));
+      if(c.firstIn||c.workMin>0)t.days++;
+      t.work+=c.workMin; t.ot+=c.otMin; t.night+=c.nightMin; t.late+=c.lateMin; t.early+=c.earlyMin;
+    }
+    days.push(row);
+    d.setDate(d.getDate()+1);
+  }
+  return {days:days,totals:t};
+}
+function exportTargets(tgt,allK,pr){
+  if(tgt!=='__all__'){
+    var w=workers.filter(function(x){return String(x['作業員ID'])===String(tgt);})[0];
+    return w?[{w:w,book:buildBook(w['作業員ID'],allK,pr)}]:[];
+  }
+  var emp=[],coop=[],seen={};
+  workers.forEach(function(w){ var id=String(w['作業員ID']); if(!id||seen[id])return; seen[id]=1; (isCoopW(w)?coop:emp).push(w); });
+  var out=[];
+  emp.forEach(function(w){ out.push({w:w,book:buildBook(w['作業員ID'],allK,pr)}); });
+  coop.forEach(function(w){ var b=buildBook(w['作業員ID'],allK,pr); if(b.totals.days>0)out.push({w:w,book:b}); });
+  return out;
+}
+function fnameBook(tgt,list){
+  var who=(tgt==='__all__')?'全員':String(list[0].w['氏名']||'').replace(/[\s　]/g,'');
+  return '出勤簿_'+who+'_'+mtitle();
+}
+function exportBook(fmt){
+  if(!me){toast('ログインしてください');return;}
+  if(!isAdminLogin()){toast('管理者のみ利用できます');return;}
+  var sel=document.getElementById('expTarget'), tgt=sel?sel.value:'__all__';
+  var pr=periodRange(), from=ymd(pr.start), to=ymd(pr.end);
+  var libs=(fmt==='xlsx')?[loadLib(LIB_XLSX)]:[loadLib(LIB_H2C),loadLib(LIB_JSPDF)];
+  showLoad(); toast(fmt==='xlsx'?'Excelを作成中…':'PDFを作成中…（人数分のページを作ります）');
+  Promise.all([
+    callGAS({action:'kintaiRange',from:from,to:to}),
+    callGAS({action:'holidays',from:from,to:to}).catch(function(){return null;})
+  ].concat(libs)).then(function(rs){
+    var res=rs[0]; if(!res.ok)throw new Error(res.error||'読込エラー');
+    var allK=res.kintai||[];
+    var hol=(rs[1]&&rs[1].ok&&rs[1].holidays)||{};
+    var list=exportTargets(tgt,allK,pr);
+    if(!list.length)throw new Error('対象の作業員がいません');
+    var per={from:from,to:to};
+    if(fmt==='xlsx')return exportXlsxBook(list,per,hol,tgt);
+    return exportPdfBook(list,per,hol,tgt);
+  }).then(function(){toast('保存しました');})
+  .catch(function(e){toast('失敗：'+e.message);})
+  .then(hideLoad);
+}
+/* --- Excel（SheetJS） --- */
+function sheetNameSafe(nm,used){
+  nm=String(nm||'シート').replace(/[\[\]\*\?\/\\:：]/g,'').slice(0,25)||'シート';
+  var b=nm,i=2; while(used[nm]){nm=b+'_'+(i++);} used[nm]=1; return nm;
+}
+function bookAoA(w,book,per,hol){
+  var wk='日月火水木金土', t=book.totals;
+  var rows=[
+    ['出勤簿（'+mtitle()+'）'],
+    ['会社名',coName(),'','対象期間',per.from+' 〜 '+per.to],
+    ['氏名',w['氏名']||'','','区分',w['区分']||'社員'],
+    [],
+    ['日付','曜日','出勤','退勤','休憩(分)','実働(h)','残業(h)','深夜(h)','遅刻(分)','早退(分)','備考']
+  ];
+  book.days.forEach(function(r){
+    var hnm=hol[r.date]||'';
+    rows.push([r.date, wk[r.dow], r.in||'', r.out?((r.next?'翌':'')+r.out):'',
+      (r.in||r.out)?(r.brk||0):'', r.work?fmtH(r.work):'', r.ot?fmtH(r.ot):'', r.night?fmtH(r.night):'',
+      r.late||'', r.early||'', hnm]);
+  });
+  rows.push(['合計','出勤 '+t.days+'日','','','',fmtH(t.work),fmtH(t.ot),fmtH(t.night),t.late,t.early,'']);
+  rows.push([]);
+  rows.push(['※ 残業＝実働−所定、深夜＝深夜帯の重なり、遅刻早退＝定時との差（丸め単位で計算）。給与・労務の正式利用は社労士にご確認ください。']);
+  return rows;
+}
+function summaryAoA(list,per){
+  var rows=[
+    ['出勤簿 集計（'+mtitle()+'）'],
+    ['会社名',coName(),'','対象期間',per.from+' 〜 '+per.to],
+    [],
+    ['氏名','区分','出勤日数','実働(h)','残業(h)','深夜(h)','遅刻(分)','早退(分)']
+  ];
+  var g={days:0,work:0,ot:0,night:0,late:0,early:0};
+  list.forEach(function(it){ var t=it.book.totals;
+    rows.push([it.w['氏名']||'',it.w['区分']||'社員',t.days,fmtH(t.work),fmtH(t.ot),fmtH(t.night),t.late,t.early]);
+    g.days+=t.days;g.work+=t.work;g.ot+=t.ot;g.night+=t.night;g.late+=t.late;g.early+=t.early; });
+  rows.push(['合計','',g.days,fmtH(g.work),fmtH(g.ot),fmtH(g.night),g.late,g.early]);
+  return rows;
+}
+function exportXlsxBook(list,per,hol,tgt){
+  var wb=XLSX.utils.book_new(), used={};
+  var colsB=[{wch:11},{wch:5},{wch:7},{wch:7},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:16}];
+  if(list.length>1){
+    var ws0=XLSX.utils.aoa_to_sheet(summaryAoA(list,per));
+    ws0['!cols']=[{wch:14},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9},{wch:9}];
+    XLSX.utils.book_append_sheet(wb,ws0,sheetNameSafe('集計',used));
+  }
+  list.forEach(function(it){
+    var ws=XLSX.utils.aoa_to_sheet(bookAoA(it.w,it.book,per,hol));
+    ws['!cols']=colsB;
+    XLSX.utils.book_append_sheet(wb,ws,sheetNameSafe(it.w['氏名'],used));
+  });
+  XLSX.writeFile(wb,fnameBook(tgt,list)+'.xlsx');
+}
+/* --- PDF（html2canvas + jsPDF・A4縦 1人1ページ） --- */
+function stampBoxes(){
+  function b(l){ return '<div style="width:46px;"><div style="border:1px solid #999;border-bottom:none;font-size:9px;text-align:center;padding:1px 0;background:#f0f2f5;color:#333;">'+l+'</div><div style="border:1px solid #999;height:40px;background:#fff;"></div></div>'; }
+  return '<div style="display:flex;">'+b('承認')+b('確認')+b('本人')+'</div>';
+}
+function bookHeadHTML(title,sub){
+  return '<div style="display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2.5px solid #16324a;padding-bottom:8px;">'
+    +'<div style="font-size:23px;font-weight:800;letter-spacing:8px;color:#16324a;">'+esc(title)+'</div>'
+    +'<div style="text-align:right;font-size:11px;line-height:1.6;color:#333;">'+esc(coName())+'<br>'+esc(mtitle())+'（'+esc(sub)+'）</div></div>';
+}
+function bookSheetHTML(w,book,per,hol){
+  var wk='日月火水木金土', t=book.totals;
+  function td(v,st){ return '<td style="border:1px solid #aaa;padding:2.5px 5px;'+(st||'')+'">'+v+'</td>'; }
+  var h='<div style="width:794px;min-height:1122px;background:#fff;color:#111;font-family:\'Zen Kaku Gothic New\',sans-serif;padding:34px 38px;box-sizing:border-box;">'
+    + bookHeadHTML('出勤簿',per.from+' 〜 '+per.to)
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-end;margin:10px 0 8px;">'
+    +'<div style="font-size:12px;color:#333;">氏名　<b style="font-size:17px;color:#111;">'+esc(w['氏名']||'')+'</b>　<span style="color:#666;font-size:11px;">'+esc(w['区分']||'社員')+'</span></div>'
+    + stampBoxes()
+    +'</div>'
+    +'<table style="width:100%;border-collapse:collapse;font-size:10.5px;">'
+    +'<tr>'+['日付','曜','出勤','退勤','休憩(分)','実働(h)','残業(h)','深夜(h)','遅刻(分)','早退(分)','備考'].map(function(x){return '<th style="border:1px solid #aaa;background:#eef1f5;padding:3px 4px;font-weight:700;color:#333;">'+x+'</th>';}).join('')+'</tr>';
+  book.days.forEach(function(r){
+    var hnm=hol[r.date]||'';
+    var red=(r.dow===0||!!hnm), blue=(r.dow===6&&!red);
+    var bg=red?'#fdf1ef':(blue?'#eef4fb':'#fff');
+    var wcol=red?'#c0392b':(blue?'#1f5fa8':'#333');
+    h+='<tr>'
+      + td(esc(r.date.slice(5).replace('-','/')),'text-align:center;background:'+bg+';')
+      + td(esc(wk[r.dow]),'text-align:center;font-weight:700;color:'+wcol+';background:'+bg+';')
+      + td(esc(r.in||''),'text-align:center;')
+      + td(r.out?esc((r.next?'翌':'')+r.out):'','text-align:center;')
+      + td((r.in||r.out)?esc(r.brk||0):'','text-align:right;')
+      + td(r.work?esc(fmtH(r.work)):'','text-align:right;')
+      + td(r.ot?esc(fmtH(r.ot)):'','text-align:right;')
+      + td(r.night?esc(fmtH(r.night)):'','text-align:right;')
+      + td(r.late?esc(r.late):'','text-align:right;')
+      + td(r.early?esc(r.early):'','text-align:right;')
+      + td(esc(hnm),'font-size:9.5px;color:#c0392b;')
+      +'</tr>';
+  });
+  h+='<tr>'
+    + td('<b>合計</b>','text-align:center;background:#eef1f5;')
+    + td('<b>出勤 '+t.days+'日</b>','text-align:center;background:#eef1f5;white-space:nowrap;')
+    + td('','background:#eef1f5;') + td('','background:#eef1f5;') + td('','background:#eef1f5;')
+    + td('<b>'+fmtH(t.work)+'</b>','text-align:right;background:#eef1f5;')
+    + td('<b>'+fmtH(t.ot)+'</b>','text-align:right;background:#eef1f5;')
+    + td('<b>'+fmtH(t.night)+'</b>','text-align:right;background:#eef1f5;')
+    + td('<b>'+(t.late||0)+'</b>','text-align:right;background:#eef1f5;')
+    + td('<b>'+(t.early||0)+'</b>','text-align:right;background:#eef1f5;')
+    + td('','background:#eef1f5;')
+    +'</tr></table>'
+    +'<div style="font-size:9.5px;color:#777;margin-top:8px;line-height:1.6;">※ 残業＝実働−所定、深夜＝深夜帯の重なり、遅刻早退＝定時との差（丸め単位で計算）。給与・労務の正式利用は社労士にご確認ください。</div>'
+    +'</div>';
+  return h;
+}
+function summaryHTML(list,per){
+  function sd(v,st){ return '<td style="border:1px solid #aaa;padding:4.5px 6px;'+(st||'')+'">'+v+'</td>'; }
+  var h='<div style="width:794px;min-height:1122px;background:#fff;color:#111;font-family:\'Zen Kaku Gothic New\',sans-serif;padding:34px 38px;box-sizing:border-box;">'
+    + bookHeadHTML('出勤簿 集計',per.from+' 〜 '+per.to)
+    +'<table style="width:100%;border-collapse:collapse;font-size:11.5px;margin-top:14px;">'
+    +'<tr>'+['氏名','区分','出勤日数','実働(h)','残業(h)','深夜(h)','遅刻(分)','早退(分)'].map(function(x){return '<th style="border:1px solid #aaa;background:#eef1f5;padding:5px 6px;font-weight:700;color:#333;">'+x+'</th>';}).join('')+'</tr>';
+  var g={days:0,work:0,ot:0,night:0,late:0,early:0};
+  list.forEach(function(it){ var t=it.book.totals;
+    h+='<tr>'+sd(esc(it.w['氏名']||''))+sd(esc(it.w['区分']||'社員'),'text-align:center;')
+      +sd(t.days+'日','text-align:right;')+sd(fmtH(t.work),'text-align:right;')+sd(fmtH(t.ot),'text-align:right;')
+      +sd(fmtH(t.night),'text-align:right;')+sd(t.late||0,'text-align:right;')+sd(t.early||0,'text-align:right;')+'</tr>';
+    g.days+=t.days;g.work+=t.work;g.ot+=t.ot;g.night+=t.night;g.late+=t.late;g.early+=t.early; });
+  h+='<tr>'+sd('<b>合計</b>','background:#eef1f5;')+sd('','background:#eef1f5;')
+    +sd('<b>'+g.days+'日</b>','text-align:right;background:#eef1f5;')+sd('<b>'+fmtH(g.work)+'</b>','text-align:right;background:#eef1f5;')
+    +sd('<b>'+fmtH(g.ot)+'</b>','text-align:right;background:#eef1f5;')+sd('<b>'+fmtH(g.night)+'</b>','text-align:right;background:#eef1f5;')
+    +sd('<b>'+(g.late||0)+'</b>','text-align:right;background:#eef1f5;')+sd('<b>'+(g.early||0)+'</b>','text-align:right;background:#eef1f5;')+'</tr>'
+    +'</table>'
+    +'<div style="font-size:10px;color:#777;margin-top:10px;">対象 '+list.length+'名（社員は全員、協力業者は記録がある人のみ）。個人別の出勤簿は次ページ以降。</div>'
+    +'</div>';
+  return h;
+}
+function exportPdfBook(list,per,hol,tgt){
+  var host=document.createElement('div');
+  host.style.cssText='position:absolute;left:-10000px;top:0;width:794px;background:#fff;';
+  document.body.appendChild(host);
+  var pages=[];
+  if(list.length>1)pages.push(summaryHTML(list,per));
+  list.forEach(function(it){ pages.push(bookSheetHTML(it.w,it.book,per,hol)); });
+  var canvases=[], chain=Promise.resolve();
+  pages.forEach(function(html){
+    chain=chain.then(function(){
+      host.innerHTML=html;
+      return html2canvas(host,{scale:2,backgroundColor:'#ffffff'}).then(function(c){canvases.push(c);});
+    });
+  });
+  return chain.then(function(){
+    var pdf=null;
+    canvases.forEach(function(c,i){
+      var w=c.width,h=c.height;
+      if(i===0)pdf=new window.jspdf.jsPDF({orientation:w>=h?'l':'p',unit:'pt',format:[w,h]});
+      else pdf.addPage([w,h],w>=h?'l':'p');
+      pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,w,h);
+    });
+    pdf.save(fnameBook(tgt,list)+'.pdf');
+    host.remove();
+  }).catch(function(e){ host.remove(); throw e; });
 }
 
 function manualLoad(silent){ if(!me)return; var d=document.getElementById('mDate').value; if(!d){toast('日付を選んでください');return;}
@@ -748,6 +1018,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden&&me)
   document.getElementById('setName').textContent=me['氏名'];
   loadBrk();showBrk();
   var hadTC=false;try{var tc=JSON.parse(localStorage.getItem('genba_tc')||'null');if(tc&&tc.date===ymd(new Date())){workers=tc.workers||[];todayK=tc.kintai||[];renderHome();hadTC=true;}}catch(e){}
+  setupExportBox();
   Promise.all([reload(hadTC),loadSettings()]).then(loadAlerts);
 })();
 </script>
