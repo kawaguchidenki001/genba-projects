@@ -1,3 +1,4 @@
+<!-- Gen-Can root app v2026.07.04-43.28.0 / ワンタップ打刻をkeepalive送信に（移動しても送信が届く・離脱警告ダイアログ廃止・punchDataで実確認） / Code_v157 -->
 <!-- Gen-Can root app v2026.07.04-43.26.0 / ワンタップ打刻のバックグラウンド送信（即時反映・GPS/送信は裏で・失敗時は状態を復元） / Code_v157 -->
 <!-- Gen-Can root app v2026.07.04-43.24.0 / 週間人員配置ボード（人員配置タイル追加→/board/・誰がどの現場か週表で一覧・人で見る/現場で見る・空きが一目） / Code_v157 -->
 <!-- Gen-Can root app v2026.07.04-43.23.0 / 文字サイズ設定（標準/大きめ/特大・アクセシビリティ・全ページ保持）／ホーム下部に追加 / Code_v157 -->
@@ -317,7 +318,7 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260704-v43-27-0"></script>
+<script src="./config.js?v=20260704-v43-28-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
@@ -464,10 +465,10 @@ function openPunchSheet(){
   return false;
 }
 function closePunchSheet(){var ov=document.getElementById('punchOv');if(ov)ov.classList.remove('show');}
-var punchBusy=false,_gcBgPending=0;
-window.addEventListener('beforeunload',function(e){ if(_gcBgPending>0){e.preventDefault();e.returnValue='';} });
-/* v43.26.0 打刻のバックグラウンド送信：シートを即閉じ・状態も即反映し、GPS取得と送信は裏で行う。
-   時刻はタップした瞬間で確定（従来はGPS取得後＝最大8秒遅れの時刻が記録されていた）。失敗時は状態を元に戻す */
+var punchBusy=false;
+/* v43.26.0 打刻のバックグラウンド送信（シート即閉じ・状態即反映・時刻はタップ時点で確定）
+   v43.28.0 keepalive送信に変更：戻る/他画面へ移動してもブラウザが送信を最後まで届ける（離脱警告ダイアログを廃止）。
+   記録の実確認はpunchData(読み取り)で行い、確認できなければ状態を戻す */
 function homePunch(type,brkMin){
   if(punchBusy){gcToast('前の打刻を送信中です。少しお待ちください');return;}
   punchBusy=true;
@@ -479,22 +480,38 @@ function homePunch(type,brkMin){
   renderTimeStatus_(st);
   try{sessionStorage.setItem('tsCache_'+u['作業員ID'],JSON.stringify({status:st,t:Date.now()}));}catch(e){}
   closePunchSheet();
-  gcToast('✓ '+type+' '+hmNow+' を記録しました（送信中…）');
-  _gcBgPending++;
+  gcToast('✓ '+type+' '+hmNow+' を記録しました（送信中…このまま移動してもOKです）');
   gcGetPos_().then(function(pos){
-    return new Promise(function(resolve,reject){
-      // タイムカード画面の punch と同じ action・同じデータ構成で送信
-      jsonpCall_({action:'punch',secret:genbaSessionTok(),data:JSON.stringify({'作業員ID':u['作業員ID'],'氏名':u['氏名']||'','種別':type,'時刻':hmNow,'日付':gcLocalYmd_(),'位置':pos,'休憩分':Number(brkMin||0)})},
-        function(r){ if(r&&r.ok)resolve(r); else reject(new Error((r&&r.error)||'記録に失敗しました')); },
-        function(kind){ reject(new Error('通信エラー（'+kind+'）')); },20000);
-    });
+    // タイムカード画面の punch と同じ action・同じデータ構成。keepaliveでページを離れても送信完了
+    var q={action:'punch',secret:genbaSessionTok(),callback:'cb_bg_'+Date.now(),
+      data:JSON.stringify({'作業員ID':u['作業員ID'],'氏名':u['氏名']||'','種別':type,'時刻':hmNow,'日付':gcLocalYmd_(),'位置':pos,'休憩分':Number(brkMin||0)})};
+    var url=((window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'')+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+    return fetch(url,{method:'GET',mode:'no-cors',keepalive:true,cache:'no-store'});
   }).then(function(){
-    gcToast('✓ '+type+'を記録しました');
+    // 送信はページを離れても完了する。ここからは表示確認のみ（punchData=読み取り）
+    return new Promise(function(resolve){
+      jsonpCall_({action:'punchData',secret:genbaSessionTok(),date:gcLocalYmd_()},
+        function(r){
+          var hit=false;
+          try{ var mine=((r&&r.kintai)||[]).filter(function(k){return String(k['作業員ID'])===String(u['作業員ID']);});
+            hit=mine.some(function(k){return (type==='出勤')?(String(k['出勤']||'')===hmNow):(String(k['退勤']||'')===hmNow);});
+          }catch(e){}
+          resolve(hit);
+        },function(){resolve('unknown');},15000);
+    });
+  }).then(function(hit){
+    if(hit===true){ gcToast('✓ '+type+'を記録しました'); }
+    else if(hit===false){
+      renderTimeStatus_(prevSt);
+      try{sessionStorage.setItem('tsCache_'+u['作業員ID'],JSON.stringify({status:prevSt,t:Date.now()}));}catch(e){}
+      gcToast('⚠ '+type+'の記録を確認できませんでした。タイムカード画面からもう一度お試しください');
+    }
+    /* 'unknown'（確認通信のみ失敗）は送信済みの可能性が高いため状態は維持 */
   }).catch(function(err){
     renderTimeStatus_(prevSt);
     try{sessionStorage.setItem('tsCache_'+u['作業員ID'],JSON.stringify({status:prevSt,t:Date.now()}));}catch(e){}
-    gcToast('⚠ '+type+'を記録できませんでした：'+err.message+'。もう一度押すか、タイムカード画面からお試しください');
-  }).then(function(){punchBusy=false;_gcBgPending=Math.max(0,_gcBgPending-1);});
+    gcToast('⚠ '+type+'を記録できませんでした：'+((err&&err.message)||'通信エラー')+'。もう一度押すか、タイムカード画面からお試しください');
+  }).then(function(){punchBusy=false;});
 }
 
 /* ===== v43.14.0 打刻忘れ・日報忘れのセルフ通知 ===== */
@@ -903,6 +920,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260704-v43-27-0"></script>
+<script src="./common_ui.js?v=20260704-v43-28-0"></script>
 </body>
 </html>

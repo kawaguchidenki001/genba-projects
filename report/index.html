@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- report v43.28.0 (2026-07-04) 日報の新規保存をkeepalive送信に変更：保存直後に戻る・他画面へ移動しても送信が最後まで届く（離脱警告ダイアログを廃止）。保存の実確認はreportData(読み取り)で行い、確認できなければ取り下げてフォーム再表示（入力内容は保持）。GAS変更なし。 -->
 <!-- report v43.26.0 (2026-07-04) 日報保存のバックグラウンド送信：新規の通常保存は一覧に即時反映してシートを閉じ、送信は裏で実行（保存待ちゼロ）。送信中はその日報の編集/削除をロックし「送信中…」表示。失敗時は一覧から取り下げてフォームを再表示（入力内容は残る）。編集・保存して次へ・写真追加は従来どおり完了待ち（失敗時の入力保護のため）。GAS変更なし。 -->
 <!-- report v43.18.0 (2026-07-04) PCで横幅いっぱいに広がっていた問題を修正（.toolbarとmainをmax-width:760px中央寄せに、他画面と統一）。GAS変更なし。 -->
 <!-- report v43.16.0 (2026-07-04) reload内のcheckRoleとreportDataを並列化（読み込み最大半減）。初回読み込み中はスケルトン表示。アクセント色を緑→青(#2d7dd2)に統一。スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
@@ -330,7 +331,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-27-0"></script>
+<script src="../config.js?v=20260704-v43-28-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 
@@ -827,9 +828,14 @@ function gatherCommon(){var g=function(id){return document.getElementById(id).va
     '開始':st,'終了':et,'翌日':nextDay?'1':'','休憩分':String(br),
     '作業時間':String(Math.max(0,etM-stM-br)),'深夜人工':g('f_ynk'),
     '備考':document.getElementById('f_note').value.trim(),'車両':checkedVehicleStr()};}
-/* v43.26.0 バックグラウンド送信の共通処理 */
-var _bgPending=0;
-window.addEventListener('beforeunload',function(e){ if(_bgPending>0){e.preventDefault();e.returnValue='';} });
+/* v43.26.0 バックグラウンド送信の共通処理
+   v43.28.0 keepalive送信に変更：保存後に戻る/他画面へ移動してもブラウザが送信を最後まで届ける（離脱警告ダイアログを廃止） */
+function sendKeepalive_(params){
+  var q=Object.assign({secret:tok(),callback:'cb_bg_'+Date.now()},params);
+  if(q.data&&typeof q.data!=='string')q.data=JSON.stringify(q.data);
+  var url=GAS_URL+'?'+Object.keys(q).map(function(k){return encodeURIComponent(k)+'='+encodeURIComponent(q[k]);}).join('&');
+  return fetch(url,{method:'GET',mode:'no-cors',keepalive:true,cache:'no-store'});
+}
 function grpPending_(pid,date){
   return reports.some(function(r){
     return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date
@@ -884,17 +890,41 @@ function saveReport(keepOpen){
     reports=_tmps.concat(reports); saveCache(); render();
     pushRecent(pid);
     try{localStorage.setItem('gc_pref_last_report_date',String(data['日付']||'').slice(0,10));}catch(e){}
-    closeOv(); toast(ws.length+'名分を保存しました（送信中…）');
-    _bgPending++;
-    callGAS({action:'addReportMulti',data:data},null,true).then(function(res){
-      if(!res||!res.ok)throw new Error((res&&res.error)||'保存失敗');
-      reload(true);
+    closeOv(); toast(ws.length+'名分を保存しました（送信中…このまま画面を移動してもOKです）');
+    var _w0=String(ws[0]['作業員ID']);
+    // v43.28.0 keepalive送信：戻る/他画面へ移動しても送信は最後まで届く。保存の実確認はreportData(読み取り)で行う
+    sendKeepalive_({action:'addReportMulti',data:data}).then(function(){
+      function check(){
+        return callGAS({action:'reportData'},null,true).then(function(res){
+          if(!res||!res.ok)return false;
+          var svRep=res.reports||[];
+          var hit=svRep.some(function(r){
+            return String(r['日付']||'').slice(0,10)===date&&String(r['案件ID']||'')===String(pid)&&String(r['作業員ID'])===_w0;
+          });
+          if(hit){ firstSyncDone=true; projects=res.projects||projects; workers=res.workers||workers; reports=svRep; vehicles=res.vehicles||vehicles; saveCache(); render(); }
+          return hit;
+        });
+      }
+      function wait(ms){return new Promise(function(r){setTimeout(r,ms);});}
+      return check().then(function(hit){
+        if(hit)return true;
+        return wait(2500).then(check);
+      }).catch(function(){return 'unknown';}); // 確認の通信だけ失敗（送信自体は届いている可能性が高い）
+    }).then(function(hit){
+      if(hit===false){
+        reports=reports.filter(function(r){return _tmpIds.indexOf(String(r['日報ID']))<0;});
+        saveCache(); render();
+        document.getElementById('ov').classList.add('show');
+        toast('⚠ 保存を確認できませんでした。内容は残っています。もう一度「保存」を押してください');
+      } else if(hit==='unknown'){
+        toast('電波が不安定です。日報は送信済みです。後でこの画面を開いてご確認ください');
+      }
     }).catch(function(err){
       reports=reports.filter(function(r){return _tmpIds.indexOf(String(r['日報ID']))<0;});
       saveCache(); render();
       document.getElementById('ov').classList.add('show');
-      toast('⚠ 保存を送信できませんでした：'+err.message+'。内容は残っています。もう一度「保存」を押してください');
-    }).then(function(){_bgPending=Math.max(0,_bgPending-1);});
+      toast('⚠ 保存を送信できませんでした：'+(err&&err.message||'通信エラー')+'。内容は残っています。もう一度「保存」を押してください');
+    });
     return;
   }
   var btn=document.getElementById('saveBtn'),btn2=document.getElementById('saveNextBtn'),btn3=document.getElementById('savePhotoBtn');btn.disabled=true;btn2.disabled=true;if(btn3)btn3.disabled=true;btn.textContent='保存中…';
@@ -1015,6 +1045,6 @@ loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadC
   offUpd();
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-27-0"></script>
+<script src="../common_ui.js?v=20260704-v43-28-0"></script>
 </body>
 </html>
