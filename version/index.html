@@ -38,7 +38,7 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
 .err{background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:800;display:none;}
 @media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr);} h1{font-size:22px;}}
 </style>
-<script src="../config.js?v=20260704-v43-26-0"></script>
+<script src="../config.js?v=20260704-v43-27-0"></script>
 </head>
 <body>
 <div class="wrap">
@@ -75,6 +75,7 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
   <div class="card">
     <h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">更新履歴</h2>
     <div class="list">
+      <div class="item"><div class="date">2026.07.04 / v43.27.0</div><h3>写真・ファイルアップロードの高速化</h3><ul><li>ファイル画面のアップロードを3件同時の並列方式に（写真6件の実測で約10秒→約3.5秒）</li><li>保存先・ファイル名・Drive保存の実確認の仕組みは従来のまま。速くなるだけです</li><li>送信中にページを閉じようとした時の警告を追加（ファイル・小黒板カメラ・録音）</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.26.0</div><h3>打刻・日報保存の待ち時間短縮</h3><ul><li>出勤・退勤の打刻は押した瞬間に画面へ反映。GPS取得と送信は裏側で行うため待ち画面が出ません（記録時刻も押した瞬間で確定）</li><li>日報の新規保存も一覧に即時反映してシートが閉じ、送信は裏側で実行（送信中はその日報の編集・削除をロック）</li><li>送信に失敗した時は画面を元に戻してお知らせします（日報は入力内容が残ったまま再表示。もう一度「保存」を押すだけ）</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.25.0</div><h3>出勤簿のExcel・PDF出力（管理者）</h3><ul><li>タイムカードの「勤怠表」タブに「出勤簿の出力」を追加。管理者でログインした時だけ表示されます</li><li>対象は「全員（社員全体）」か個人を選択。Excelは1人1シート＋集計シート、PDFはA4で1人1ページ＋集計ページ（印欄付き）</li><li>締め日設定を反映した月度で集計。土日祝の色分け・夜勤またぎ・残業/深夜/遅刻早退の自動計算に対応</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.24.0</div><h3>週間人員配置ボード（新機能）</h3><ul><li>ホームに「人員配置」を追加。誰がどの現場に入るかを1週間の表で一覧できます</li><li>「人で見る」で手が空く人（空き）が一目でわかり、「現場で見る」でその日に誰が入るかを確認できます（前週／今週／次週で移動）</li><li>もとになるのはスケジュールの「担当」です。予定の追加・変更は従来どおりスケジュールから行ってください</li></ul></div>
@@ -146,7 +147,7 @@ function checkGas(){
 }
 render({},null);checkGas();
 </script>
-<script src="../common_ui.js?v=20260704-v43-26-0"></script>
+<script src="../common_ui.js?v=20260704-v43-27-0"></script>
 
 </body>
 </html>

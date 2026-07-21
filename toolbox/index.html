@@ -1,3 +1,4 @@
+<!-- toolbox v43.27.0 (2026-07-04) 小黒板カメラ・録音のDrive保存中にページを閉じ/離脱しようとした時の警告(beforeunload)を追加（保存はもともとバックグラウンド送信でカメラ継続可能。送信が消えるのを防ぐ）。GAS変更なし。 -->
 <!-- toolbox v43.12.0 (2026-07-04) 録音一覧の白文字修正・畳換算表記の適正化・esc強化・draw系は未使用のまま。GAS変更なし。 -->
 <!-- toolbox v43.11.0 (2026-07-04) config.jsを先頭読み込みに。黒板の会社名をconfig.jsから取得。アイコンリンク修正。GAS変更なし。 -->
 <!-- toolbox version 48 (2026-07-04) v43.10.1 重大バグ修正：小黒板カメラ・録音のDrive保存が失敗しても「✓保存しました」と表示されていた問題を修正（ファイル画面と同じconfirmUploadで保存を実確認）。GAS変更なし。 -->
@@ -23,7 +24,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Montserrat:ital,wght@1,900&family=Zen+Kaku+Gothic+New:wght@500;700&display=swap" rel="stylesheet">
-<script src="../config.js?v=20260704-v43-26-0"></script>
+<script src="../config.js?v=20260704-v43-27-0"></script>
 <script>
 (function(){
   try{
@@ -2859,6 +2860,9 @@ function aConv(from){
 
 /* ===== 共通 POST（アップロード用） ===== */
 function tbPost(obj){obj.secret=genbaSessionTok();return fetch(GAS_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(obj)});}
+/* v43.27.0 アップロード送信中にページを閉じ/離脱しようとした時の警告（黒板カメラ・録音の保存が消えるのを防ぐ） */
+var _bgUp=0;
+window.addEventListener('beforeunload',function(e){ if(_bgUp>0){e.preventDefault();e.returnValue='';} });
 /* v43.11.0: 黒板の会社名既定値をconfig.js(COMPANY_NAME)から設定 */
 (function(){try{var bc=document.getElementById('boardCompany');if(bc&&!bc.value)bc.value=(window.GENBA_CONFIG&&window.GENBA_CONFIG.COMPANY_NAME)||'';}catch(e){}})();
 /* v43.10.1: no-cors POSTは結果が読めず失敗しても成功表示になっていたため、
@@ -3519,10 +3523,12 @@ function boardShootCore(srcEl,vw,vh){
   var ups=[{dest:'photo',name:'board_'+ts+'.jpg',data:withData}];
   if(noBoardData) ups.push({dest:'photo',name:'photo_'+ts+'.jpg',data:noBoardData});
   var jobs=ups.map(function(x){return tbPost({action:'uploadPhoto',id:boardSiteId,dest:x.dest,name:x.name,mime:'image/jpeg',data:x.data});});
+  _bgUp++;
   Promise.all(jobs)
     .then(function(){ toast('Drive保存を確認中…'); return Promise.all(ups.map(function(x){return tbConfirmUpload(boardSiteId,x.dest,x.name);})); })
     .then(function(){ toast('✓ Driveに保存しました'+(noBoardData?'（黒板あり＋なし 2枚）':'')); })
-    .catch(function(){ toast('⚠ 保存を確認できませんでした。電波の良い場所でもう一度「保存」を押してください'); });
+    .catch(function(){ toast('⚠ 保存を確認できませんでした。電波の良い場所でもう一度「保存」を押してください'); })
+    .then(function(){ _bgUp=Math.max(0,_bgUp-1); });
 }
 
 
@@ -3607,10 +3613,12 @@ function recSave(){
   reader.onload=function(ev){
     var b64=ev.target.result.split(',')[1];
     toast('Driveに保存中...');
+    _bgUp++;
     tbPost({action:'uploadPhoto',id:recSiteId,dest:'file',name:fname,mime:recBlob.type||'audio/webm',data:b64})
       .then(function(){toast('Drive保存を確認中…');return tbConfirmUpload(recSiteId,'file',fname);})
       .then(function(){toast('✓ 保存しました');recReset();recLoadList();})
-      .catch(function(){toast('⚠ 保存を確認できませんでした。録音は消えていません。もう一度「保存」を押してください');});
+      .catch(function(){toast('⚠ 保存を確認できませんでした。録音は消えていません。もう一度「保存」を押してください');})
+      .then(function(){ _bgUp=Math.max(0,_bgUp-1); });
   };
   reader.readAsDataURL(recBlob);
 }
@@ -4097,6 +4105,6 @@ function openBoardForCase(id){
 (function(){ var m=location.search.match(/[?&]tool=([a-z]+)/); if(m){ try{ if(m[1]==='board'){document.title='小黒板カメラ｜Gen-Can';boardMode='live';try{tbSet('boardCamMode','live');}catch(e2){}} openTool(m[1]); setTimeout(function(){document.documentElement.classList.remove('tb-direct-board');},250); }catch(e){} } })();
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-26-0"></script>
+<script src="../common_ui.js?v=20260704-v43-27-0"></script>
 </body>
 </html>

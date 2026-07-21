@@ -1,3 +1,4 @@
+<!-- files v43.27.0 (2026-07-04) アップロードを3件同時の並列方式に（従来は1件ずつ送信→Drive確認→次の直列で、複数写真だと件数×数秒かかっていた。6件実測10秒→3.5秒）。アップロード中にページを閉じようとした時の警告(beforeunload)を追加。保存先・ファイル名・Drive確認(confirmUpload)の仕組みは不変。GAS変更なし。 -->
 <!-- Gen-Can files app v2026.06.21-43.9.12 / 案1-A 写真B64フォールバック / Code_v144 -->
 <!-- files v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- files v43.12.0 (2026-07-04) アップロード二重実行ガード追加。旧クライアントPDF台帳（写真削除処理付きデッドコード）とjspdf CDN依存を削除。GAS変更なし。 -->
@@ -484,7 +485,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-26-0"></script>
+<script src="../config.js?v=20260704-v43-27-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'v2026.06.21-43.9.12';
@@ -1755,41 +1756,52 @@ function uploadAll(files){
     grid.appendChild(d);return d;
   });
   function mark(idx,ok,msg){var b=items[idx]&&items[idx].querySelector('.upst');if(b)b.textContent=ok?'✅':'❌'; if(msg){var n=items[idx]&&items[idx].querySelector('.upnm'); if(n)n.title=msg;}}
-  function next(){
-    if(i>=arr.length){
-      uploading=false;
-      prog.textContent='アップロード完了（'+done+'件'+(fail?'／失敗'+fail:'')+'）';
-      var tt=document.getElementById('upTtl');
-      if(tt)tt.textContent='今回アップロードしたファイル（'+done+'件'+(fail?'／失敗'+fail:'')+'）— Drive保存確認済み';
-      var act=document.createElement('div');act.className='afterActions';
-      act.innerHTML='<button type="button" onclick="pickFiles()">続けてファイルを追加</button><button type="button" onclick="refreshCurrentHomeDrive()">フォルダを更新</button>'; setTimeout(function(){try{refreshCurrentHomeDrive();}catch(e){}},600);
-      box.appendChild(act);
-      setTimeout(function(){prog.style.display='none'; var upPanel=document.getElementById('panel'); if(upPanel&&!ledgerMode)upPanel.style.display='none';},4000);
-      toast(fail?('保存確認：成功'+done+'件／失敗'+fail+'件'):('Drive保存を確認しました（'+done+'件）'));
-      return;
-    }
-    var idx=i, file=arr[i++], expectedName=uploadNames[idx];
-    prog.textContent='送信中… '+i+'/'+arr.length;
+  // v43.27.0 並列アップロード（3件同時）：従来は「送信→Drive確認→次」を1件ずつ直列で行っていたため、
+  // まとめてアップすると 件数×（送信＋確認）の時間がかかっていた。3件並行で全体を大幅短縮（内容・保存先は不変）。
+  function finish(){
+    uploading=false;
+    prog.textContent='アップロード完了（'+done+'件'+(fail?'／失敗'+fail:'')+'）';
+    var tt=document.getElementById('upTtl');
+    if(tt)tt.textContent='今回アップロードしたファイル（'+done+'件'+(fail?'／失敗'+fail:'')+'）— Drive保存確認済み';
+    var act=document.createElement('div');act.className='afterActions';
+    act.innerHTML='<button type="button" onclick="pickFiles()">続けてファイルを追加</button><button type="button" onclick="refreshCurrentHomeDrive()">フォルダを更新</button>'; setTimeout(function(){try{refreshCurrentHomeDrive();}catch(e){}},600);
+    box.appendChild(act);
+    setTimeout(function(){prog.style.display='none'; var upPanel=document.getElementById('panel'); if(upPanel&&!ledgerMode)upPanel.style.display='none';},4000);
+    toast(fail?('保存確認：成功'+done+'件／失敗'+fail+'件'):('Drive保存を確認しました（'+done+'件）'));
+  }
+  function doOne(idx){
+    var file=arr[idx], expectedName=uploadNames[idx];
     var isImage=((file.type||'').indexOf('image')===0);
     var toPhotoFolder=((initialMode==='ledger'||ledgerMode)&&isImage);
+    var p;
     if(toPhotoFolder){
-      resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
+      p=resizeImage(file,MAXPX,QUALITY).then(function(dataUrl){
         return postNoCors({action:'uploadPhoto',id:curId,dest:'photo',kind:(document.getElementById('bdKind').value||'').trim(),name:expectedName,mime:'image/jpeg',data:dataUrl.split(',')[1]});
-      }).then(function(){
-        prog.textContent='Drive保存確認中… '+i+'/'+arr.length;
-        return confirmUploadedName('photo',expectedName,8,900);
-      }).then(function(){done++;mark(idx,true);next();}).catch(function(err){fail++;mark(idx,false,err&&err.message);next();});
+      }).then(function(){ return confirmUploadedName('photo',expectedName,8,900); });
     }else{
-      readB64(file).then(function(b64){
+      p=readB64(file).then(function(b64){
         return postNoCors({action:'uploadPhoto',id:curId,dest:'file',name:expectedName,mime:file.type||'application/octet-stream',data:b64});
-      }).then(function(){
-        prog.textContent='Drive保存確認中… '+i+'/'+arr.length;
-        return confirmUploadedName('file',expectedName,8,900);
-      }).then(function(){done++;mark(idx,true);next();}).catch(function(err){fail++;mark(idx,false,err&&err.message);next();});
+      }).then(function(){ return confirmUploadedName('file',expectedName,8,900); });
+    }
+    return p.then(function(){done++;mark(idx,true);}).catch(function(err){fail++;mark(idx,false,err&&err.message);});
+  }
+  var CONC=3, launched=0, finished=0;
+  function pump(){
+    if(finished>=arr.length){ finish(); return; }
+    while(launched<arr.length && (launched-finished)<CONC){
+      (function(idx){
+        doOne(idx).then(function(){
+          finished++;
+          prog.textContent='アップロード中…（3件ずつ並行） 完了 '+finished+'/'+arr.length+(fail?'／失敗'+fail:'');
+          pump();
+        });
+      })(launched++);
     }
   }
-  next();
+  prog.textContent='アップロード中…（3件ずつ並行） 完了 0/'+arr.length;
+  pump();
 }
+window.addEventListener('beforeunload',function(e){ if(uploading){e.preventDefault();e.returnValue='';} });
 function readB64(file){ return new Promise(function(res,rej){ var r=new FileReader(); r.onload=function(){ res(String(r.result).split(',')[1]); }; r.onerror=function(){rej(new Error('読込失敗'));}; r.readAsDataURL(file); }); }
 function resizeImage(file,max,q){
   return new Promise(function(res,rej){
@@ -1879,6 +1891,6 @@ if(!genbaSessionTok()){
   loadProjects(true);
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-26-0"></script>
+<script src="../common_ui.js?v=20260704-v43-27-0"></script>
 </body>
 </html>
