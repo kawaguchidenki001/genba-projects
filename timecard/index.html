@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- timecard v43.26.0 (2026-07-04) 打刻のバックグラウンド送信：押した瞬間に画面反映し、GPS取得(最大8秒)とGAS送信を裏で実行（待ち画面ゼロ）。時刻はタップ時点で確定。送信完了までボタン無効＋「送信中…」表示、失敗時は元に戻して再打刻を案内。取消は送信完了後のみ。GAS変更なし。 -->
 <!-- timecard v43.25.0 (2026-07-04) 出勤簿のExcel/PDF出力を追加（管理者のみ表示）。勤怠表タブに「出勤簿の出力」ボックス：対象=全員（社員全体＋記録のある協力業者）／個人。Excel=1人1シート＋集計シート(SheetJS遅延読込)、PDF=A4縦1人1ページ＋集計ページ(html2canvas+jsPDF遅延読込・印欄付き)。既存kintaiRange/holidaysを利用しGAS変更なし。締め日・祝日・夜勤またぎ対応。 -->
 <!-- timecard v43.18.1 (2026-07-04) 出勤/退勤ボタンの色をアプリ共通の配色に統一（単色の緑#22a06b・橙#e8910b→ホーム画面のタイルや各アイコンと同じビビッドなグラデ 出勤=緑/退勤=橙）。GAS変更なし。 -->
 <!-- timecard v43.16.0 (2026-07-04) アクセント色を紫→青(#2d7dd2)に統一（出勤=緑・退勤=橙などの状態色は据え置き）。theme-colorも青に。スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
@@ -325,7 +326,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-25-0"></script>
+<script src="../config.js?v=20260704-v43-26-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 
@@ -413,6 +414,7 @@ function renderHome(){
   document.getElementById('sWork').textContent = done.length ? (Math.round(totalH*100)/100)+'h' : '―';
   document.getElementById('btnIn').disabled = !!open;   // 出勤中は出勤不可
   document.getElementById('btnOut').disabled = !open;   // 出勤中のみ退勤可
+  if(typeof pendingPunch!=='undefined'&&pendingPunch){document.getElementById('btnIn').disabled=true;document.getElementById('btnOut').disabled=true;} // 送信完了まで連打防止
   showBrk();
   var t=ymd(new Date());
   var rows = mySessions().filter(function(k){ var d=String(k['日付']).slice(0,10); return d===t || (k['出勤']&&!k['退勤']); });
@@ -422,7 +424,7 @@ function renderHome(){
   rows.forEach(function(k){
     var inT=k['出勤']||'', outT=k['退勤']||'';
     var nd=(inT&&outT&&toMinC(outT)<toMinC(inT))?'翌':'';
-    var right = outT ? ((k['実働時間']!==''&&k['実働時間']!=null)?('実働 '+k['実働時間']+'h'):'') : '勤務中';
+    var right = k['_pending'] ? '送信中…' : (outT ? ((k['実働時間']!==''&&k['実働時間']!=null)?('実働 '+k['実働時間']+'h'):'') : '勤務中');
     h+='<div class="lrow"><span class="dt">'+esc(inT||'—')+' → '+(outT?nd+esc(outT):'—')+'</span><span class="pin" style="margin-left:auto;font-size:12px;'+(outT?'color:var(--sub);':'color:var(--green);font-weight:700;')+'">'+esc(right)+'</span></div>';
   });
   log.innerHTML=h;
@@ -436,6 +438,7 @@ function updateUndoRow(){ var row=document.getElementById('undoRow'); if(!row)re
 function undoLast(){
   if(!me){toast('ログインしてください');return;}
   var k=lastSession(); if(!k){toast('取り消せる打刻がありません');return;}
+  if(k['_pending']||String(k['勤怠ID']).indexOf('tmp_')===0){toast('送信中です。完了してから取り消してください');return;}
   var id=k['勤怠ID'];
   if(k['退勤']){
     if(!confirm('退勤 '+k['退勤']+' を取り消して「勤務中」に戻します。よろしいですか？'))return;
@@ -458,14 +461,40 @@ function undoLast(){
 function getPos(){return new Promise(function(res){ if(!navigator.geolocation){res('');return;}
   navigator.geolocation.getCurrentPosition(function(p){res(p.coords.latitude.toFixed(5)+','+p.coords.longitude.toFixed(5));},function(){res('');},{enableHighAccuracy:true,timeout:8000,maximumAge:60000}); }); }
 
+/* v43.26.0 打刻のバックグラウンド送信：画面は即時反映し、GPS取得と送信は裏で行う（待ち時間ゼロ化）。
+   時刻はタップした瞬間で確定（従来はGPS取得後＝最大8秒遅れの時刻が記録されていた）。失敗時は元に戻して再打刻を案内 */
+var pendingPunch=false,_bgPending=0;
 function punch(type){
   if(!me){toast('ログインしてください');return;}
-  document.getElementById('btnIn').disabled=true;document.getElementById('btnOut').disabled=true;showLoad();
-  getPos().then(function(pos){var n=new Date();
-    return callGAS({action:'punch',data:{'作業員ID':me['作業員ID'],'氏名':me['氏名'],'種別':type,'時刻':hm(n),'日付':ymd(n),'位置':pos,'休憩分':brkTot()}});
-  }).then(function(res){if(!res.ok)throw new Error(res.error||'記録失敗');upTodayK(res.kintai);renderHome();try{localStorage.setItem('genba_tc',JSON.stringify({date:ymd(new Date()),workers:workers,kintai:todayK}));}catch(e){}loadAlerts();toast(type+'を記録しました');})
-  .catch(function(err){toast('失敗：'+err.message);renderHome();}).then(hideLoad);
+  if(pendingPunch){toast('前の打刻を送信中です。少しお待ちください');return;}
+  var n=new Date(), t=hm(n), d=ymd(n);
+  var tmp=null, openK=null, prevOut='';
+  if(type==='退勤'){
+    openK=myOpen(); if(!openK){toast('出勤の記録がありません');return;}
+    prevOut=openK['退勤']||''; openK['退勤']=t; openK['_pending']=1;
+  } else {
+    tmp={'勤怠ID':'tmp_'+Date.now(),'作業員ID':me['作業員ID'],'氏名':me['氏名'],'日付':d,'出勤':t,'退勤':'','休憩分':brkTot(),'実働時間':'','_pending':1};
+    todayK.push(tmp);
+  }
+  pendingPunch=true; _bgPending++;
+  renderHome();
+  toast(type+' '+t+' を記録しました（送信中…）');
+  getPos().then(function(pos){
+    return callGAS({action:'punch',data:{'作業員ID':me['作業員ID'],'氏名':me['氏名'],'種別':type,'時刻':t,'日付':d,'位置':pos,'休憩分':brkTot()}});
+  }).then(function(res){
+    if(!res.ok)throw new Error(res.error||'記録失敗');
+    if(tmp)todayK=todayK.filter(function(x){return x!==tmp;});
+    if(openK)delete openK['_pending'];
+    upTodayK(res.kintai);
+    try{localStorage.setItem('genba_tc',JSON.stringify({date:ymd(new Date()),workers:workers,kintai:todayK}));}catch(e){}
+    loadAlerts();toast('✓ '+type+'を記録しました');
+  }).catch(function(err){
+    if(tmp)todayK=todayK.filter(function(x){return x!==tmp;});
+    if(openK){openK['退勤']=prevOut;delete openK['_pending'];}
+    toast('⚠ '+type+'を記録できませんでした：'+err.message+'。もう一度押してください');
+  }).then(function(){pendingPunch=false;_bgPending=Math.max(0,_bgPending-1);renderHome();});
 }
+window.addEventListener('beforeunload',function(e){ if(_bgPending>0){e.preventDefault();e.returnValue='';} });
 
 function renderAll(){
   var el=document.getElementById('pAll');
@@ -1023,6 +1052,6 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden&&me)
   Promise.all([reload(hadTC),loadSettings()]).then(loadAlerts);
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-25-0"></script>
+<script src="../common_ui.js?v=20260704-v43-26-0"></script>
 </body>
 </html>

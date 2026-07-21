@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- report v43.26.0 (2026-07-04) 日報保存のバックグラウンド送信：新規の通常保存は一覧に即時反映してシートを閉じ、送信は裏で実行（保存待ちゼロ）。送信中はその日報の編集/削除をロックし「送信中…」表示。失敗時は一覧から取り下げてフォームを再表示（入力内容は残る）。編集・保存して次へ・写真追加は従来どおり完了待ち（失敗時の入力保護のため）。GAS変更なし。 -->
 <!-- report v43.18.0 (2026-07-04) PCで横幅いっぱいに広がっていた問題を修正（.toolbarとmainをmax-width:760px中央寄せに、他画面と統一）。GAS変更なし。 -->
 <!-- report v43.16.0 (2026-07-04) reload内のcheckRoleとreportDataを並列化（読み込み最大半減）。初回読み込み中はスケルトン表示。アクセント色を緑→青(#2d7dd2)に統一。スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- report v43.14.0 (2026-07-04) 日報保存時に保存日を端末に記録（ホームの「日報がまだ」通知用）。GAS変更なし。 -->
@@ -329,7 +330,7 @@
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-25-0"></script>
+<script src="../config.js?v=20260704-v43-26-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 
@@ -440,7 +441,9 @@ function showDetail(pid,date){
   document.getElementById('dov').classList.add('show');
 }
 function closeDetail(){document.getElementById('dov').classList.remove('show');}
-function editFromDetail(){if(!detailCtx)return;closeDetail();openForm(detailCtx.pid,detailCtx.date);}
+function editFromDetail(){if(!detailCtx)return;
+  if(grpPending_(detailCtx.pid,detailCtx.date)){toast('送信中です。完了してから編集してください');return;}
+  closeDetail();openForm(detailCtx.pid,detailCtx.date);}
 var SCHED_PRE=(function(){try{var u=new URLSearchParams(location.search);
   if(u.get('from_sched')!=='1')return null;
   return {pid:u.get('pid')||'',date:u.get('date')||'',st:u.get('st')||'',et:u.get('et')||'',
@@ -607,13 +610,14 @@ function render(){
     var key=d+'|'+pid;
     if(!gmap[key]){gmap[key]={date:d,pid:pid,name:projFull(pid==='__none__'?'':pid,r['案件名']),emp:[],part:[],nk:0,desc:''};order.push(key);}
     var g=gmap[key];g.nk+=numv(r['人工']);g.ynk=(g.ynk||0)+numv(r['深夜人工']);if(!g.desc&&r['作業内容'])g.desc=String(r['作業内容']);
+    if(r['_pending']||String(r['日報ID']).indexOf('tmp_')===0)g.pend=1;
     if(isKyo(r['区分']))g.part.push(workerShort(r));else g.emp.push(workerShort(r));
   });
   order.sort(function(a,b){var A=gmap[a],B=gmap[b];return B.date.localeCompare(A.date)||A.name.localeCompare(B.name);});
   var h='<div class="lhead"><span>現場名</span><span>社員</span><span class="r">人工</span><span></span></div>';
   order.forEach(function(k){var g=gmap[k];
     h+='<div class="lrow" data-pid="'+esc(g.pid)+'" data-date="'+esc(g.date)+'">'+
-      '<span class="lr-site">'+esc(g.name)+'</span>'+
+      '<span class="lr-site">'+esc(g.name)+(g.pend?' <span style="font-size:10px;color:#e8910b;font-weight:800;">送信中…</span>':'')+'</span>'+
       '<span class="lr-emp">'+esc(g.emp.join('、')||'－')+'</span>'+
       '<span class="lr-nk">'+round2(g.nk)+(g.ynk>0?'<span class="lr-ynk">夜'+round2(g.ynk)+'</span>':'')+'</span>'+
       '<span class="lr-del" data-pid="'+esc(g.pid)+'" data-date="'+esc(g.date)+'" title="削除">×</span></div>';
@@ -625,6 +629,7 @@ function render(){
     showDetail(x.getAttribute('data-pid'),x.getAttribute('data-date'));};})(rows[i]);}
 }
 function delRow(pid,date){
+  if(grpPending_(pid,date)){toast('送信中です。完了してから操作してください');return;}
   var grp=reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
   if(!grp.length)return;
   var nm=projFull(pid==='__none__'?'':pid,grp[0]['案件名']);
@@ -822,6 +827,15 @@ function gatherCommon(){var g=function(id){return document.getElementById(id).va
     '開始':st,'終了':et,'翌日':nextDay?'1':'','休憩分':String(br),
     '作業時間':String(Math.max(0,etM-stM-br)),'深夜人工':g('f_ynk'),
     '備考':document.getElementById('f_note').value.trim(),'車両':checkedVehicleStr()};}
+/* v43.26.0 バックグラウンド送信の共通処理 */
+var _bgPending=0;
+window.addEventListener('beforeunload',function(e){ if(_bgPending>0){e.preventDefault();e.returnValue='';} });
+function grpPending_(pid,date){
+  return reports.some(function(r){
+    return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date
+      &&(r['_pending']||String(r['日報ID']).indexOf('tmp_')===0);
+  });
+}
 function saveReport(keepOpen){
   var c=gatherCommon();
   if(!c['日付']){toast('日付を入れてください');return;}
@@ -857,6 +871,32 @@ function saveReport(keepOpen){
   var existing=isEditing?sameGrp:[];
   var data={};for(var k in c)data[k]=c[k];
   data['_workers']=ws.map(function(w){return {'作業員ID':w['作業員ID'],'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||''};});
+  // v43.26.0 新規の通常保存はバックグラウンド送信：一覧に即時反映して画面を返し、送信は裏で行う。
+  // 失敗時は一覧から取り下げてフォームを再表示（入力内容はフォームに残っているため再タップで再送できる）。
+  // 編集・保存して次へ・保存して写真追加は、失敗時に入力内容を復元できないため従来どおり送信完了を待つ。
+  if(!isEditing && !keepOpen){
+    var _ts=Date.now(), _tmpIds=[];
+    var _tmps=ws.map(function(w,i){
+      var r={}; for(var kk in c)r[kk]=c[kk];
+      r['日報ID']='tmp_'+_ts+'_'+i; r['作業員ID']=w['作業員ID']; r['氏名']=w['氏名']||''; r['区分']=w['区分']||''; r['所属']=w['所属']||''; r['_pending']=1;
+      _tmpIds.push(r['日報ID']); return r;
+    });
+    reports=_tmps.concat(reports); saveCache(); render();
+    pushRecent(pid);
+    try{localStorage.setItem('gc_pref_last_report_date',String(data['日付']||'').slice(0,10));}catch(e){}
+    closeOv(); toast(ws.length+'名分を保存しました（送信中…）');
+    _bgPending++;
+    callGAS({action:'addReportMulti',data:data},null,true).then(function(res){
+      if(!res||!res.ok)throw new Error((res&&res.error)||'保存失敗');
+      reload(true);
+    }).catch(function(err){
+      reports=reports.filter(function(r){return _tmpIds.indexOf(String(r['日報ID']))<0;});
+      saveCache(); render();
+      document.getElementById('ov').classList.add('show');
+      toast('⚠ 保存を送信できませんでした：'+err.message+'。内容は残っています。もう一度「保存」を押してください');
+    }).then(function(){_bgPending=Math.max(0,_bgPending-1);});
+    return;
+  }
   var btn=document.getElementById('saveBtn'),btn2=document.getElementById('saveNextBtn'),btn3=document.getElementById('savePhotoBtn');btn.disabled=true;btn2.disabled=true;if(btn3)btn3.disabled=true;btn.textContent='保存中…';
   Promise.all(existing.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
     .then(function(){return callGAS({action:'addReportMulti',data:data});})
@@ -975,6 +1015,6 @@ loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadC
   offUpd();
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-25-0"></script>
+<script src="../common_ui.js?v=20260704-v43-26-0"></script>
 </body>
 </html>
