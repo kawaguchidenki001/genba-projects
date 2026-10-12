@@ -1,4 +1,4 @@
-<!-- Gen-Can root app v2026.07.04-43.28.0 / ワンタップ打刻をkeepalive送信に（移動しても送信が届く・離脱警告ダイアログ廃止・punchDataで実確認） / Code_v157 -->
+<!-- Gen-Can root app v2026.10.12-43.29.0 / LINE等から ?next= で指定画面へ（ログイン後も）/ v2026.07.04-43.28.0 / ワンタップ打刻をkeepalive送信に（移動しても送信が届く・離脱警告ダイアログ廃止・punchDataで実確認） / Code_v157 -->
 <!-- Gen-Can root app v2026.07.04-43.26.0 / ワンタップ打刻のバックグラウンド送信（即時反映・GPS/送信は裏で・失敗時は状態を復元） / Code_v157 -->
 <!-- Gen-Can root app v2026.07.04-43.24.0 / 週間人員配置ボード（人員配置タイル追加→/board/・誰がどの現場か週表で一覧・人で見る/現場で見る・空きが一目） / Code_v157 -->
 <!-- Gen-Can root app v2026.07.04-43.23.0 / 文字サイズ設定（標準/大きめ/特大・アクセシビリティ・全ページ保持）／ホーム下部に追加 / Code_v157 -->
@@ -318,7 +318,7 @@
 </div>
 
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="./config.js?v=20260704-v43-28-0"></script>
+<script src="./config.js?v=20261012-v43-29-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 var APP_VERSION=(window.GENBA_CONFIG&&window.GENBA_CONFIG.APP_VERSION)||'—';
@@ -688,7 +688,7 @@ function doLogin(){
     attempts++;
     jsonpCall_({action:'login',id:id,pw:pw},function(res){
       finish();
-      if(res&&res.ok&&res.worker){maybeStorePasswordCredential(id,pw);genbaSaveSession(res);localStorage.setItem('genba_user',JSON.stringify(res.worker));showMenu(res.worker);}
+      if(res&&res.ok&&res.worker){maybeStorePasswordCredential(id,pw);genbaSaveSession(res);localStorage.setItem('genba_user',JSON.stringify(res.worker));var _nx=safeNext_();if(_nx){location.replace('./'+_nx);return;}showMenu(res.worker);}
       else setErr((res&&res.error)||'ログインできませんでした');
     },function(kind){
       if(attempts<2){ setTimeout(tryLogin,700); return; }
@@ -902,7 +902,12 @@ function remOK(id){remAddDismiss(id);renderRemPopup();}
 function remDel(id){remSaveArr(remLoad().filter(function(x){return x.id!==id;}));renderRemPopup();}
 
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
-(function(){try{var _fs=localStorage.getItem('gc_pref_fontscale');if(_fs&&_fs!=='1')document.documentElement.style.zoom=_fs;}catch(e){}applyTileOrder();markFontScale();var u=gUser();if(u&&u['作業員ID']){showMenu(u);renderRemPopup();}else{showLogin();}})();
+/* v43.29.0 LINEのリッチメニュー等から ?next=report/?new=1 のように開いた時：ログイン済みならその画面へ、未ログインならログイン後にその画面へ。
+   行き先はアプリ内の決まった画面だけ（外部サイトへは飛ばない） */
+function safeNext_(){ try{ var n=new URLSearchParams(location.search).get('next')||'';
+  return /^(report|timecard|calendar|photos|projects|board|files|koutei|toolbox|quick)\/(\?[A-Za-z0-9=&%._-]*)?$/.test(n)?n:''; }catch(e){ return ''; } }
+(function(){var _nx=safeNext_(),_u0=gUser();if(_nx&&_u0&&_u0['作業員ID']&&genbaSessionTok()){location.replace('./'+_nx);return;}
+try{var _fs=localStorage.getItem('gc_pref_fontscale');if(_fs&&_fs!=='1')document.documentElement.style.zoom=_fs;}catch(e){}applyTileOrder();markFontScale();var u=gUser();if(u&&u['作業員ID']){showMenu(u);renderRemPopup();}else{showLogin();}})();
 </script>
 
 <div class="punch-ov" id="punchOv"><div class="punch-box">
@@ -920,6 +925,6 @@ if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catc
   <div class="rsub">「OK」を押すと一旦閉じます（アプリを開き直すと再表示）。「削除」を押すと今後表示しません。</div>
   <div id="remCards"></div>
 </div></div>
-<script src="./common_ui.js?v=20260704-v43-28-0"></script>
+<script src="./common_ui.js?v=20261012-v43-29-0"></script>
 </body>
 </html>
