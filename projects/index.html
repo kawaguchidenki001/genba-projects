@@ -1307,6 +1307,7 @@ var hadCacheP=(projects&&projects.length>0)||(customers&&customers.length>0);
 reload(hadCacheP);
 callGAS({action:'checkRole'},null,true).then(function(res){
   ROLE=(res&&res.ok)?res.role:'';
+  if(!ROLE&&res&&res.ok===false&&!/認証/.test(String(res.error||''))){ setSync('off',String(res.error||'一時的なエラー')); return; }   /* v43.29.0 一時的なエラーでは管理者ログインを消さない */
   if(!ROLE){ if(admTok())localStorage.removeItem('genba_admin'); showGate('認証できませんでした。共通リンクから開き直してください。'); return; }
   if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin');
   hideGate(); applyAdminUI();

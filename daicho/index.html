@@ -286,6 +286,7 @@ function init(){
   var hadCache=projects.length>0;
   callGAS({action:'checkRole'},null,hadCache).then(function(res){
     if(res&&res.ok&&res.role==='admin'){showContent(); if(hadCache)renderList(); loadAll(hadCache);}
+    else if(res&&res.ok===false&&!/認証|権限/.test(String(res.error||''))){showGate();toast(res.error||'一時的なエラーです。少し待って開き直してください');}   /* v43.29.0 一時的なエラーでは管理者ログインを消さない */
     else{localStorage.removeItem('genba_admin');showGate();}
   }).catch(function(){showGate();});
 }
