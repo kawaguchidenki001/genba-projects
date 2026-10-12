@@ -38,7 +38,7 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
 .err{background:#fee2e2;color:#b91c1c;border-radius:14px;padding:12px 14px;margin:12px 0;font-weight:800;display:none;}
 @media(max-width:720px){.grid{grid-template-columns:repeat(2,1fr);} h1{font-size:22px;}}
 </style>
-<script src="../config.js?v=20260704-v43-28-0"></script>
+<script src="../config.js?v=20261012-v43-29-0"></script>
 </head>
 <body>
 <div class="wrap">
@@ -75,6 +75,7 @@ ul{padding-left:1.25em;} li{margin:.1em 0;}
   <div class="card">
     <h2 style="font-size:18px;color:#1f5fa8;margin-bottom:8px;">更新履歴</h2>
     <div class="list">
+      <div class="item"><div class="date">2026.10.12 / v43.29.0</div><h3>日報から原価：使用材料・伝票読み取り</h3><ul><li>作業日報に「使用材料」を追加。商品マスタから選んで数量を入れるだけで、工事台帳の材料費に自動計上</li><li>工事台帳に「材料費（日報から自動）」と品目内訳。「伝票を撮って原価に登録」でAIが納品書を読み取り</li><li>日報の作業内容に、その現場の見積書の項目を候補表示</li><li>アプリのアイコン長押し（Android）の「日報」やブックマーク（report/?new=1）から、日報の入力画面を直接開ける</li><li>金額（受注金額・予算・単価・労務費）と作業員の個人情報は管理者だけに表示</li><li>作業員名簿・施工体制台帳などの安全書類は管理者用フォルダに保存</li><li>日報の画面を開くたびにログインの期限（30日）を延長（毎日使っていればログインし直し不要）</li><li>日報の編集・削除の不具合を修正</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.28.0</div><h3>打刻・日報：移動しても届く送信に</h3><ul><li>出勤・退勤や日報保存の直後に戻る・他画面へ移動すると『サイトから移動しますか？』の警告が出ていた問題を解消</li><li>ページを離れてもブラウザが送信を最後まで届ける方式（keepalive）に変更。押したらすぐ移動してOKです</li><li>記録されたかは裏側でサーバーを読み取って確認し、確認できなかった時だけお知らせします</li><li>写真・録音・ファイルはデータが大きくこの仕組みが使えないため、送信中の警告は残しています（キャンセルで完了待ちを推奨）</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.27.0</div><h3>写真・ファイルアップロードの高速化</h3><ul><li>ファイル画面のアップロードを3件同時の並列方式に（写真6件の実測で約10秒→約3.5秒）</li><li>保存先・ファイル名・Drive保存の実確認の仕組みは従来のまま。速くなるだけです</li><li>送信中にページを閉じようとした時の警告を追加（ファイル・小黒板カメラ・録音）</li></ul></div>
       <div class="item"><div class="date">2026.07.04 / v43.26.0</div><h3>打刻・日報保存の待ち時間短縮</h3><ul><li>出勤・退勤の打刻は押した瞬間に画面へ反映。GPS取得と送信は裏側で行うため待ち画面が出ません（記録時刻も押した瞬間で確定）</li><li>日報の新規保存も一覧に即時反映してシートが閉じ、送信は裏側で実行（送信中はその日報の編集・削除をロック）</li><li>送信に失敗した時は画面を元に戻してお知らせします（日報は入力内容が残ったまま再表示。もう一度「保存」を押すだけ）</li></ul></div>
@@ -148,7 +149,7 @@ function checkGas(){
 }
 render({},null);checkGas();
 </script>
-<script src="../common_ui.js?v=20260704-v43-28-0"></script>
+<script src="../common_ui.js?v=20261012-v43-29-0"></script>
 
 </body>
 </html>

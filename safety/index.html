@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- safety v43.29.0 (2026-10-12) 作業員名簿・社会保険加入状況・施工体制台帳などの保存先が「Gen-Canデータ/安全書類（管理者用）/現場ごと」になった（GAS v158。個人情報・請負金額を含むため作業員のファイル一覧に出さない）のに合わせて案内文を変更。 -->
 <!-- safety v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- safety version 13 (2026-06-14) ヘッダー統一（メニュー左/アイコン+タイトル中央/Gen-Can+更新ボタン右、少し大きく）。更新はloadAll()。機能・id不変 -->
 <html lang="ja">
@@ -352,7 +353,7 @@
 
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt" id="ltxt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-28-0"></script>
+<script src="../config.js?v=20261012-v43-29-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 
@@ -491,7 +492,7 @@ function makeRoster(mode){
   if(!wids.length){toast('作業員を1人以上選んでください');return;}
   var caseId=document.getElementById('rCase').value;
   if(!caseId){
-    if(!confirm('工事名（現場）が選ばれていません。\n\nこのまま作成すると、ファイルは現場フォルダではなく共通の「安全書類」フォルダに保存されます。\n\n上の「工事名」で現場を選ぶと、その現場のフォルダに保存され、後から探しやすくなります。\n\nこのまま作成しますか？')){
+    if(!confirm('工事名（現場）が選ばれていません。\n\nこのまま作成すると、ファイルは「安全書類（管理者用）」フォルダの直下に保存されます。\n\n上の「工事名」で現場を選ぶと、その中の現場ごとのフォルダに保存され、後から探しやすくなります。\n\nこのまま作成しますか？')){
       return;
     }
   }
@@ -521,7 +522,7 @@ function makeRosterXlsx(mode){
   if(!wids.length){toast('作業員を1人以上選んでください');return;}
   var caseId=document.getElementById('rCase').value;
   if(!caseId){
-    if(!confirm('工事名（現場）が選ばれていません。\n\nこのまま作成すると、ファイルは共通の「安全書類」フォルダに保存されます。\n\nこのまま作成しますか？')){
+    if(!confirm('工事名（現場）が選ばれていません。\n\nこのまま作成すると、ファイルは「安全書類（管理者用）」フォルダの直下に保存されます。\n\nこのまま作成しますか？')){
       return;
     }
   }
@@ -877,6 +878,6 @@ function dkDeleteDoc(id){
   }).catch(function(err){toast('失敗：'+err.message);});
 }
 </script>
-<script src="../common_ui.js?v=20260704-v43-28-0"></script>
+<script src="../common_ui.js?v=20261012-v43-29-0"></script>
 </body>
 </html>

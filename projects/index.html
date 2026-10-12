@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- projects v43.29.0 (2026-10-12) 現場の入力画面：受注金額（税抜・税込）・実行予算の欄を管理者だけに表示。GAS v158で金額は管理者以外に返らない。 -->
 <!-- projects v43.21.0 (2026-07-04) 現場詳細（管理者）に「収支・原価を見る」ボタンを追加し、その現場の工事台帳(daicho/?case=)へ遷移。GAS変更なし。 -->
 <!-- projects v43.20.0 (2026-07-04) ?status=（完了等）でステータス絞り込みURLに対応（ホームの請求まだアラートからの遷移用・キャッシュ表示段階から即適用）。GAS変更なし。 -->
 <!-- projects v43.16.0 (2026-07-04) 起動時の権限確認とデータ取得を並列化（初回読み込み最大半減）。初回読み込み中はスケルトン表示。配色を統一トークン（青 #2d7dd2・紺文字）に変更（状態色は据え置き）。スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
@@ -241,7 +242,7 @@
   .hmark{font-size:15px;}
   .back{font-size:11.5px;padding:9px 14px;}
 </style>
-<script src="../config.js?v=20260704-v43-28-0"></script>
+<script src="../config.js?v=20261012-v43-29-0"></script>
 </head>
 <body>
 <div id="verBadge" style="position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:99999;font-size:10px;line-height:1.5;color:#fff;background:rgba(0,0,0,.30);padding:1px 9px;border-radius:0 0 8px 8px;font-family:sans-serif;pointer-events:none;letter-spacing:.5px;">…</div>
@@ -1084,6 +1085,10 @@ function openProject(p){
   g('f_price_ex').value = p?(p['受注金額税抜']||''):'';
   g('f_price_in').value = p?(p['受注金額税込']||''):'';
   g('f_budget').value   = p?(p['実行予算']||''):'';
+  window.__projMoneyLoaded = !p || (p['受注金額税抜']!==undefined || p['受注金額税込']!==undefined || p['実行予算']!==undefined);
+  /* v43.29.0 受注金額・実行予算は管理者だけに表示（GAS v158は管理者以外に金額を返さない） */
+  var _adm=isAdmin(), _pr=g('f_price_ex').closest('.two'), _bd=g('f_budget').closest('.fld');
+  if(_pr)_pr.style.display=_adm?'':'none'; if(_bd)_bd.style.display=_adm?'':'none';
   g('f_line').value     = p?(p['LINE_URL']||''):'';
   g('f_note').value = p?(p['備考']||''):'';
   document.getElementById('ov').classList.add('show');
@@ -1105,6 +1110,8 @@ function gatherProject(){
 }
 function saveProject(){
   var d=gatherProject();
+  /* v43.29.0 金額を受け取っていない（管理者以外の時のデータが残っている）状態で開いた場合、空欄の金額は送らない＝既存の金額を空で上書きしない */
+  if(window.__projMoneyLoaded===false){ ['受注金額税抜','受注金額税込','実行予算'].forEach(function(k){ if(String(d[k]||'')==='')delete d[k]; }); }
   if(!d['案件名']){toast('現場名を入力してください');return;}
   var id=d['案件ID']; var isNew=!id;
   var btn=document.getElementById('saveBtn'); btn.disabled=true; btn.textContent='保存中…';
@@ -1300,12 +1307,13 @@ var hadCacheP=(projects&&projects.length>0)||(customers&&customers.length>0);
 reload(hadCacheP);
 callGAS({action:'checkRole'},null,true).then(function(res){
   ROLE=(res&&res.ok)?res.role:'';
+  if(!ROLE&&res&&res.ok===false&&!/認証/.test(String(res.error||''))){ setSync('off',String(res.error||'一時的なエラー')); return; }   /* v43.29.0 一時的なエラーでは管理者ログインを消さない */
   if(!ROLE){ if(admTok())localStorage.removeItem('genba_admin'); showGate('認証できませんでした。共通リンクから開き直してください。'); return; }
   if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin');
   hideGate(); applyAdminUI();
 }).catch(function(){ setSync('off','オフライン'); });
 </script>
 
-<script src="../common_ui.js?v=20260704-v43-28-0"></script>
+<script src="../common_ui.js?v=20261012-v43-29-0"></script>
 </body>
 </html>

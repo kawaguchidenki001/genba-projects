@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- daicho v43.29.0 (2026-10-12) 日報原価：①材料費（日報から自動）を原価内訳に追加（作業員が日報で入れた使用材料×商品マスタ単価。内訳は品目ごと。単価未設定の材料は件数を表示、後から商品マスタに単価を入れた分は※印で計算）②「伝票を撮って登録」：納品書・請求書の写真をAIが読み取り（仕入先・日付・税抜金額・明細）、原価の登録画面に入れて確認してから保存。写真は Gen-Canデータ/原価伝票（管理者用）に保存（金額が写るため現場フォルダには置かない）③CSVに材料費（日報）と品目を出力（先頭が=+-@の文字は式として実行されないよう対策）。GAS v158が必要（旧GASでは従来どおり表示）。 -->
 <!-- daicho v43.21.0 (2026-07-04) 深リンク対応：daicho/?case=現場ID で該当現場の収支・原価を直接表示（現場詳細の「収支・原価を見る」ボタンからの遷移用）。収支計算ロジックは既存のまま。GAS変更なし。 -->
 <!-- daicho v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- daicho v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
@@ -136,6 +137,24 @@
   .htxt .nm{font-size:19.5px;}
   .hmark{font-size:15px;}
   .back{font-size:11.5px;padding:9px 14px;}
+  /* v43.29.0 材料費（日報）・伝票読取 */
+  .mdet{margin:0 0 6px;padding:2px 0 8px;border-bottom:1px dashed var(--line);}
+  .mdet summary{cursor:pointer;font-size:12.5px;color:var(--accent-d);font-weight:700;padding:2px 0;}
+  .mdet table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px;}
+  .mdet table,.slipprev table{min-width:0!important;}   /* 共通UIのスマホ用「表は最小720px」を、この小さな内訳表には適用しない */
+  .mdet td{padding:4px 2px;border-bottom:1px solid #e3e8ef;vertical-align:top;}
+  .mdet td.r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .mnote{font-size:11.5px;color:#92400e;margin:2px 0 8px;line-height:1.6;}
+  .slipbtn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border:none;border-radius:12px;background:var(--bg);box-shadow:var(--rise-sm);color:var(--accent-d);font-size:15px;font-weight:800;cursor:pointer;margin:2px 0 12px;font-family:inherit;}
+  .slipbtn:active{box-shadow:var(--well);}
+  .slipbtn svg{width:20px;height:20px;}
+  .slipprev{background:#f7fbff;border-radius:12px;box-shadow:var(--well);padding:10px 12px;margin-bottom:12px;font-size:13px;}
+  .slipprev .st{font-weight:800;color:var(--ink);margin-bottom:4px;}
+  .slipprev table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  .slipprev td{padding:3px 2px;border-bottom:1px solid #e3e8ef;vertical-align:top;}
+  .slipprev td.r{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  .slipprev .sn{font-size:11.5px;color:var(--sub);margin-top:6px;line-height:1.6;}
+  .slipprev a{color:var(--accent-d);font-weight:700;}
 </style>
 </head>
 <body>
@@ -179,6 +198,7 @@
 <div class="ov" id="ov">
   <div class="sheet">
     <h2 id="shTitle">原価の登録</h2>
+    <div class="slipprev" id="slipPrev" style="display:none;"></div>
     <div class="two">
       <div class="fld"><label>日付</label><input id="f_date" type="date"></div>
       <div class="fld"><label>区分</label><select id="f_kbn">
@@ -197,9 +217,10 @@
   </div>
 </div>
 
+<input type="file" id="slipFile" accept="image/*,application/pdf" style="display:none;" onchange="slipSelected(this)">
 <div class="toast" id="toast"></div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
-<script src="../config.js?v=20260704-v43-28-0"></script>
+<script src="../config.js?v=20261012-v43-29-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 
@@ -217,15 +238,18 @@ function genbaSaveSession(res){
 }
 function genbaClearSession(){try{localStorage.removeItem('genba_session');localStorage.removeItem('genba_admin');}catch(e){}}
 var projects=[],customers=[],costs=[],labor={},vehicles=[],vehicleUsage={};
+var repMat={},FEAT={};   /* v43.29.0 材料費（日報）・GASの対応機能 */
 var curId='',curStatus='進行中',editId='';
 /* v43.21.0 現場詳細からの深リンク（daicho/?case=現場ID で該当現場の収支を直接開く） */
 var _deepCase=null; try{var _dm=location.search.match(/[?&]case=([^&]+)/); if(_dm)_deepCase=decodeURIComponent(_dm[1]);}catch(e){}
 var CACHE='genba_daicho_cache';
 var KBN_ORDER=['材料費','外注費','機械リース','経費','その他'];
 var KBN_LABEL={'機械リース':'機械・リース'};
+/* v43.29.0 日報からの材料費と並ぶ時は、手入力の材料費を「伝票・手入力」と明記 */
+function kbnLabel(k,hasRm){ if(k==='材料費'&&hasRm)return '材料費（伝票・手入力）'; return KBN_LABEL[k]||k; }
 
-function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];customers=c.customers||[];costs=c.costs||[];labor=c.labor||{};vehicles=c.vehicles||[];vehicleUsage=c.vehicleUsage||{};}catch(e){}}
-function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,customers:customers,costs:costs,labor:labor,vehicles:vehicles,vehicleUsage:vehicleUsage}));}catch(e){}}
+function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];customers=c.customers||[];costs=c.costs||[];labor=c.labor||{};vehicles=c.vehicles||[];vehicleUsage=c.vehicleUsage||{};repMat=c.repMat||{};FEAT=c.features||{};}catch(e){}}
+function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,customers:customers,costs:costs,labor:labor,vehicles:vehicles,vehicleUsage:vehicleUsage,repMat:repMat,features:FEAT}));}catch(e){}}
 function admTok(){return localStorage.getItem('genba_admin')||'';}
 
 var loadCnt=0,loadShownAt=0,loadTmr=null;
@@ -262,6 +286,7 @@ function init(){
   var hadCache=projects.length>0;
   callGAS({action:'checkRole'},null,hadCache).then(function(res){
     if(res&&res.ok&&res.role==='admin'){showContent(); if(hadCache)renderList(); loadAll(hadCache);}
+    else if(res&&res.ok===false&&!/認証|権限/.test(String(res.error||''))){showGate();toast(res.error||'一時的なエラーです。少し待って開き直してください');}   /* v43.29.0 一時的なエラーでは管理者ログインを消さない */
     else{localStorage.removeItem('genba_admin');showGate();}
   }).catch(function(){showGate();});
 }
@@ -278,6 +303,7 @@ function loadAll(silent){
   callGAS({action:'costData'},null,silent).then(function(res){
     if(!res.ok)throw new Error(res.error||'エラー');
     projects=res.projects||[];customers=res.customers||[];costs=res.costs||[];labor=res.labor||{};vehicles=res.vehicles||[];vehicleUsage=res.vehicleUsage||{};window.__suppliers=res.suppliers||[];
+    repMat=res.repMaterials||{};FEAT=res.features||{};
     saveCache();fillCustList();
     if(_deepCase){ var dc=_deepCase; _deepCase=null;
       if(projById(dc)){ openDetail(dc); if(history&&history.replaceState)history.replaceState(null,'',location.pathname); return; } }
@@ -305,10 +331,11 @@ function calc(p){
     vehCost+=c0;vehDetail.push({name:v?(v['車両名']||vid):vid,days:days,rate:rate,cost:c0});
   });
   vehDetail.sort(function(a,b){return b.days-a.days;});
-  var costSum=laborCost+vehCost;KBN_ORDER.forEach(function(k){costSum+=by[k];});
+  var rm=repMat[id]||null, matCost=rm?num(rm.amount):0;   /* v43.29.0 材料費（日報から自動） */
+  var costSum=laborCost+vehCost+matCost;KBN_ORDER.forEach(function(k){costSum+=by[k];});
   var uke=num(p['受注金額税抜']), budget=num(p['実行予算']);
   var profit=uke-costSum, rate=uke>0?(profit/uke*100):0;
-  return {by:by,laborCost:laborCost,ninku:ninku,vehCost:vehCost,vehDetail:vehDetail,costSum:costSum,uke:uke,budget:budget,profit:profit,rate:rate};
+  return {by:by,laborCost:laborCost,ninku:ninku,vehCost:vehCost,vehDetail:vehDetail,matCost:matCost,matInfo:rm,costSum:costSum,uke:uke,budget:budget,profit:profit,rate:rate};
 }
 function projById(id){for(var i=0;i<projects.length;i++)if(String(projects[i]['案件ID'])===String(id))return projects[i];return null;}
 
@@ -404,9 +431,24 @@ function renderDetail(){
   var vd=c.vehDetail.map(function(x){return esc(x.name)+' '+x.days+'日'+(x.rate?'':'※');}).join('・');
   h+='<div class="row"><span>車両費<span class="auto">日報から自動</span>'+(vd?'<span style="font-size:11.5px;color:var(--sub);"> '+vd+'</span>':'')+'</span><b class="yen">'+yen(c.vehCost)+'</b></div>';
   if(c.vehDetail.some(function(x){return !x.rate;}))h+='<div class="row" style="border-bottom:none;padding-top:0;"><span style="font-size:11px;color:var(--sub);">※印の車両は日額単価が未設定のため0円で計上。管理画面の「車両」タブで設定できます。</span><b></b></div>';
-  KBN_ORDER.forEach(function(k){h+='<div class="row"><span>'+esc(KBN_LABEL[k]||k)+'</span><b class="yen">'+yen(c.by[k])+'</b></div>';});
+  if(FEAT.repMaterials||c.matInfo){
+    var mi=c.matInfo||{items:[],count:0,unpriced:0,estimated:0};
+    h+='<div class="row"><span>材料費<span class="auto">日報から自動</span>'+(mi.count?'<span style="font-size:11.5px;color:var(--sub);"> '+mi.count+'件</span>':'')+'</span><b class="yen">'+yen(c.matCost)+'</b></div>';
+    if(mi.items&&mi.items.length){
+      h+='<details class="mdet"><summary>品目の内訳を見る（'+mi.items.length+'品目）</summary><table>'+mi.items.map(function(x){
+        return '<tr><td>'+esc(x['品名']||'')+(x['規格']?'<br><span style="color:var(--sub);">'+esc(x['規格'])+'</span>':'')+(x.est?' ※':'')+'</td><td class="r">'+esc(String(x['数量']))+esc(x['単位']||'')+'</td><td class="r">'+(num(x['単価'])>0?'@'+fmt(x['単価']):'<span style="color:#b45309;">単価なし</span>')+'</td><td class="r">'+yen(x['金額'])+'</td></tr>';
+      }).join('')+'</table></details>';
+    }
+    if(mi.unpriced>0)h+='<div class="mnote">単価が決まっていない材料が '+mi.unpriced+' 件あり、0円で計上しています（一覧にない材料の手入力、または商品マスタの単価が空欄）。商品マスタに単価を入れると、その商品は自動で計算されます。</div>';
+    if(mi.estimated>0)h+='<div class="mnote" style="color:var(--sub);">※印は、日報の登録時に単価が空欄だったため、今の商品マスタの単価で計算しています。</div>';
+  }
+  var _hasRm=!!(FEAT.repMaterials||c.matInfo);
+  KBN_ORDER.forEach(function(k){h+='<div class="row"><span>'+esc(kbnLabel(k,_hasRm))+'</span><b class="yen">'+yen(c.by[k])+'</b></div>';});
   h+='<div class="row"><span>原価合計</span><b class="yen">'+yen(c.costSum)+'</b></div>';
   h+='</div>';
+  if(FEAT.slipOcr){
+    h+='<button class="slipbtn" onclick="pickSlip()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>伝票を撮って原価に登録（AI読み取り）</button>';
+  }
   var rows=costs.filter(function(x){return String(x['案件ID'])===curId;});
   rows.sort(function(a,b){return String(b['日付']||'').localeCompare(String(a['日付']||''));});
   h+='<div class="sec">原価明細（'+rows.length+'件）</div>';
@@ -420,7 +462,7 @@ function renderDetail(){
         '<div class="r yen">'+yen(num(x['金額']))+'</div></div>';
     }).join('');
   }
-  h+='<div style="font-size:11.5px;color:var(--sub);margin-top:10px;">※労務費は作業日報の労務費（単価×人工）、車両費は作業日報の使用車両×日額単価（1日1台＝1日分）を自動集計しています。金額はすべて税抜で入力してください。</div>';
+  h+='<div style="font-size:11.5px;color:var(--sub);margin-top:10px;">※労務費は作業日報の労務費（単価×人工）、車両費は作業日報の使用車両×日額単価（1日1台＝1日分）、材料費（日報から自動）は日報の使用材料×商品マスタの単価を自動集計しています。伝票で登録する材料費と同じ材料を重ねて計上しないようご注意ください。金額はすべて税抜で入力してください。</div>';
   document.getElementById('detail').innerHTML=h;
 }
 
@@ -440,6 +482,7 @@ function openCostSheet(id){
   document.getElementById('f_amt').value=x?String(num(x['金額'])||''):'';
   document.getElementById('f_memo').value=x?(x['備考']||''):'';
   document.getElementById('delRow').style.display=x?'block':'none';
+  var sp=document.getElementById('slipPrev'); if(sp){sp.style.display='none';sp.innerHTML='';}
   document.getElementById('ov').classList.add('show');
 }
 function closeSheet(){document.getElementById('ov').classList.remove('show');}
@@ -471,7 +514,7 @@ function deleteCost(){
 }
 
 // ===== CSV出力（詳細画面）=====
-function csvCell(v){v=String(v==null?'':v);if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
+function csvCell(v){v=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(v)&&!/^-?\d+(\.\d+)?$/.test(v))v="'"+v;if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}   /* v43.29.0 先頭が=+-@の文字（作業員が入力した材料名など）をExcelで式として実行させない */
 function exportCsv(){
   var p=projById(curId);if(!p)return;
   var c=calc(p);
@@ -484,12 +527,19 @@ function exportCsv(){
   lines.push(['内訳','金額'].map(csvCell).join(','));
   lines.push(['労務費（日報から自動・人工'+(Math.round(c.ninku*100)/100)+'）',c.laborCost].map(csvCell).join(','));
   lines.push(['車両費（日報から自動：'+c.vehDetail.map(function(x){return x.name+' '+x.days+'日';}).join('・')+'）',c.vehCost].map(csvCell).join(','));
-  KBN_ORDER.forEach(function(k){lines.push([(KBN_LABEL[k]||k),c.by[k]].map(csvCell).join(','));});
+  if(FEAT.repMaterials||c.matInfo)lines.push(['材料費（日報から自動）',c.matCost].map(csvCell).join(','));
+  KBN_ORDER.forEach(function(k){lines.push([kbnLabel(k,!!(FEAT.repMaterials||c.matInfo)),c.by[k]].map(csvCell).join(','));});
   lines.push('');
   lines.push(['日付','区分','取引先','内容','金額','備考'].map(csvCell).join(','));
   var rows=costs.filter(function(x){return String(x['案件ID'])===curId;});
   rows.sort(function(a,b){return String(a['日付']||'').localeCompare(String(b['日付']||''));});
   rows.forEach(function(x){lines.push([fmtDate(x['日付']),(KBN_LABEL[String(x['区分'])]||x['区分']||''),x['取引先']||'',x['内容']||'',num(x['金額']),x['備考']||''].map(csvCell).join(','));});
+  var mi=c.matInfo;
+  if(mi&&mi.items&&mi.items.length){
+    lines.push('');
+    lines.push(['材料費（日報から自動）の品目','規格','数量','単位','単価','金額','備考'].map(csvCell).join(','));
+    mi.items.forEach(function(x){lines.push([x['品名']||'',x['規格']||'',x['数量'],x['単位']||'',num(x['単価'])||'',num(x['金額']),x.est?'登録時は単価未設定（現在の単価で計算）':(num(x['単価'])>0?'':'単価未設定')].map(csvCell).join(','));});
+  }
   var bom='\uFEFF',blob=new Blob([bom+lines.join('\r\n')],{type:'text/csv'});
   var a=document.createElement('a');a.href=URL.createObjectURL(blob);
   a.download='工事台帳_'+String(p['略称']||p['案件名']||curId)+'.csv';
@@ -497,9 +547,76 @@ function exportCsv(){
   toast('CSVを出力しました');
 }
 
+/* ===== v43.29.0 伝票の写真をAIで読み取って原価に登録 ===== */
+function callGASPost(params,silent){return new Promise(function(resolve,reject){
+  if(!silent)showLoad();
+  var body=Object.assign({secret:admTok()},params);
+  fetch(GAS_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
+    .then(function(r){return r.text();})
+    .then(function(t){if(!silent)hideLoad();try{resolve(JSON.parse(t));}catch(e){reject(new Error('応答を読めませんでした'));}})
+    .catch(function(e){if(!silent)hideLoad();reject(new Error('通信エラー：'+e.message));});
+});}
+function pickSlip(){ if(!curId){toast('現場を選んでください');return;} var f=document.getElementById('slipFile'); f.value=''; f.click(); }
+/* 写真は長辺1800pxのJPEGに縮小（文字が読める大きさのまま送信量を抑える）。PDFはそのまま（8MBまで） */
+function shrinkImage(file){ return new Promise(function(resolve,reject){
+  var url=URL.createObjectURL(file), img=new Image();
+  img.onload=function(){ var w=img.naturalWidth,h=img.naturalHeight,mx=1800,sc=Math.min(1,mx/Math.max(w,h));
+    var cv=document.createElement('canvas'); cv.width=Math.round(w*sc); cv.height=Math.round(h*sc);
+    var cx=cv.getContext('2d'); cx.fillStyle='#fff'; cx.fillRect(0,0,cv.width,cv.height); cx.drawImage(img,0,0,cv.width,cv.height);
+    URL.revokeObjectURL(url); resolve({b64:cv.toDataURL('image/jpeg',0.86).split(',')[1],mime:'image/jpeg'}); };
+  img.onerror=function(){ URL.revokeObjectURL(url); reject(new Error('この画像は開けませんでした（JPEG・PNGでお試しください）')); };
+  img.src=url; }); }
+function readAsB64(file){ return new Promise(function(resolve,reject){ var r=new FileReader(); r.onload=function(e){resolve({b64:String(e.target.result||'').split(',')[1]||'',mime:'application/pdf'});}; r.onerror=function(){reject(new Error('ファイルを読めませんでした'));}; r.readAsDataURL(file); }); }
+function slipSelected(input){
+  var file=input.files&&input.files[0]; if(!file)return;
+  var isPdf=/pdf/i.test(file.type)||/\.pdf$/i.test(file.name);
+  if(isPdf&&file.size>8*1024*1024){toast('PDFが大きすぎます（8MBまで）');return;}
+  var caseId=curId;
+  document.querySelector('#loading .txt').textContent='AIが伝票を読み取り中…';
+  showLoad();
+  (isPdf?readAsB64(file):shrinkImage(file)).then(function(d){
+    return callGASPost({action:'slipOcr',base64:d.b64,mime:d.mime,caseId:caseId},true);
+  }).then(function(res){
+    hideLoad(); document.querySelector('#loading .txt').textContent='読み込み中…';
+    if(!res||!res.ok){toast('読み取れませんでした：'+((res&&res.error)||'不明なエラー'));return;}
+    if(curId!==caseId)return;
+    openSlipCost(res);
+  }).catch(function(e){ hideLoad(); document.querySelector('#loading .txt').textContent='読み込み中…'; toast(e.message); });
+}
+function openSlipCost(res){
+  openCostSheet();
+  var g=function(id){return document.getElementById(id);};
+  g('shTitle').textContent='伝票から原価を登録';
+  g('f_kbn').value='材料費';
+  if(res.ocrOk){
+    if(res.date)g('f_date').value=res.date;
+    g('f_dest').value=res.supplier||'';
+    var its=res.items||[];
+    var body=its.length?(String(its[0].n||'')+(its.length>1?' ほか'+(its.length-1)+'品目':'')):'材料（伝票）';
+    g('f_body').value=body.slice(0,60);
+    g('f_amt').value=res.amountEx?String(res.amountEx):'';
+  }
+  g('f_memo').value=res.fileUrl?('伝票写真 '+res.fileUrl):'';
+  var h='';
+  if(res.ocrOk){
+    h+='<div class="st">AIの読み取り結果（必ず伝票と見比べてから保存してください）</div>';
+    h+='<div>仕入先：'+esc(res.supplier||'（読めず）')+'　日付：'+esc(res.date||'（読めず）')+'</div>';
+    h+='<div>税抜 '+(res.subtotal?yen(res.subtotal):'—')+'　消費税 '+(res.tax?yen(res.tax):'—')+'　税込 '+(res.total?yen(res.total):'—')+'</div>';
+    if((res.items||[]).length){
+      h+='<table>'+res.items.slice(0,30).map(function(x){return '<tr><td>'+esc(x.n||'')+'</td><td class="r">'+esc(String(x.q||''))+esc(x.u||'')+'</td><td class="r">'+(x.a?yen(x.a):'')+'</td></tr>';}).join('')+'</table>';
+      if(res.items.length>30)h+='<div class="sn">ほか '+(res.items.length-30)+' 行</div>';
+    }
+    h+='<div class="sn">金額には<b>税抜</b>の合計を入れています'+(res.subtotal?'':'（伝票に税抜合計が無いため推定。要確認）')+'。日報の「使用材料」で入力済みの材料と同じ物なら、二重計上にならないよう登録しないでください。</div>';
+  } else {
+    h+='<div class="st" style="color:#b45309;">読み取りできませんでした</div><div class="sn">'+esc(res.ocrError||'')+'<br>写真は保存しました。伝票を見ながら手で入力してください。</div>';
+  }
+  if(res.fileUrl)h+='<div class="sn"><a href="'+esc(res.fileUrl)+'" target="_blank" rel="noopener">保存した伝票写真を開く</a>（Gen-Canデータ／原価伝票（管理者用）。作業員の画面からは見えません）</div>';
+  if(res.saveError)h+='<div class="sn" style="color:#b45309;">'+esc(res.saveError)+'</div>';
+  var sp=g('slipPrev'); sp.innerHTML=h; sp.style.display='block';
+}
 document.getElementById('ov').addEventListener('click',function(e){if(e.target===this)closeSheet();});
 init();
 </script>
-<script src="../common_ui.js?v=20260704-v43-28-0"></script>
+<script src="../common_ui.js?v=20261012-v43-29-0"></script>
 </body>
 </html>

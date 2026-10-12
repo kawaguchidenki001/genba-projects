@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- report v43.29.0 (2026-10-12) 日報原価：①使用材料（商品マスタから選んで数量だけ入力→工事台帳の材料費に自動計上。一覧にない材料は手入力可・単価未設定扱い）②その現場の見積明細の品名を作業内容の候補チップに表示 ③ ?new=1 で入力画面を直接開く（ブックマーク・アプリのアイコン長押し「日報」から。未ログインならログイン後に戻る）④日報の編集・削除を1回の通信で行う方式に（GAS v158のreplaceReportGroup/deleteReportGroup。旧GASでは従来方式）⑤不具合修正：編集中に現場・日付を変えると変更先の別の日報を消していた／削除に失敗しても「削除しました」と表示していた。GAS v158で金額は管理者以外に返らない。 -->
 <!-- report v43.28.0 (2026-07-04) 日報の新規保存をkeepalive送信に変更：保存直後に戻る・他画面へ移動しても送信が最後まで届く（離脱警告ダイアログを廃止）。保存の実確認はreportData(読み取り)で行い、確認できなければ取り下げてフォーム再表示（入力内容は保持）。GAS変更なし。 -->
 <!-- report v43.26.0 (2026-07-04) 日報保存のバックグラウンド送信：新規の通常保存は一覧に即時反映してシートを閉じ、送信は裏で実行（保存待ちゼロ）。送信中はその日報の編集/削除をロックし「送信中…」表示。失敗時は一覧から取り下げてフォームを再表示（入力内容は残る）。編集・保存して次へ・写真追加は従来どおり完了待ち（失敗時の入力保護のため）。GAS変更なし。 -->
 <!-- report v43.18.0 (2026-07-04) PCで横幅いっぱいに広がっていた問題を修正（.toolbarとmainをmax-width:760px中央寄せに、他画面と統一）。GAS変更なし。 -->
@@ -245,6 +246,29 @@
   .minihelp{font-size:12px;color:var(--sub);margin-top:6px;}
   #savePhotoBtn{background:#2563eb;}
   @media(max-width:430px){.quickbar{grid-template-columns:1fr;}.tplchip{font-size:12.5px;padding:7px 9px;}}
+  /* v43.29.0 使用材料・見積の項目 */
+  .matlist{display:flex;flex-direction:column;gap:7px;}
+  .matrow{display:grid;grid-template-columns:minmax(0,1fr) 84px auto 34px;align-items:center;gap:7px;background:var(--bg);border-radius:12px;box-shadow:var(--rise-sm);padding:8px 10px;}
+  .matrow .mn{font-weight:700;font-size:14px;line-height:1.3;min-width:0;overflow-wrap:anywhere;}
+  .matrow .mn small{display:block;color:var(--sub);font-weight:500;font-size:11.5px;}
+  .matrow input{width:100%;padding:9px 8px;border:none;border-radius:9px;font-size:16px;text-align:right;background:var(--bg);box-shadow:var(--well-soft);color:var(--ink);}
+  .matrow .mu{font-size:12.5px;color:var(--sub);white-space:nowrap;max-width:44px;overflow:hidden;text-overflow:ellipsis;}
+  .matrow .mx{width:34px;height:34px;border:none;border-radius:50%;background:var(--bg);box-shadow:var(--rise-sm);color:#c0392b;font-size:16px;font-weight:800;cursor:pointer;}
+  .matrow .mx:active{box-shadow:var(--well);}
+  .matempty{font-size:13px;color:var(--sub);padding:4px 2px;line-height:1.6;}
+  .matbtns{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+  .estbox{margin-top:8px;border-radius:16px;background:#f2faf5;box-shadow:var(--well);padding:9px 10px 10px;}
+  .estbox .esth{font-size:12.5px;font-weight:900;color:#1d6b46;margin:0 2px 7px;}
+  .estbox .tplchips{padding:0;}
+  .pkgrp{font-size:12.5px;font-weight:900;color:var(--sub);margin:12px 2px 6px;}
+  .pklist{display:flex;flex-direction:column;gap:6px;}
+  .pkitem{display:flex;align-items:center;justify-content:space-between;gap:10px;border:none;width:100%;text-align:left;background:var(--bg);border-radius:12px;box-shadow:var(--rise-sm);padding:11px 12px;font-size:15px;color:var(--ink);cursor:pointer;font-family:inherit;}
+  .pkitem:active{box-shadow:var(--well);}
+  .pkitem small{color:var(--sub);font-size:12px;}
+  .pkitem .pkadd{flex:0 0 auto;font-weight:900;color:var(--accent-d);font-size:13px;}
+  .pkitem.on .pkadd{color:#1a7a4a;}
+  .pkfree{display:grid;grid-template-columns:minmax(0,1fr) 64px auto;gap:6px;}
+  .pkfree input{padding:10px;border:none;border-radius:10px;font-size:16px;background:var(--bg);box-shadow:var(--well-soft);color:var(--ink);min-width:0;}
 </style>
 </head>
 <body>
@@ -317,7 +341,11 @@
     <div class="fld" id="vmFld"><label>使用車両（工事台帳に反映されます）</label>
       <div id="vmList" class="wgroup"></div>
     </div>
-    <div class="fld"><label>作業内容</label><div class="micwrap"><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea><button type="button" class="micbtn" data-mic="f_desc" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div><div class="tplcats" id="descTpls"></div><div class="tpltools"><input id="descTplInput" placeholder="定型文を追加 例）墨出し、入線作業"><button type="button" class="tpladd" onclick="addCustomDescTemplate()">追加</button></div><div class="tplsubtools"><button type="button" class="tplsmall" onclick="addDescTextAsTemplate()">入力中の作業内容を定型文に登録</button><button type="button" class="tplsmall" onclick="resetDescTemplates()">初期値に戻す</button></div><div class="minihelp">カテゴリ名をタップすると開閉できます。定型文をタップすると作業内容に追加、×で削除できます。登録内容はこの端末のブラウザに保存されます。</div></div>
+    <div class="fld"><label>作業内容</label><div class="micwrap"><textarea id="f_desc" placeholder="例）2階照明器具取付、配線"></textarea><button type="button" class="micbtn" data-mic="f_desc" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div><div class="estbox" id="estBox" style="display:none;"><div class="esth">この現場の見積の項目（タップで作業内容に追加）</div><div class="tplchips" id="estChips"></div></div><div class="tplcats" id="descTpls"></div><div class="tpltools"><input id="descTplInput" placeholder="定型文を追加 例）墨出し、入線作業"><button type="button" class="tpladd" onclick="addCustomDescTemplate()">追加</button></div><div class="tplsubtools"><button type="button" class="tplsmall" onclick="addDescTextAsTemplate()">入力中の作業内容を定型文に登録</button><button type="button" class="tplsmall" onclick="resetDescTemplates()">初期値に戻す</button></div><div class="minihelp">カテゴリ名をタップすると開閉できます。定型文をタップすると作業内容に追加、×で削除できます。登録内容はこの端末のブラウザに保存されます。</div></div>
+    <div class="fld" id="matFld" style="display:none;"><label>使用材料（工事台帳の材料費に反映されます）</label>
+      <div id="matList" class="matlist"></div>
+      <div class="matbtns"><button type="button" class="tplsmall" onclick="openMatPick()">＋ 材料を追加</button></div>
+    </div>
     <div class="fld"><label>備考</label><div class="micwrap"><textarea id="f_note"></textarea><button type="button" class="micbtn" data-mic="f_note" title="音声入力" aria-label="音声入力"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 14a3 3 0 0 0 3-3V5a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3z"/><path d="M19 11a7 7 0 0 1-14 0H3a9 9 0 0 0 8 8.94V23h2v-3.06A9 9 0 0 0 21 11h-2z"/></svg></button></div></div>
     <div class="acts">
       <button class="btn sub" onclick="closeOv()">キャンセル</button>
@@ -329,9 +357,20 @@
   </div>
 </div>
 
+<div class="ov" id="matOv" onclick="if(event.target===this)closeMatPick()">
+  <div class="sheet">
+    <h2>使用材料を追加</h2>
+    <div class="fld"><input id="matQ" type="search" placeholder="品名・規格で探す（例：VVF、ダウンライト）" oninput="renderMatPick()" autocomplete="off"></div>
+    <div id="matPickList"></div>
+    <div class="pkgrp">一覧にない材料</div>
+    <div class="pkfree"><input id="matFreeN" placeholder="品名" maxlength="60"><input id="matFreeU" placeholder="単位" maxlength="10"><button type="button" class="tplsmall" onclick="addFreeMat()">追加</button></div>
+    <div class="minihelp">一覧にない材料は単価が決まっていないため、工事台帳では0円で計上されます。よく使う材料は管理者が商品マスタに登録してください。</div>
+    <div class="acts"><button class="btn primary" onclick="closeMatPick()">完了</button></div>
+  </div>
+</div>
 <div class="loading" id="loading"><div class="lbox"><div class="spin"></div><div class="txt">読み込み中…</div></div></div>
 <div class="toast" id="toast"></div>
-<script src="../config.js?v=20260704-v43-28-0"></script>
+<script src="../config.js?v=20261012-v43-29-0"></script>
 <script>
 var GAS_URL=(window.GENBA_CONFIG&&window.GENBA_CONFIG.GAS_URL)||'';
 
@@ -352,6 +391,7 @@ var T_GENERAL='';
 var ROLE='general';
 var firstSyncDone=false;   /* v43.16.0 初回同期が終わるまでスケルトン表示 */
 var projects=[],workers=[],reports=[],vehicles=[],dateFilter='month',view='list';
+var reportMaterials=[],products=[],FEAT={};   /* v43.29.0 使用材料・商品・GASの対応機能 */
 var CACHE='genba_reports_cache';
 
 function admTok(){return localStorage.getItem('genba_admin')||'';}
@@ -374,6 +414,99 @@ function callGAS(params,secretOverride,silent){
     s.onerror=function(){cleanup();reject(new Error('通信エラー'));};document.head.appendChild(s);
   });
 }
+/* ===== v43.29.0 使用材料（日報→工事台帳の材料費）・見積の項目・LINEから入力 ===== */
+var matItems=[];   /* フォーム上の使用材料 [{pid,name,spec,unit,qty}] */
+function applyMatData(res){ if(!res)return; if(res.reportMaterials)reportMaterials=res.reportMaterials; if(res.products)products=res.products; FEAT=res.features||{}; renderMatList(); }
+function matSupported(){ return !!(FEAT&&FEAT.reportMaterials); }
+function grpKey(pid,date){ return String(pid==='__none__'?'':(pid||''))+'|'+String(date||'').slice(0,10); }
+function matsOfGroup(pid,date){ var k=grpKey(pid,date); return reportMaterials.filter(function(m){return String(m['日報キー'])===k;}); }
+function prodById(id){ for(var i=0;i<products.length;i++) if(String(products[i]['商品ID'])===String(id)) return products[i]; return null; }
+function fmtQty(n){ n=Math.round((Number(n)||0)*100)/100; return String(n); }
+function setMatItemsFromGroup(pid,date){
+  matItems=matsOfGroup(pid,date).map(function(m){ return {pid:String(m['商品ID']||''),name:String(m['品名']||''),spec:String(m['規格']||''),unit:String(m['単位']||''),qty:numv(m['数量'])}; });
+  renderMatList(); }
+function renderMatList(){
+  var fld=document.getElementById('matFld'); if(!fld)return;
+  fld.style.display=matSupported()?'block':'none';
+  var box=document.getElementById('matList');
+  if(!matItems.length){ box.innerHTML='<div class="matempty">材料を使った日は「＋ 材料を追加」から選び、数量だけ入れてください。</div>'; return; }
+  box.innerHTML=matItems.map(function(m,i){
+    return '<div class="matrow"><div class="mn">'+esc(m.name)+(m.spec?'<small>'+esc(m.spec)+'</small>':'')+(m.pid?'':'<small>一覧外（単価未設定）</small>')+'</div>'+
+      '<input type="number" inputmode="decimal" min="0" step="any" value="'+esc(fmtQty(m.qty))+'" aria-label="'+esc(m.name)+'の数量" oninput="setMatQty('+i+',this.value)">'+
+      '<span class="mu">'+esc(m.unit||'')+'</span><button type="button" class="mx" aria-label="'+esc(m.name)+'を外す" onclick="delMat('+i+')">×</button></div>';
+  }).join(''); }
+function setMatQty(i,v){ if(matItems[i])matItems[i].qty=numv(v); }
+function delMat(i){ matItems.splice(i,1); renderMatList(); }
+/* 送信は短い形式（URLの長さを抑える）：マスタ品 {i:商品ID,q:数量}／一覧外・マスタから消えた品 {i?,n:品名,u:単位,q:数量} */
+var MAT_MAX=40;
+function gatherMaterials(){
+  return matItems.filter(function(m){return (m.pid||m.name)&&numv(m.qty)>0;}).map(function(m){
+    if(m.pid&&prodById(m.pid))return {i:m.pid,q:fmtQty(m.qty)};
+    var o={n:m.name,u:m.unit||'',q:fmtQty(m.qty)}; if(m.pid)o.i=m.pid; return o; }); }
+function matFull(){ if(matItems.length>=MAT_MAX){toast('使用材料は1回の日報で'+MAT_MAX+'行までです（同じ材料は数量でまとめてください）');return true;} return false; }
+function openMatPick(){ document.getElementById('matQ').value=''; renderMatPick(); document.getElementById('matOv').classList.add('show'); }
+function closeMatPick(){ document.getElementById('matOv').classList.remove('show'); renderMatList(); }
+function usedInProject(pid){ var cnt={};
+  reportMaterials.forEach(function(m){ if(pid&&String(m['案件ID'])===String(pid)&&m['商品ID'])cnt[m['商品ID']]=(cnt[m['商品ID']]||0)+1; });
+  return Object.keys(cnt).sort(function(a,b){return cnt[b]-cnt[a];}).map(prodById).filter(Boolean).slice(0,8); }
+function renderMatPick(){
+  var q=(document.getElementById('matQ').value||'').trim().toLowerCase(), box=document.getElementById('matPickList');
+  if(!products.length){ box.innerHTML='<div class="matempty">商品マスタに材料がまだありません。管理者が「材料・在庫」から登録すると、ここで選べます。下の「一覧にない材料」から手入力もできます。</div>'; return; }
+  var inForm={}; matItems.forEach(function(m){ if(m.pid)inForm[m.pid]=1; });
+  function item(p){ var id=String(p['商品ID']), on=inForm[id], sub=[p['規格'],p['単位']].filter(Boolean).join('・');
+    return '<button type="button" class="pkitem'+(on?' on':'')+'" data-pid="'+esc(id)+'"><span>'+esc(p['商品名']||'')+(sub?' <small>'+esc(sub)+'</small>':'')+'</span><span class="pkadd">'+(on?'✓ 追加済（もう1つ）':'＋ 追加')+'</span></button>'; }
+  var h='';
+  if(!q){ var used=usedInProject(document.getElementById('f_proj').value); if(used.length)h+='<div class="pkgrp">この現場で使った材料</div><div class="pklist">'+used.map(item).join('')+'</div>'; }
+  var arr=products.filter(function(p){ return !q||(String(p['商品名']||'')+' '+String(p['規格']||'')).toLowerCase().indexOf(q)>=0; });
+  h+='<div class="pkgrp">'+(q?'検索結果（'+arr.length+'件）':'すべての材料（'+arr.length+'件）')+'</div>';
+  h+=arr.length?'<div class="pklist">'+arr.slice(0,80).map(item).join('')+'</div>':'<div class="matempty">見つかりません。下の「一覧にない材料」から追加できます。</div>';
+  if(arr.length>80)h+='<div class="matempty">ほか '+(arr.length-80)+' 件あります。品名で絞り込んでください。</div>';
+  box.innerHTML=h;
+  Array.prototype.forEach.call(box.querySelectorAll('.pkitem'),function(b){ b.onclick=function(){ pickMat(b.getAttribute('data-pid')); }; }); }
+function pickMat(id){ var p=prodById(id); if(!p)return;
+  var hit=null; matItems.forEach(function(m){ if(m.pid===String(id))hit=m; });
+  if(hit){ hit.qty=numv(hit.qty)+1; toast((p['商品名']||'')+' を 数量'+fmtQty(hit.qty)+' にしました'); }
+  else { if(matFull())return; matItems.push({pid:String(id),name:String(p['商品名']||''),spec:String(p['規格']||''),unit:String(p['単位']||''),qty:1}); toast((p['商品名']||'')+' を追加しました（数量は一覧で変更）'); }
+  renderMatPick(); }
+function addFreeMat(){ var n=document.getElementById('matFreeN'), u=document.getElementById('matFreeU'), nm=String(n.value||'').trim();
+  if(!nm){toast('品名を入力してください');n.focus();return;}
+  if(matFull())return;
+  matItems.push({pid:'',name:nm.slice(0,60),spec:'',unit:String(u.value||'').trim().slice(0,10),qty:1});
+  n.value='';u.value=''; toast(nm+' を追加しました（数量は一覧で変更）'); }
+/* 見積の項目（その現場の見積明細の品名）。端末に10分キャッシュ */
+var estCache={}; try{ estCache=JSON.parse(localStorage.getItem('genba_estitems_cache')||'{}')||{}; }catch(e){ estCache={}; }
+function renderEstChips(pid){ var box=document.getElementById('estBox'), el=document.getElementById('estChips'); if(!box)return;
+  var c=estCache[pid], items=(c&&c.items)||[];
+  if(!pid||!items.length){ box.style.display='none'; el.innerHTML=''; return; }
+  el.innerHTML=''; items.forEach(function(it){ var b=document.createElement('button'); b.type='button'; b.className='tplchip'; b.title=it.n+' を追加';
+    var sp=document.createElement('span'); sp.className='txt'; sp.textContent=it.n; b.appendChild(sp); b.onclick=function(){addDescTpl(it.n);}; el.appendChild(b); });
+  box.style.display='block'; }
+function loadEstItems(pid){ renderEstChips(pid); if(!pid||!FEAT.estWorkItems)return;
+  var c=estCache[pid]; if(c&&Date.now()-c.t<10*60*1000)return;
+  callGAS({action:'estWorkItems',id:pid},null,true).then(function(res){ if(!res||!res.ok)return;
+    estCache[pid]={t:Date.now(),items:res.items||[]};
+    try{ var ks=Object.keys(estCache); if(ks.length>40){ ks.sort(function(a,b){return estCache[a].t-estCache[b].t;}).slice(0,ks.length-40).forEach(function(k){delete estCache[k];}); }
+      localStorage.setItem('genba_estitems_cache',JSON.stringify(estCache)); }catch(e){}
+    if(document.getElementById('f_proj').value===pid)renderEstChips(pid); }).catch(function(){}); }
+/* 日報（現場×日付）の削除。GAS v158なら1回の通信、旧GASなら1行ずつ（失敗をきちんと知らせる） */
+function myWorkerId(){ try{ var me=JSON.parse(localStorage.getItem('genba_user')||'null'); return me?String(me['作業員ID']||''):''; }catch(e){ return ''; } }
+function deleteGroupReq(pid,date,grp){
+  /* ids＝この画面が知っている行。サーバー側で他の人が追加していたら削除を止める（知らない行まで消さない） */
+  if(FEAT.groupOps) return callGAS({action:'deleteReportGroup',pid:(pid==='__none__'?'':pid),date:date,ids:(grp||[]).map(function(r){return r['日報ID'];}).join(',')}).then(function(res){ if(!res||!res.ok)throw new Error((res&&res.error)||'削除失敗'); return res; });
+  if(!isAdmin()&&(grp||[]).some(function(r){return String(r['作業員ID'])!==myWorkerId();}))return Promise.reject(new Error('他の人の分を含む日報は、管理者に削除を依頼してください'));
+  return Promise.all((grp||[]).map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
+    .then(function(rs){ var bad=(rs||[]).filter(function(x){return !x||!x.ok;})[0]; if(bad)throw new Error(bad.error||'削除失敗'); return rs; }); }
+/* ブックマークやアイコン長押しの「日報」から report/?new=1 で開いたら、入力画面をすぐ開く（自分にチェック） */
+var LINE_NEW=(function(){ try{ return new URLSearchParams(location.search).get('new')==='1'; }catch(e){ return false; } })();
+if(LINE_NEW&&!tok()){ try{ location.replace('../?next='+encodeURIComponent('report/?new=1')); }catch(e){} }
+function tryLineNew(){
+  if(!LINE_NEW||!projects.length||!workers.length)return;
+  LINE_NEW=false; try{history.replaceState(null,'',location.pathname);}catch(e){}
+  if(document.getElementById('ov').classList.contains('show'))return;
+  openForm();
+  try{ var me=JSON.parse(localStorage.getItem('genba_user')||'null'); var mid=me&&String(me['作業員ID']||'');
+    if(mid&&!document.querySelectorAll('#wmFld .wcb:checked').length){ var cbs=document.querySelectorAll('#wmFld .wcb'); for(var i=0;i<cbs.length;i++){ if(cbs[i].value===mid)cbs[i].checked=true; } updateNkDisp(); } }catch(e){}
+}
 function setSync(st,t){document.getElementById('dot').className='dot'+(st?' '+st:'');document.getElementById('syncTxt').textContent=t;}
 
 /* 管理者ログイン（PINで金額が見える）*/
@@ -386,16 +519,18 @@ function toggleAdmin(){ if(admTok()){ if(confirm('管理者ログアウトしま
 }
 function updateAdmBtn(){ /* 管理者ボタンは廃止済み */ }
 
-function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];workers=c.workers||[];reports=c.reports||[];vehicles=c.vehicles||[];}catch(e){}}
-function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,workers:workers,reports:reports,vehicles:vehicles}));}catch(e){}}
+function loadCache(){try{var c=JSON.parse(localStorage.getItem(CACHE)||'{}');projects=c.projects||[];workers=c.workers||[];reports=c.reports||[];vehicles=c.vehicles||[];reportMaterials=c.reportMaterials||[];products=c.products||[];FEAT=c.features||{};}catch(e){}}
+function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:projects,workers:workers,reports:reports,vehicles:vehicles,reportMaterials:reportMaterials,products:products,features:FEAT}));}catch(e){}}
 function reload(silent){
   setSync('busy','同期中…');
   /* v43.16.0 権限確認とデータ取得を並行実行（従来は直列で待ち時間が2倍だった） */
-  callGAS({action:'checkRole'},null,true).then(function(r){ ROLE=(r&&r.ok)?r.role:'general'; if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin'); updateAdmBtn(); render(); }).catch(function(){});
+  callGAS({action:'checkRole'},null,true).then(function(r){ if(r&&r.ok){ ROLE=r.role; if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin');
+      /* v43.29.0 日報を開くたびにログインの期限を延長（同じトークンの時だけ。期限切れで毎月ログインし直しにならないように） */
+      try{ var _s=JSON.parse(localStorage.getItem('genba_session')||'null'); if(_s&&_s.token&&_s.expiresAt&&r.token===_s.token&&Number(r.expiresAt)>Number(_s.expiresAt)){ _s.expiresAt=Number(r.expiresAt); localStorage.setItem('genba_session',JSON.stringify(_s)); } }catch(e){} } else if(r&&/認証/.test(String(r.error||''))&&admTok()){ localStorage.removeItem('genba_admin'); } updateAdmBtn(); render(); }).catch(function(){});   /* v43.29.0 一時的なエラーでは管理者ログインを消さない */
   callGAS({action:'reportData'},null,silent)
     .then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
       firstSyncDone=true;
-      projects=res.projects||[];workers=res.workers||[];reports=res.reports||[];vehicles=res.vehicles||[];saveCache();buildProjOptions();render();setSync('ok','同期済み');trySchedPre(); })
+      projects=res.projects||[];workers=res.workers||[];reports=res.reports||[];vehicles=res.vehicles||[];applyMatData(res);saveCache();buildProjOptions();render();setSync('ok','同期済み');trySchedPre();tryLineNew(); })
     .catch(function(err){firstSyncDone=true; setSync('off','オフライン'); if(!silent){render();toast('読込失敗：'+err.message);} else if(/認証|ログイン|セッション|権限|secret|auth/i.test(String(err&&err.message||''))){toast('ログインの有効期限が切れた可能性があります。メニューへ戻って入り直してください');} });
 }
 
@@ -436,6 +571,9 @@ function showDetail(pid,date){
   h+=dvRow('人工（合計）',round2(nk)+' 人工'+(ynkSum>0?'　＋　深夜 '+round2(ynkSum)+' 人工':'')+'（'+grp.length+'名分）');
   var vh='';grp.forEach(function(r){if(!vh&&r['車両'])vh=r['車両'];});
   if(vh)h+=dvRow('使用車両',vehNames(vh),'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:5px;"><path d="M2 7h12v9H2zM14 10h4l3 3v3h-7z"/><circle cx="6.5" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>');
+  var gm=matsOfGroup(pid,date);
+  if(gm.length){ var mAmt=0,hasAmt=false; gm.forEach(function(m){ if(m['金額']!==undefined&&m['金額']!==''){hasAmt=true;mAmt+=numv(m['金額']);} });
+    h+=dvRow('使用材料',gm.map(function(m){return (m['品名']||'')+' '+fmtQty(m['数量'])+(m['単位']||'');}).join('、')+(hasAmt&&isAdmin()?'（材料費 ¥'+Math.round(mAmt).toLocaleString('ja-JP')+'）':'')); }
   h+=dvRow('作業内容',desc||'－');
   h+=dvRow('備考',note||'－');
   document.getElementById('dvBody').innerHTML=h;
@@ -554,12 +692,13 @@ function copyFromDetail(){if(!detailCtx)return;var pid=detailCtx.pid,date=detail
   openForm(pid,date);editGroup=null;
   var g=function(id){return document.getElementById(id);};
   g('f_date').value=todayStr();
+  matItems=[];renderMatList();   /* v43.29.0 材料は複製しない（材料費の二重計上を防ぐ） */
   g('mTitle').textContent='日報の入力（複製・日付は今日になっています）';
   g('grpDelRow').style.display='none';
   g('saveNextBtn').style.display='';g('savePhotoBtn').style.display='';g('quickBar').style.display='grid';renderRecents();}
 
 /* ===== 出力（Excel CSV / PDF印刷） ===== */
-function csvq(v){v=String(v==null?'':v);return '"'+v.replace(/"/g,'""')+'"';}
+function csvq(v){v=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(v)&&!/^-?\d+(\.\d+)?$/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';}   /* v43.29.0 先頭が=+-@の文字はExcelで式として実行されないよう'を付ける */
 function exportExcel(){
   var list=filtered();
   if(!list.length){toast('出力するデータがありません');return;}
@@ -635,9 +774,9 @@ function delRow(pid,date){
   if(!grp.length)return;
   var nm=projFull(pid==='__none__'?'':pid,grp[0]['案件名']);
   if(!confirm(date+'\n「'+nm+'」の日報（'+grp.length+'名分）を削除します。\nよろしいですか？'))return;
-  Promise.all(grp.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
+  deleteGroupReq(pid,date,grp)
     .then(function(){toast('削除しました');reload();})
-    .catch(function(){toast('削除に失敗しました');});
+    .catch(function(err){toast('削除に失敗しました：'+(err&&err.message||''));reload(true);});
 }
 var editGroup=null;
 function delGroupForm(ev){ if(ev)ev.preventDefault(); if(!editGroup)return;
@@ -645,8 +784,8 @@ function delGroupForm(ev){ if(ev)ev.preventDefault(); if(!editGroup)return;
   var existing=reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
   if(!existing.length){closeOv();return;}
   if(!confirm('この日報（現場ごと・'+existing.length+'名分）を削除します。よろしいですか？'))return;
-  Promise.all(existing.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
-    .then(function(){closeOv();toast('削除しました');reload();}).catch(function(err){toast('削除に失敗しました：'+(err&&err.message||''));});
+  deleteGroupReq(pid,date,existing)
+    .then(function(){closeOv();toast('削除しました');reload();}).catch(function(err){toast('削除に失敗しました：'+(err&&err.message||''));reload(true);});
 }
 function renderSum(list){
   var byProj={},byKyo={};
@@ -721,7 +860,7 @@ function openForm(pid,date){   // pid・date 指定で編集、未指定で新�
   var g=function(id){return document.getElementById(id);};
   var editing=!!(pid!=null&&date);
   var grp=editing?reports.filter(function(r){return String(r['案件ID']||'__none__')===String(pid)&&String(r['日付']||'').slice(0,10)===date;}):[];
-  editGroup=editing?{pid:pid,date:date}:null;
+  editGroup=editing?{pid:pid,date:date,ids:grp.map(function(r){return String(r['日報ID']);})}:null;   /* v43.29.0 開いた時点の行を覚える（裏で再読込しても、見ていない行は消さない） */
   g('mTitle').textContent=editing?'この日報を編集（現場ごと）':'日報の入力（まとめて記入できます）';
   g('grpDelRow').style.display=(editing&&grp.length)?'block':'none';
   g('f_date').value=editing?date:todayStr();
@@ -751,6 +890,7 @@ function openForm(pid,date){   // pid・date 指定で編集、未指定で新�
     var cbs=document.querySelectorAll('#wmFld .wcb');for(var i=0;i<cbs.length;i++){if(ids[String(cbs[i].value)])cbs[i].checked=true;}}
   var vstr='';grp.forEach(function(r){if(!vstr&&r['車両'])vstr=r['車両'];});
   setVehicleChecks(editing?vstr:'');
+  if(editing)setMatItemsFromGroup(pid,date); else {matItems=[];renderMatList();}
   var desc='',note='';grp.forEach(function(r){if(!desc&&r['作業内容'])desc=r['作業内容'];if(!note&&r['備考'])note=r['備考'];});
   g('f_desc').value=editing?desc:'';
   g('f_note').value=editing?note:'';
@@ -763,7 +903,8 @@ function openForm(pid,date){   // pid・date 指定で編集、未指定で新�
 }
 function buildSelect(id,arr,vk,tk,withBelong){var s=document.getElementById(id);s.innerHTML='';arr.forEach(function(o){var op=document.createElement('option');op.value=o[vk];op.textContent=o[tk]+(withBelong&&o['所属']?'（'+o['所属']+'）':'');s.appendChild(op);});}
 function onProj(){var pid=document.getElementById('f_proj').value,p=projects.filter(function(x){return x['案件ID']===pid;})[0],a=document.getElementById('f_drive');
-  if(p&&p['Driveフォルダ']){a.href=p['Driveフォルダ'];a.style.display='inline-block';}else{a.style.display='none';}}
+  if(p&&p['Driveフォルダ']){a.href=p['Driveフォルダ'];a.style.display='inline-block';}else{a.style.display='none';}
+  loadEstItems(pid);}
 var nextDay=false;
 function toggleNextDay(){nextDay=document.getElementById('ndChk').checked;
   document.getElementById('nextDayBtn').classList.toggle('on',nextDay);timeCalc();}
@@ -852,7 +993,18 @@ function saveReport(keepOpen){
   var pid=c['案件ID'],date=c['日付'];
   var sameGrp=reports.filter(function(r){return String(r['案件ID']||'')===String(pid)&&String(r['日付']||'').slice(0,10)===date;});
   var isEditing=!!editGroup;
-  if(!isEditing){
+  /* v43.29.0 編集時は「編集を開いた元の日報（現場×日付）」を置き換える。
+     従来は変更後の現場・日付の日報を消していたため、現場や日付を変えると別の日報が消えて元の日報が残っていた */
+  var origGrp=isEditing?reports.filter(function(r){return String(r['案件ID']||'__none__')===String(editGroup.pid)&&String(r['日付']||'').slice(0,10)===editGroup.date;}):[];
+  var movedKey=isEditing&&(grpKey(editGroup.pid,editGroup.date)!==grpKey(pid,date));
+  if(matSupported()){
+    var badQ=matItems.filter(function(m){return !(numv(m.qty)>0);});
+    if(badQ.length){toast('材料の数量を入れてください：'+badQ.map(function(m){return m.name;}).join('、'));return;}
+    if(matItems.length>MAT_MAX){toast('使用材料は'+MAT_MAX+'行までです');return;}
+  }
+  /* 旧GAS（1行ずつ削除）では、本人以外の行を含む日報を管理者以外が編集すると途中までしか消せず日報が欠けるため、先に止める */
+  if(isEditing&&!FEAT.groupOps&&!isAdmin()&&origGrp.some(function(r){return String(r['作業員ID'])!==myWorkerId();})){toast('他の人の分を含む日報は、管理者に編集を依頼してください');return;}
+  if(!isEditing||movedKey){
     var dupNames=[];
     ws.forEach(function(w){
       if(sameGrp.some(function(r){return String(r['作業員ID'])===String(w['作業員ID']);}))dupNames.push(w['氏名']||'');
@@ -861,7 +1013,7 @@ function saveReport(keepOpen){
   }
   // 1日の上限チェック：同じ人は通常＋深夜の合計で1.5人工まで（全現場合算）
   var addNk=numv(c['人工'])+numv(c['深夜人工']);
-  var grpIds={};sameGrp.forEach(function(r){grpIds[String(r['日報ID'])]=1;});
+  var grpIds={};origGrp.forEach(function(r){grpIds[String(r['日報ID'])]=1;});
   var overNames=[];
   ws.forEach(function(w){
     var cur=0;
@@ -874,9 +1026,10 @@ function saveReport(keepOpen){
     if(cur+addNk>1.5+1e-9)overNames.push((w['氏名']||'')+'（登録済 '+round2(cur)+'＋今回 '+round2(addNk)+'＝'+round2(cur+addNk)+'）');
   });
   if(overNames.length){toast('⚠ 1日の上限は合計1.5人工までです：'+overNames.join('、'));return;}
-  var existing=isEditing?sameGrp:[];
+  var existing=origGrp;
   var data={};for(var k in c)data[k]=c[k];
   data['_workers']=ws.map(function(w){return {'作業員ID':w['作業員ID'],'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||''};});
+  if(matSupported())data['_materials']=gatherMaterials();
   // v43.26.0 新規の通常保存はバックグラウンド送信：一覧に即時反映して画面を返し、送信は裏で行う。
   // 失敗時は一覧から取り下げてフォームを再表示（入力内容はフォームに残っているため再タップで再送できる）。
   // 編集・保存して次へ・保存して写真追加は、失敗時に入力内容を復元できないため従来どおり送信完了を待つ。
@@ -901,7 +1054,7 @@ function saveReport(keepOpen){
           var hit=svRep.some(function(r){
             return String(r['日付']||'').slice(0,10)===date&&String(r['案件ID']||'')===String(pid)&&String(r['作業員ID'])===_w0;
           });
-          if(hit){ firstSyncDone=true; projects=res.projects||projects; workers=res.workers||workers; reports=svRep; vehicles=res.vehicles||vehicles; saveCache(); render(); }
+          if(hit){ firstSyncDone=true; projects=res.projects||projects; workers=res.workers||workers; reports=svRep; vehicles=res.vehicles||vehicles; applyMatData(res); saveCache(); render(); }
           return hit;
         });
       }
@@ -928,8 +1081,13 @@ function saveReport(keepOpen){
     return;
   }
   var btn=document.getElementById('saveBtn'),btn2=document.getElementById('saveNextBtn'),btn3=document.getElementById('savePhotoBtn');btn.disabled=true;btn2.disabled=true;if(btn3)btn3.disabled=true;btn.textContent='保存中…';
-  Promise.all(existing.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
-    .then(function(){return callGAS({action:'addReportMulti',data:data});})
+  /* v43.29.0 編集はGAS v158なら1回の通信で置き換え（途中まで消える事故を防ぐ）。旧GASでは従来方式 */
+  var job=(isEditing&&FEAT.groupOps)
+    ? callGAS({action:'replaceReportGroup',pid:(editGroup.pid==='__none__'?'':editGroup.pid),date:editGroup.date,ids:(editGroup.ids||origGrp.map(function(r){return r['日報ID'];})).join(','),data:data})
+    : Promise.all(existing.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
+        .then(function(rs){var bad=(rs||[]).filter(function(x){return !x||!x.ok;})[0];if(bad)throw new Error(bad.error||'元の日報を削除できませんでした');})
+        .then(function(){return callGAS({action:'addReportMulti',data:data});});
+  job
     .then(function(res){if(!res.ok)throw new Error(res.error||'保存失敗');
       pushRecent(pid);
       // v43.14.0: ホームの「日報がまだ」通知用に、最後に日報を保存した日付を端末に記録
@@ -947,7 +1105,7 @@ function saveReport(keepOpen){
 function resetForNext(){
   document.getElementById('f_desc').value='';document.getElementById('f_note').value='';
   var cbs=document.querySelectorAll('#wmFld .wcb');for(var i=0;i<cbs.length;i++)cbs[i].checked=false;
-  setVehicleChecks('');updateNkDisp();renderRecents();
+  setVehicleChecks('');updateNkDisp();renderRecents();matItems=[];renderMatList();
   var sh=document.querySelector('#ov .sheet');if(sh)sh.scrollTop=0;}
 function closeOv(){document.getElementById('ov').classList.remove('show');}
 
@@ -1026,7 +1184,7 @@ document.addEventListener('visibilitychange',function(){if(!document.hidden)relo
 })();
 
 try{document.addEventListener('keydown',function(ev){if(ev.key==='Enter'&&ev.target&&ev.target.id==='descTplInput'){ev.preventDefault();addCustomDescTemplate();}});}catch(e){}
-loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadCache=(projects&&projects.length>0)||(reports&&reports.length>0);trySchedPre();reload(hadCache);
+loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadCache=(projects&&projects.length>0)||(reports&&reports.length>0);trySchedPre();tryLineNew();reload(hadCache);
 </script>
 <div class="ov" id="dov" onclick="if(event.target===this)closeDetail()">
   <div class="sheet">
@@ -1045,6 +1203,6 @@ loadCache();buildDateChips();buildProjOptions();updateAdmBtn();render();var hadC
   offUpd();
 })();
 </script>
-<script src="../common_ui.js?v=20260704-v43-28-0"></script>
+<script src="../common_ui.js?v=20261012-v43-29-0"></script>
 </body>
 </html>
