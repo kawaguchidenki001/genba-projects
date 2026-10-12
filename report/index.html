@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- report v43.29.0 (2026-10-12) 日報原価：①使用材料（商品マスタから選んで数量だけ入力→工事台帳の材料費に自動計上。一覧にない材料は手入力可・単価未設定扱い）②その現場の見積明細の品名を作業内容の候補チップに表示 ③LINEのボタンから ?new=1 で入力画面を直接開く（未ログインならログイン後に戻る）④日報の編集・削除を1回の通信で行う方式に（GAS v158のreplaceReportGroup/deleteReportGroup。旧GASでは従来方式）⑤不具合修正：編集中に現場・日付を変えると変更先の別の日報を消していた／削除に失敗しても「削除しました」と表示していた。GAS v158で金額は管理者以外に返らない。 -->
+<!-- report v43.29.0 (2026-10-12) 日報原価：①使用材料（商品マスタから選んで数量だけ入力→工事台帳の材料費に自動計上。一覧にない材料は手入力可・単価未設定扱い）②その現場の見積明細の品名を作業内容の候補チップに表示 ③ ?new=1 で入力画面を直接開く（ブックマーク・アプリのアイコン長押し「日報」から。未ログインならログイン後に戻る）④日報の編集・削除を1回の通信で行う方式に（GAS v158のreplaceReportGroup/deleteReportGroup。旧GASでは従来方式）⑤不具合修正：編集中に現場・日付を変えると変更先の別の日報を消していた／削除に失敗しても「削除しました」と表示していた。GAS v158で金額は管理者以外に返らない。 -->
 <!-- report v43.28.0 (2026-07-04) 日報の新規保存をkeepalive送信に変更：保存直後に戻る・他画面へ移動しても送信が最後まで届く（離脱警告ダイアログを廃止）。保存の実確認はreportData(読み取り)で行い、確認できなければ取り下げてフォーム再表示（入力内容は保持）。GAS変更なし。 -->
 <!-- report v43.26.0 (2026-07-04) 日報保存のバックグラウンド送信：新規の通常保存は一覧に即時反映してシートを閉じ、送信は裏で実行（保存待ちゼロ）。送信中はその日報の編集/削除をロックし「送信中…」表示。失敗時は一覧から取り下げてフォームを再表示（入力内容は残る）。編集・保存して次へ・写真追加は従来どおり完了待ち（失敗時の入力保護のため）。GAS変更なし。 -->
 <!-- report v43.18.0 (2026-07-04) PCで横幅いっぱいに広がっていた問題を修正（.toolbarとmainをmax-width:760px中央寄せに、他画面と統一）。GAS変更なし。 -->
@@ -496,7 +496,7 @@ function deleteGroupReq(pid,date,grp){
   if(!isAdmin()&&(grp||[]).some(function(r){return String(r['作業員ID'])!==myWorkerId();}))return Promise.reject(new Error('他の人の分を含む日報は、管理者に削除を依頼してください'));
   return Promise.all((grp||[]).map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
     .then(function(rs){ var bad=(rs||[]).filter(function(x){return !x||!x.ok;})[0]; if(bad)throw new Error(bad.error||'削除失敗'); return rs; }); }
-/* LINEのリッチメニュー等から report/?new=1 で開いたら、入力画面をすぐ開く（自分にチェック） */
+/* ブックマークやアイコン長押しの「日報」から report/?new=1 で開いたら、入力画面をすぐ開く（自分にチェック） */
 var LINE_NEW=(function(){ try{ return new URLSearchParams(location.search).get('new')==='1'; }catch(e){ return false; } })();
 if(LINE_NEW&&!tok()){ try{ location.replace('../?next='+encodeURIComponent('report/?new=1')); }catch(e){} }
 function tryLineNew(){

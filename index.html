@@ -902,7 +902,7 @@ function remOK(id){remAddDismiss(id);renderRemPopup();}
 function remDel(id){remSaveArr(remLoad().filter(function(x){return x.id!==id;}));renderRemPopup();}
 
 if('serviceWorker' in navigator){ navigator.serviceWorker.register('sw.js').catch(function(){}); }
-/* v43.29.0 LINEのリッチメニュー等から ?next=report/?new=1 のように開いた時：ログイン済みならその画面へ、未ログインならログイン後にその画面へ。
+/* v43.29.0 ブックマーク等から ?next=report/?new=1 のように開いた時：ログイン済みならその画面へ、未ログインならログイン後にその画面へ。
    行き先はアプリ内の決まった画面だけ（外部サイトへは飛ばない） */
 function safeNext_(){ try{ var n=new URLSearchParams(location.search).get('next')||'';
   return /^(report|timecard|calendar|photos|projects|board|files|koutei|toolbox|quick)\/(\?[A-Za-z0-9=&%._-]*)?$/.test(n)?n:''; }catch(e){ return ''; } }
