@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- daicho v43.29.0 (2026-10-12) 日報原価：①材料費（日報から自動）を原価内訳に追加（作業員が日報で入れた使用材料×商品マスタ単価。内訳は品目ごと。単価未設定の材料は件数を表示、後から商品マスタに単価を入れた分は※印で計算）②「伝票を撮って登録」：納品書・請求書の写真をAIが読み取り（仕入先・日付・税抜金額・明細）、原価の登録画面に入れて確認してから保存。写真は現場フォルダ/書類/伝票に保存 ③CSVに材料費（日報）と品目を出力。GAS v158が必要（旧GASでは従来どおり表示）。 -->
+<!-- daicho v43.29.0 (2026-10-12) 日報原価：①材料費（日報から自動）を原価内訳に追加（作業員が日報で入れた使用材料×商品マスタ単価。内訳は品目ごと。単価未設定の材料は件数を表示、後から商品マスタに単価を入れた分は※印で計算）②「伝票を撮って登録」：納品書・請求書の写真をAIが読み取り（仕入先・日付・税抜金額・明細）、原価の登録画面に入れて確認してから保存。写真は Gen-Canデータ/原価伝票（管理者用）に保存（金額が写るため現場フォルダには置かない）③CSVに材料費（日報）と品目を出力（先頭が=+-@の文字は式として実行されないよう対策）。GAS v158が必要（旧GASでは従来どおり表示）。 -->
 <!-- daicho v43.21.0 (2026-07-04) 深リンク対応：daicho/?case=現場ID で該当現場の収支・原価を直接表示（現場詳細の「収支・原価を見る」ボタンからの遷移用）。収支計算ロジックは既存のまま。GAS変更なし。 -->
 <!-- daicho v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- daicho v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
@@ -513,7 +513,7 @@ function deleteCost(){
 }
 
 // ===== CSV出力（詳細画面）=====
-function csvCell(v){v=String(v==null?'':v);if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}
+function csvCell(v){v=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(v)&&!/^-?\d+(\.\d+)?$/.test(v))v="'"+v;if(/[",\n]/.test(v))v='"'+v.replace(/"/g,'""')+'"';return v;}   /* v43.29.0 先頭が=+-@の文字（作業員が入力した材料名など）をExcelで式として実行させない */
 function exportCsv(){
   var p=projById(curId);if(!p)return;
   var c=calc(p);
@@ -609,7 +609,7 @@ function openSlipCost(res){
   } else {
     h+='<div class="st" style="color:#b45309;">読み取りできませんでした</div><div class="sn">'+esc(res.ocrError||'')+'<br>写真は保存しました。伝票を見ながら手で入力してください。</div>';
   }
-  if(res.fileUrl)h+='<div class="sn"><a href="'+esc(res.fileUrl)+'" target="_blank" rel="noopener">保存した伝票写真を開く</a>（現場フォルダ／書類／伝票）</div>';
+  if(res.fileUrl)h+='<div class="sn"><a href="'+esc(res.fileUrl)+'" target="_blank" rel="noopener">保存した伝票写真を開く</a>（Gen-Canデータ／原価伝票（管理者用）。作業員の画面からは見えません）</div>';
   if(res.saveError)h+='<div class="sn" style="color:#b45309;">'+esc(res.saveError)+'</div>';
   var sp=g('slipPrev'); sp.innerHTML=h; sp.style.display='block';
 }

@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- order v43.29.0 (2026-10-12) 商品の編集：単価を受け取っていない状態（管理者以外の時のデータが端末に残っている等）で開いた場合、空欄の単価を送らない＝既存の単価を空で上書きしない。GAS v158は商品単価を管理者以外に返さない。 -->
 <!-- order v43.17.0 (2026-07-04) デザイン統一第2弾：配色を全画面共通トークン（青 #2d7dd2・紺文字 #1f3a52）に統一。状態色・入口アイコンの色分けは据え置き。GAS変更なし。 -->
 <!-- order v43.16.0 (2026-07-04) スピナーの人工待ち(最小表示時間)を撤去し150ms遅延表示方式に変更（速い処理はスピナー非表示）。GAS変更なし。 -->
 <!-- order v43.11.0 (2026-07-04) 差出人の既定値をconfig.js(COMPANY_SHORT)から取得（自社名固定を解消）。GAS変更なし。 -->
@@ -689,6 +690,7 @@ function openProd(id){
   document.getElementById('p_spec').value=p?(p['規格']||''):'';
   document.getElementById('p_unit').value=p?(p['単位']||''):'';
   document.getElementById('p_price').value=p?(p['単価']||''):'';
+  window.__ordPriceLoaded = !p || p['単価']!==undefined;   /* v43.29.0 */
   document.getElementById('p_order').value=p?(p['表示順']||''):'';
   document.getElementById('p_memo').value=p?(p['メモ']||''):'';
   // 標準仕入先プルダウン（名称で保持）
@@ -710,6 +712,7 @@ function saveProd(){
     '規格':document.getElementById('p_spec').value.trim(),'単位':document.getElementById('p_unit').value.trim(),
     '標準仕入先':document.getElementById('p_sup').value,'単価':document.getElementById('p_price').value.trim(),
     '表示順':document.getElementById('p_order').value.trim(),'メモ':document.getElementById('p_memo').value.trim()};
+  if(window.__ordPriceLoaded===false&&d['単価']==='')delete d['単価'];   /* v43.29.0 受け取っていない単価を空で上書きしない */
   var btn=document.getElementById('pBtnSave');btn.disabled=true;btn.textContent='保存中…';
   callGAS({action:'productSave',data:d}).then(function(res){
     if(!res.ok)throw new Error(res.error||'保存失敗');

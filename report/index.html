@@ -437,9 +437,13 @@ function renderMatList(){
   }).join(''); }
 function setMatQty(i,v){ if(matItems[i])matItems[i].qty=numv(v); }
 function delMat(i){ matItems.splice(i,1); renderMatList(); }
+/* 送信は短い形式（URLの長さを抑える）：マスタ品 {i:商品ID,q:数量}／一覧外・マスタから消えた品 {i?,n:品名,u:単位,q:数量} */
+var MAT_MAX=40;
 function gatherMaterials(){
   return matItems.filter(function(m){return (m.pid||m.name)&&numv(m.qty)>0;}).map(function(m){
-    return m.pid?{'商品ID':m.pid,'数量':fmtQty(m.qty)}:{'品名':m.name,'単位':m.unit||'','数量':fmtQty(m.qty)}; }); }
+    if(m.pid&&prodById(m.pid))return {i:m.pid,q:fmtQty(m.qty)};
+    var o={n:m.name,u:m.unit||'',q:fmtQty(m.qty)}; if(m.pid)o.i=m.pid; return o; }); }
+function matFull(){ if(matItems.length>=MAT_MAX){toast('使用材料は1回の日報で'+MAT_MAX+'行までです（同じ材料は数量でまとめてください）');return true;} return false; }
 function openMatPick(){ document.getElementById('matQ').value=''; renderMatPick(); document.getElementById('matOv').classList.add('show'); }
 function closeMatPick(){ document.getElementById('matOv').classList.remove('show'); renderMatList(); }
 function usedInProject(pid){ var cnt={};
@@ -462,10 +466,11 @@ function renderMatPick(){
 function pickMat(id){ var p=prodById(id); if(!p)return;
   var hit=null; matItems.forEach(function(m){ if(m.pid===String(id))hit=m; });
   if(hit){ hit.qty=numv(hit.qty)+1; toast((p['商品名']||'')+' を 数量'+fmtQty(hit.qty)+' にしました'); }
-  else { matItems.push({pid:String(id),name:String(p['商品名']||''),spec:String(p['規格']||''),unit:String(p['単位']||''),qty:1}); toast((p['商品名']||'')+' を追加しました（数量は一覧で変更）'); }
+  else { if(matFull())return; matItems.push({pid:String(id),name:String(p['商品名']||''),spec:String(p['規格']||''),unit:String(p['単位']||''),qty:1}); toast((p['商品名']||'')+' を追加しました（数量は一覧で変更）'); }
   renderMatPick(); }
 function addFreeMat(){ var n=document.getElementById('matFreeN'), u=document.getElementById('matFreeU'), nm=String(n.value||'').trim();
   if(!nm){toast('品名を入力してください');n.focus();return;}
+  if(matFull())return;
   matItems.push({pid:'',name:nm.slice(0,60),spec:'',unit:String(u.value||'').trim().slice(0,10),qty:1});
   n.value='';u.value=''; toast(nm+' を追加しました（数量は一覧で変更）'); }
 /* 見積の項目（その現場の見積明細の品名）。端末に10分キャッシュ */
@@ -484,8 +489,11 @@ function loadEstItems(pid){ renderEstChips(pid); if(!pid||!FEAT.estWorkItems)ret
       localStorage.setItem('genba_estitems_cache',JSON.stringify(estCache)); }catch(e){}
     if(document.getElementById('f_proj').value===pid)renderEstChips(pid); }).catch(function(){}); }
 /* 日報（現場×日付）の削除。GAS v158なら1回の通信、旧GASなら1行ずつ（失敗をきちんと知らせる） */
+function myWorkerId(){ try{ var me=JSON.parse(localStorage.getItem('genba_user')||'null'); return me?String(me['作業員ID']||''):''; }catch(e){ return ''; } }
 function deleteGroupReq(pid,date,grp){
-  if(FEAT.groupOps) return callGAS({action:'deleteReportGroup',pid:(pid==='__none__'?'':pid),date:date}).then(function(res){ if(!res||!res.ok)throw new Error((res&&res.error)||'削除失敗'); return res; });
+  /* ids＝この画面が知っている行。サーバー側で他の人が追加していたら削除を止める（知らない行まで消さない） */
+  if(FEAT.groupOps) return callGAS({action:'deleteReportGroup',pid:(pid==='__none__'?'':pid),date:date,ids:(grp||[]).map(function(r){return r['日報ID'];}).join(',')}).then(function(res){ if(!res||!res.ok)throw new Error((res&&res.error)||'削除失敗'); return res; });
+  if(!isAdmin()&&(grp||[]).some(function(r){return String(r['作業員ID'])!==myWorkerId();}))return Promise.reject(new Error('他の人の分を含む日報は、管理者に削除を依頼してください'));
   return Promise.all((grp||[]).map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
     .then(function(rs){ var bad=(rs||[]).filter(function(x){return !x||!x.ok;})[0]; if(bad)throw new Error(bad.error||'削除失敗'); return rs; }); }
 /* LINEのリッチメニュー等から report/?new=1 で開いたら、入力画面をすぐ開く（自分にチェック） */
@@ -688,7 +696,7 @@ function copyFromDetail(){if(!detailCtx)return;var pid=detailCtx.pid,date=detail
   g('saveNextBtn').style.display='';g('savePhotoBtn').style.display='';g('quickBar').style.display='grid';renderRecents();}
 
 /* ===== 出力（Excel CSV / PDF印刷） ===== */
-function csvq(v){v=String(v==null?'':v);return '"'+v.replace(/"/g,'""')+'"';}
+function csvq(v){v=String(v==null?'':v);if(/^[=+\-@\t\r]/.test(v)&&!/^-?\d+(\.\d+)?$/.test(v))v="'"+v;return '"'+v.replace(/"/g,'""')+'"';}   /* v43.29.0 先頭が=+-@の文字はExcelで式として実行されないよう'を付ける */
 function exportExcel(){
   var list=filtered();
   if(!list.length){toast('出力するデータがありません');return;}
@@ -990,7 +998,10 @@ function saveReport(keepOpen){
   if(matSupported()){
     var badQ=matItems.filter(function(m){return !(numv(m.qty)>0);});
     if(badQ.length){toast('材料の数量を入れてください：'+badQ.map(function(m){return m.name;}).join('、'));return;}
+    if(matItems.length>MAT_MAX){toast('使用材料は'+MAT_MAX+'行までです');return;}
   }
+  /* 旧GAS（1行ずつ削除）では、本人以外の行を含む日報を管理者以外が編集すると途中までしか消せず日報が欠けるため、先に止める */
+  if(isEditing&&!FEAT.groupOps&&!isAdmin()&&origGrp.some(function(r){return String(r['作業員ID'])!==myWorkerId();})){toast('他の人の分を含む日報は、管理者に編集を依頼してください');return;}
   if(!isEditing||movedKey){
     var dupNames=[];
     ws.forEach(function(w){
@@ -1070,7 +1081,7 @@ function saveReport(keepOpen){
   var btn=document.getElementById('saveBtn'),btn2=document.getElementById('saveNextBtn'),btn3=document.getElementById('savePhotoBtn');btn.disabled=true;btn2.disabled=true;if(btn3)btn3.disabled=true;btn.textContent='保存中…';
   /* v43.29.0 編集はGAS v158なら1回の通信で置き換え（途中まで消える事故を防ぐ）。旧GASでは従来方式 */
   var job=(isEditing&&FEAT.groupOps)
-    ? callGAS({action:'replaceReportGroup',pid:(editGroup.pid==='__none__'?'':editGroup.pid),date:editGroup.date,data:data})
+    ? callGAS({action:'replaceReportGroup',pid:(editGroup.pid==='__none__'?'':editGroup.pid),date:editGroup.date,ids:origGrp.map(function(r){return r['日報ID'];}).join(','),data:data})
     : Promise.all(existing.map(function(r){return callGAS({action:'deleteReport',id:r['日報ID']});}))
         .then(function(rs){var bad=(rs||[]).filter(function(x){return !x||!x.ok;})[0];if(bad)throw new Error(bad.error||'元の日報を削除できませんでした');})
         .then(function(){return callGAS({action:'addReportMulti',data:data});});

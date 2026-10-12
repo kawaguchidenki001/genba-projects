@@ -1085,6 +1085,7 @@ function openProject(p){
   g('f_price_ex').value = p?(p['受注金額税抜']||''):'';
   g('f_price_in').value = p?(p['受注金額税込']||''):'';
   g('f_budget').value   = p?(p['実行予算']||''):'';
+  window.__projMoneyLoaded = !p || (p['受注金額税抜']!==undefined || p['受注金額税込']!==undefined || p['実行予算']!==undefined);
   /* v43.29.0 受注金額・実行予算は管理者だけに表示（GAS v158は管理者以外に金額を返さない） */
   var _adm=isAdmin(), _pr=g('f_price_ex').closest('.two'), _bd=g('f_budget').closest('.fld');
   if(_pr)_pr.style.display=_adm?'':'none'; if(_bd)_bd.style.display=_adm?'':'none';
@@ -1109,6 +1110,8 @@ function gatherProject(){
 }
 function saveProject(){
   var d=gatherProject();
+  /* v43.29.0 金額を受け取っていない（管理者以外の時のデータが残っている）状態で開いた場合、空欄の金額は送らない＝既存の金額を空で上書きしない */
+  if(window.__projMoneyLoaded===false){ ['受注金額税抜','受注金額税込','実行予算'].forEach(function(k){ if(String(d[k]||'')==='')delete d[k]; }); }
   if(!d['案件名']){toast('現場名を入力してください');return;}
   var id=d['案件ID']; var isNew=!id;
   var btn=document.getElementById('saveBtn'); btn.disabled=true; btn.textContent='保存中…';
