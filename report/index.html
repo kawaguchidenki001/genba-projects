@@ -524,7 +524,9 @@ function saveCache(){try{localStorage.setItem(CACHE,JSON.stringify({projects:pro
 function reload(silent){
   setSync('busy','同期中…');
   /* v43.16.0 権限確認とデータ取得を並行実行（従来は直列で待ち時間が2倍だった） */
-  callGAS({action:'checkRole'},null,true).then(function(r){ if(r&&r.ok){ ROLE=r.role; if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin'); } else if(r&&/認証/.test(String(r.error||''))&&admTok()){ localStorage.removeItem('genba_admin'); } updateAdmBtn(); render(); }).catch(function(){});   /* v43.29.0 一時的なエラーでは管理者ログインを消さない */
+  callGAS({action:'checkRole'},null,true).then(function(r){ if(r&&r.ok){ ROLE=r.role; if(admTok()&&ROLE!=='admin')localStorage.removeItem('genba_admin');
+      /* v43.29.0 日報を開くたびにログインの期限を延長（同じトークンの時だけ。期限切れで毎月ログインし直しにならないように） */
+      try{ var _s=JSON.parse(localStorage.getItem('genba_session')||'null'); if(_s&&_s.token&&_s.expiresAt&&r.token===_s.token&&Number(r.expiresAt)>Number(_s.expiresAt)){ _s.expiresAt=Number(r.expiresAt); localStorage.setItem('genba_session',JSON.stringify(_s)); } }catch(e){} } else if(r&&/認証/.test(String(r.error||''))&&admTok()){ localStorage.removeItem('genba_admin'); } updateAdmBtn(); render(); }).catch(function(){});   /* v43.29.0 一時的なエラーでは管理者ログインを消さない */
   callGAS({action:'reportData'},null,silent)
     .then(function(res){ if(!res.ok)throw new Error(res.error||'エラー');
       firstSyncDone=true;
