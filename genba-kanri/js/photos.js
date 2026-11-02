@@ -1,4 +1,4 @@
-/* 現場管理 photos.js v1.0.0 — 工事写真（一覧・小黒板カメラ・写真台帳）
+/* 現場管理 photos.js v1.0.1 — 工事写真（一覧・小黒板カメラ・写真台帳）
  * 保存先：現場フォルダ/写真/<工種>（GASの uploadPhoto dest:'photo', kind:工種）。Gen-Canの工事写真と同じ場所です。
  * 写真台帳：GASの makeLedgerFiles（Gen-Canと同じテンプレート「工事写真台帳テンプレート_GenCan標準」）で PDF / Excel を作成。 */
 (function(){
@@ -254,18 +254,20 @@ function renderCamera(view,params){
     var g=boardC.getContext('2d'); g.clearRect(0,0,boardC.width,boardC.height);
     if(cfg.on) drawBoard(g,boardC.width,boardC.height,fields(),cfg.size,cfg.pos);
   }
+  var reqNo=0;   /* カメラ起動の要求番号。新しい要求が出たら古い要求で得たカメラはすぐ止める（カメラが点きっぱなしにならないように） */
   function start(){
     stop();
     if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){ noCam('この端末・ブラウザではアプリ内カメラが使えません。'); return; }
+    var my=++reqNo;
     navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:facing},width:{ideal:2560},height:{ideal:1920}}}).then(function(s){
-      if(!alive){ s.getTracks().forEach(function(t){t.stop();}); return; }
+      if(!alive||my!==reqNo||document.hidden){ s.getTracks().forEach(function(t){t.stop();}); return; }
       stream=s; vid.srcObject=s; var pl=vid.play(); if(pl&&pl.catch) pl.catch(function(){});
       vid.onloadedmetadata=function(){ msg.hidden=true; layout(); };
-    }).catch(function(e){ noCam('カメラを起動できませんでした（'+(e&&e.name==='NotAllowedError'?'カメラの使用が許可されていません':(e&&e.message)||'不明なエラー')+'）。'); });
+    }).catch(function(e){ if(my!==reqNo||!alive) return; noCam('カメラを起動できませんでした（'+(e&&e.name==='NotAllowedError'?'カメラの使用が許可されていません':(e&&e.message)||'不明なエラー')+'）。'); });
   }
   function noCam(t){ msg.hidden=false; msg.innerHTML='<div>'+esc(t)+'<br>端末のカメラで撮影して、黒板を合成して保存できます。</div><button type="button" class="btn primary" data-native>📷 端末のカメラで撮る</button>';
     msg.querySelector('[data-native]').onclick=function(){ view.querySelector('[data-file]').click(); }; layout(); }
-  function stop(){ if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream=null; } }
+  function stop(){ reqNo++; if(stream){ stream.getTracks().forEach(function(t){ t.stop(); }); stream=null; } }
   function flash(){ frame.style.opacity='.35'; setTimeout(function(){ frame.style.opacity=''; },120); }
   function finish(c){
     if(cfg.on) drawBoard(c.getContext('2d'),c.width,c.height,fields(),cfg.size,cfg.pos);
@@ -305,6 +307,7 @@ function renderCamera(view,params){
   view.querySelector('[data-place]').oninput=function(){ cfg.place=this.value.trim(); save(); drawPreview(); };
   var onR=U.debounce(layout,120);
   window.addEventListener('resize',onR); window.addEventListener('orientationchange',onR);
+  vid.addEventListener('resize',onR);   /* 端末を回して映像の縦横が変わった時も、枠と黒板を合わせ直す */
   var onVis=function(){ if(document.hidden) stop(); else if(alive&&!stream) start(); };
   document.addEventListener('visibilitychange',onVis);
   layout(); start();

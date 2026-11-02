@@ -1,7 +1,7 @@
-/* 現場管理 service worker v1.0.0 (2026-11-02)
+/* 現場管理 service worker v1.0.1 (2026-11-02)
  * 方針：Gen-Canと同じく、ファイルはキャッシュせずネットワークから直接読む（古い画面が残る事故を防ぐ）。
  * 電波がなくてページを開けない時だけ、案内ページを返す。 */
-var GK_SW_VERSION = 'gk-20261102-1-0-0';
+var GK_SW_VERSION = 'gk-20261102-1-0-1';
 self.addEventListener('install', function(){ self.skipWaiting(); });
 self.addEventListener('activate', function(e){ e.waitUntil(self.clients.claim()); });
 self.addEventListener('fetch', function(e){

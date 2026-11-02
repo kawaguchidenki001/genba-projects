@@ -1,4 +1,4 @@
-/* 現場管理 home.js v1.0.0 — 「今日」画面と「情報・設定」画面 */
+/* 現場管理 home.js v1.0.1 — 「今日」画面と「情報・設定」画面 */
 (function(){
 'use strict';
 var U=GK.u, D=GK.data, S=GK.session, CAN=GK.can, esc=U.esc;
@@ -95,7 +95,7 @@ function renderSettings(view){
   view.querySelector('[data-fs]').onclick=function(e){ var b=e.target.closest('[data-v]'); if(!b) return; GK.setFontScale(b.dataset.v); U.$$('[data-fs] .chip',view).forEach(function(c){ c.classList.toggle('on',c===b); }); };
   view.querySelector('[data-reload]').onclick=function(){
     GK.busy(true,'読み込み中…');
-    Promise.all([D.loadRD(),D.loadCal()]).then(function(){ if(GK.Issues) GK.Issues.clear(); GK.toast('最新のデータを読み込みました'); }).catch(function(e){ GK.toast('読み込めませんでした：'+e.message,{err:true}); }).finally(function(){ GK.busy(false); });
+    Promise.all([D.loadRD(true),D.loadCal(true)]).then(function(){ if(GK.Issues) GK.Issues.clear(); GK.toast('最新のデータを読み込みました'); }).catch(function(e){ GK.toast('読み込めませんでした：'+e.message,{err:true}); }).finally(function(){ GK.busy(false); });
   };
 }
 

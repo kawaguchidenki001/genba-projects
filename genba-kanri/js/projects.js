@@ -1,4 +1,4 @@
-/* 現場管理 projects.js v1.0.0 — 現場一覧・現場詳細・工程表
+/* 現場管理 projects.js v1.0.1 — 現場一覧・現場詳細・工程表
  * データ：案件マスタ（addProject=誰でも／updateProject=管理者）・工程シート（addKoutei=誰でも／updateKoutei・deleteKoutei=管理者）
  * 金額（受注金額・実行予算）はこのアプリでは扱いません（Gen-Canで管理者が操作）。 */
 (function(){
@@ -233,10 +233,18 @@ function kouteiForm(pid,k,list,reload){
     if(e<s){ GK.toast('終了日が開始日より前になっています',{err:true}); return; }
     var data={'案件ID':pid,'工程名':name,'開始日':s,'終了日':e,'進捗':String(Math.max(0,Math.min(100,U.numv(f('prog').value)))),'種別':f('kind').value.trim(),'備考':f('note').value.trim()};
     if(isNew){ var mx=0; list.forEach(function(x){ mx=Math.max(mx,U.numv(x['並び順'])); }); data['並び順']=String(mx+1); }
+    var btn=sh.$('[data-save]'); if(!GK.lockBtn(btn)) return;
+    var before={}; list.forEach(function(x){ before[String(x['工程ID'])]=1; });
     GK.busy(true,'保存中…');
-    API.write(isNew?'addKoutei':'updateKoutei',isNew?{data:data}:{id:k['工程ID'],data:data}).then(function(){
+    API.write(isNew?'addKoutei':'updateKoutei',isNew?{data:data}:{id:k['工程ID'],data:data}).catch(function(err){
+      if(!isNew) throw err;
+      /* 通信切れの時は、同じ工程が増えていないか読み直して確かめる（二重登録防止） */
+      var fresh=[];
+      return GK.verifySaved(err,function(){ return API.call('koutei',{projectId:pid}).then(function(r){ fresh=r.koutei||[]; }); },
+        function(){ return fresh.some(function(x){ return !before[String(x['工程ID'])]&&x['工程名']===name&&U.d10(x['開始日'])===s; }); });
+    }).then(function(){
       sh.close(); GK.toast('工程を保存しました'); return reload(); })
-      .catch(function(err){ GK.toast('保存できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); });
+      .catch(function(err){ btn.disabled=false; GK.toast('保存できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); });
   };
   var del=sh.$('[data-del]');
   if(del) del.onclick=function(){
@@ -275,12 +283,20 @@ function projectForm(p){
     if(!data['案件名']){ GK.toast('現場名を入力してください',{err:true}); return; }
     if(data['工期開始']&&data['工期完了']&&data['工期完了']<data['工期開始']){ GK.toast('工期完了が工期開始より前になっています',{err:true}); return; }
     if(isNew){ var dup=D.projects.filter(function(x){ return U.normName(x['案件名'])===U.normName(data['案件名']); }); if(dup.length&&!window.confirm('同じ名前の現場がすでにあります。登録しますか？')) return; }
+    var btn=sh.$('[data-save]'); if(!GK.lockBtn(btn)) return;
+    var before={}; D.projects.forEach(function(x){ before[String(x['案件ID'])]=1; });
+    var added=null;
     GK.busy(true,'保存中…');
-    API.write(isNew?'addProject':'updateProject',isNew?{data:data}:{id:p['案件ID'],data:data}).then(function(res){
+    API.write(isNew?'addProject':'updateProject',isNew?{data:data}:{id:p['案件ID'],data:data}).catch(function(err){
+      if(!isNew) throw err;
+      /* 通信切れの時は、同じ名前の現場が増えていないか読み直して確かめる（二重登録防止） */
+      return GK.verifySaved(err,function(){ return D.loadRD(true); },function(){ added=D.projects.filter(function(x){ return !before[String(x['案件ID'])]&&U.normName(x['案件名'])===U.normName(data['案件名']); })[0]; return !!added; })
+        .then(function(){ return {project:added}; });
+    }).then(function(res){
       sh.close(); GK.toast(isNew?'現場を登録しました':'保存しました');
       var np=res.project;
-      return D.loadRD().then(function(){ if(isNew&&np&&np['案件ID']) GK.go('/project/'+encodeURIComponent(np['案件ID'])); else GK.refresh(); });
-    }).catch(function(err){ GK.toast('保存できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); });
+      return D.loadRD(true).then(function(){ if(isNew&&np&&np['案件ID']) GK.go('/project/'+encodeURIComponent(np['案件ID'])); else GK.refresh(); });
+    }).catch(function(err){ btn.disabled=false; GK.toast('保存できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); });
   };
 }
 GK.projectForm=projectForm;

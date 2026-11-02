@@ -1,4 +1,4 @@
-/* 現場管理 core.js v1.0.0 (2026-11-02)
+/* 現場管理 core.js v1.0.1 (2026-11-02)
  * 共通処理：設定・ログイン（Gen-Canと共有）・GAS通信・データ保持・画面切替・部品
  * - GASはGen-Canと同じもの（config.js の GAS_URL）を使い、サーバー側の変更はしていません。
  * - ログイン情報は Gen-Can と同じ localStorage キー（genba_session / genba_user / genba_admin）を共有します。
@@ -8,12 +8,21 @@
 'use strict';
 
 var CFG = window.GENBA_CONFIG || {};
-var APP = { name:'現場管理', version:'v1.0.0', build:'gk-20261102-1-0-0', updated:'2026-11-02' };
+var APP = { name:'現場管理', version:'v1.0.1', build:'gk-20261102-1-0-1', updated:'2026-11-02' };
 var KP = 'genba_kanri_';
 var GK = window.GK = { APP:APP, CFG:CFG, KP:KP };
 
 /* 更新履歴（アプリ内「情報」画面に表示） */
 GK.CHANGELOG = [
+  { v:'v1.0.1', d:'2026-11-02', items:[
+    '通信が途中で切れた時は、保存できていたかを確かめてから結果を表示（日報・現場・工程・配置・指摘・検査の二重登録を防止）',
+    '保存の直後は必ず最新のデータを読み直す。保存ボタンの二度押しを防止',
+    '指摘・図面の写真送信に失敗した時、画面が固まらずに入力を残したままお知らせ',
+    'ログインし直しても入力中の内容が消えないように',
+    'カメラの切替を素早く押した時にカメラが点いたままになる不具合、PDF図面のページを素早く切り替えた時のピンの取り違えを修正',
+    '日報は現場を必須に（Gen-Canと同じ）。起動直後でも作業員・車両の一覧が後から表示されるように',
+    '検査の「否」を指摘に登録する時の重複を防止。写真の拡大表示を戻るボタンで閉じるように'
+  ]},
   { v:'v1.0.0', d:'2026-11-02', items:[
     '最初の版。Gen-Canのデータ（現場・工程・日報・予定・写真・メモ）をそのまま使う現場管理特化アプリとして作成。',
     '現場一覧・詳細・工程表（現場ごとの工程と全現場の工期）',
@@ -110,11 +119,14 @@ GK.confirm = function(msg,opt){ opt=opt||{};
   }); };
 
 /* 画像の拡大表示 */
+var viewers=[];
+GK.closeViewers = function(){ viewers.slice().forEach(function(c){ c(); }); };
 GK.viewer = function(o){
   var v=document.createElement('div'); v.className='viewer';
   v.innerHTML='<div class="vh"><b>'+U.esc(o.title||'')+'</b><button class="x" type="button" aria-label="閉じる">×</button></div><div class="vb"><div class="spin"></div></div><div class="vf"></div>';
   document.body.appendChild(v);
-  var close=function(){ v.remove(); document.removeEventListener('keydown',k); if(o.onClose) o.onClose(); };
+  var close=function(){ if(!v.parentNode) return; v.remove(); viewers=viewers.filter(function(c){ return c!==close; }); document.removeEventListener('keydown',k); if(o.onClose) o.onClose(); };
+  viewers.push(close);
   var k=function(e){ if(e.key==='Escape') close(); };
   document.addEventListener('keydown',k);
   v.querySelector('.x').onclick=close;
@@ -177,18 +189,28 @@ function jsonp(params,timeout){
     var cb='gk_'+Date.now().toString(36)+'_'+Math.floor(Math.random()*1e7);
     var q=Object.assign({},params,{callback:cb,_build:APP.build,_ts:Date.now()});
     var s=document.createElement('script'), done=false;
-    var t=setTimeout(function(){ fin(new Error('タイムアウトしました（電波の良い場所でもう一度お試しください）')); }, timeout||25000);
+    var t=setTimeout(function(){ fin(netErr('タイムアウトしました（電波の良い場所でもう一度お試しください）')); }, timeout||25000);
     function fin(err,res){ if(done) return; done=true; clearTimeout(t);
       window[cb]=function(){ try{ delete window[cb]; }catch(e){} };   /* 遅れて届いた応答でエラーにならないように */
       if(s.parentNode) s.parentNode.removeChild(s);
       if(err) reject(err); else resolve(res||{}); }
     window[cb]=function(res){ fin(null,res); };
     s.async=true; s.charset='utf-8';
-    s.onerror=function(){ fin(new Error('通信エラー（電波・ネット接続を確認してください）')); };
+    s.onerror=function(){ fin(netErr('通信エラー（電波・ネット接続を確認してください）')); };
     s.src=GAS+(GAS.indexOf('?')>=0?'&':'?')+U.qs(q);
     document.head.appendChild(s);
   });
 }
+/* 通信が途中で切れた等のエラー（サーバーに届いたかどうか分からない）には net 印を付ける */
+function netErr(msg){ var e=new Error(msg); e.net=true; return e; }
+/* 書き込みが通信エラーになった時、実は保存できていないかを読み直して確かめる（二重登録防止）
+ * reload：最新データを読み直す関数／found：保存済みならtrue。保存できていれば成功扱い、だめなら元のエラー */
+GK.verifySaved = function(err,reload,found){
+  if(!err||!err.net) return Promise.reject(err);
+  return Promise.resolve().then(reload).then(function(){ if(found()) return true; throw err; },function(){ throw err; });
+};
+/* ボタンの二度押し防止：押した瞬間に無効化し、失敗した時だけ戻す */
+GK.lockBtn = function(btn){ if(!btn||btn.disabled) return false; btn.disabled=true; return true; };
 API.urlLength = function(action,params){ return (GAS+'?'+U.qs(Object.assign({action:action,secret:S.token(),callback:'gk_xxxxxxxx_xxxxxxx',_build:APP.build,_ts:Date.now()},params||{}))).length; };
 function isAuthErr(res){ return res&&res.ok===false&&/認証/.test(String(res.error||'')); }
 /* 読み取り（失敗時は自動でもう1回） */
@@ -224,11 +246,12 @@ API.post = function(action,params,opt){
   return fetch(GAS,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),signal:ctl?ctl.signal:undefined})
     .then(function(r){ return r.json(); })
     .then(function(res){ clearTimeout(t); if(isAuthErr(res)) GK.authFail(); if(!res||res.ok!==true) throw new Error((res&&res.error)||'エラーが発生しました'); return res; },
-      function(err){ clearTimeout(t); throw new Error(err&&err.name==='AbortError'?'タイムアウトしました':'通信エラー（電波・ネット接続を確認してください）'); });
+      function(err){ clearTimeout(t); throw netErr(err&&err.name==='AbortError'?'タイムアウトしました':'通信エラー（電波・ネット接続を確認してください）'); });
 };
-/* 書き込み：短ければJSONP（Gen-Canと同じ）、長ければPOST。書き込みは自動再送しない（二重登録防止） */
+/* 書き込み：短ければJSONP（Gen-Canと同じ）、長ければPOST。書き込みは自動再送しない（二重登録防止）。
+   GASの処理待ちで遅くなることがあるので、待ち時間は読み取りより長い45秒 */
 API.write = function(action,params,opt){
-  opt=Object.assign({retry:0},opt||{});
+  opt=Object.assign({retry:0,timeout:45000},opt||{});
   if(API.urlLength(action,params)<=6500) return API.call(action,params,opt);
   var p={}; Object.keys(params||{}).forEach(function(k){ p[k]=params[k]; });
   return API.post(action,p,opt);
@@ -331,6 +354,8 @@ UP.run = function(j){
   },function(err){
     UP.active--;
     if(j.tries<2){ j.state='wait'; UP.render(); UP.retryCheck(j).then(function(file){ if(file){ j.state='done'; UP.jobs=UP.jobs.filter(function(x){return x!==j;}); UP.render(); j.ok(file); GK.emit('uploaded',{job:j,file:file}); } UP.pump(); }); return; }
+    /* failFast：指摘・図面の登録など、画面で完了を待っている送信は、ここで失敗を返す（画面が固まらないように。入力は画面に残る） */
+    if(j.failFast){ UP.jobs=UP.jobs.filter(function(x){return x!==j;}); j.b64=null; j.blob=null; UP.render(); j.ng(err); UP.pump(); return; }
     j.state='fail'; j.err=err; UP.render(); GK.toast('写真・ファイルの送信に失敗しました：'+(j.label||j.name),{err:true}); UP.pump();
   });
 };
@@ -368,30 +393,42 @@ D.restore = function(){
   var cal=C.get('cal'); if(cal&&cal.schedules) D.schedules=cal.schedules;
 };
 var rdP=null, calP=null;
+/* 読み込み中の要求があればそれを使う。fresh＝保存の直後など「保存後のデータ」が必要な時は、
+   読み込み中の要求が終わるのを待ってから、改めて読み直す（古いデータで「保存できていない」と誤判定しないため） */
+function chainLoad(cur,fresh,fn,set){
+  if(cur&&!fresh) return cur;
+  var p=(cur?cur.then(function(){},function(){}):Promise.resolve()).then(fn);
+  set(p);
+  var clear=function(){ set(null,p); GK.sync(''); };
+  p.then(clear,clear);
+  return p;
+}
 /* reportData：現場・作業員・日報・車両・（v158）材料 を一度に取得（Gen-Canの日報画面と同じ） */
-D.loadRD = function(){
-  if(rdP) return rdP;
+D.loadRD = function(fresh){
+  return chainLoad(rdP,fresh,loadRD_,function(p,old){ if(old){ if(rdP===old) rdP=null; } else rdP=p; });
+};
+function loadRD_(){
   GK.sync('更新中…');
-  rdP=API.call('reportData',{},{timeout:40000}).then(function(res){
+  return API.call('reportData',{},{timeout:40000}).then(function(res){
     ['projects','workers','reports','vehicles','customers','contacts'].forEach(function(k){ if(res[k]) D[k]=res[k]; });
     D.reportMaterials=res.reportMaterials||[]; D.products=res.products||[]; D.features=res.features||{};
     D.t.rd=Date.now();
     var pack={projects:D.projects,workers:D.workers,reports:D.reports,vehicles:D.vehicles,customers:D.customers,contacts:D.contacts,reportMaterials:D.reportMaterials,products:D.products,features:D.features};
     if(!C.set('rd',pack)){ pack.reports=[]; pack.reportMaterials=[]; C.set('rd',pack); }   /* 容量不足なら日報以外だけ保存 */
     GK.emit('data','rd'); return D;
-  }).finally(function(){ rdP=null; GK.sync(''); });
-  return rdP;
-};
+  });
+}
 /* calendarData：予定（スケジュール）を含む */
-D.loadCal = function(){
-  if(calP) return calP;
+D.loadCal = function(fresh){
+  return chainLoad(calP,fresh,loadCal_,function(p,old){ if(old){ if(calP===old) calP=null; } else calP=p; });
+};
+function loadCal_(){
   GK.sync('更新中…');
-  calP=API.call('calendarData',{},{timeout:40000}).then(function(res){
+  return API.call('calendarData',{},{timeout:40000}).then(function(res){
     D.schedules=res.schedules||[]; ['projects','workers','customers','vehicles','contacts'].forEach(function(k){ if(res[k]) D[k]=res[k]; });
     D.t.cal=Date.now(); C.set('cal',{schedules:D.schedules}); GK.emit('data','cal'); return D;
-  }).finally(function(){ calP=null; GK.sync(''); });
-  return calP;
-};
+  });
+}
 D.fresh = function(kind,maxAge){ return Date.now()-(D.t[kind]||0) < (maxAge||60000); };
 D.ensure = function(kind,maxAge){ if(D.fresh(kind,maxAge)) return Promise.resolve(D); return kind==='cal'?D.loadCal():D.loadRD(); };
 D.project = function(id){ id=String(id||''); for(var i=0;i<D.projects.length;i++) if(String(D.projects[i]['案件ID'])===id) return D.projects[i]; return null; };
@@ -461,7 +498,7 @@ function render(isRefresh){
   if(!r){ GK.go('/today',true); return; }
   var params={}; r.keys.forEach(function(k,i){ params[k]=decodeURIComponent(m[i+1]); });
   if(cur&&cur.cleanup){ try{ cur.cleanup(); }catch(e){ console.error(e); } }
-  GK.closeSheets();
+  GK.closeSheets(); GK.closeViewers();
   var o=r.o, old=document.getElementById('view');
   /* 画面ごとに入れ物を作り直す（前の画面で付けたクリック処理などが残らないように） */
   var view=old.cloneNode(false); old.parentNode.replaceChild(view,old);
@@ -501,7 +538,8 @@ GK.setFontScale = function(v){ try{ localStorage.setItem('gc_pref_fontscale',Str
 var authShown=false;
 GK.authFail = function(){
   if(authShown) return; authShown=true;
-  GK.closeSheets();
+  /* 入力中のシートは閉じずに隠すだけ（同じ人がログインし直したら元に戻す） */
+  document.getElementById('sheetRoot').hidden=true;
   showLogin('ログインの有効期限が切れました。もう一度ログインしてください。');
 };
 function showLogin(msg){
@@ -549,11 +587,18 @@ function checkRole(){
     }
   }).catch(function(){ /* 電波が悪いだけの時はそのまま使えるようにする */ });
 }
+var startedUser='';
 function startApp(){
   document.getElementById('app').hidden=false;
-  D.restore();
+  var me=S.me().id;
+  /* ログイン切れから同じ人がログインし直した時は、入力中の画面をそのまま残す（作り直すと入力が消えるため） */
+  var keep=started&&me&&me===startedUser&&document.getElementById('view').childNodes.length>0;
+  if(!keep) D.restore();
   if(!started){ started=true; navStack=[location.hash||'#/today']; }
-  render();
+  startedUser=me;
+  document.getElementById('sheetRoot').hidden=false;
+  if(keep){ GK.toast('ログインしました（入力中の内容はそのままです。保存できなかった場合はもう一度「保存」を押してください）',{ms:6000}); }
+  else { GK.closeSheets(); render(); }
   /* 権限が確定して変わった時だけ画面を描き直す（入力中のフォームを消さないため） */
   var before=CAN.role();
   checkRole().then(function(){ if(CAN.role()!==before) GK.refresh(); });

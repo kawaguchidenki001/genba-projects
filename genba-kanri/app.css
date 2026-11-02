@@ -1,4 +1,4 @@
-/* 現場管理 v1.0.0 — 共通スタイル（スマホ優先・屋外でも見やすい高コントラスト） */
+/* 現場管理 v1.0.1 — 共通スタイル（スマホ優先・屋外でも見やすい高コントラスト） */
 :root{
   --bg:#eef2f7; --card:#ffffff; --ink:#1b2a3a; --sub:#5a6b7e; --line:#dbe3ec; --soft:#f5f8fb;
   --accent:#1e40af; --accent2:#2563eb; --accentSoft:#e8efff;
@@ -241,7 +241,7 @@ hr.sep{border:0;border-top:1px solid var(--line);margin:12px 0}
 .cam-form{background:#111827;padding:8px 10px;display:grid;grid-template-columns:1fr 1fr;gap:6px}
 .cam-form input,.cam-form select{width:100%;min-height:40px;border-radius:9px;border:1px solid #374151;background:#1f2937;color:#fff;padding:6px 9px;font-size:15px}
 .cam-form .full{grid-column:1/-1}
-.upq{position:fixed;right:10px;top:calc(var(--top) + 8px);z-index:60;background:#0f172a;color:#fff;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.25);display:flex;align-items:center;gap:6px;border:0;cursor:pointer}
+.upq{position:fixed;right:10px;top:calc(var(--top) + 8px);z-index:180;background:#0f172a;color:#fff;border-radius:999px;padding:5px 12px;font-size:12px;font-weight:800;box-shadow:0 4px 14px rgba(0,0,0,.25);display:flex;align-items:center;gap:6px;border:0;cursor:pointer}
 .upq.err{background:#991b1b}
 .upq .dot{width:8px;height:8px;border-radius:50%;background:#facc15;animation:blink 1s infinite}
 @keyframes blink{50%{opacity:.3}}

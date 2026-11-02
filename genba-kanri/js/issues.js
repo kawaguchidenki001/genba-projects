@@ -1,4 +1,4 @@
-/* 現場管理 issues.js v1.0.0 — 図面・指摘（是正）・検査
+/* 現場管理 issues.js v1.0.1 — 図面・指摘（是正）・検査
  * GASは変更していません。既存の仕組みだけで保存します。
  *  - 図面：現場フォルダの「図面」フォルダ（ドライブで入れた図面）＋ アプリから追加した図面（現場フォルダの「ファイル」に「図面_」付きで保存）
  *          PDFはアプリで1ページずつ画像にしてから保存（表示を速くするため）。図面フォルダに直接入れたPDFはそのまま表示。
@@ -81,7 +81,7 @@ function workersOpts(sel){ var me=S.me().id;
 /* メモの保存。通信が途中で切れても二重登録しないよう、cid（端末で作る番号）で保存済みか確かめる */
 function saveNote(data,cid,pid){
   return API.write('noteSave',{data:data}).then(function(res){ return res.note||{}; },function(err){
-    if(data['メモID']||!cid) throw err;
+    if(data['メモID']||!cid||!err||!err.net) throw err;   /* 通信切れの時だけ、保存済みかを確かめる */
     var req=pid?API.call('notesList',{id:pid}):API.call('notesList',{type:data['種類']});
     return req.then(function(res){ var hit=(res.notes||[]).filter(function(n){ return n['種類']===data['種類']&&json(n['内容']).cid===cid; })[0]; if(hit) return hit; throw err; },function(){ throw err; });
   });
@@ -92,7 +92,7 @@ function uploadPhotos(pid,files,kind,prefix,onProg){
   return files.reduce(function(ch,f,i){ return ch.then(function(){
     return IMG.fromFile(f).then(function(img){ return IMG.blob(IMG.toCanvas(img,1920),'image/jpeg',0.85); }).then(function(blob){
       var name=U.safeName(prefix,40)+'_'+U.stamp()+U.pad(i)+'.jpg';
-      return GK.uploader.add({pid:pid,dest:'photo',kind:kind,name:name,mime:'image/jpeg',blob:blob,label:prefix}).then(function(file){ done++; if(onProg) onProg(done,files.length); out.push({id:file.id,name:file.name||name}); });
+      return GK.uploader.add({pid:pid,dest:'photo',kind:kind,name:name,mime:'image/jpeg',blob:blob,label:prefix,failFast:true}).then(function(file){ done++; if(onProg) onProg(done,files.length); out.push({id:file.id,name:file.name||name}); });
     });
   }); },Promise.resolve()).then(function(){ return out; });
 }
@@ -189,7 +189,7 @@ function addDrawing(pid,existing,done){
       var cnt=0;
       return Promise.all(pages.map(function(b,i){
         var name='図面_'+title+(pages.length>1?'_p'+U.pad(i+1):'')+'.jpg';
-        return GK.uploader.add({pid:pid,dest:'file',name:name,mime:'image/jpeg',blob:b,label:'図面 '+title}).then(function(){ cnt++; prog.textContent='送信しています… '+cnt+' / '+pages.length; });
+        return GK.uploader.add({pid:pid,dest:'file',name:name,mime:'image/jpeg',blob:b,label:'図面 '+title,failFast:true}).then(function(){ cnt++; prog.textContent='送信しています… '+cnt+' / '+pages.length; });
       }));
     }).then(function(){ s.close(); GK.toast('図面「'+title+'」を追加しました'); done(); })
       .catch(function(err){ btn.disabled=false; prog.textContent=''; GK.toast('図面を追加できませんでした：'+err.message,{err:true}); });
@@ -235,6 +235,7 @@ function renderProject(view,params,q){
   view.innerHTML='<div class="seg" data-t><button type="button" data-v="draw">🗺 図面</button><button type="button" data-v="list">📍 指摘</button><button type="button" data-v="insp">✅ 検査</button></div><div data-body></div>';
   var c=null, dl=null, err='', derr='';
   function draw(){
+    if(!view.isConnected) return;   /* 別の画面に移った後に読み込みが終わった時は何もしない */
     U.$$('[data-t] button',view).forEach(function(b){ b.classList.toggle('on',b.dataset.v===tab); });
     var body=view.querySelector('[data-body]');
     GK.setActions('');
@@ -279,7 +280,7 @@ function renderProject(view,params,q){
   draw();
   I.loadProject(pid).then(function(x){ c=x; draw(); }).catch(function(e){ err=e.message; draw(); });
   I.loadDrawings(pid).then(function(l){ dl=l; draw(); }).catch(function(e){ derr=e.message; draw(); });
-  if(!D.t.rd) D.ensure('rd').then(function(){ GK.setTitle(D.project(pid)?D.pname(D.project(pid)):'図面・指摘'); }).catch(function(){});
+  if(!D.t.rd) D.ensure('rd').then(function(){ if(view.isConnected) GK.setTitle(D.project(pid)?D.pname(D.project(pid)):'図面・指摘'); }).catch(function(){});
 }
 
 /* ===================== 図面ビューア（拡大・移動・ピン） ===================== */
@@ -302,34 +303,37 @@ function renderDrawing(view,params,q){
   function onThisPage(i){ if(!i.draw||!i.draw.fid) return false; var r=curRef(); return String(i.draw.fid)===String(r.fid)&&(Number(i.draw.page)||1)===r.page; }
   function drawPins(){
     U.$$('.pin',cvs).forEach(function(p){ if(p!==tempPin) p.remove(); });
-    if(!c||!W) return;
+    if(!c||!W||loading) return;
     c.issues.filter(onThisPage).forEach(function(i){ var el=document.createElement('div'); el.className='pin s'+i.cur; el.style.left=(i.draw.x*W)+'px'; el.style.top=(i.draw.y*H)+'px';
       el.innerHTML='<b data-nid="'+esc(i.nid)+'" title="'+esc(i.title)+'">'+(i.no||'?')+'</b>'; cvs.appendChild(el); });
   }
-  function showImg(url){
-    return new Promise(function(ok,ng){ var img=new Image(); img.onload=function(){ if(!alive) return; cvs.innerHTML=''; W=img.naturalWidth; H=img.naturalHeight;
+  /* ページの読み込み番号：ページを素早く切り替えた時、最後に選んだページだけを表示する（ピンが別のページに付かないように） */
+  var loadSeq=0, loading=false, pdfP=null;
+  function showImg(url,my){
+    return new Promise(function(ok,ng){ var img=new Image(); img.onload=function(){ if(!alive||my!==loadSeq){ ok(false); return; } cvs.innerHTML=''; W=img.naturalWidth; H=img.naturalHeight;
         /* 図面は原寸の大きさで置き、拡大縮小は transform で行う（ピンの位置＝図面上の割合とずれないように） */
-        cvs.style.width=W+'px'; cvs.style.height=H+'px'; img.style.width=W+'px'; img.style.height=H+'px'; img.alt=d.title; cvs.appendChild(img); msg.hidden=true; fit(); drawPins(); ok(); };
+        cvs.style.width=W+'px'; cvs.style.height=H+'px'; img.style.width=W+'px'; img.style.height=H+'px'; img.alt=d.title; cvs.appendChild(img); msg.hidden=true; loading=false; fit(); drawPins(); ok(true); };
       img.onerror=function(){ ng(new Error('図面の画像を表示できませんでした')); }; img.src=url; });
   }
   function loadPage(){
+    var my=++loadSeq, idx=pageIdx;
+    loading=true; U.$$('.pin',cvs).forEach(function(p){ p.remove(); });
     msg.hidden=false; msg.innerHTML='<div class="spin"></div><div>図面を読み込んでいます…</div>';
     var pg=view.querySelector('[data-pg]');
     var p;
     if(d.pdf){
-      /* PDFはページを画像にして端末に一時保存（2回目からは速く開ける）。ページ数も一緒に保存 */
-      var pfid=d.pages[0].fid, key='pdfpg_'+pfid+'_'+(pageIdx+1);
-      var ensureDoc=function(){ return pdf?Promise.resolve(pdf):GK.fileBlob(pfid,{timeout:120000,cache:false}).then(blobToBuf).then(pdfDoc).then(function(doc){ pdf=doc; GK.idb.set('pdfn_'+pfid,doc.numPages); return doc; }); };
+      /* PDFはページを画像にして端末に一時保存（2回目からは速く開ける）。ページ数も一緒に保存。PDF本体の取得は1回だけ */
+      var pfid=d.pages[0].fid, key='pdfpg_'+pfid+'_'+(idx+1);
+      var ensureDoc=function(){ if(!pdfP){ pdfP=GK.fileBlob(pfid,{timeout:120000,cache:false}).then(blobToBuf).then(pdfDoc).then(function(doc){ pdf=doc; GK.idb.set('pdfn_'+pfid,doc.numPages); return doc; }); pdfP.catch(function(){ pdfP=null; }); } return pdfP; };
       p=GK.idb.get(key).then(function(hit){ if(hit) return hit;
-        return ensureDoc().then(function(doc){ return renderPdfPage(doc,pageIdx+1,2200); }).then(function(cv){ return IMG.blob(cv,'image/jpeg',0.85); }).then(function(b){ GK.idb.set(key,b); return b; }); })
-        .then(function(b){ return showImg(URL.createObjectURL(b)); })
-        .then(function(){ return pdf?pdf.numPages:GK.idb.get('pdfn_'+pfid); })
-        .then(function(n){ if(n) pdfPages=Number(n)||1; navPg(); });
+        return ensureDoc().then(function(doc){ return renderPdfPage(doc,idx+1,2200); }).then(function(cv){ return IMG.blob(cv,'image/jpeg',0.85); }).then(function(b){ GK.idb.set(key,b); return b; }); })
+        .then(function(b){ return my===loadSeq?showImg(URL.createObjectURL(b),my):false; })
+        .then(function(shown){ if(!shown) return; return Promise.resolve(pdf?pdf.numPages:GK.idb.get('pdfn_'+pfid)).then(function(n){ if(n) pdfPages=Number(n)||1; navPg(); }); });
     } else {
-      p=GK.fileBlob(d.pages[pageIdx].fid,{timeout:90000}).then(function(b){ return showImg(URL.createObjectURL(b)); }).then(navPg);
+      p=GK.fileBlob(d.pages[idx].fid,{timeout:90000}).then(function(b){ return my===loadSeq?showImg(URL.createObjectURL(b),my):false; }).then(function(shown){ if(shown) navPg(); });
     }
     function navPg(){ var n=d.pdf?pdfPages:d.pages.length; pg.hidden=n<=1; view.querySelector('[data-pl]').textContent=(pageIdx+1)+' / '+n; }
-    return p.catch(function(e){ msg.hidden=false; msg.innerHTML='<div>'+esc(e.message)+'</div><button type="button" class="btn" data-retry>もう一度</button>'; msg.querySelector('[data-retry]').onclick=loadPage; });
+    return p.catch(function(e){ if(my!==loadSeq) return; msg.hidden=false; msg.innerHTML='<div>'+esc(e.message)+'</div><button type="button" class="btn" data-retry>もう一度</button>'; msg.querySelector('[data-retry]').onclick=loadPage; });
   }
   /* 操作：1本指で移動、2本指で拡大縮小、ホイールで拡大縮小、タップでピン追加（追加モード時） */
   var pts={}, start=null, pinch=null;
@@ -360,6 +364,7 @@ function renderDrawing(view,params,q){
   var lastTap=0;
   function tap(cx,cy){
     if(!W) return;
+    if(loading){ if(addMode) GK.toast('図面を読み込み中です。少しお待ちください'); return; }
     var r=stage.getBoundingClientRect(), ix=(cx-r.left-tx)/s, iy=(cy-r.top-ty)/s;
     if(addMode){
       if(ix<0||iy<0||ix>W||iy>H){ GK.toast('図面の上をタップしてください'); return; }
@@ -385,8 +390,11 @@ function renderDrawing(view,params,q){
   view.querySelector('[data-fit]').onclick=fit;
   view.querySelector('[data-pp]').onclick=function(){ if(pageIdx>0){ pageIdx--; loadPage(); } };
   view.querySelector('[data-pn]').onclick=function(){ var n=d.pdf?pdfPages:d.pages.length; if(pageIdx<n-1){ pageIdx++; loadPage(); } };
-  var onR=U.debounce(fit,150); window.addEventListener('resize',onR);
+  /* 画面の幅が変わった時（回転など）だけ全体表示に戻す。キーボードの出し入れ（高さだけ変わる）では拡大を保つ */
+  var lastW=window.innerWidth;
+  var onR=U.debounce(function(){ if(window.innerWidth!==lastW){ lastW=window.innerWidth; fit(); } },150); window.addEventListener('resize',onR);
   function begin(){
+    if(!alive) return;
     d=findDrawing(pid,fid);
     if(!d){ msg.innerHTML='<div>図面が見つかりませんでした（削除された可能性があります）</div>'; return; }
     GK.setTitle(d.title);
@@ -443,6 +451,7 @@ function renderIssue(view,params){
   var pid=params.pid, nid=params.nid;
   bindThumbs(view);   /* 写真のタップで拡大（1回だけ登録） */
   function draw(){
+    if(!view.isConnected) return;
     var i=I.issue(pid,nid);
     if(!i){ view.innerHTML=proj[pid]?'<div class="empty">この指摘は見つかりませんでした（削除された可能性があります）</div>':'<div class="skel"></div><div class="skel"></div>'; return; }
     GK.setTitle('指摘 No.'+i.no);
@@ -537,11 +546,17 @@ function renderInspect(view,params){
       var hit=(c.insp||[]).filter(function(y){ return y.nid===nid; })[0];
       if(!hit){ view.innerHTML='<div class="empty">この検査記録は見つかりませんでした</div>'; return false; }
       x=JSON.parse(JSON.stringify(hit));
+      linkIssues(c);
     }
     return true;
   }
+  /* 「否」の項目が、すでに指摘として登録済みかを指摘の側からも確認する（検査記録に書き戻せない人が登録した分も含む＝重複登録防止） */
+  function linkIssues(c){
+    ((c&&c.issues)||[]).forEach(function(i){ if(i.insp&&String(i.insp.nid)===String(nid)){ var r=x.items[Number(i.insp.idx)]; if(r&&!r.iss) r.iss=i.nid; } });
+  }
   var editable=false;
   function draw(){
+    if(!view.isConnected) return;
     editable=CAN.write()&&(isNew||CAN.admin()||x.creatorId===me.id);
     GK.setTitle(isNew?'検査を記録':(x.title||x.name||'検査'));
     if(!isNew) GK.setActions('<a href="#/print/inspect/'+encodeURIComponent(pid)+'/'+encodeURIComponent(nid)+'">🖨 印刷</a>');
@@ -591,16 +606,24 @@ function renderInspect(view,params){
     var body=payload();
     var data={'案件ID':pid,'種類':K_INSP,'タイトル':x.name,'内容':JSON.stringify(body)};
     if(!isNew) data['メモID']=nid; else { data['作成者ID']=me.id; data['作成者名']=me.name; }
+    var btn=view.querySelector('[data-save]'); if(!GK.lockBtn(btn)) return;
     GK.busy(true,'保存中…');
     saveNote(data,isNew?body.cid:'',pid).then(function(note){ GK.toast('検査記録を保存しました'); newInspDraft=null; return I.loadProject(pid,true).then(function(){ return note; }); })
       .then(function(note){ var id=String(note['メモID']||nid); GK.go('/inspect/'+encodeURIComponent(pid)+'/'+encodeURIComponent(id),true); })
-      .catch(function(err){ GK.toast('保存できませんでした：'+err.message,{err:true,ms:7000}); }).finally(function(){ GK.busy(false); });
+      .catch(function(err){ if(btn) btn.disabled=false; GK.toast('保存できませんでした：'+err.message,{err:true,ms:7000}); }).finally(function(){ GK.busy(false); });
   }
   /* 「否」の項目を指摘として登録し、検査記録に紐づける */
+  var toIssBusy=false;
   function toIssues(){
+    if(toIssBusy) return; toIssBusy=true;
+    /* 最新の指摘を読み直してから、まだ登録されていない「否」だけを登録する */
+    GK.busy(true,'確認中…');
+    I.loadProject(pid,true).then(function(c0){ GK.busy(false); linkIssues(c0); toIssues2(); },function(err){ GK.busy(false); toIssBusy=false; GK.toast('読み込めませんでした：'+err.message,{err:true}); });
+  }
+  function toIssues2(){
     var ngs=[]; x.items.forEach(function(r,k){ if(r.r===2&&!r.iss&&r.l) ngs.push(k); });
-    if(!ngs.length) return;
-    GK.confirm('「否」の '+ngs.length+' 項目を指摘として登録します。\n（担当・期限は、あとで各指摘の「直す」から入れられます）',{ok:'登録する'}).then(function(y){ if(!y) return;
+    if(!ngs.length){ toIssBusy=false; draw(); GK.toast('「否」の項目はすべて指摘として登録済みです'); return; }
+    GK.confirm('「否」の '+ngs.length+' 項目を指摘として登録します。\n（担当・期限は、あとで各指摘の「直す」から入れられます）',{ok:'登録する'}).then(function(y){ if(!y){ toIssBusy=false; return; }
       GK.busy(true,'登録中…');
       var c=proj[pid], mx=0; ((c&&c.issues)||[]).forEach(function(i){ mx=Math.max(mx,i.no); });
       var seq=Promise.resolve();
@@ -611,7 +634,7 @@ function renderInspect(view,params){
         /* 検査記録に「登録済み」を書き戻す（記録した本人・管理者のみ。それ以外は指摘だけ登録） */
         if(CAN.admin()||x.creatorId===me.id) return API.write('noteSave',{data:{'メモID':nid,'内容':JSON.stringify(payload())}});
       }).then(function(){ GK.toast(ngs.length+'件の指摘を登録しました'); return I.loadProject(pid,true); }).then(function(c2){ init(c2); draw(); })
-        .catch(function(err){ GK.toast('登録できませんでした：'+err.message,{err:true}); I.loadProject(pid,true).catch(function(){}); }).finally(function(){ GK.busy(false); });
+        .catch(function(err){ GK.toast('登録できませんでした：'+err.message,{err:true}); I.loadProject(pid,true).catch(function(){}); }).finally(function(){ toIssBusy=false; GK.busy(false); });
     });
   }
   view.innerHTML='<div class="skel"></div><div class="skel"></div>';
@@ -643,8 +666,10 @@ function tplManager(){
       if(!title||!items.length){ GK.toast('名前と項目を入れてください',{err:true}); return; }
       var me=S.me(), data={'案件ID':'','種類':K_TPL,'タイトル':title,'内容':JSON.stringify({v:1,items:items})};
       if(t.nid) data['メモID']=t.nid; else { data['作成者ID']=me.id; data['作成者名']=me.name; }
+      var btn=e.$('[data-sv]'); if(!GK.lockBtn(btn)) return;
+      var cid=U.uid('c'); if(!t.nid) data['内容']=JSON.stringify({v:1,items:items,cid:cid});
       GK.busy(true,'保存中…');
-      API.write('noteSave',{data:data}).then(function(){ e.close(); GK.toast('保存しました'); draw(); }).catch(function(err){ GK.toast('保存できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); });
+      saveNote(data,t.nid?'':cid,'').then(function(){ e.close(); GK.toast('保存しました'); draw(); }).catch(function(err){ btn.disabled=false; GK.toast('保存できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); });
     };
     var d=e.$('[data-d]'); if(d) d.onclick=function(){ GK.confirm('テンプレート「'+t.title+'」を削除しますか？',{ok:'削除する',danger:true}).then(function(y){ if(!y) return; GK.busy(true,'削除中…');
       API.write('noteDelete',{id:t.nid}).then(function(){ e.close(); GK.toast('削除しました'); draw(); }).catch(function(err){ GK.toast('削除できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); }); }); };
@@ -669,6 +694,7 @@ function printIssues(view,params,q){
   var pid=params.pid, f=q.get('f')||'open';
   var doc=printHead(view);
   I.loadProject(pid).then(function(c){
+    if(!view.isConnected) return;
     var p=D.project(pid)||{}, arr=c.issues.filter(function(i){ return f==='all'||i.cur<2; }).sort(function(a,b){ return a.no-b.no; });
     var h='<h1>指摘・是正一覧表</h1><div class="pr-meta"><span>工事名：'+esc(p['案件名']||D.pname(p))+'</span><span>出力日：'+esc(U.jp(U.today()))+'</span></div>'+
       '<div class="pr-meta"><span>対象：'+(f==='all'?'すべて':'未完了のみ')+'（'+arr.length+'件）</span><span>'+esc(GK.CFG.COMPANY_NAME||'')+'</span></div>'+
@@ -688,6 +714,7 @@ function printInspect(view,params){
   var pid=params.pid, nid=params.nid;
   var doc=printHead(view);
   I.loadProject(pid).then(function(c){
+    if(!view.isConnected) return;
     var x=(c.insp||[]).filter(function(y){ return y.nid===nid; })[0];
     if(!x){ doc.innerHTML='この検査記録は見つかりませんでした'; return; }
     var p=D.project(pid)||{}, ok=0, ng=0, na=0;

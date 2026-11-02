@@ -1,4 +1,4 @@
-/* 現場管理 reports.js v1.0.0 — 作業日報・人員配置（週間ボード）
+/* 現場管理 reports.js v1.0.1 — 作業日報・人員配置（週間ボード）
  * 日報：作業日報シート（addReportMulti／v158の replaceReportGroup・deleteReportGroup。旧GASでは deleteReport＋addReportMulti）
  *   人工の計算・1日1.5人工の上限・同じ日同じ現場の二重登録チェックはGen-Canの日報画面と同じ規則です。
  *   使用材料（v158）はこのアプリでは入力しませんが、編集してもGen-Canで入れた材料は消えないように引き継ぎます。
@@ -124,8 +124,8 @@ function detail(pid,date){
   sh.$('[data-del]').onclick=function(){
     GK.confirm(U.md(date)+'「'+(p?D.pname(p):'現場なし')+'」の日報（'+g.length+'名分）を削除しますか？',{ok:'削除する',danger:true}).then(function(y){ if(!y) return;
       GK.busy(true,'削除中…');
-      deleteGroup(pid,date,g).then(function(){ sh.close(); GK.toast('削除しました'); return D.loadRD(); })
-        .catch(function(err){ GK.toast('削除できませんでした：'+err.message,{err:true}); D.loadRD().catch(function(){}); }).finally(function(){ GK.busy(false); }); });
+      deleteGroup(pid,date,g).then(function(){ sh.close(); GK.toast('削除しました'); return D.loadRD(true); })
+        .catch(function(err){ GK.toast('削除できませんでした：'+err.message,{err:true}); D.loadRD(true).catch(function(){}); }).finally(function(){ GK.busy(false); }); });
   };
 }
 function deleteGroup(pid,date,grp){
@@ -140,7 +140,7 @@ function renderForm(view,edit,q){
   var isEdit=!!edit, orig=isEdit?groupRows(edit.pid,edit.date):[];
   if(isEdit&&!orig.length){
     view.innerHTML=D.t.rd?'<div class="card">この日報は見つかりませんでした（削除された可能性があります）。</div>':'<div class="skel"></div>';
-    if(!D.t.rd) D.ensure('rd').then(function(){ GK.refresh(); }).catch(function(){});
+    if(!D.t.rd) D.ensure('rd').then(function(){ if(view.isConnected) GK.refresh(); }).catch(function(){});
     return;
   }
   var me=myId(), g0=orig[0]||{};
@@ -148,7 +148,7 @@ function renderForm(view,edit,q){
     date:isEdit?edit.date:(q.get('date')||U.today()),
     pid:isEdit?edit.pid:(q.get('pid')||''),
     ws:{}, nextDay:isEdit?!!String(g0['翌日']||''):false,
-    veh:{}, none:isEdit&&!edit.pid   /* none＝「現場なし（事務所・その他）」を選んだ */
+    veh:{}
   };
   if(isEdit) orig.forEach(function(r){ st.ws[String(r['作業員ID'])]=1; String(r['車両']||'').split(',').forEach(function(v){ v=v.trim(); if(v) st.veh[v]=1; }); });
   else if(q.get('names')){ var names={}; U.ownerTokens(q.get('names')).forEach(function(n){ names[n]=1; });
@@ -159,6 +159,8 @@ function renderForm(view,edit,q){
   h+='<div class="card">';
   h+='<div class="grid2"><label class="fld"><span>日付<span class="req">*</span></span><input type="date" data-f="date" value="'+esc(st.date)+'"></label>'+
      '<label class="fld"><span>現場<span class="req">*</span></span><select data-f="pid"></select></label></div>';
+  /* Gen-Canの日報と同じく現場は必須（現場なしの日報はGen-Canで直せなくなるため） */
+  if(isEdit&&!edit.pid) h+='<div class="hint" style="margin:-6px 0 8px">この日報は現場が入っていません。Gen-Canと同じく、現場を選んでから保存してください。</div>';
   h+='<div class="chips scroll" data-recent style="margin:-4px 0 10px"></div>';
   h+='<div class="grid3"><label class="fld"><span>開始</span><input type="time" step="300" data-f="st" value="'+esc(isEdit&&g0['開始']?U.hm(g0['開始']):'08:00')+'"></label>'+
      '<label class="fld"><span>終了</span><input type="time" step="300" data-f="et" value="'+esc(isEdit&&g0['終了']?U.hm(g0['終了']):'17:00')+'"></label>'+
@@ -169,8 +171,7 @@ function renderForm(view,edit,q){
   h+='<div class="card"><div class="row"><div class="flabel grow" style="margin:0">作業員<span class="req">*</span></div><span class="small muted" data-wn></span></div><div data-ws></div></div>';
   h+='<div class="card"><label class="fld"><span>作業内容</span><textarea data-f="desc" maxlength="1000" placeholder="例：2F 照明器具取付・配線">'+esc(isEdit?(g0['作業内容']||''):'')+'</textarea></label><div class="chips" data-sugg></div>'+
      '<label class="fld mt12"><span>備考</span><textarea data-f="note" maxlength="1000" style="min-height:64px">'+esc(isEdit?(g0['備考']||''):'')+'</textarea></label>'+
-     (D.vehicles.length?'<div class="flabel">車両</div><div class="pick" data-veh>'+D.vehicles.map(function(v){ var id=String(v['車両ID']); return '<label><input type="checkbox" value="'+esc(id)+'"'+(st.veh[id]?' checked':'')+'><span>🚚 '+esc(v['車両名']||id)+'</span></label>'; }).join('')+'</div>':'')+
-     '<div data-mats></div></div>';
+     '<div data-vehwrap></div><div data-mats></div></div>';
   h+='<div class="btns" style="margin-bottom:24px">'+(isEdit?'<button type="button" class="btn danger" data-del>削除</button>':'')+'<button type="button" class="btn primary" data-save style="flex:2">'+(isEdit?'直して保存':'保存する')+'</button></div>';
   view.innerHTML=h;
   var $=function(s){ return view.querySelector(s); }, f=function(n){ return $('[data-f="'+n+'"]'); };
@@ -180,8 +181,12 @@ function renderForm(view,edit,q){
     var o='<option value="">（選んでください）</option>';
     arr.forEach(function(p){ var id=String(p['案件ID']); if(id===cur) has=true; o+='<option value="'+esc(id)+'"'+(id===cur?' selected':'')+'>'+esc(D.pname(p))+'</option>'; });
     if(cur&&!has){ var cp=D.project(cur); o+='<option value="'+esc(cur)+'" selected>'+esc(cp?D.pname(cp):(g0['案件名']||cur))+'</option>'; }
-    o+='<option value="__pick">他の現場を探す…</option><option value="__none"'+(st.none?' selected':'')+'>現場なし（事務所・その他）</option>';
+    o+='<option value="__pick">他の現場を探す…</option>';
     f('pid').innerHTML=o;
+  }
+  /* 車両（データが届いたら描き直す。選んだ車両は st.veh に覚えている） */
+  function vehHtml(){
+    $('[data-vehwrap]').innerHTML=D.vehicles.length?'<div class="flabel">車両</div><div class="pick" data-veh>'+D.vehicles.map(function(v){ var id=String(v['車両ID']); return '<label><input type="checkbox" value="'+esc(id)+'"'+(st.veh[id]?' checked':'')+'><span>🚚 '+esc(v['車両名']||id)+'</span></label>'; }).join('')+'</div>':'';
   }
   function recents(){
     var seen={}, out=[];
@@ -192,7 +197,8 @@ function renderForm(view,edit,q){
   function workersHtml(){
     var ws=activeWorkers(), a=ws.filter(function(w){ return !D.isPartner(w); }), b=ws.filter(D.isPartner);
     /* 編集中の日報に、いまは停止中の作業員が入っていても外れないように表示する */
-    Object.keys(st.ws).forEach(function(id){ if(!ws.some(function(w){ return String(w['作業員ID'])===id; })){ var r=orig.filter(function(x){ return String(x['作業員ID'])===id; })[0]; a.push(D.worker(id)||{'作業員ID':id,'氏名':(r&&r['氏名'])||id}); } });
+    Object.keys(st.ws).forEach(function(id){ if(!ws.some(function(w){ return String(w['作業員ID'])===id; })){ var r=orig.filter(function(x){ return String(x['作業員ID'])===id; })[0];
+      a.push(D.worker(id)||{'作業員ID':id,'氏名':(r&&r['氏名'])||(id===me?S.me().name:'')||id}); } });
     function pick(list){ return '<div class="pick">'+list.map(function(w){ var id=String(w['作業員ID']); return '<label><input type="checkbox" value="'+esc(id)+'"'+(st.ws[id]?' checked':'')+'><span>'+esc(D.wname(w))+(id===me?'（自分）':'')+'</span></label>'; }).join('')+'</div>'; }
     $('[data-ws]').innerHTML=(a.length?'<div class="pick-h">社員</div>'+pick(a):'')+(b.length?'<div class="pick-h">協力業者</div>'+pick(b):'')+(ws.length?'':'<div class="small muted">作業員を読み込み中…</div>');
     countW();
@@ -221,27 +227,27 @@ function renderForm(view,edit,q){
     var ms=D.reportMaterials.filter(function(m){ return String(m['日報キー'])===grpKey(edit.pid,edit.date); });
     el.innerHTML=ms.length?'<div class="flabel mt12">使用材料（Gen-Canの日報で入力・そのまま引き継ぎます）</div><div class="small">'+ms.map(function(m){ return esc((m['品名']||'')+'　'+(m['数量']||'')+(m['単位']||'')); }).join('<br>')+'</div>':'';
   }
-  projOptions(); recents(); workersHtml(); calc(); sugg(); mats();
+  projOptions(); recents(); workersHtml(); vehHtml(); calc(); sugg(); mats();
   f('pid').onchange=function(){
     var v=f('pid').value;
-    if(v==='__pick'){ GK.pickProject().then(function(p){ if(p){ st.pid=String(p['案件ID']); st.none=false; } projOptions(); recents(); sugg(); }); return; }
-    st.none=(v==='__none'); st.pid=st.none?'':v; recents(); sugg(); };
-  $('[data-recent]').onclick=function(e){ var b=e.target.closest('[data-pid]'); if(!b) return; st.pid=b.dataset.pid; st.none=false; projOptions(); recents(); sugg(); };
+    if(v==='__pick'){ GK.pickProject().then(function(p){ if(p) st.pid=String(p['案件ID']); projOptions(); recents(); sugg(); }); return; }
+    st.pid=v; recents(); sugg(); };
+  $('[data-recent]').onclick=function(e){ var b=e.target.closest('[data-pid]'); if(!b) return; st.pid=b.dataset.pid; projOptions(); recents(); sugg(); };
   $('[data-ws]').onchange=function(e){ var c=e.target; if(c.type!=='checkbox') return; if(c.checked) st.ws[c.value]=1; else delete st.ws[c.value]; countW(); };
   ['st','et','br'].forEach(function(n){ f(n).oninput=calc; }); f('nd').onchange=calc;
   f('date').onchange=function(){ st.date=f('date').value; };
   $('[data-sugg]').onclick=function(e){ var b=e.target.closest('[data-t]'); if(!b) return; var ta=f('desc'); ta.value=(ta.value.trim()?ta.value.replace(/\s+$/,'')+'\n':'')+b.dataset.t; ta.focus(); };
-  var vb=$('[data-veh]'); if(vb) vb.onchange=function(e){ var c=e.target; if(c.checked) st.veh[c.value]=1; else delete st.veh[c.value]; };
+  $('[data-vehwrap]').onchange=function(e){ var c=e.target; if(c.type!=='checkbox') return; if(c.checked) st.veh[c.value]=1; else delete st.veh[c.value]; };
   var dl=$('[data-del]'); if(dl) dl.onclick=function(){
     GK.confirm('この日報（'+orig.length+'名分）を削除しますか？',{ok:'削除する',danger:true}).then(function(y){ if(!y) return;
       GK.busy(true,'削除中…');
-      deleteGroup(edit.pid,edit.date,orig).then(function(){ GK.toast('削除しました'); return D.loadRD(); }).then(function(){ GK.go('/reports',true); })
+      deleteGroup(edit.pid,edit.date,orig).then(function(){ GK.toast('削除しました'); return D.loadRD(true); }).then(function(){ GK.go('/reports',true); })
         .catch(function(err){ GK.toast('削除できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); }); }); };
 
   $('[data-save]').onclick=function(){
     var date=f('date').value, pid=st.pid, p=D.project(pid);
     if(!date){ GK.toast('日付を入力してください',{err:true}); return; }
-    if(!pid&&!st.none){ GK.toast('現場を選んでください',{err:true}); return; }
+    if(!pid){ GK.toast('現場を選んでください',{err:true}); return; }
     var wids=Object.keys(st.ws);
     if(!wids.length){ GK.toast('作業員を選んでください',{err:true}); return; }
     var c=calc(); if(c.err){ GK.toast(c.err,{err:true}); return; }
@@ -260,7 +266,7 @@ function renderForm(view,edit,q){
       D.reports.forEach(function(r){ if(U.d10(r['日付'])!==date||String(r['作業員ID'])!==String(w['作業員ID'])||origIds[String(r['日報ID'])]) return; cur+=U.numv(r['人工'])+U.numv(r['深夜人工']); });
       if(cur+add>1.5+1e-9) over.push((w['氏名']||'')+'（登録済 '+U.round2(cur)+'＋今回 '+U.round2(add)+'）'); });
     if(over.length){ GK.toast('⚠ 1日の上限は合計1.5人工までです：'+over.join('、'),{err:true,ms:7000}); return; }
-    var data={'日付':date,'案件ID':pid,'案件名':p?(p['案件名']||''):'','作業内容':f('desc').value.trim(),'人工':String(c.nk),'開始':f('st').value,'終了':f('et').value,
+    var data={'日付':date,'案件ID':pid,'案件名':p?(p['案件名']||''):(String(g0['案件ID']||'')===pid?(g0['案件名']||''):''),'作業内容':f('desc').value.trim(),'人工':String(c.nk),'開始':f('st').value,'終了':f('et').value,
       '翌日':f('nd').checked?'1':'','休憩分':String(c.brMin),'作業時間':String(c.minutes),'深夜人工':String(c.ynk),'備考':f('note').value.trim(),'車両':Object.keys(st.veh).join(',')};
     data['_workers']=ws.map(function(w){ return {'作業員ID':String(w['作業員ID']),'氏名':w['氏名']||'','区分':w['区分']||'','所属':w['所属']||''}; });
     if(D.features&&D.features.reportMaterials){
@@ -279,18 +285,20 @@ function renderForm(view,edit,q){
     }
     var btn=$('[data-save]'); btn.disabled=true;
     GK.busy(true,'保存中…');
+    var before={}; D.reports.forEach(function(r){ before[String(r['日報ID'])]=1; });
     job.then(function(){ return true; },function(err){
-      /* 通信が途中で切れても、実は保存できていることがある → 読み直して確認してから失敗を伝える（二重登録防止） */
+      /* 通信が途中で切れても、実は保存できていることがある → 読み直して確認してから失敗を伝える（二重登録防止）。
+         保存前に無かった日報（同じ日・同じ現場・1人目の作業員）が増えていれば保存できている */
       if(isEdit) throw err;
-      return D.loadRD().then(function(){ var hit=D.reports.some(function(r){ return U.d10(r['日付'])===date&&String(r['案件ID']||'')===String(pid)&&String(r['作業員ID'])===String(ws[0]['作業員ID']); });
-        if(hit) return true; throw err; },function(){ throw err; });
+      return GK.verifySaved(err,function(){ return D.loadRD(true); },function(){ return D.reports.some(function(r){ return !before[String(r['日報ID'])]&&U.d10(r['日付'])===date&&String(r['案件ID']||'')===String(pid)&&String(r['作業員ID'])===String(ws[0]['作業員ID']); }); });
     }).then(function(){
       try{ localStorage.setItem('gc_pref_last_report_date',date); }catch(e){}   /* Gen-Canホームの「日報がまだ」通知と共有 */
       GK.toast(isEdit?'日報を直しました':ws.length+'名分の日報を保存しました');
-      return D.loadRD().catch(function(){}).then(function(){ GK.go('/reports?d='+encodeURIComponent(date),true); });
+      return D.loadRD(true).catch(function(){}).then(function(){ GK.go('/reports?d='+encodeURIComponent(date),true); });
     }).catch(function(err){ btn.disabled=false; GK.toast('保存できませんでした：'+err.message,{err:true,ms:7000}); }).finally(function(){ GK.busy(false); });
   };
-  var off=GK.on('data',function(k){ if(k==='rd'){ projOptions(); recents(); if(!view.querySelector('[data-ws] input')) workersHtml(); } });
+  /* データが届いたら選択肢を描き直す（選んだ作業員・車両は st に覚えているので消えない） */
+  var off=GK.on('data',function(k){ if(k==='rd'){ projOptions(); recents(); workersHtml(); vehHtml(); } });
   if(!D.t.rd) D.ensure('rd').catch(function(){});
   return off;
 }
@@ -384,12 +392,12 @@ function schedSheet(arr,key,day,redraw){
       GK.confirm(msg,{ok:rest.length?'外す':'削除する',danger:true}).then(function(y){ if(!y) return;
         GK.busy(true,'保存中…');
         (rest.length?API.write('updateSchedule',{id:s['予定ID'],data:{'担当':rest.join('・')}}):API.write('deleteSchedule',{id:s['予定ID']}))
-          .then(function(){ sh.close(); GK.toast('保存しました'); return D.loadCal(); }).catch(function(err){ GK.toast('保存できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); }); });
+          .then(function(){ sh.close(); GK.toast('保存しました'); return D.loadCal(true); }).catch(function(err){ GK.toast('保存できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); }); });
       return;
     }
     GK.confirm('この予定を削除しますか？\n（担当：'+(s['担当']||'')+'）',{ok:'削除する',danger:true}).then(function(y){ if(!y) return;
       GK.busy(true,'削除中…');
-      API.write('deleteSchedule',{id:s['予定ID']}).then(function(){ sh.close(); GK.toast('削除しました'); return D.loadCal(); }).catch(function(err){ GK.toast('削除できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); }); });
+      API.write('deleteSchedule',{id:s['予定ID']}).then(function(){ sh.close(); GK.toast('削除しました'); return D.loadCal(true); }).catch(function(err){ GK.toast('削除できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); }); });
   };
   var ad=sh.$('[data-add]'); if(ad) ad.onclick=function(){ sh.close(); assignSheet(key.indexOf('w:')===0?{day:day,wid:key.slice(2)}:{day:day,pid:key.slice(2)},redraw); };
 }
@@ -425,11 +433,17 @@ function assignSheet(o,redraw){
     var clash=[];
     ids.forEach(function(id){ var w=D.worker(id); if(!w) return;
       D.schedules.forEach(function(x){ var xa=U.d10(x['日付']), xb=U.d10(x['終了日'])||xa; if(!xa||xb<s||xa>e) return; if(D.isMine(x,w)) clash.push(D.wname(w)+'：'+U.mdS(xa)+(xb!==xa?'〜'+U.mdS(xb):'')+' '+(D.project(x['案件ID'])?D.pname(D.project(x['案件ID'])):(x['案件名']||''))); }); });
+    var btn=sh.$('[data-save]');
     var go=function(){
+      if(!GK.lockBtn(btn)) return;
       var data={'予定ID':'','日付':s,'終了日':e===s?'':e,'案件ID':pid,'案件名':p['案件名']||'','予定内容':sh.$('[data-t]').value.trim()||sh.$('[data-k]').value,'区分':sh.$('[data-k]').value,'担当':names.join('・'),'開始':sh.$('[data-st]').value,'終了':sh.$('[data-et]').value,'備考':'','車両':''};
+      var before={}; D.schedules.forEach(function(x){ before[String(x['予定ID'])]=1; });
       GK.busy(true,'保存中…');
-      API.write('addSchedule',{data:data}).then(function(){ sh.close(); GK.toast('配置を追加しました'); return D.loadCal(); })
-        .catch(function(err){ GK.toast('追加できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); });
+      API.write('addSchedule',{data:data}).catch(function(err){
+        /* 通信切れの時は、同じ予定が増えていないか読み直して確かめる（二重登録防止） */
+        return GK.verifySaved(err,function(){ return D.loadCal(true); },function(){ return D.schedules.some(function(x){ return !before[String(x['予定ID'])]&&String(x['案件ID'])===pid&&U.d10(x['日付'])===s&&x['担当']===data['担当']&&x['予定内容']===data['予定内容']; }); });
+      }).then(function(){ sh.close(); GK.toast('配置を追加しました'); return D.loadCal(true); })
+        .catch(function(err){ btn.disabled=false; GK.toast('追加できませんでした：'+err.message,{err:true}); }).finally(function(){ GK.busy(false); });
     };
     if(clash.length) GK.confirm('次の人はこの期間にすでに予定があります。\n\n'+clash.slice(0,8).join('\n')+(clash.length>8?'\nほか':'')+'\n\nこのまま追加しますか？',{ok:'追加する'}).then(function(y){ if(y) go(); });
     else go();
